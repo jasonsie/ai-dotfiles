@@ -21,7 +21,7 @@ from pathlib import Path
 # Configuration
 # =============================================================================
 
-OUTPUT_DIR = os.path.expanduser("~/.claude/codebase-maps")
+OUTPUT_SUBDIR = ".claude/codebase-maps"
 IGNORE_DIRS = {
     "node_modules",
     ".git",
@@ -326,9 +326,10 @@ def main():
     data = generate_map(cwd, languages)
     markdown = to_markdown(data, cwd, languages)
 
-    # Save
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-    output_file = os.path.join(OUTPUT_DIR, f"{os.path.basename(cwd)}_symbols.md")
+    # Save — output is local to the target project (single-truth: workspace owns its outputs)
+    output_dir = os.path.join(cwd, OUTPUT_SUBDIR)
+    os.makedirs(output_dir, exist_ok=True)
+    output_file = os.path.join(output_dir, f"{os.path.basename(cwd)}_symbols.md")
     with open(output_file, "w", encoding="utf-8") as f:
         f.write(markdown)
 

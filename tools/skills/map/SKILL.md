@@ -17,17 +17,18 @@ context: fork
 ## 執行方式
 
 ```bash
-# 在專案根目錄執行（輸出存於 ~/.claude/codebase-maps/）
+# 在專案根目錄執行（輸出存於 <cwd>/.claude/codebase-maps/）
 python3 ~/.claude/skills/map/scripts/symbol_map.py
 
-# 或指定目標目錄
+# 或指定目標目錄（輸出存於 <target>/.claude/codebase-maps/）
 python3 ~/.claude/skills/map/scripts/symbol_map.py /path/to/project
 ```
 
 腳本會：
+
 1. 自動偵測語言（TypeScript / JavaScript / Python / Rust / Go）
 2. 提取所有 exported 符號與精確 `file:line`
-3. 輸出 markdown 地圖至 `~/.claude/codebase-maps/<project>_symbols.md`
+3. 輸出 markdown 地圖至 `<target>/.claude/codebase-maps/<project>_symbols.md`（target 預設為 cwd）
 
 ## 輸出格式範例
 
@@ -39,19 +40,22 @@ python3 ~/.claude/skills/map/scripts/symbol_map.py /path/to/project
 **Files**: 42 | **Symbols**: 183
 
 ## Classes
-| Symbol | Location |
-|--------|----------|
+
+| Symbol         | Location                  |
+| -------------- | ------------------------- |
 | `AuthProvider` | `src/auth/provider.ts:15` |
 
 ## Functions
-| Symbol | Location |
-|--------|----------|
+
+| Symbol       | Location               |
+| ------------ | ---------------------- |
 | `formatDate` | `src/utils/date.ts:42` |
 ```
 
 ## 產出後的使用方式
 
 地圖生成後，直接引用精確位置：
+
 - 「讀 `src/auth/provider.ts:15` 確認 AuthProvider 的介面」
 - 「`src/utils/date.ts:42` 的 `formatDate` 需要修改」
 
@@ -59,18 +63,19 @@ python3 ~/.claude/skills/map/scripts/symbol_map.py /path/to/project
 
 ## 支援語言
 
-| 語言 | 提取符號類型 |
-|------|------------|
+| 語言       | 提取符號類型                                  |
+| ---------- | --------------------------------------------- |
 | TypeScript | function, class, interface, type, const, enum |
-| JavaScript | function, class, const, module.exports |
-| Python | class, def, TypeVar |
-| Rust | pub fn, pub struct, pub enum, pub trait |
-| Go | exported func, struct, interface (大寫開頭) |
+| JavaScript | function, class, const, module.exports        |
+| Python     | class, def, TypeVar                           |
+| Rust       | pub fn, pub struct, pub enum, pub trait       |
+| Go         | exported func, struct, interface (大寫開頭)   |
 
 ## Gotcha
 
-- **腳本路徑**：確認 `~/.claude/skills/map/scripts/symbol_map.py` 存在（在 workspace 的 `.claude/skills/map/scripts/` 目錄中）
-- **輸出目錄**：地圖存於 `~/.claude/codebase-maps/`，非 workspace 目錄，不會被 git 追蹤
+- **腳本路徑**：腳本本身安裝於全域（`~/.claude/skills/map/scripts/symbol_map.py`），但**輸出永遠在本地專案**（`<cwd>/.claude/codebase-maps/`）
+- **輸出目錄**：地圖存於 target 專案的 `.claude/codebase-maps/`（target 預設為 cwd，可由 argv[1] 指定）
+- **加入 .gitignore**：若不想 commit 符號地圖，將 `.claude/codebase-maps/` 加入專案 `.gitignore`
 - **大型 codebase**：超過 1000 個檔案時產出可能較大；用 `head -100` 先看摘要
 - **動態語言**：Python 只提取頂層 class/def，不含動態建立的符號
 - **更新時機**：每次大規模重構後重跑更新地圖
