@@ -21,11 +21,13 @@ FILE_PATH=$(echo "$INPUT" | grep -o '"filePath"\s*:\s*"[^"]*"' | head -1 | sed '
 # 檢查是否為 Memory.md
 case "$FILE_PATH" in
   *Memory.md)
-    # 找到 workspace 目錄
-    if [ "$CLAUDE_CODE_REMOTE" = "true" ]; then
-      WORKSPACE_DIR="/tmp/claude-code-workspace"
-    else
-      WORKSPACE_DIR="$HOME/claude-code-workspace"
+    # 找到 workspace 目錄：優先採用 shim 的 WORKSPACE_DIR；僅在 cloud remote 時 fallback
+    if [ -z "${WORKSPACE_DIR:-}" ]; then
+      if [ "$CLAUDE_CODE_REMOTE" = "true" ]; then
+        WORKSPACE_DIR="/tmp/claude-code-workspace"
+      else
+        exit 0
+      fi
     fi
 
     # 複製最新的 Memory.md 到 workspace（如果是在其他專案中修改的）

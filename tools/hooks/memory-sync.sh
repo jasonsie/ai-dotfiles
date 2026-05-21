@@ -15,10 +15,15 @@ export WORKSPACE_CLI_NAME WORKSPACE_DIR
 # --- end shim ---
 
 # --- 定位 workspace 目錄 ---
-if [ "$CLAUDE_CODE_REMOTE" = "true" ]; then
-  WORKSPACE_DIR="/tmp/claude-code-workspace"
-else
-  WORKSPACE_DIR="$HOME/claude-code-workspace"
+# 優先採用 shim 設定的 WORKSPACE_DIR（來自 CLAUDE_PROJECT_DIR），讓 hook 在任意專案都能運作。
+# 僅在 shim 未提供且偵測到 cloud remote 時 fallback 到 /tmp。
+if [ -z "${WORKSPACE_DIR:-}" ]; then
+  if [ "$CLAUDE_CODE_REMOTE" = "true" ]; then
+    WORKSPACE_DIR="/tmp/claude-code-workspace"
+  else
+    echo "[memory-sync] WORKSPACE_DIR unset and no project context, skipping"
+    exit 0
+  fi
 fi
 
 # 確認目錄存在

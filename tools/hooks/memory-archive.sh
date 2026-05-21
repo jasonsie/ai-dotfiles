@@ -16,11 +16,13 @@ WORKSPACE_DIR="${WORKSPACE_DIR:-${CLAUDE_PROJECT_DIR:-}}"
 export WORKSPACE_CLI_NAME WORKSPACE_DIR
 # --- end shim ---
 
-# 定位 workspace
-if [ "$CLAUDE_CODE_REMOTE" = "true" ]; then
-  WORKSPACE_DIR="/tmp/claude-code-workspace"
-else
-  WORKSPACE_DIR="$HOME/claude-code-workspace"
+# 定位 workspace：優先採用 shim 的 WORKSPACE_DIR；僅在 cloud remote 時 fallback
+if [ -z "${WORKSPACE_DIR:-}" ]; then
+  if [ "$CLAUDE_CODE_REMOTE" = "true" ]; then
+    WORKSPACE_DIR="/tmp/claude-code-workspace"
+  else
+    exit 0
+  fi
 fi
 
 MEMORY_FILE="$WORKSPACE_DIR/Memory.md"

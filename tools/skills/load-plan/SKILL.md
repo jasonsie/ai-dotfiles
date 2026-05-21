@@ -20,9 +20,9 @@ context: fork
 bash "$CLAUDE_PROJECT_DIR/scripts/load-plan.sh"
 ```
 
-或直接呼叫：
+或直接呼叫（替換為實際 workspace 路徑）：
 ```bash
-bash /home/user/claude-code-workspace/scripts/load-plan.sh
+bash "${WORKSPACE_DIR:-$HOME/Developer/repo/project/ai/workspace/ai-cli-workspace}/scripts/load-plan.sh"
 ```
 
 ## 輸出說明
