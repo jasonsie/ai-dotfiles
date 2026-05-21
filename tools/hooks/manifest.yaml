@@ -1,0 +1,85 @@
+# Hook event manifest — maps neutral event names to each CLI's native event.
+# `null` means the CLI does not support an equivalent event; adapter skips it.
+#
+# Each canonical script lives at tools/hooks/<script>. Adapters wire each CLI's
+# native event to invoke the script with $WORKSPACE_CLI_NAME set.
+
+version: 1
+
+events:
+  session-start:
+    script: session-start.sh
+    description: Session begins (auto-pull, env init)
+    claude: SessionStart
+    gemini: session-start
+    codex: pre-session
+
+  instructions-loaded:
+    script: instructions-loaded.sh
+    description: CLAUDE.md / AGENTS.md / rules loaded (debug-only in Claude)
+    claude: InstructionsLoaded
+    gemini: null
+    codex: null
+
+  user-prompt:
+    script: user-prompt.sh
+    description: User submits a prompt; inject reminders
+    claude: UserPromptSubmit
+    gemini: user-prompt
+    codex: pre-prompt
+
+  pre-tool:
+    script: pre-tool.sh
+    description: Before tool invocation (e.g. bash pre-commit review)
+    claude: PreToolUse
+    gemini: pre-tool
+    codex: pre-tool
+
+  post-edit:
+    script: post-edit.sh
+    description: After file Edit/Write; syntax validation
+    claude: PostToolUse
+    gemini: post-tool
+    codex: post-tool
+
+  pre-compact:
+    script: pre-compact.sh
+    description: Before context compaction (Claude-only concept)
+    claude: PreCompact
+    gemini: null
+    codex: null
+
+  post-compact:
+    script: post-compact.sh
+    description: After context compaction (Claude-only concept)
+    claude: PostCompact
+    gemini: null
+    codex: null
+
+  subagent-start:
+    script: subagent-start.sh
+    description: Subagent invocation begins (Claude-only)
+    claude: SubagentStart
+    gemini: null
+    codex: null
+
+  subagent-stop:
+    script: subagent-stop.sh
+    description: Subagent invocation ends (Claude-only)
+    claude: SubagentStop
+    gemini: null
+    codex: null
+
+  session-stop:
+    script: session-stop.sh
+    description: Session ends; cleanup
+    claude: Stop
+    gemini: session-end
+    codex: post-session
+
+# Matchers (CLI-specific narrowing). Only Claude uses them today.
+matchers:
+  pre-tool:
+    claude: bash
+  post-edit:
+    claude: "Edit|Write"

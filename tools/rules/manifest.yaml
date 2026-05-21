@@ -1,0 +1,68 @@
+# Rule manifest — maps each rule to which CLI(s) it targets.
+# Adapters use this to generate per-CLI rule files:
+#   - AGENTS.md (Codex) — concatenated portable rules
+#   - GEMINI.md          — concatenated portable rules
+#   - CLAUDE.md          — @./AGENTS.md + Claude-only @-imports + preamble
+
+version: 1
+
+rules:
+  core:
+    file: core.md
+    targets: [claude, gemini, codex]
+    order: 10
+    summary: "Core rules: language, git workflow, think-before-coding, validation"
+
+  subagent-strategy:
+    file: subagent-strategy.md
+    targets: [claude, gemini, codex]
+    order: 20
+    summary: "Sub-agent delegation and advisor strategy"
+
+  context-management:
+    file: context-management.md
+    targets: [claude, gemini, codex]
+    order: 30
+    summary: "Context window management, prompt caching architecture"
+
+  token-efficiency:
+    file: token-efficiency.md
+    targets: [claude, gemini, codex]
+    order: 40
+    summary: "Token efficiency tiers and compact hints"
+
+  session-management:
+    file: session-management.md
+    targets: [claude, gemini, codex]
+    order: 50
+    summary: "Session lifecycle: continue/rewind/clear/compact"
+
+  cli-enhancers:
+    file: cli-enhancers.md
+    targets: [claude, gemini, codex]
+    order: 60
+    summary: "CLI enhancer tool inventory (ast-grep, shellcheck, etc.)"
+
+  routines:
+    file: routines.md
+    targets: [claude, gemini, codex]
+    order: 70
+    summary: "Scheduled / API / webhook routines and integrations"
+
+  auto-sync:
+    file: auto-sync.md
+    targets: [claude]
+    order: 80
+    summary: "Claude-specific hook events and auto-sync mechanisms"
+
+  opus47-best-practices:
+    file: opus47-best-practices.md
+    targets: [claude]
+    order: 90
+    summary: "Claude Opus 4.7 effort levels and adaptive thinking"
+
+  subagent-advanced:
+    file: subagent-advanced.md
+    targets: [claude]
+    order: 100
+    summary: "Claude Tasks API, advanced subagent coordination"

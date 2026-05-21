@@ -1,0 +1,32 @@
+CLAUDE.local.md
+
+# Claude Code local settings (may contain MCP tokens/credentials)
+.claude/settings.local.json
+
+# Secrets & credentials
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+credentials/
+
+# Logs
+*.log
+logs/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/settings.json
+.idea/
+
+# Runtime artifacts
+__pycache__/
+*.pyc
+*.pyo
+node_modules/
+.cache/
