@@ -3,6 +3,14 @@ CLAUDE.local.md
 # Claude Code local settings (may contain MCP tokens/credentials)
 .claude/settings.local.json
 
+# Generated artifacts — produced by scripts/install.sh from tools/ (SoT).
+# CLAUDE.md is intentionally tracked despite partial regeneration (mixed
+# hand-written + generated; see CONTEXT.md "Why this structure").
+/AGENTS.md
+/GEMINI.md
+/.claude/settings.json
+/.claude/settings.json.bak
+
 # Secrets & credentials
 .env
 .env.local
