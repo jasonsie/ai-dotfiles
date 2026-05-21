@@ -58,6 +58,25 @@ for rule_key, rule_meta in sorted_rules:
 body = '\n\n---\n\n'.join(sections)
 # Ensure header ends with a blank line before the body
 output = header.rstrip('\n') + '\n\n' + body + '\n'
+
+# Codex auto-truncates AGENTS.md at 32 KiB. Warn on stderr when the codex
+# target gets close, so users notice before silent truncation hits.
+CODEX_LIMIT = 32 * 1024
+WARN_THRESHOLD = int(CODEX_LIMIT * 0.9)
+if target == 'codex':
+    size = len(output.encode('utf-8'))
+    if size >= CODEX_LIMIT:
+        sys.stderr.write(
+            f"[WARN] AGENTS.md output is {size} bytes — exceeds Codex 32 KiB limit; "
+            f"content past the limit will be truncated by Codex. "
+            f"Consider raising project_doc_max_bytes or trimming rules.\n"
+        )
+    elif size >= WARN_THRESHOLD:
+        sys.stderr.write(
+            f"[WARN] AGENTS.md output is {size} bytes — within 10%% of Codex's "
+            f"32 KiB limit. Adding more rules may trigger silent truncation.\n"
+        )
+
 print(output, end='')
 PYEOF
 }
@@ -91,7 +110,18 @@ for rule_key, rule_meta in sorted_rules:
     if 'claude' not in targets:
         continue
     rule_file = rule_meta.get('file', '')
-    import_lines.append(f'- @.claude/rules/{rule_file}')
+    # Resolve the manifest path (relative to tools/rules/) against workspace_dir.
+    # Files inside tools/rules/ are imported as @.claude/rules/<name>; anything
+    # outside (e.g. ../../CONTEXT.md → repo root) is imported by its repo-root
+    # path. Mirrors how _build_rules_for_target resolves the same field.
+    abs_path = os.path.normpath(os.path.join(workspace_dir, 'tools/rules', rule_file))
+    rel_to_root = os.path.relpath(abs_path, workspace_dir)
+    rules_prefix = os.path.join('tools', 'rules') + os.sep
+    if rel_to_root.startswith(rules_prefix):
+        rule_basename = rel_to_root[len(rules_prefix):]
+        import_lines.append(f'- @.claude/rules/{rule_basename}')
+    else:
+        import_lines.append(f'- @{rel_to_root}')
 
 new_section = '## 常駐規則（🟡 自動載入，約 1,184 tok）\n\n' + '\n'.join(import_lines)
 

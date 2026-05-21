@@ -7,6 +7,12 @@
 version: 1
 
 rules:
+  project-context:
+    file: ../../CONTEXT.md
+    targets: [claude, gemini, codex]
+    order: 0
+    summary: "Project context: multi-CLI workspace positioning, SoT principle, terminology"
+
   core:
     file: core.md
     targets: [claude, gemini, codex]

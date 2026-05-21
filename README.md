@@ -1,8 +1,12 @@
-# Claude Code Workspace
+# AI CLI Workspace
 
 > **繁體中文** · [English below](#english)
 
-針對 [Claude Code](https://code.claude.com) 優化的個人工作區 — 內建四層載入框架、雙語支援、Advisor 模式與全域自動化 Hooks。
+服務 [Claude Code](https://code.claude.com)、[Gemini CLI](https://github.com/google-gemini/gemini-cli)、[Codex CLI](https://github.com/openai/codex) 的共用個人工作區
+（fork 自 [`zeuikli/claude-code-workspace`](https://github.com/zeuikli/claude-code-workspace)）。
+Claude Code 為 first-class 支援，內建四層載入框架、Advisor 模式與全域自動化 Hooks；Gemini / Codex 目前同步 rules 與 entry context（skills、agents 適配後續迭代）。
+
+> 跨 CLI 專案脈絡定義於 [`CONTEXT.md`](./CONTEXT.md)，三個 CLI 啟動時皆會自動載入。
 
 ---
 
@@ -162,7 +166,11 @@ echo "@$HOME/claude-code-workspace/CLAUDE.md" > ~/.claude/CLAUDE.md
 
 ## English
 
-A personal [Claude Code](https://code.claude.com) workspace with a **4-tier load framework**, bilingual support (Traditional Chinese first, English second), Advisor Strategy, and automated hooks.
+A shared personal workspace for [Claude Code](https://code.claude.com), [Gemini CLI](https://github.com/google-gemini/gemini-cli), and [Codex CLI](https://github.com/openai/codex)
+(forked from [`zeuikli/claude-code-workspace`](https://github.com/zeuikli/claude-code-workspace)).
+Claude Code is first-class with a **4-tier load framework**, Advisor Strategy, and automated hooks;
+Gemini and Codex currently receive synchronized rules and entry context (skills / agents adaptation pending).
+Cross-CLI project context lives in [`CONTEXT.md`](./CONTEXT.md), auto-loaded by all three CLIs at session start.
 
 ### Quick Start
 
