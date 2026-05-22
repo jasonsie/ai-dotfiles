@@ -64,3 +64,34 @@ to change, extend `tools/` first — never patch the generated file as a shortcu
 - **Upstream-maintained**: Claude Code native features (skills, agents, hooks, rules core)
 - **Added in this fork**: Multi-CLI adapter layer, the `tools/` canonical structure, `scripts/install.sh --target=claude|gemini|codex|all`
 - Inspect upstream history: `git log upstream/main -- <path>` (requires an `upstream` remote)
+
+## Open architecture work (transitional)
+
+The two-stage model: Stage 1 = `bash install.sh` produces global artifacts
+under `~/.claude/`, `~/.gemini/`, `~/.codex/`. Stage 2 = `/init-project
+--profile=<name>` (run inside a target project) produces project-local
+`.claude/` files. Items below are scoped to one stage or the other and
+deliberately deferred from the multi-CLI positioning PR.
+
+- **PR-B — Migrate `tools/` install from symlink → copy with merge/patch
+  semantics** (Stage 1). Current `scripts/adapters/{codex,gemini}.sh`
+  use `ensure_symlink` for skills, which violates the P2 design intent
+  (workspace repo as static source; per-CLI config dirs as independent
+  runtime copies updated only via explicit `install.sh`). The change
+  must merge/patch pre-existing user content rather than overwrite —
+  users may have hand-added skills/settings outside the workspace.
+
+- **PR-C — Build the `/init-project` command** (Stage 2). A project-scope
+  bootstrap that asks which dimensions apply (frontend, backend,
+  data-analysis, MS expert — atomic, multi-select, composable) and
+  generates a project-local `.claude/CLAUDE.md` plus project-specific
+  rules/memory placeholders. Implementation outline:
+  - `tools/profiles/<dimension>.yaml` per dimension
+  - `scripts/init-project.sh` as the single source of truth — `source`-able
+    and executable, multi-select via `gum choose --no-limit` when
+    available, falling back to `read -p` otherwise
+  - Thin per-CLI launchers (Claude skill, Gemini command, Codex command)
+    that invoke the shared script
+  - Merge/patch semantics — never overwrite an existing project `.claude/`
+  - The user's user-global rules (Stage 1) load on every session; project
+    output is a strict additive layer (no override semantics).
