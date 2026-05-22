@@ -155,6 +155,11 @@ out_path = os.path.join(skill_dir, 'SKILL.md')
 with open(out_path, 'w') as f:
     f.write(skill_md)
 
+# Mark this directory as workspace-managed so stale cleanup can find it
+# and so future installs don't mistake it for user content.
+with open(os.path.join(skill_dir, '.workspace-managed'), 'w') as f:
+    f.write('managed-by: scripts/install.sh\n')
+
 print(out_path)
 PYEOF
 }
@@ -211,13 +216,13 @@ gemini_adapter_run() {
   ensure_dir "${HOME}/.gemini/skills"
   ensure_dir "${HOME}/.gemini/commands"
 
-  # 2. Symlink each local skill
+  # 2. Copy each local skill (workspace-managed, marker-tracked)
   for skill_dir in "${WORKSPACE_DIR}/tools/skills"/*/; do
     skill_name="$(basename "$skill_dir")"
-    # Only symlink skills that have a SKILL.md
+    # Only copy skills that have a SKILL.md
     if [ -f "${skill_dir}/SKILL.md" ]; then
-      ensure_symlink "${WORKSPACE_DIR}/tools/skills/${skill_name}" \
-                     "${HOME}/.gemini/skills/${skill_name}"
+      ensure_copied_tree "${WORKSPACE_DIR}/tools/skills/${skill_name}" \
+                         "${HOME}/.gemini/skills/${skill_name}"
     fi
   done
 
@@ -236,6 +241,21 @@ gemini_adapter_run() {
       summary_track created
     fi
   done
+
+  # 3b. Prune stale workspace-managed skills (both real + agent-wrapper).
+  # Build the allowlist of basenames that should exist after this run.
+  local valid_skill_names=()
+  for skill_dir in "${WORKSPACE_DIR}/tools/skills"/*/; do
+    [ -f "${skill_dir}/SKILL.md" ] || continue
+    valid_skill_names+=("$(basename "$skill_dir")")
+  done
+  for agent_file in "${WORKSPACE_DIR}/tools/agents"/*.md; do
+    [ -f "$agent_file" ] || continue
+    valid_skill_names+=("agent-$(basename "$agent_file" .md)")
+  done
+  if [ ${#valid_skill_names[@]} -gt 0 ]; then
+    prune_stale_managed_by_name "${HOME}/.gemini/skills" "${valid_skill_names[@]}"
+  fi
 
   # 4. Convert commands to Gemini TOML
   for cmd_file in "${WORKSPACE_DIR}/tools/commands"/*.md; do

@@ -73,14 +73,6 @@ under `~/.claude/`, `~/.gemini/`, `~/.codex/`. Stage 2 = `/init-project
 `.claude/` files. Items below are scoped to one stage or the other and
 deliberately deferred from the multi-CLI positioning PR.
 
-- **PR-B — Migrate `tools/` install from symlink → copy with merge/patch
-  semantics** (Stage 1). Current `scripts/adapters/{codex,gemini}.sh`
-  use `ensure_symlink` for skills, which violates the P2 design intent
-  (workspace repo as static source; per-CLI config dirs as independent
-  runtime copies updated only via explicit `install.sh`). The change
-  must merge/patch pre-existing user content rather than overwrite —
-  users may have hand-added skills/settings outside the workspace.
-
 - **PR-C — Build the `/init-project` command** (Stage 2). A project-scope
   bootstrap that asks which dimensions apply (frontend, backend,
   data-analysis, MS expert — atomic, multi-select, composable) and

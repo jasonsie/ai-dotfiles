@@ -170,14 +170,18 @@ codex_adapter_run() {
   ensure_dir "${HOME}/.codex/skills"
   ensure_dir "${HOME}/.codex/agents"
 
-  # 2. Symlink local skills
+  # 2. Copy local skills (workspace-managed, marker-tracked)
   for skill_dir in "${WORKSPACE_DIR}/tools/skills"/*/; do
     skill_name="$(basename "$skill_dir")"
     if [ -f "${skill_dir}/SKILL.md" ]; then
-      ensure_symlink "${WORKSPACE_DIR}/tools/skills/${skill_name}" \
-                     "${HOME}/.codex/skills/${skill_name}"
+      ensure_copied_tree "${WORKSPACE_DIR}/tools/skills/${skill_name}" \
+                         "${HOME}/.codex/skills/${skill_name}"
     fi
   done
+
+  # 2b. Prune skills previously installed by workspace but now removed from tools/skills/.
+  prune_stale_managed "${HOME}/.codex/skills" \
+                      "${WORKSPACE_DIR}/tools/skills"
 
   # 3. Generate agent YAML files
   for agent_file in "${WORKSPACE_DIR}/tools/agents"/*.md; do
