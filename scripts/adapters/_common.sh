@@ -368,6 +368,84 @@ prune_stale_managed() {
 }
 
 # ---------------------------------------------------------------------------
+# Managed-files manifest filename — sidecar manifest tracking individual
+# files this adapter installed into a flat directory (e.g. ~/.codex/prompts/*.md).
+# Directory installs use the per-dir WORKSPACE_MARKER instead.
+# ---------------------------------------------------------------------------
+WORKSPACE_FILES_MANIFEST=".workspace-managed-files"
+
+# ---------------------------------------------------------------------------
+# prune_stale_managed_files <dest_dir> <valid_basename_1> [<valid_basename_2> ...]
+# Use when a flat directory receives individual files from the workspace
+# (e.g. ~/.codex/prompts/*.md from tools/commands/*.md). Reads the previous
+# manifest, removes files in the manifest no longer in the allowlist, then
+# rewrites the manifest with the new allowlist. Files NOT in the previous
+# manifest are user-owned and never touched.
+# ---------------------------------------------------------------------------
+prune_stale_managed_files() {
+  local dest_dir
+  dest_dir="$(_expand_tilde "$1")"
+  shift
+  local manifest="${dest_dir}/${WORKSPACE_FILES_MANIFEST}"
+
+  [ -d "$dest_dir" ] || return 0
+
+  # Build the new allowlist (sorted, unique). Empty allowlist is valid —
+  # represents "the workspace ships no files of this kind anymore", which
+  # should prune every previously-managed file.
+  local new_list=""
+  if [ "$#" -gt 0 ]; then
+    new_list="$(printf '%s\n' "$@" | sort -u)"
+  fi
+
+  # If no previous manifest, nothing to prune; just write the new one.
+  if [ ! -f "$manifest" ]; then
+    if is_dry_run; then
+      log_info "[dry-run] would write managed-files manifest: ${manifest}"
+      summary_track created
+      return 0
+    fi
+    printf '%s\n' "$new_list" > "$manifest"
+    summary_track created
+    return 0
+  fi
+
+  # Find entries previously managed but no longer wanted.
+  local prev_list stale
+  prev_list="$(cat "$manifest")"
+  stale="$(comm -23 <(printf '%s\n' "$prev_list") <(printf '%s\n' "$new_list") || true)"
+
+  if [ -n "$stale" ]; then
+    local f target
+    while IFS= read -r f; do
+      [ -z "$f" ] && continue
+      target="${dest_dir}/${f}"
+      [ -e "$target" ] || continue
+      if is_dry_run; then
+        log_info "[dry-run] would prune stale managed file: ${target}"
+        summary_track updated
+        continue
+      fi
+      _assert_safe_rm_target "$target" || return 1
+      rm -f "$target"
+      log_ok "Pruned stale managed file: ${target}"
+      summary_track updated
+    done <<< "$stale"
+  fi
+
+  # Refresh manifest if changed.
+  if [ "$prev_list" != "$new_list" ]; then
+    if is_dry_run; then
+      log_info "[dry-run] would update managed-files manifest: ${manifest}"
+      summary_track updated
+      return 0
+    fi
+    printf '%s\n' "$new_list" > "$manifest"
+    summary_track updated
+  fi
+}
+
+# ---------------------------------------------------------------------------
 # write_if_changed <dest> <content>
 # Writes content (passed as a string) to dest only if it differs.
 # Always returns 0 (safe to call under set -e).

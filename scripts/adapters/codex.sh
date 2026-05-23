@@ -199,6 +199,28 @@ codex_adapter_run() {
     fi
   done
 
+  # 3b. Copy commands as Codex custom prompts (~/.codex/prompts/*.md).
+  # Codex CLI 0.117+ reads ~/.codex/prompts/<name>.md as slash commands.
+  # The on-disk format matches tools/commands/*.md exactly (markdown +
+  # YAML frontmatter), so we copy through without transformation.
+  ensure_dir "${HOME}/.codex/prompts"
+  local managed_prompts=()
+  for cmd_file in "${WORKSPACE_DIR}/tools/commands"/*.md; do
+    [ -f "$cmd_file" ] || continue
+    cmd_name="$(basename "$cmd_file")"
+    local prompt_content
+    prompt_content="$(cat "$cmd_file")"
+    write_if_changed "${HOME}/.codex/prompts/${cmd_name}" "$prompt_content"
+    managed_prompts+=("$cmd_name")
+  done
+  # Always run prune, even when tools/commands/ is empty — otherwise an
+  # emptied commands dir would leave stale prompts + manifest forever.
+  if [ ${#managed_prompts[@]} -gt 0 ]; then
+    prune_stale_managed_files "${HOME}/.codex/prompts" "${managed_prompts[@]}"
+  else
+    prune_stale_managed_files "${HOME}/.codex/prompts"
+  fi
+
   # 4. Build MCP TOML block
   log_info "Building Codex MCP block..."
   local mcp_toml

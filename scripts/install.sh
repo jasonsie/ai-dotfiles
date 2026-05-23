@@ -167,6 +167,11 @@ esac
 echo ""
 _run_adapter "rules"
 
+# Pin the workspace path to a known location so Stage-2 launchers
+# (skills, prompts, commands) can find scripts/init-project.sh without
+# guessing — they read this file at runtime.
+write_if_changed "${HOME}/.ai-cli-workspace-path" "$WORKSPACE_DIR"
+
 # ---------------------------------------------------------------------------
 # Final summary
 # ---------------------------------------------------------------------------

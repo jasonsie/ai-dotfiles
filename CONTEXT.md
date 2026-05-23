@@ -65,25 +65,18 @@ to change, extend `tools/` first — never patch the generated file as a shortcu
 - **Added in this fork**: Multi-CLI adapter layer, the `tools/` canonical structure, `scripts/install.sh --target=claude|gemini|codex|all`
 - Inspect upstream history: `git log upstream/main -- <path>` (requires an `upstream` remote)
 
-## Open architecture work (transitional)
+## Two-stage install model
 
-The two-stage model: Stage 1 = `bash install.sh` produces global artifacts
-under `~/.claude/`, `~/.gemini/`, `~/.codex/`. Stage 2 = `/init-project
---profile=<name>` (run inside a target project) produces project-local
-`.claude/` files. Items below are scoped to one stage or the other and
-deliberately deferred from the multi-CLI positioning PR.
+- **Stage 1** — `bash scripts/install.sh` produces global artifacts under
+  `~/.claude/`, `~/.gemini/`, `~/.codex/`. Skills install as marker-tracked
+  copies (`.workspace-managed` sentinel), so user-added entries survive
+  re-installs and removed entries are pruned on next run.
+- **Stage 2** — `bash scripts/init-project.sh` (or `/init-project` from
+  any CLI) runs inside a target project and writes a project-local
+  `.claude/CLAUDE.md` as a strict additive layer on top of Stage 1.
+  Profiles live in `tools/profiles/<dimension>.yaml`; multi-select
+  composes by union of skills. Content below the
+  `<!-- USER-CONTENT-BELOW -->` sentinel is preserved across re-runs.
 
-- **PR-C — Build the `/init-project` command** (Stage 2). A project-scope
-  bootstrap that asks which dimensions apply (frontend, backend,
-  data-analysis, MS expert — atomic, multi-select, composable) and
-  generates a project-local `.claude/CLAUDE.md` plus project-specific
-  rules/memory placeholders. Implementation outline:
-  - `tools/profiles/<dimension>.yaml` per dimension
-  - `scripts/init-project.sh` as the single source of truth — `source`-able
-    and executable, multi-select via `gum choose --no-limit` when
-    available, falling back to `read -p` otherwise
-  - Thin per-CLI launchers (Claude skill, Gemini command, Codex command)
-    that invoke the shared script
-  - Merge/patch semantics — never overwrite an existing project `.claude/`
-  - The user's user-global rules (Stage 1) load on every session; project
-    output is a strict additive layer (no override semantics).
+Adding a new dimension: drop a YAML file in `tools/profiles/` listing
+the skills it surfaces. No code changes required.
