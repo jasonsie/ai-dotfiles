@@ -23,28 +23,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Sync Claude + Codex docs
+      # All three CLIs (Claude, Codex, AGY) are mirrored by the bash+curl sync.
+      # AGY no longer needs a headless browser — its docs are static markdown
+      # assets fetched directly. See docs/inventory/crawler-tech-research-2026-06-07.md.
+      - name: Sync CLI docs (Claude + Codex + AGY)
         run: bash scripts/sync-cli-docs.sh
-
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      # Antigravity is a JS SPA with no static markdown — render it with Playwright.
-      # Best-effort: if Google changes their SPA this step fails without failing the
-      # whole run, so the Claude/Codex sync above still commits.
-      - name: Crawl Antigravity CLI docs (best-effort)
-        id: antigravity
-        continue-on-error: true
-        run: |
-          npm install --no-save playwright turndown
-          npx playwright install --with-deps chromium
-          node scripts/crawl-antigravity.mjs
-
-      - name: Report Antigravity outcome
-        if: steps.antigravity.outcome != 'success'
-        run: echo "::warning::Antigravity CLI crawl did not succeed (outcome=${{ steps.antigravity.outcome }}); docs/agy left unchanged."
 
       - name: Commit and push
         run: |
