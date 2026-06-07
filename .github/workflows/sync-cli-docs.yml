@@ -1,0 +1,59 @@
+name: Sync CLI Docs
+
+on:
+  schedule:
+    # 每週一早上 9:00 UTC+8（= 週一 01:00 UTC）
+    - cron: '0 1 * * 1'
+  workflow_dispatch: # 手動觸發
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-cli-docs
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Sync Claude + Codex docs
+        run: bash scripts/sync-cli-docs.sh
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Antigravity is a JS SPA with no static markdown — render it with Playwright.
+      # Best-effort: if Google changes their SPA this step fails without failing the
+      # whole run, so the Claude/Codex sync above still commits.
+      - name: Crawl Antigravity CLI docs (best-effort)
+        id: antigravity
+        continue-on-error: true
+        run: |
+          npm install --no-save playwright turndown
+          npx playwright install --with-deps chromium
+          node scripts/crawl-antigravity.mjs
+
+      - name: Report Antigravity outcome
+        if: steps.antigravity.outcome != 'success'
+        run: echo "::warning::Antigravity CLI crawl did not succeed (outcome=${{ steps.antigravity.outcome }}); docs/agy left unchanged."
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No documentation changes."
+          else
+            git commit -m "Sync CLI docs — $(date '+%Y-%m-%d')"
+            git push origin HEAD:main
+          fi

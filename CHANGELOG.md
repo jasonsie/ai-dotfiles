@@ -4,6 +4,27 @@
 
 ---
 
+## 2026-06-07 — 新增 CLI 文件週期同步工作流
+
+### 新增
+
+- `.github/workflows/sync-cli-docs.yml` — 每週一早上 9:00 UTC+8 自動同步 Claude Code / Codex / Antigravity CLI 官方文件至 `docs/claude/`、`docs/codex/`、`docs/agy/`
+- `scripts/sync-cli-docs.sh` — 從上游 LLM 列表頁拉取 markdown 並鏡像至本地（Claude Code / Codex；Antigravity 由 Playwright 爬蟲處理）
+- `scripts/crawl-antigravity.mjs` — Node.js + Playwright 爬蟲，將 Antigravity 官方 SPA 轉譯為 markdown（best-effort；失敗不中斷其他 sync）
+
+### 修改
+
+- `README.md` — 澄清 `blog-archive` 分支已凍結；新增說明 CLI 文件自動同步週期與位置
+- `.github/workflows/ci.yml` — 擴展 shellcheck job 納入 `scripts/sync-cli-docs.sh` 驗證
+
+### 設計決策
+
+- **為何 Antigravity 獨立爬蟲**：該 CLI 為 JS SPA（無靜態 markdown），Playwright 是唯一可行方案；失敗時其他 sync 仍進行，減低整體風險
+- **為何週期同步而非 CI 每次都跑**：CLI 文件更新頻率較低，週期 sync 可降低 CI 負擔；git 記錄 commit 時間可用於追溯「Last synced」
+- **為何 `docs/inventory/`**：預留路徑供日後擴展（如 SDK 版本清單、compatibility matrix）
+
+---
+
 ## 2026-04-17 (opus-4.7-rewrite v2) — 導入 blog-archive 最新洞察深化 Opus 4.7 優化
 
 ### 改寫依據（本輪新增）

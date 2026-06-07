@@ -19,11 +19,17 @@ jobs:
       - name: Install shellcheck
         run: sudo apt-get update -qq && sudo apt-get install -y shellcheck
 
-      - name: Run shellcheck on hooks
+      - name: Run shellcheck on hooks and scripts
         run: |
           HOOKS_DIR=".claude/hooks"
           FAILED=0
           for script in "$HOOKS_DIR"/*.sh; do
+            if [ -f "$script" ]; then
+              echo "Checking: $script"
+              shellcheck --severity=warning "$script" || FAILED=1
+            fi
+          done
+          for script in scripts/sync-cli-docs.sh; do
             if [ -f "$script" ]; then
               echo "Checking: $script"
               shellcheck --severity=warning "$script" || FAILED=1
