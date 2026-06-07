@@ -56,6 +56,17 @@ write_page() {
   } > "$dest"
 }
 
+# read_lines <var> — read stdin into the named array, one element per line.
+# Portable stand-in for `mapfile -t` (bash 4+); this script targets bash 3.2+
+# (macOS stock /bin/bash) as well as CI's bash 5. Blank lines are skipped.
+read_lines() {
+  local __name="$1" __line
+  eval "$__name=()"
+  while IFS= read -r __line; do
+    [ -n "$__line" ] && eval "$__name+=(\"\$__line\")"
+  done
+}
+
 # write_index <dir> <title> <rel_page>...
 write_index() {
   local dir="$1" title="$2"
@@ -76,7 +87,7 @@ sync_claude() {
   local urls=() pages=() url rel dest ok=0 fail=0
 
   echo "[claude] discovering pages from $CLAUDE_LLMS"
-  mapfile -t urls < <(fetch "$CLAUDE_LLMS" \
+  read_lines urls < <(fetch "$CLAUDE_LLMS" \
     | grep -oE 'https://code\.claude\.com/docs/en/[A-Za-z0-9._/-]+\.md' \
     | sort -u)
 
@@ -116,7 +127,7 @@ sync_codex() {
   local urls=() pages=() url rel dest ok=0 fail=0
 
   echo "[codex] discovering pages from $CODEX_LLMS"
-  mapfile -t urls < <(fetch "$CODEX_LLMS" \
+  read_lines urls < <(fetch "$CODEX_LLMS" \
     | grep -oE 'https://developers\.openai\.com/codex(/[A-Za-z0-9._/-]+)?' \
     | sed -E 's#[)/]+$##' \
     | sort -u)
