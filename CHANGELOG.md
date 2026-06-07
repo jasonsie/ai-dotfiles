@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-06-07 — AGY 同步改用 curl，移除 Playwright 爬蟲
+
+### 修改
+
+- `scripts/sync-cli-docs.sh` — 新增 `sync_agy()`，以純 bash+curl 鏡像 Antigravity CLI 文件（與 Claude/Codex 同一管線）。發現原本「SPA 無靜態 markdown」的前提有誤：SPA 實際從 `/assets/docs/cli/<slug>.md` 靜態資產取得內容，curl 即可抓取（見 `docs/inventory/crawler-tech-research-2026-06-07.md`）。
+- `.github/workflows/sync-cli-docs.yml` — 移除 setup-node、Playwright/chromium 安裝與 best-effort 爬蟲步驟；工作流簡化為 checkout → bash sync → commit，移除最重的 CI 依賴。
+- `scripts/sync-cli-docs.sh` — 同時修正 `mapfile`（bash 4+）→ `read_lines` 可攜式輔助函式，讓腳本可在 macOS 內建 bash 3.2 執行。
+
+### 移除
+
+- `scripts/crawl-antigravity.mjs` — Playwright 爬蟲已由上述 curl 路徑取代。
+
+### 設計決策
+
+- **為何改用 curl**：單一技術棧（bash+curl）涵蓋三個 CLI、無瀏覽器依賴、可在 macOS 本機執行；fragile 的 DOM selector 改為 hashed JS bundle 的 slug 列舉（附 hardcoded fallback + <15 sanity floor，fail-closed）。若 `/assets/docs/*.md` 失效，fallback 為 firecrawl，不復用 Playwright。
+
+---
+
 ## 2026-06-07 — 新增 CLI 文件週期同步工作流
 
 ### 新增
