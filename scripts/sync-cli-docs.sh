@@ -1,15 +1,14 @@
 #!/usr/bin/env bash
 #
-# sync-cli-docs.sh — mirror Claude Code and Codex CLI documentation into docs/.
+# sync-cli-docs.sh — mirror Claude Code, Codex, and Antigravity CLI docs into docs/.
 #
-# Claude Code and Codex both expose clean markdown:
+# All three expose clean markdown fetchable with plain curl:
 #   - Claude: every page has a `.md` twin; index at code.claude.com/docs/llms.txt
 #   - Codex:  append `.md` to any page URL; pages discoverable via developers.openai.com/llms.txt
+#   - AGY:    SPA, but content lives in static `/assets/docs/cli/<slug>.md` assets;
+#             slugs discovered from the hashed JS bundle's nav manifest (best-effort).
 #
-# Antigravity is NOT handled here — it is a JS SPA with no static markdown and is
-# crawled separately by scripts/crawl-antigravity.mjs (best-effort, Playwright).
-#
-# Output: docs/claude/ and docs/codex/, one .md per page, faithful upstream content
+# Output: docs/claude/, docs/codex/, and docs/agy/, one .md per page, faithful upstream content
 # prefixed with a static `> Source:` header (no timestamp, so unchanged docs do not
 # produce diffs). "Last synced" is recorded by the git commit, not in the files.
 # Each source directory gets an auto-generated INDEX.md. Directories are rebuilt
@@ -25,6 +24,15 @@ CLAUDE_PREFIX="https://code.claude.com/docs/en/"
 
 CODEX_LLMS="https://developers.openai.com/llms.txt"
 CODEX_PREFIX="https://developers.openai.com/codex"
+
+# Antigravity (AGY) is an Angular SPA with no static HTML, but its content lives
+# in static markdown assets the SPA fetches client-side. We discover the CLI doc
+# slugs from the hashed JS bundle's embedded nav manifest, then fetch each asset
+# directly — no browser needed. See docs/inventory/crawler-tech-research-2026-06-07.md.
+AGY_BASE="https://antigravity.google"
+AGY_DISCOVERY="https://antigravity.google/docs/get-started"
+AGY_ASSET_PREFIX="https://antigravity.google/assets/docs/cli/"
+AGY_PAGE_PREFIX="https://antigravity.google/docs/"
 
 # Resolve repo root relative to this script so it works from any CWD.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -165,9 +173,145 @@ sync_codex() {
   echo "[codex] done: ok=$ok fail=$fail -> $dir"
 }
 
+# Snapshot 2026-06-07: 21 CLI doc slugs discovered from the JS-bundle nav manifest.
+# Used only as a fallback when bundle discovery yields nothing (e.g. the hashed
+# bundle filename or the manifest shape changes). To regenerate this list:
+#   curl --compressed -A "$USER_AGENT" https://antigravity.google/docs/get-started \
+#     | grep -oE 'main-[A-Za-z0-9]+\.js' | head -1   # -> the bundle filename
+#   curl --compressed -A "$USER_AGENT" "https://antigravity.google/<bundle>" \
+#     | grep -oE 'path:"cli",slug:"[^"]+"' \
+#     | sed -E 's/.*slug:"([^"]+)"/\1/' | sort -u
+AGY_FALLBACK_SLUGS=(
+  cli-artifacts cli-best-practices cli-conversations cli-credits cli-features
+  cli-getting-started cli-install cli-overview cli-permissions cli-plugins
+  cli-prompting cli-reference cli-sandbox cli-settings cli-statusline
+  cli-subagents cli-title cli-troubleshooting cli-tutorial cli-using
+  gcli-migration
+)
+
+# write_agy_page <fetch_url> <source_url> <dest_path>
+# Like write_page, but the AGY assets carry multi-line YAML frontmatter and an
+# embedded H1, so this writer strips the frontmatter block, promotes the
+# frontmatter `title:` to an H1 only when the body lacks its own, and writes the
+# same two-line Source header. Returns non-zero (without writing) on fetch
+# failure so the caller can count it as a miss.
+write_agy_page() {
+  local fetch_url="$1" source_url="$2" dest="$3" raw body title firstline titlefile
+  if ! raw="$(fetch "$fetch_url")"; then
+    echo "  WARN: failed to fetch $fetch_url" >&2
+    return 1
+  fi
+  # Guard against a 200-served SPA/HTML shell (e.g. a renamed slug whose asset
+  # URL the CDN falls through to index.html): reject anything that looks like
+  # HTML rather than the expected markdown, so we never commit a page of chrome.
+  case "$raw" in
+    '<!DOCTYPE'* | '<!doctype'* | '<html'* | *'<app-root'*)
+      echo "  WARN: $fetch_url returned HTML, not markdown; skipping" >&2
+      return 1
+      ;;
+  esac
+  # Strip the leading `---`..`---` frontmatter block and capture `title:`.
+  # BSD-portable awk (no GNU extensions): runs on stock macOS /bin/bash 3.2.
+  # Leading blank lines of the body are dropped so the H1 check sees real content.
+  titlefile="$(mktemp)"
+  trap 'rm -f "$titlefile"' RETURN
+  body="$(printf '%s\n' "$raw" | awk '
+    BEGIN { in_fm = 0; started = 0 }
+    NR == 1 && $0 == "---" { in_fm = 1; next }
+    in_fm && $0 == "---"   { in_fm = 0; next }
+    in_fm {
+      if ($0 ~ /^title:[[:space:]]*/) {
+        t = $0
+        sub(/^title:[[:space:]]*/, "", t)
+        sub(/^["\047]/, "", t); sub(/["\047]$/, "", t)   # strip matching quotes
+        title = t
+      }
+      next
+    }
+    {
+      if (!started) {
+        if ($0 ~ /^[[:space:]]*$/) next
+        started = 1
+      }
+      print
+    }
+    END { print "@@TITLE@@" title > "/dev/stderr" }
+  ' 2>"$titlefile")"
+  title="$(sed -n 's/^@@TITLE@@//p' "$titlefile")"
+
+  firstline="${body%%$'\n'*}"   # pure expansion: no subshell, no SIGPIPE under pipefail
+  mkdir -p "$(dirname "$dest")"
+  {
+    printf '> Source: %s\n' "$source_url"
+    printf '> Mirror maintained by .github/workflows/sync-cli-docs.yml — do not edit by hand.\n\n'
+    # Promote the frontmatter title only if the body has no top-level heading,
+    # avoiding a duplicate H1.
+    case "$firstline" in
+      "# "*) ;;
+      *) [ -n "$title" ] && printf '# %s\n\n' "$title" ;;
+    esac
+    printf '%s\n' "$body"
+  } > "$dest"
+}
+
+sync_agy() {
+  local dir="docs/agy" stage="docs/agy.tmp"
+  local slugs=() pages=() bundle slug rel dest ok=0 fail=0 src
+
+  echo "[agy] discovering CLI slugs from $AGY_DISCOVERY"
+  bundle="$(fetch "$AGY_DISCOVERY" | grep -oE 'main-[A-Za-z0-9]+\.js' | head -1 || true)"
+  if [ -n "$bundle" ]; then
+    read_lines slugs < <(fetch "$AGY_BASE/$bundle" \
+      | grep -oE 'path:"cli",slug:"[^"]+"' \
+      | sed -E 's/.*slug:"([^"]+)"/\1/' \
+      | sort -u)
+  fi
+
+  if [ "${#slugs[@]}" -eq 0 ]; then
+    echo "[agy] WARN: bundle discovery found no slugs; using hardcoded fallback list" >&2
+    slugs=("${AGY_FALLBACK_SLUGS[@]}")
+    src="fallback list"
+  else
+    src="bundle: $bundle"
+  fi
+  echo "[agy] discovery source: $src (${#slugs[@]} slugs)"
+
+  # Sanity floor: if discovery+fallback still gives an implausibly small set,
+  # fail closed and leave the existing docs/agy untouched.
+  if [ "${#slugs[@]}" -lt 15 ]; then
+    echo "[agy] ERROR: only ${#slugs[@]} slugs (< 15); refusing to touch docs/agy" >&2
+    return 1
+  fi
+
+  rm -rf "$stage"
+  mkdir -p "$stage"
+  for slug in "${slugs[@]}"; do
+    rel="$slug"
+    dest="$stage/${rel}.md"
+    if write_agy_page "${AGY_ASSET_PREFIX}${slug}.md" "${AGY_PAGE_PREFIX}${slug}" "$dest"; then
+      pages+=("${rel}.md")
+      ok=$((ok + 1))
+    else
+      fail=$((fail + 1))
+    fi
+  done
+
+  if [ "$ok" -eq 0 ]; then
+    echo "[agy] ERROR: every page failed; keeping previous docs/agy" >&2
+    rm -rf "$stage"
+    return 1
+  fi
+
+  write_index "$stage" "Antigravity CLI" "${pages[@]}"
+  rm -rf "$dir"
+  mv "$stage" "$dir"
+  echo "[agy] done: ok=$ok fail=$fail -> $dir"
+}
+
 main() {
   sync_claude || EXIT_CODE=1
   sync_codex || EXIT_CODE=1
+  sync_agy || echo "[agy] WARN: sync failed; kept previous docs/agy" >&2
   exit "$EXIT_CODE"
 }
 
