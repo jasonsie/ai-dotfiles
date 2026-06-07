@@ -214,7 +214,6 @@ write_agy_page() {
   # BSD-portable awk (no GNU extensions): runs on stock macOS /bin/bash 3.2.
   # Leading blank lines of the body are dropped so the H1 check sees real content.
   titlefile="$(mktemp)"
-  trap 'rm -f "$titlefile"' RETURN
   body="$(printf '%s\n' "$raw" | awk '
     BEGIN { in_fm = 0; started = 0 }
     NR == 1 && $0 == "---" { in_fm = 1; next }
@@ -238,6 +237,8 @@ write_agy_page() {
     END { print "@@TITLE@@" title > "/dev/stderr" }
   ' 2>"$titlefile")"
   title="$(sed -n 's/^@@TITLE@@//p' "$titlefile")"
+  rm -f "$titlefile"            # inline cleanup; a RETURN trap would fire in other
+                                # functions' scopes where titlefile is unbound (set -u)
 
   firstline="${body%%$'\n'*}"   # pure expansion: no subshell, no SIGPIPE under pipefail
   mkdir -p "$(dirname "$dest")"
