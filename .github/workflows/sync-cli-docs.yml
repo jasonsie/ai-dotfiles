@@ -23,9 +23,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Sync Claude + Codex docs
-        run: bash scripts/sync-cli-docs.sh
-
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
@@ -33,7 +30,7 @@ jobs:
 
       # Antigravity is a JS SPA with no static markdown — render it with Playwright.
       # Best-effort: if Google changes their SPA this step fails without failing the
-      # whole run, so the Claude/Codex sync above still commits.
+      # whole run, so the bash sync below still commits.
       - name: Crawl Antigravity CLI docs (best-effort)
         id: antigravity
         continue-on-error: true
@@ -45,6 +42,11 @@ jobs:
       - name: Report Antigravity outcome
         if: steps.antigravity.outcome != 'success'
         run: echo "::warning::Antigravity CLI crawl did not succeed (outcome=${{ steps.antigravity.outcome }}); docs/agy left unchanged."
+
+      # Runs LAST so its atomic mv wins the docs/agy/ directory: the bash curl
+      # sync now mirrors AGY too and supersedes the Playwright crawl above.
+      - name: Sync CLI docs (Claude + Codex + AGY)
+        run: bash scripts/sync-cli-docs.sh
 
       - name: Commit and push
         run: |
