@@ -62,7 +62,7 @@ Turn on **Allow members to use Codex Local**.
 
 This enables use of the Codex app, CLI, and IDE extension for allowed users.
 
-If members need programmatic Codex local workflows, also turn on **Allow members to use Codex access tokens** or grant the access token permission through a custom role. Workspace owners and admins can use **Access token expiration limit** to set the longest expiration members can choose for new tokens. For setup and permission details, see [Access tokens](https://developers.openai.com/codex/enterprise/access-tokens).
+If members need programmatic Codex local workflows, grant **Allow users to create access tokens** in the **Access tokens** section or through a custom role. Workspace owners and admins can use **Access token expiration limit** in the **Codex Local** section to set the longest expiration members can choose for new tokens. For setup and permission details, see [Access tokens](https://developers.openai.com/codex/enterprise/access-tokens).
 
 If the Codex Local toggle is off, users who attempt to use the Codex app, CLI, or IDE will see the following error: “403 - Unauthorized. Contact your ChatGPT administrator for access.”
 
@@ -188,6 +188,10 @@ These cloud-managed policies apply across Codex local surfaces when users sign i
 
 Use cloud-managed `requirements.toml` policies to enforce the guardrails you want for each group. The snippets below are examples you can adapt, not required settings.
 
+For Codex 0.138.0 or later, prefer `allowed_permission_profiles` with managed
+`default_permissions`. Use `allowed_sandbox_modes` only for legacy deployments
+that still configure `sandbox_mode`.
+
 <div class="max-w-1xl mx-auto py-1">
   <img src="https://developers.openai.com/images/codex/enterprise/example_policy.png"
     alt="Example managed requirements policy"
@@ -203,11 +207,25 @@ allowed_sandbox_modes = ["workspace-write"]
 allowed_approval_policies = ["on-request"]
 ```
 
-Example: disable Browser Use, the in-app browser, and Computer Use:
+Example: allow the standard permission profiles for an upgraded fleet:
+
+Permission-profile allowlists require Codex 0.138.0 or later. Use this example
+  only after every managed client runs a supporting release.
+
+```toml
+default_permissions = ":workspace"
+
+[allowed_permission_profiles]
+":read-only" = true
+":workspace" = true
+```
+
+Example: constrain Browser Use, the in-app browser, and Computer Use:
 
 ```toml
 [features]
 browser_use = false
+browser_use_full_cdp_access = false
 in_app_browser = false
 computer_use = false
 ```

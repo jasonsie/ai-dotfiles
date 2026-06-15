@@ -48,8 +48,8 @@
         - Codex on the web, in the CLI, in the IDE extension, and on iOS
         - Cloud-based integrations like automatic code review and Slack
           integration
-        - The latest models, including GPT-5.5, GPT-5.4, and GPT-5.3-Codex
-        - GPT-5.4-mini for higher usage limits on routine local messages
+        - The latest models, including GPT-5.5, GPT-5.4, and GPT-5.4 mini
+        - GPT-5.4 mini for higher usage limits on routine local messages
         - Flexibly extend usage with [ChatGPT credits](#credits-overview)
         - Other [ChatGPT features](https://chatgpt.com/pricing) as part of the
           Plus plan
@@ -83,8 +83,7 @@
       >
         - Codex in the CLI, SDK, or IDE extension
         - No cloud-based features (GitHub code review, Slack, etc.)
-        - Delayed access to new models like GPT-5.3-Codex and
-          GPT-5.3-Codex-Spark
+        - Model availability follows the API models available to your key
         - Pay only for the tokens Codex uses, based on [API
           pricing](https://platform.openai.com/docs/pricing)
       </PricingCard>
@@ -148,8 +147,7 @@
       >
         - Codex in the CLI, SDK, or IDE extension
         - No cloud-based features (GitHub code review, Slack, etc.)
-        - Delayed access to new models like GPT-5.3-Codex and
-          GPT-5.3-Codex-Spark
+        - Model availability follows the API models available to your key
         - Pay only for the tokens Codex uses, based on [API
           pricing](https://platform.openai.com/docs/pricing)
       </PricingCard>
@@ -157,6 +155,26 @@
 
   </div>
 </ContentSwitcher>
+
+## Invite friends and coworkers
+
+Eligible users can send Codex invitations from the profile menu in the
+lower-left corner of the app. Choose **Invite a friend** on an eligible personal
+plan or **Invite a coworker** in an eligible Business workspace, enter the
+recipient's email address, and send the invitation.
+
+The invitation dialog shows the current reward, recipient requirements, invite
+limits, and when rewards expire for your plan or promotion. Personal and
+Business referral programs have separate rewards and eligibility rules.
+Referrals aren't currently available for ChatGPT Enterprise.
+
+From June 11 through June 24, 2026, eligible Plus and Pro users can invite up to
+three friends. When an eligible recipient sends their first Codex message, both
+people receive a banked rate-limit reset. Banked rate-limit resets are usable for
+30 days after they're granted. Business referrals use separate shared-workspace
+credit rewards; review the
+[current terms](https://help.openai.com/en/articles/20001271) before you send an
+invitation.
 
 ## Frequently asked questions
 
@@ -238,16 +256,10 @@ GPT-5.5 being a significantly more capable model.
             <td style="text-align:center">Not available</td>
           </tr>
           <tr>
-            <td>GPT-5.4-mini</td>
+            <td>GPT-5.4 mini</td>
             <td style="text-align:center">60-350</td>
             <td style="text-align:center">Not available</td>
             <td style="text-align:center">Not available</td>
-          </tr>
-          <tr>
-            <td>GPT-5.3-Codex</td>
-            <td style="text-align:center">30-150</td>
-            <td style="text-align:center">10-60</td>
-            <td style="text-align:center">20-50</td>
           </tr>
         </tbody>
         <tfoot>
@@ -307,16 +319,10 @@ GPT-5.5 being a significantly more capable model.
             <td style="text-align:center">Not available</td>
           </tr>
           <tr>
-            <td>GPT-5.4-mini</td>
+            <td>GPT-5.4 mini</td>
             <td style="text-align:center">300-1750</td>
             <td style="text-align:center">Not available</td>
             <td style="text-align:center">Not available</td>
-          </tr>
-          <tr>
-            <td>GPT-5.3-Codex</td>
-            <td style="text-align:center">150-750</td>
-            <td style="text-align:center">50-300</td>
-            <td style="text-align:center">100-250</td>
           </tr>
         </tbody>
         <tfoot>
@@ -376,16 +382,10 @@ GPT-5.5 being a significantly more capable model.
             <td style="text-align:center">Not available</td>
           </tr>
           <tr>
-            <td>GPT-5.4-mini</td>
+            <td>GPT-5.4 mini</td>
             <td style="text-align:center">1200-7000</td>
             <td style="text-align:center">Not available</td>
             <td style="text-align:center">Not available</td>
-          </tr>
-          <tr>
-            <td>GPT-5.3-Codex</td>
-            <td style="text-align:center">600-3000</td>
-            <td style="text-align:center">200-1200</td>
-            <td style="text-align:center">400-1000</td>
           </tr>
         </tbody>
         <tfoot>
@@ -445,16 +445,10 @@ GPT-5.5 being a significantly more capable model.
             <td style="text-align:center">Not available</td>
           </tr>
           <tr>
-            <td>GPT-5.4-mini</td>
+            <td>GPT-5.4 mini</td>
             <td style="text-align:center">60-350</td>
             <td style="text-align:center">Not available</td>
             <td style="text-align:center">Not available</td>
-          </tr>
-          <tr>
-            <td>GPT-5.3-Codex</td>
-            <td style="text-align:center">30-150</td>
-            <td style="text-align:center">10-60</td>
-            <td style="text-align:center">20-50</td>
           </tr>
         </tbody>
         <tfoot>
@@ -503,7 +497,9 @@ GPT-5.5 being a significantly more capable model.
         <tbody>
           <tr>
             <td>GPT-5.5</td>
-            <td style="text-align:center">Not available</td>
+            <td style="text-align:center">
+              [Usage-based](https://platform.openai.com/docs/pricing)
+            </td>
             <td style="text-align:center">Not available</td>
             <td style="text-align:center">Not available</td>
           </tr>
@@ -516,15 +512,7 @@ GPT-5.5 being a significantly more capable model.
             <td style="text-align:center">Not available</td>
           </tr>
           <tr>
-            <td>GPT-5.4-mini</td>
-            <td style="text-align:center">
-              [Usage-based](https://platform.openai.com/docs/pricing)
-            </td>
-            <td style="text-align:center">Not available</td>
-            <td style="text-align:center">Not available</td>
-          </tr>
-          <tr>
-            <td>GPT-5.3-Codex</td>
+            <td>GPT-5.4 mini</td>
             <td style="text-align:center">
               [Usage-based](https://platform.openai.com/docs/pricing)
             </td>
@@ -575,6 +563,10 @@ runs on specialized low-latency hardware, usage is governed by a separate usage
 limit that may adjust based on demand.
 
 ### What happens when you hit usage limits?
+
+We want you to be able to complete work already in progress. If you reach your
+usage limits during an active turn, the agent will be able to continue working
+on that turn, subject to fair use limits.
 
 ChatGPT Plus and Pro users who reach their usage limit can purchase additional
 credits to continue working without needing to upgrade their existing plan.
@@ -659,22 +651,10 @@ sales](https://chatgpt.com/contact-sales?utm_internal_source=openai_developers_c
         <td style="text-align:center">375 credits</td>
       </tr>
       <tr>
-        <td>GPT-5.4-mini</td>
+        <td>GPT-5.4 mini</td>
         <td style="text-align:center">18.75 credits</td>
         <td style="text-align:center">1.875 credits</td>
         <td style="text-align:center">113 credits</td>
-      </tr>
-      <tr>
-        <td>GPT-5.3-Codex</td>
-        <td style="text-align:center">43.75 credits</td>
-        <td style="text-align:center">4.375 credits</td>
-        <td style="text-align:center">350 credits</td>
-      </tr>
-      <tr>
-        <td>GPT-5.2</td>
-        <td style="text-align:center">43.75 credits</td>
-        <td style="text-align:center">4.375 credits</td>
-        <td style="text-align:center">350 credits</td>
       </tr>
       <tr>
         <td>GPT-5.3-Codex-Spark</td>
@@ -705,11 +685,6 @@ sales](https://chatgpt.com/contact-sales?utm_internal_source=openai_developers_c
         <td colspan="4" style="text-align:center">
           Fast mode consumes credits at a higher rate for supported models. See
           <a href="/codex/speed">Speed</a> for rates.
-        </td>
-      </tr>
-      <tr>
-        <td colspan="4" style="text-align:center">
-          Cloud tasks and code review run on GPT-5.3-Codex.
         </td>
       </tr>
     </tfoot>
@@ -747,7 +722,7 @@ tips to maximize your limits:
   to Codex adds more context to your messages and uses more of your limit.
   Disable MCP servers when you don’t need them.
 - **Switch to a smaller model for routine tasks.** Using GPT-5.4 or
-  GPT-5.4-mini can extend your local-message usage limits, depending on the
+  GPT-5.4 mini can extend your local-message usage limits, depending on the
   model you switch from.
 
 ## Feature availability
@@ -1042,6 +1017,7 @@ tips to maximize your limits:
           {
             name: "Computer Use",
             href: "/codex/app/computer-use",
+            limitedFootnote: "region",
             availability: {
               plus: "limited",
               pro: "limited",
