@@ -97,6 +97,20 @@ allow_appshots = false
 
 Codex treats only `allow_appshots = false` as disabling Appshots. If the key is omitted, Appshots remain unconstrained by requirements and use normal product availability checks. App-server clients that read effective requirements through `configRequirements/read` receive the same restriction as `allowAppshots`; an omitted or `null` `allowAppshots` value doesn't disable Appshots.
 
+### Disable device remote control
+
+To disable [device remote control](https://developers.openai.com/codex/remote-connections#pick-up-work-from-another-device)
+for managed users, set the top-level `allow_remote_control` requirement:
+
+```toml
+allow_remote_control = false
+```
+
+Codex treats only `allow_remote_control = false` as disabling device remote
+control. If the key is omitted, device remote control remains unconstrained by
+requirements and uses normal product availability checks. This requirement does
+not disable SSH remote connections.
+
 ### Control available permission profiles
 
 Use `allowed_permission_profiles` to control which built-in and custom
@@ -248,16 +262,22 @@ For example, `allowed_web_search_modes = ["cached"]` prevents live web search ev
 
 ### Configure network access requirements
 
+<WarningTip>
+  `[experimental_network]` is experimental and may change. Do not enable these
+  requirements broadly across an enterprise deployment without validating them
+  on the Codex client versions and operating systems your users run. Windows
+  support is still limited; avoid applying this policy to Windows users unless
+  you have tested it in your environment.
+</WarningTip>
+
 Use `[experimental_network]` in `requirements.toml` when administrators should
 define network access requirements centrally. These requirements are separate
-from the user `features.network_proxy` toggle: they can configure sandboxed
+from the user `features.network_proxy` toggle: they can configure sandbox
 networking without that feature flag, but they don't grant command network
 access when the active sandbox keeps networking off.
 
 ```toml
 experimental_network.enabled = true
-experimental_network.dangerously_allow_all_unix_sockets = true
-experimental_network.allow_local_binding = true
 experimental_network.allowed_domains = [
   "api.openai.com",
   "*.example.com",
@@ -274,7 +294,7 @@ exclusive. If it's `true` without managed allow rules, user-added domain allow
 rules don't remain effective.
 
 The domain syntax, local/private destination rules, deny-over-allow behavior,
-and DNS rebinding limitations are the same as the sandboxed networking behavior
+and DNS rebinding limitations are the same as the sandbox networking behavior
 described in [Agent approvals & security](https://developers.openai.com/codex/agent-approvals-security#network-isolation).
 
 ### Pin feature flags
@@ -302,7 +322,7 @@ Use the canonical feature keys from `config.toml`'s `[features]` table. Codex no
 - `browser_use = false` disables Browser Use and Browser Agent availability.
 - `browser_use_full_cdp_access = false` prevents users from enabling full CDP
   access in Browser Developer mode.
-- `computer_use = false` disables Computer Use availability and related
+- `computer_use = false` disables Computer Use, Record & Replay, and related
   install or setup flows.
 
 If omitted, these features are allowed by policy, subject to normal client,

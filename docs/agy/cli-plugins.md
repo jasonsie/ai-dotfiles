@@ -35,6 +35,61 @@ A compliant plugin contains the following layout:
 └── rules/                      # Optional custom codebase rules files
 ```
 
+### The plugin manifest (plugin.json)
+
+The `plugin.json` file is a mandatory manifest located at the root of your
+plugin directory. It defines the plugin's identity and metadata.
+
+**Manifest example**
+
+```json
+{
+  "$schema": "https://antigravity.google/schemas/v1/plugin.json",
+  "name": "my-plugin",
+  "description": "A brief description of what my plugin does."
+}
+```
+
+**Field reference**
+
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `name` | String | **Yes** | The unique, machine-readable name of the plugin. It must contain only alphanumeric characters, hyphens, and underscores (matches `^[a-zA-Z0-9-_]+$`). This name is used to reference the plugin in CLI commands. |
+| `description` | String | No | A brief human-readable description of the plugin's purpose, displayed in plugin listings. |
+
+**Automatic validation**
+
+To enable automatic autocomplete and validation in editors like VS Code or
+WebStorm, include the `$schema` key pointing to the official schema URL:
+
+```json
+"$schema": "https://antigravity.google/schemas/v1/plugin.json"
+```
+
+**Full JSON Schema**
+
+```json
+{
+  "$schema": "https://antigravity.google/schemas/v1/plugin.json",
+  "title": "Antigravity Plugin Manifest",
+  "description": "Schema for Antigravity CLI plugin manifest files (plugin.json)",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The unique, machine-readable name of the plugin. Must contain only alphanumeric characters, hyphens, and underscores.",
+      "pattern": "^[a-zA-Z0-9-_]+$"
+    },
+    "description": {
+      "type": "string",
+      "description": "A brief human-readable description of the plugin's purpose and capabilities."
+    }
+  },
+  "required": ["name"],
+  "additionalProperties": false
+}
+```
+
 ### Managing plugins via CLI subcommands
 
 The CLI exposes a `plugin` (or plural `plugins`) subcommand pipeline to manage your extensions:
@@ -69,14 +124,16 @@ To deploy workspace-specific skills that stay with your git repository:
 
 1. Create a directory named `.agents/skills/` at your project root.
 2. Inside, draft a markdown file with a `.md` extension (such as `format-tests.md`).
-3. Define the skill's Frontmatter metadata:
-   ```yaml
-   ---
-   name: format-tests
-   description: Standardize and re-format Python unittest assertions
-   ---
-   ```
+3. Define the skill's Frontmatter metadata (see the example below).
 4. Below the metadata, write explicit instructions for the agent. When you run `agy` in this directory, the skill is compiled, and `/format-tests` becomes available in the prompt box.
+
+**Frontmatter example:**
+```yaml
+---
+name: format-tests
+description: Standardize and re-format Python unittest assertions
+---
+```
 
 ### Sharing global skills
 
