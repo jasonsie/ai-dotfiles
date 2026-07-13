@@ -1,19 +1,21 @@
 > Source: https://developers.openai.com/codex/security/setup
 > Mirror maintained by .github/workflows/sync-cli-docs.yml — do not edit by hand.
 
-# Codex Security setup
+# Codex Security cloud setup
 
-This page walks you from initial access to reviewed findings and remediation pull requests in Codex Security.
+This page walks you from initial access to reviewed findings and remediation
+pull requests in Codex Security cloud.
 
-Confirm you've set up Codex Cloud first. If not, see [Codex
-  Cloud](https://developers.openai.com/codex/cloud) to get started.
+Confirm you've set up Codex cloud first. If not, see [Codex
+  cloud](https://learn.chatgpt.com/docs/cloud) to get started.
 
 ## 1. Access and environment
 
-Codex Security scans GitHub repositories connected through [Codex Cloud](https://developers.openai.com/codex/cloud).
+Codex Security cloud scans GitHub repositories connected through
+[Codex cloud](https://learn.chatgpt.com/docs/cloud).
 
-- Confirm your workspace has access to Codex Security.
-- Confirm the repository you want to scan is available in Codex Cloud.
+- Confirm your workspace has access to Codex Security cloud.
+- Confirm the repository you want to scan is available in Codex cloud.
 
 Go to [Codex environments](https://chatgpt.com/codex/settings/environments) and check whether the repository already has an environment. If it doesn't, create one there before continuing.
 
@@ -98,7 +100,7 @@ If you want scan results to change, you can edit the threat model with your
 After initial findings appear, revisit the model so scan guidance stays aligned with current priorities.
 Keeping it current helps Codex Security produce better suggestions.
 
-For a deeper explanation of threat models and how they affect criticality and triage, see [Improving the threat model](https://developers.openai.com/codex/security/threat-model).
+For a deeper explanation of threat models and how they affect criticality and triage, see [Improving the threat model](https://learn.chatgpt.com/docs/security/threat-model).
 
 ## 5. Review findings and patch
 
@@ -116,7 +118,7 @@ You can use two views:
 - **Recommended Findings**: an evolving top 10 list of the most critical issues in the repo
 - **All Findings**: a sortable, filterable table of findings across the repository
 
-![Recommended findings view](https://developers.openai.com/codex/security/images/aardvark_recommended_findings.png)
+![Recommended findings view](https://learn.chatgpt.com/docs/security/images/aardvark_recommended_findings.png)
 
 Click a finding to open its detail page, which includes:
 
@@ -138,6 +140,6 @@ You can review each finding and create a PR directly from the finding detail pag
 
 ## Related docs
 
-- [Codex Security](https://developers.openai.com/codex/security) gives the product overview.
-- [FAQ](https://developers.openai.com/codex/security/faq) covers common questions.
-- [Improving the threat model](https://developers.openai.com/codex/security/threat-model) explains how to improve scan context and finding prioritization.
+- [Codex Security](https://learn.chatgpt.com/docs/security) gives the product overview.
+- [FAQ](https://learn.chatgpt.com/docs/security/faq) covers common questions.
+- [Improving the threat model](https://learn.chatgpt.com/docs/security/threat-model) explains how to improve scan context and finding prioritization.
