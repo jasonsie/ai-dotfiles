@@ -4,7 +4,11 @@
 # Sites
 
 Sites is in public beta. Availability can depend on your plan, region, and
-  workspace settings.
+  workspace settings. Plan-specific usage limits apply across all Sites during
+  the beta. ChatGPT shows the current limits and notifies you as you approach
+  one. Reaching a limit can prevent you from creating a Site, adding storage, or
+  keeping a high-usage Site public, but you can still edit and manage existing
+  Sites.
 
 Sites lets ChatGPT create, host, refine, and share websites, web apps, and games.
 Use Sites when you want to turn a prompt or compatible existing project into a
@@ -28,6 +32,9 @@ Every Sites deployment URL is a production deployment. If you want to review a
   it.
 
 ## Get started with Sites
+
+In ChatGPT, include the word "website" in your prompt or mention `@Sites` to
+start the Sites workflow explicitly.
 
 <WorkflowSteps variant="headings">
 
@@ -88,6 +95,65 @@ avatars between visits.
 
 Browse the [Sites showcase](https://developers.openai.com/showcase) for deployed internal apps and the full
   prompts used to create them.
+
+## Review Site analytics
+
+Sites records traffic automatically, so you can see how people use a deployed
+Site without adding an analytics SDK. The analytics view shows total unique
+visitors and page views, plus both metrics over time. Change the date range or
+granularity to inspect a different period.
+
+
+
+Open **Sites**, find the Site, then select **More actions** > **Analytics**.
+
+
+
+
+
+
+
+<Illustration description="Interactive Sites analytics dashboard showing unique visitors and page views over seven days.">
+  <SitesAnalyticsIllustration />
+</Illustration>
+
+Analytics is currently available for Sites that aren't owned by an Enterprise
+  workspace.
+
+## Add Sign in with ChatGPT
+
+Public Sites can remain open to everyone while offering optional Sign in with
+ChatGPT for identity-aware features, such as saved progress, personalized views,
+or records that belong to a specific person. Workspace-restricted Sites already
+use ChatGPT identity to enforce their sharing settings.
+
+Ask Sites to add the sign-in experience:
+
+```text
+Add Sign in with ChatGPT to this public Site. Keep the Site available to signed-out visitors. Show a Sign in with ChatGPT action when someone is signed out. After they sign in, greet them with their full name when available, or their email address otherwise. Add a Sign out action, and keep authorization decisions in server-side code.
+```
+
+<ToggleSection title="How it works">
+
+Sites handles the sign-in and sign-out flows through platform-provided paths,
+then returns the visitor to your Site:
+
+```html
+<a href="/signin-with-chatgpt">Sign in with ChatGPT</a>
+<a href="/signout-with-chatgpt">Sign out</a>
+```
+
+After a visitor signs in, Sites forwards their identity to the server through
+these request headers:
+
+- `oai-authenticated-user-email` contains the authenticated email address.
+- `oai-authenticated-user-full-name` may contain a non-empty profile name. Treat
+  it as optional and fall back to the email address.
+
+Keep authorization decisions in server-side code, and don't depend on
+name-split headers.
+
+</ToggleSection>
 
 ## Understand projects, versions, and deployments
 
@@ -156,17 +222,24 @@ expect the hosted site to remember.
 
 ## Control access and secrets
 
-Hosting a Site doesn't automatically make it public. Keep access limited while
-you review the content, data handling, and expected audience.
+A new Site is limited to its owner and workspace admins until you change its
+access. Keep access limited while you review the content, data handling, and
+expected audience.
 
 Depending on your account and workspace settings, sharing options can include:
 
-- Only you or people you invite.
-- Everyone in your workspace.
-- Anyone with the link.
+- **Owner and workspace admins**
+- **Selected active users or groups**, where supported
+- **Anyone in the workspace**, where supported
+- **Anyone on the internet**, only when public publishing is enabled
 
-Sharing lets people visit the Site; it doesn't let them edit it. Workspace
-admins can restrict whether members can share Sites publicly.
+Sharing lets people visit the Site; it doesn't let them edit it. In Enterprise
+workspaces, public publishing is off by default and must be enabled by an admin.
+
+For limited sharing, invited visitors must sign in with the account that
+received access. A public Site is available without ChatGPT workspace access. A
+Site's audience setting and any sign-in feature built into the Site are separate
+controls.
 
 For example:
 
@@ -195,14 +268,42 @@ configuration.
 
 
 
+## Connect a custom domain
+
+Where custom domains are available, you can connect an apex domain or subdomain
+that you already own. Sites doesn't register domains for you, so you must be
+able to change the domain's DNS records. Custom domains aren't available in
+Enterprise workspaces at launch.
+
+To connect a domain:
+
+1. Open the Site's settings and select **Add domain**.
+2. Enter the apex domain or subdomain you want to use.
+3. Copy the DNS records and values Sites provides, then add them through your
+   domain provider.
+4. Wait a few minutes, then return to the Site's settings and refresh the domain
+   status.
+
+You can also ask ChatGPT to help point the domain at your Site. If browsing or
+computer use is enabled, ChatGPT can help you navigate your domain provider
+after you sign in.
+
 ## Review before you share
 
 Before you share a Site:
 
-- Review the Site's content and behavior in the preview.
-- Check that the Site handles information and uploaded files as expected.
-- Confirm that the Site doesn't expose confidential information or secret
-  values.
+- Review its content, generated text and images, links, uploaded files, forms,
+  and interactive behavior.
+- Confirm that it doesn't expose confidential or sensitive information, secret
+  values, or third-party content you don't have the right to share.
+- Test the Site from the intended visitor experience, including its access and
+  sign-in behavior.
+- Review features that collect personal information or other visitor content.
+  Decide whether the Site should collect, share, or publish that information.
+- If the Site uses Sign in with ChatGPT, explain what visitor information it
+  receives and how it uses that information.
+- If the Site collects or processes personal data, comply with
+  [applicable privacy and data-protection laws](https://help.openai.com/en/articles/20001340).
 - Choose the narrowest sharing option that fits the intended audience.
 - Open the shared Site and confirm that the intended audience can visit it.
 
@@ -213,10 +314,41 @@ database migrations in the Codex [review pane](https://learn.chatgpt.com/docs/co
 
 
 
+## Take down or delete a Site
+
+To remove access without deleting a Site, open its sharing settings and restrict
+access to yourself or selected people. Confirm that the previous audience can no
+longer open it.
+
+To permanently delete a Site:
+
+1. Open **Sites** and locate the Site.
+2. Select **Delete site** and follow the instructions in the prompt.
+3. Enter the Site slug, then select **Permanently delete**.
+
+Deleting a Site permanently removes it. You can't restore a deleted Site.
+
+## Understand limits and unsupported uses
+
+Sites hosts web experiences that run in the supported Sites runtime. Some
+frameworks, private networks, databases, background services, and hosting
+patterns aren't supported.
+
+Sites doesn't support data residency or inference residency at launch. This
+includes deployed Sites, Site code, D1 and R2 data and file storage, generated
+artifacts, and logs.
+
+Don't use Sites to process Protected Health Information or payment-card data;
+target children under 13 or the applicable age of digital consent; enable
+financial transactions; distribute malware; enable phishing; impersonate people
+or organizations; or otherwise violate OpenAI policies. See
+[Creating and managing ChatGPT Sites](https://help.openai.com/en/articles/20001339)
+for the current limits and policy links.
+
 ## Related documentation
 
 
 
-- [ChatGPT desktop app](https://learn.chatgpt.com/docs/app) introduces app navigation, projects, and tasks.
+- [ChatGPT desktop app](https://learn.chatgpt.com/docs/app) introduces app navigation, projects, and chats.
 - [Review and ship changes](https://learn.chatgpt.com/docs/code-review?surface=app) explains how to inspect source
   changes before publishing them.

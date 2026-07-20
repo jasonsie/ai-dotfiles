@@ -3,8 +3,8 @@
 
 # Pricing
 
-<strong>ChatGPT Work and Codex share usage.</strong> Work usage inside ChatGPT
-  uses the same pricing, credits, and usage limits as Codex.
+<strong>Work mode and Codex share usage.</strong> Work mode usage inside
+  ChatGPT uses the same pricing, credits, and usage limits as Codex.
 
 <h2 class="sr-only">Pricing options</h2>
 
@@ -107,7 +107,7 @@
         footnoteLabel="*2+ users, billed annually. $25 per user per month when billed monthly."
       >
         - Access ChatGPT and Codex across desktop and mobile apps
-        - Larger virtual machines to run cloud tasks faster
+        - Larger virtual machines to run cloud chats faster
         - Flexibly extend usage with [ChatGPT credits](#credits-overview)
         - A secure, dedicated workspace with essential admin controls, SAML SSO,
           and MFA
@@ -245,7 +245,7 @@ Choose the GPT-5.6 model that best fits your work:
               Local Messages[\*](#shared-limits-plus) / 5h
             </th>
             <th scope="col" style="text-align:center">
-              Cloud Tasks[\*](#shared-limits-plus) / 5h
+              Cloud chats[\*](#shared-limits-plus) / 5h
             </th>
             <th scope="col" style="text-align:center">
               Code Reviews / 5h
@@ -294,7 +294,7 @@ Choose the GPT-5.6 model that best fits your work:
           <tr>
             <td colspan="4" style="text-align:center">
               <a id="shared-limits-plus" class="footnote">
-                *The usage limits for local messages and cloud tasks share a
+                *The usage limits for local messages and cloud chats share a
                 **five-hour window**. Additional weekly limits may apply.
               </a>
             </td>
@@ -326,7 +326,7 @@ Choose the GPT-5.6 model that best fits your work:
               Local Messages[\*](#shared-limits-pro) / 5h
             </th>
             <th scope="col" style="text-align:center">
-              Cloud Tasks[\*](#shared-limits-pro) / 5h
+              Cloud chats[\*](#shared-limits-pro) / 5h
             </th>
             <th scope="col" style="text-align:center">
               Code Reviews / 5h
@@ -375,7 +375,7 @@ Choose the GPT-5.6 model that best fits your work:
           <tr>
             <td colspan="4" style="text-align:center">
               <a id="shared-limits-pro" class="footnote">
-                *The usage limits for local messages and cloud tasks share a
+                *The usage limits for local messages and cloud chats share a
                 **five-hour window**. Additional weekly limits may apply.
               </a>
             </td>
@@ -407,7 +407,7 @@ Choose the GPT-5.6 model that best fits your work:
               Local Messages[\*](#shared-limits-pro-20x) / 5h
             </th>
             <th scope="col" style="text-align:center">
-              Cloud Tasks[\*](#shared-limits-pro-20x) / 5h
+              Cloud chats[\*](#shared-limits-pro-20x) / 5h
             </th>
             <th scope="col" style="text-align:center">
               Code Reviews / 5h
@@ -456,7 +456,7 @@ Choose the GPT-5.6 model that best fits your work:
           <tr>
             <td colspan="4" style="text-align:center">
               <a id="shared-limits-pro-20x" class="footnote">
-                *The usage limits for local messages and cloud tasks share a
+                *The usage limits for local messages and cloud chats share a
                 **five-hour window**. Additional weekly limits may apply.
               </a>
             </td>
@@ -488,7 +488,7 @@ Choose the GPT-5.6 model that best fits your work:
               Local Messages[\*](#shared-limits-business) / 5h
             </th>
             <th scope="col" style="text-align:center">
-              Cloud Tasks[\*](#shared-limits-business) / 5h
+              Cloud chats[\*](#shared-limits-business) / 5h
             </th>
             <th scope="col" style="text-align:center">
               Code Reviews / 5h
@@ -537,7 +537,7 @@ Choose the GPT-5.6 model that best fits your work:
           <tr>
             <td colspan="4" style="text-align:center">
               <a id="shared-limits-business" class="footnote">
-                *The usage limits for local messages and cloud tasks share a
+                *The usage limits for local messages and cloud chats share a
                 **five-hour window**. Additional weekly limits may apply.
               </a>
             </td>
@@ -569,7 +569,7 @@ Choose the GPT-5.6 model that best fits your work:
               Local Messages[\*](#shared-limits-api-key) / 5h
             </th>
             <th scope="col" style="text-align:center">
-              Cloud Tasks[\*](#shared-limits-api-key) / 5h
+              Cloud chats[\*](#shared-limits-api-key) / 5h
             </th>
             <th scope="col" style="text-align:center">
               Code Reviews / 5h
@@ -630,7 +630,7 @@ Choose the GPT-5.6 model that best fits your work:
           <tr>
             <td colspan="4" style="text-align:center">
               <a id="shared-limits-api-key" class="footnote">
-                *The usage limits for local messages and cloud tasks share a
+                *The usage limits for local messages and cloud chats share a
                 **five-hour window**. Additional weekly limits may apply.
               </a>
             </td>
@@ -684,7 +684,7 @@ can purchase additional workspace credits to continue using Codex.
 If you are approaching usage limits, you can also switch to a smaller model to
 make your usage limits last longer.
 
-All users may also run extra local tasks using an API key, with usage charged at
+All users may also run extra local chats using an API key, with usage charged at
 [standard API rates](https://platform.openai.com/docs/pricing).
 
 <a id="image-generation-usage-limits"></a>
@@ -692,7 +692,7 @@ All users may also run extra local tasks using an API key, with usage charged at
 ### How does image generation count toward usage limits?
 
 Image generation counts toward the same general Codex usage limits as local
-messages and cloud tasks. Image generations use included limits 3-5x faster on
+messages and cloud chats. Image generations use included limits 3-5x faster on
 average than similar turns without image generation, depending on
 image quality and size. After you reach your included limits, image generation
 also draws from [credits](#credits-overview).
@@ -714,7 +714,7 @@ tighter task scope would still produce a useful result.
 ### What are tokens and credits?
 
 Tokens are small units of information that ChatGPT reads and writes. Your
-prompt, files, conversation history, tool results, and ChatGPT's response all
+prompt, files, chat history, tool results, and ChatGPT's response all
 use tokens.
 
 Credits translate token usage into a simpler unit for tracking and managing
@@ -899,7 +899,7 @@ efficiently](https://learn.chatgpt.com/docs/prompting#use-work-efficiently).
             },
           },
           {
-            name: "ChatGPT Work on Web",
+            name: "Work mode in ChatGPT on the web",
             href: "/codex/get-started-with-work",
             availability: {
               plus: "available",
@@ -910,7 +910,7 @@ efficiently](https://learn.chatgpt.com/docs/prompting#use-work-efficiently).
             },
           },
           {
-            name: "ChatGPT desktop app for local tasks",
+            name: "ChatGPT desktop app for local chats",
             href: "/codex/app",
             availability: {
               plus: "available",
@@ -1357,8 +1357,8 @@ efficiently](https://learn.chatgpt.com/docs/prompting#use-work-efficiently).
         title: "Cloud and integrations",
         features: [
           {
-            name: "Codex cloud tasks",
-            shortName: "Cloud tasks",
+            name: "Codex cloud chats",
+            shortName: "Cloud chats",
             href: "/codex/cloud",
             availability: {
               plus: "available",

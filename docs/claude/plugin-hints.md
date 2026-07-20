@@ -30,6 +30,8 @@ Claude Code never installs a plugin automatically. The user always confirms.
 
 ## Emit the hint
 
+Hint prompts only fire for plugins listed in the official Anthropic marketplace. See [Get your plugin into the official marketplace](#get-your-plugin-into-the-official-marketplace) before you ship the integration.
+
 Gate emission on an environment variable so the marker is unlikely to appear when a human runs your CLI directly, then write the tag to stderr on its own line. Choose which variable to check:
 
 * `CLAUDECODE`: set on every Claude Code version, so it reaches the most sessions. It is also set in tmux sessions and stdio MCP server subprocesses that Claude Code starts. IDE extensions also set it in their integrated terminals, where a human may be running your CLI directly.
@@ -64,8 +66,9 @@ The following examples gate on `CLAUDECODE` for maximum reach and emit a hint fo
   ```
 
   ```shell Shell theme={null}
-  [ -n "$CLAUDECODE" ] &&
+  if [ -n "$CLAUDECODE" ]; then
     printf '%s\n' '<claude-code-hint v="1" type="plugin" value="example-cli@claude-plugins-official" />' >&2
+  fi
   ```
 </CodeGroup>
 
@@ -106,10 +109,11 @@ When the hint passes all checks, Claude Code shows a prompt like the following:
 
 The prompt names the command that produced the hint so users can spot a mismatch between the tool and the plugin it recommends. If the user does not respond within 30 seconds, the prompt dismisses as **No**.
 
-Prompt frequency is bounded:
+Prompt frequency is bounded, and some sessions never prompt:
 
 * **Once per plugin**: after the prompt is shown, Claude Code records the plugin and never prompts for it again, regardless of the user's answer.
 * **Once per session**: across all CLIs on the machine, at most one hint prompt appears per Claude Code session.
+* **Telemetry opt-outs**: sessions where analytics are disabled never show hint prompts. This includes sessions with `DISABLE_TELEMETRY` or `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` set, and sessions on third-party providers such as Amazon Bedrock or Google Cloud's Agent Platform where the [automatic telemetry opt-out](/en/data-usage#default-behaviors-by-api-provider) applies.
 
 Selecting **Yes** installs the plugin to user scope. Selecting **No, and don't show plugin installation hints again** disables all future hint prompts for the user.
 

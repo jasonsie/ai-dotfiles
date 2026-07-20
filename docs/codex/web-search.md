@@ -8,7 +8,7 @@ untrusted input.
 
 
 
-In the ChatGPT desktop app, ask for current information in a task. ChatGPT records
+In the ChatGPT desktop app, ask for current information in a chat. ChatGPT records
 search activity with the other tool calls in the transcript.
 
 
@@ -23,7 +23,7 @@ search activity with the other tool calls in the transcript.
 
 ## Configure local web search
 
-For local Codex tasks, Codex enables cached search by default. Cached mode uses
+For local Codex chats, Codex enables cached search by default. Cached mode uses
 an OpenAI-maintained index instead of fetching arbitrary pages live, which
 lowers—but doesn't remove—prompt injection risk.
 

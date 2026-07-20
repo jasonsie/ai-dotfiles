@@ -1,7 +1,13 @@
 > Source: https://developers.openai.com/codex/security/faq
 > Mirror maintained by .github/workflows/sync-cli-docs.yml — do not edit by hand.
 
-# FAQ
+# Codex Security cloud FAQ
+
+This FAQ covers Codex Security cloud. For local scans and workflows that run in
+a Codex task, see the [Codex Security plugin quickstart](https://learn.chatgpt.com/docs/security/plugin).
+
+{/* vale Microsoft.Auto = NO */}
+{/* vale Vale.Spelling = NO */}
 
 ## Getting started
 
@@ -105,3 +111,6 @@ Auto-validation is the phase that tries to reproduce a suspected issue in an iso
 ### What happens if validation fails?
 
 The finding remains unvalidated. Logs and reports still capture what was attempted so engineers can retry, investigate further, or adjust the reproduction steps.
+
+{/* vale Microsoft.Auto = YES */}
+{/* vale Vale.Spelling = YES */}

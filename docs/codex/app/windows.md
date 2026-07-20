@@ -4,7 +4,7 @@
 # ChatGPT desktop app for Windows
 
 The [ChatGPT desktop app for Windows](https://get.microsoft.com/installer/download/9PLM9XGG6VKS?cid=website_cta_psi) gives you one interface for
-working across projects, running parallel tasks, and reviewing results.
+working across projects, running parallel chats, and reviewing results.
 The Windows app supports core workflows such as worktrees, scheduled tasks, Git
 functionality, the built-in browser, file previews, plugins, and skills.
 It runs natively on Windows using PowerShell and the
@@ -12,7 +12,7 @@ It runs natively on Windows using PowerShell and the
 run in [Windows Subsystem for Linux 2 (WSL2)](#windows-subsystem-for-linux-wsl).
 
 <CodexScreenshot
-  alt="ChatGPT desktop app for Windows showing a project sidebar, active task, and review pane"
+  alt="ChatGPT desktop app for Windows showing a project sidebar, active chat, and review pane"
   lightSrc="/images/codex/windows/codex-windows-light.webp"
   darkSrc="/images/codex/windows/codex-windows-dark.webp"
   variant="no-wallpaper"
@@ -25,14 +25,13 @@ Download the [ChatGPT desktop app](https://get.microsoft.com/installer/download/
 
 Then follow the [quickstart](https://learn.chatgpt.com/docs/quickstart?setup=app) to get started.
 
-For enterprises, administrators can deploy the app with Microsoft Store app
-distribution through enterprise management tools.
+For enterprise installation and update options, see
+[Deploy the Windows app](https://learn.chatgpt.com/docs/enterprise/windows-deployment).
 
-If you prefer a command-line install path, or need an alternative to opening
-the Microsoft Store UI, run:
+If you prefer a command-line install path, run:
 
 ```powershell
-winget install Codex -s msstore
+winget install --id 9PLM9XGG6VKS -s msstore
 ```
 
 ## Native sandbox
@@ -88,7 +87,7 @@ installed, options include:
 - WSL
 
 This change applies only to new terminal sessions. If you already have an
-integrated terminal open, restart the app or start a new task before
+integrated terminal open, restart the app or start a new chat before
 expecting the new default terminal to appear.
 
 </div>
