@@ -1,36 +1,51 @@
 # Workspace Tools Checklist
 
-> **Status legend** — `[x]` implanted in `tools/` (canonical, cross-CLI ready) · `[ ]` catalogued, not yet implanted.
+> **Archive — frozen 2026-05-21.** This file is a historical record of the one-time
+> port that organised tools from the `skill` and `everything-claude-code` repos into the
+> canonical `tools/` source of truth. The migration is complete. Live work is now tracked
+> via the memory/session system (`MEMORY.md`, session summaries), not here.
 >
-> **Implanted** = file lives in `tools/<category>/<name>` (tracked in git, ships with the repo) and is generated/symlinked into each CLI by `scripts/install.sh`. Everything in `tools/` is the single source of truth — `.claude/`, `.gemini/`, `.codex/` are derived artifacts.
+> Only implanted tools are recorded below. The former "Catalogued (not yet implanted)"
+> menus and the dated verification block have been removed — they were a live backlog and a
+> point-in-time quality assertion, neither of which belongs in a frozen archive. ECC's
+> catalogued skills remain reachable live as `everything-claude-code:*` plugins, so porting
+> them into `tools/` would only duplicate them.
+>
+> **Status legend** — `[x]` implanted in `tools/` (canonical, cross-CLI ready).
+>
+> **Implanted** = file lives in `tools/<category>/<name>` (tracked in git, ships with the repo)
+> and is generated/symlinked into each CLI by `scripts/install.sh`. Everything in `tools/` is the
+> single source of truth — `.claude/`, `.gemini/`, `.codex/` are derived artifacts.
 
-## Goal
+## Goal (as scoped for the migration)
 
-> Customise claude-code workspace from this repo so it satisfies general software development. Organise tools from `skill` and `everything-claude-code` repos, categorise them, and add to the workspace.
+> Customise claude-code workspace from this repo so it satisfies general software development.
+> Organise tools from `skill` and `everything-claude-code` repos, categorise them, and add to
+> the workspace.
 >
 > **Workspace must:**
 > - Compatible with Codex CLI, Gemini CLI (via canonical `tools/` + per-CLI adapter)
-> - Portable; plug in to different environments easily without relying on Claude's native plugin system; use a config file + directory structure approach so tools can be copied across environments without compatibility issues
+> - Portable; plug in to different environments easily without relying on Claude's native plugin
+>   system; use a config file + directory structure approach so tools can be copied across
+>   environments without compatibility issues
 
-## Implementation Snapshot (2026-05-21)
+## Implementation Snapshot (implanted at freeze)
 
-| Category | Implanted | Catalogued only |
-|---|---|---|
-| Skills | 34 | ~145 |
-| Agents | 9 | 23 |
-| Commands | 3 | 65 |
-| Rules | 10 | — |
-| Hooks | 14 | — |
-| MCP servers | 0 (registry scaffolded) | — |
-| Adapters (Claude/Gemini/Codex/Rules) | 4 | — |
+| Category | Implanted |
+|---|---|
+| Skills | 35 |
+| Agents | 9 |
+| Commands | 4 |
+| Rules | 10 |
+| Hooks | 14 |
+| MCP servers | 0 (registry scaffolded) |
+| Adapters (Claude/Gemini/Codex/Rules) | 4 |
 
 ---
 
 ## Skills
 
-### Engineering / Development
-
-#### Implanted (`tools/skills/`)
+### Engineering / Development (`tools/skills/`)
 - [x] `debug` — debugging workflow
 - [x] `deep-review` — pre-commit multi-dimensional review
 - [x] `perf` — performance analysis
@@ -45,32 +60,7 @@
 - [x] `prototype` — throwaway prototype for design exploration
 - [x] `zoom-out` — broader context on unfamiliar code
 
-#### Catalogued (in upstream repos, not implanted)
-- [ ] `coding-standards` — universal TS/JS/React/Node standards
-- [ ] `backend-patterns` — backend architecture, API design, DB optimisation
-- [ ] `frontend-patterns` — React, Next.js, state management, perf
-- [ ] `api-design` — REST API patterns (resource naming, status, pagination)
-- [ ] `mcp-server-patterns` — build MCP servers with Node/TS SDK
-- [ ] `database-migrations` · `postgres-patterns` · `clickhouse-io`
-- [ ] `nextjs-turbopack` · `bun-runtime` · `nuxt4-patterns`
-- [ ] `django-patterns` / `django-tdd` / `django-security` / `django-verification`
-- [ ] `springboot-patterns` / `springboot-tdd` / `springboot-security` / `springboot-verification`
-- [ ] `laravel-patterns` / `laravel-tdd` / `laravel-security` / `laravel-verification`
-- [ ] `kotlin-patterns` / `kotlin-coroutines-flows` / `kotlin-ktor-patterns` / `kotlin-exposed-patterns` / `kotlin-testing`
-- [ ] `swift-concurrency-6-2` / `swift-actor-persistence` / `swift-protocol-di-testing` / `swiftui-patterns`
-- [ ] `golang-patterns` / `golang-testing`
-- [ ] `rust-patterns` / `rust-testing`
-- [ ] `perl-patterns` / `perl-security` / `perl-testing`
-- [ ] `python-patterns` / `python-testing`
-- [ ] `cpp-coding-standards` / `cpp-testing`
-- [ ] `java-coding-standards` / `jpa-patterns`
-- [ ] `pytorch-patterns`
-- [ ] `android-clean-architecture` / `compose-multiplatform-patterns` / `foundation-models-on-device`
-- [ ] `migrate-to-shoehorn` — TS test migration (`as` → `@total-typescript/shoehorn`)
-
-### Planning & Design
-
-#### Implanted (`tools/skills/`)
+### Planning & Design (`tools/skills/`)
 - [x] `spec-interview` — interactive spec gathering
 - [x] `grill-me` — relentless interview to reach shared understanding
 - [x] `to-prd` — turn conversation into a PRD
@@ -78,33 +68,7 @@
 - [x] `triage` — issue triage state machine
 - [x] `handoff` — compact conversation into handoff document
 
-#### Catalogued
-- [ ] `blueprint` — feature blueprint
-- [ ] `ralphinho-rfc-pipeline` — RFC pipeline
-- [ ] `architecture-decision-records` — capture ADRs from sessions
-- [ ] `strategic-compact` — manual compaction at logical intervals
-
-### DevOps & Quality
-
-#### Catalogued
-- [ ] `docker-patterns` — containerisation patterns
-- [ ] `deployment-patterns` — release strategies
-- [ ] `security-review` — security checklist for auth/input/secrets/payment
-- [ ] `security-scan` — automated security scanning
-- [ ] `e2e-testing` — Playwright POM, CI/CD, artifacts
-- [ ] `verification-loop` — comprehensive verification system
-- [ ] `tdd-workflow` — TDD enforcement (80%+ coverage)
-- [ ] `ai-regression-testing` — AI-aware regression suite
-- [ ] `agent-eval` / `eval-harness` — evaluation harnesses
-- [ ] `agent-harness-construction` — building agent harnesses
-- [ ] `plankton-code-quality` — code quality checks
-- [ ] `skill-comply` / `skill-stocktake` / `skill-health` — skill governance
-- [ ] `setup-pre-commit` — Husky + lint-staged + Prettier
-- [ ] `git-guardrails-claude-code` — block dangerous git commands via hooks
-
-### Productivity & Session Management
-
-#### Implanted (`tools/skills/`)
+### Productivity & Session Management (`tools/skills/`)
 - [x] `prime` — workspace cold-start primer
 - [x] `retro` — session retrospective
 - [x] `context-report` — context usage report
@@ -121,56 +85,12 @@
 - [x] `write-a-skill` — skill authoring with progressive disclosure
 - [x] `setup-matt-pocock-skills` — bootstrap engineering-skill blocks
 
-#### Catalogued
-- [ ] `deep-research` — multi-source research with citations
-- [ ] `market-research` — market sizing & competitor analysis
-- [ ] `exa-search` — neural search via Exa
-- [ ] `search-first` — research-before-coding workflow
-- [ ] `documentation-lookup` — Context7-based lookup
-- [ ] `claude-api` — Anthropic SDK patterns
-- [ ] `prompt-optimizer` — prompt optimisation
-- [ ] `prompt-optimize` — slash command variant
-- [ ] `iterative-retrieval` / `cost-aware-llm-pipeline` / `regex-vs-llm-structured-text`
-- [ ] `dmux-workflows` — tmux + multi-agent
-- [ ] `nanoclaw-repl` / `autonomous-loops` / `continuous-agent-loop` / `continuous-learning` / `continuous-learning-v2`
-- [ ] `ai-first-engineering` / `agentic-engineering` / `enterprise-agent-ops`
-- [ ] `claude-devfleet` / `team-builder` / `harness-optimizer`
-- [ ] `context-budget` / `agent-eval` / `learn-eval`
-- [ ] `configure-ecc` / `project-guidelines-example` / `rules-distill`
-- [ ] `santa-method` / `click-path-audit` / `content-hash-cache-pattern`
-
-### Content & Media
-
-#### Catalogued
-- [ ] `content-engine` — platform-native content systems
-- [ ] `article-writing` — long-form authoring
-- [ ] `crosspost` — multi-platform distribution
-- [ ] `frontend-slides` — HTML presentations
-- [ ] `liquid-glass-design` — design system
-- [ ] `video-editing` — AI-assisted video pipeline
-- [ ] `fal-ai-media` — fal.ai image/video/audio generation
-- [ ] `videodb` — video database integration
-- [ ] `x-api` — X/Twitter API integration
-- [ ] `data-scraper-agent` — data scraping
-- [ ] `visa-doc-translate` — document translation
-- [ ] `nutrient-document-processing` — document processing
-- [ ] `edit-article` — restructure / improve articles
-- [ ] `obsidian-vault` — Obsidian notes management
-
-### Business / Vertical
-
-#### Catalogued
-- [ ] `investor-outreach` / `investor-materials` — fundraising
-- [ ] `carrier-relationship-management` · `customs-trade-compliance` · `energy-procurement`
-- [ ] `inventory-demand-planning` · `logistics-exception-management` · `production-scheduling`
-- [ ] `quality-nonconformance` · `returns-reverse-logistics`
-- [ ] `scaffold-exercises` — educational exercise scaffolding
+### Project Setup (`tools/skills/`)
+- [x] `init-project` — Stage-2 project-local `.claude/CLAUDE.md` scaffolder (profile-composed)
 
 ---
 
-## Agents
-
-#### Local & implanted (`tools/agents/`)
+## Agents (`tools/agents/`)
 - [x] `architecture-explorer.md`
 - [x] `code-reviewer.md`
 - [x] `doc-writer.md`
@@ -181,74 +101,20 @@
 - [x] `security-reviewer.md`
 - [x] `test-writer.md`
 
-#### Catalogued (in `everything-claude-code/agents/`)
-- [ ] `architect.md` — system design / architecture decisions
-- [ ] `build-error-resolver.md` — generic build error diagnosis
-- [ ] `chief-of-staff.md` — high-level orchestration
-- [ ] `cpp-build-resolver.md` / `cpp-reviewer.md`
-- [ ] `go-build-resolver.md` / `go-reviewer.md`
-- [ ] `java-build-resolver.md` / `java-reviewer.md`
-- [ ] `kotlin-build-resolver.md` / `kotlin-reviewer.md`
-- [ ] `rust-build-resolver.md` / `rust-reviewer.md`
-- [ ] `python-reviewer.md`
-- [ ] `database-reviewer.md`
-- [ ] `doc-updater.md` / `docs-lookup.md`
-- [ ] `e2e-runner.md`
-- [ ] `harness-optimizer.md`
-- [ ] `loop-operator.md`
-- [ ] `planner.md`
-- [ ] `refactor-cleaner.md`
-- [ ] `tdd-guide.md`
-
 ---
 
-## Commands
-
-#### Local & implanted (`tools/commands/`)
+## Commands (`tools/commands/`)
 - [x] `deep-review.md` — three-dimension review before commit
 - [x] `load-plan.md` — print four-tier loading plan
 - [x] `healthcheck.md` — workspace integrity validator
-
-#### Catalogued (in `everything-claude-code/commands/`)
-- [ ] `aside.md` — side conversation / aside
-- [ ] `build-fix.md` — build error fix workflow
-- [ ] `checkpoint.md` — save session checkpoint
-- [ ] `claw.md` — Claw command
-- [ ] `code-review.md` — code review workflow
-- [ ] `cpp-build.md` · `cpp-review.md` · `cpp-test.md`
-- [ ] `go-build.md` · `go-review.md` · `go-test.md`
-- [ ] `kotlin-build.md` · `kotlin-review.md` · `kotlin-test.md`
-- [ ] `rust-build.md` · `rust-review.md` · `rust-test.md`
-- [ ] `python-review.md`
-- [ ] `gradle-build.md`
-- [ ] `devfleet.md` — DevFleet management
-- [ ] `docs.md` — documentation generation
-- [ ] `e2e.md` — E2E runner
-- [ ] `eval.md` · `learn-eval.md` · `learn.md`
-- [ ] `evolve.md` — evolve / improve workflow
-- [ ] `harness-audit.md` — harness audit
-- [ ] `instinct-export.md` · `instinct-import.md` · `instinct-status.md`
-- [ ] `loop-start.md` · `loop-status.md`
-- [ ] `model-route.md` — model routing
-- [ ] `multi-backend.md` · `multi-execute.md` · `multi-frontend.md` · `multi-plan.md` · `multi-workflow.md`
-- [ ] `orchestrate.md` — agent orchestration
-- [ ] `plan.md` · `setup-pm.md` · `projects.md` · `promote.md`
-- [ ] `pm2.md` — PM2 process management
-- [ ] `prompt-optimize.md`
-- [ ] `quality-gate.md`
-- [ ] `refactor-clean.md`
-- [ ] `resume-session.md` · `save-session.md` · `sessions.md`
-- [ ] `skill-create.md` · `skill-health.md`
-- [ ] `tdd.md`
-- [ ] `test-coverage.md`
-- [ ] `update-codemaps.md` · `update-docs.md`
-- [ ] `verify.md`
+- [x] `init-project.md` — Stage-2 project initialiser
 
 ---
 
 ## Rules (cross-CLI, `tools/rules/`)
 
-> Manifest: `tools/rules/manifest.yaml`. Adapters concatenate into `AGENTS.md` (Codex/cross-CLI), `GEMINI.md`, and the 常駐規則 section of `CLAUDE.md`.
+> Manifest: `tools/rules/manifest.yaml`. Adapters concatenate into `AGENTS.md` (Codex/cross-CLI),
+> `GEMINI.md`, and the 常駐規則 section of `CLAUDE.md`.
 
 #### Portable to all three CLIs
 - [x] `core.md` — language, git workflow, think-before-coding, validation
@@ -268,7 +134,8 @@
 
 ## Hooks (cross-CLI, `tools/hooks/`)
 
-> Manifest: `tools/hooks/manifest.yaml`. Each script reads `$WORKSPACE_CLI_NAME` and `$WORKSPACE_DIR` so the same script can be wired into each CLI's native event surface.
+> Manifest: `tools/hooks/manifest.yaml`. Each script reads `$WORKSPACE_CLI_NAME` and
+> `$WORKSPACE_DIR` so the same script can be wired into each CLI's native event surface.
 
 #### Lifecycle
 - [x] `session-start.sh` (Claude `SessionStart` / Gemini `session-start` / Codex `pre-session`)
@@ -296,18 +163,15 @@
 
 ## MCP Servers (`tools/mcp/servers.yaml`)
 
-> Adapters emit per-CLI native MCP config (Claude JSON `mcp_servers`, Gemini JSON `mcpServers`, Codex TOML `[mcp_servers.<name>]`). Registry is empty by default; populate manually as MCP servers come online.
+> Adapters emit per-CLI native MCP config (Claude JSON `mcp_servers`, Gemini JSON `mcpServers`,
+> Codex TOML `[mcp_servers.<name>]`). Registry is empty at freeze; populate manually as MCP
+> servers come online.
 
-#### Registry
 - [x] Neutral schema scaffolded (`tools/mcp/servers.yaml`); 0 entries
-- [ ] Migrate user-level MCP servers (GitHub, Figma, Gmail, Drive, Serena, Context7, Notion) into registry
-- [ ] Document per-server `enabled-for` reasoning
 
 ---
 
 ## Settings Templates (`tools/settings/`)
-
-#### Implanted
 - [x] `claude.json.tmpl` — Claude settings template (hooks/MCP placeholders)
 - [x] `gemini.json.tmpl` — Gemini settings template
 - [x] `codex.toml.tmpl` — Codex settings template
@@ -332,31 +196,6 @@
 
 ### Documentation
 - [x] `tools/README.md` — canonical-source contract
-- [x] `docs/2026-05-21-cross-ai-cli-workspace-research.md` — cross-CLI research report
 - [x] `README.md` updated with new install flow + `tools/` structure
 - [x] `tools/hooks/manifest.yaml` — per-CLI event-name mapping
 - [x] `tools/rules/manifest.yaml` — per-rule CLI targeting
-
----
-
-## Verification Status (2026-05-21)
-
-- [x] `bash scripts/install.sh --target=claude` — real run, 5 files unchanged on second invocation (idempotent)
-- [x] `bash scripts/install.sh --target=gemini --dry-run` — exits 0, logs 22 intended actions for `~/.gemini/`
-- [x] `bash scripts/install.sh --target=codex --dry-run` — exits 0, logs 23 intended actions for `~/.codex/`
-- [x] `bash scripts/healthcheck.sh` — 110 PASS / 2 WARN (pre-existing) / 0 FAIL
-- [x] `.claude/` symlinks: 67 total, 0 broken
-- [x] `.claude/settings.json` valid JSON, 10 hook events resolved against `tools/hooks/`
-- [ ] Real `--target=gemini` run on a machine with Gemini CLI installed (deferred)
-- [ ] Real `--target=codex` run on a machine with Codex CLI installed (deferred)
-
----
-
-## Future Work (deferred)
-
-- [ ] Re-introduce a lockfile mechanism (e.g. `tools/manifest.lock.json`) once we need to track upstream provenance for individual `tools/skills/` entries. `skills-lock.json` was removed on 2026-05-21 — the 14 mattpocock skills are now committed to the repo as canonical content.
-- [ ] Auto-sync upstream skills (`mattpocock/skills`, `everything-claude-code`) into `tools/skills/` via lockfile executor
-- [ ] GitHub `gh skill` integration for publishing
-- [ ] Per-CLI hook event translation beyond manifest mapping
-- [ ] Curate next-batch tools from "Catalogued" sections above
-- [ ] Convert the 9 implanted agents into Codex `openai.yaml` and Gemini SKILL.md wrappers via adapters (mechanism in place; tested via dry-run)
