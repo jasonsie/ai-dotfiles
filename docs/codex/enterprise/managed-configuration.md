@@ -521,6 +521,20 @@ MCP servers use the same identity shapes under
 
 If `mcp_servers` is present but empty, the local client disables all MCP servers.
 
+### Control plugin availability
+
+To turn off plugins in supported local clients, set `features.plugins` to
+`false` in `requirements.toml`:
+
+```toml
+features.plugins = false
+```
+
+This setting also applies when users sign in to Codex with an API key. See the
+[`features.plugins`
+reference](https://learn.chatgpt.com/docs/config-file/config-reference#requirementstoml) for the
+supported configuration.
+
 ### Restrict plugin marketplace sources
 
 To restrict operations on user-configured marketplace sources, set
@@ -557,7 +571,7 @@ reserved name match. The requirements don't filter already configured user
 marketplaces or their plugins at runtime.
 
 These source restrictions apply only where a local client supports plugin
-marketplace operations: Work mode and Codex in the ChatGPT desktop app, and
+marketplace operations: ChatGPT Work and Codex in the desktop app, and
 Codex CLI. They don't add plugins to Chat, the IDE extension, or mobile.
 
 ## Managed defaults (`managed_config.toml`)

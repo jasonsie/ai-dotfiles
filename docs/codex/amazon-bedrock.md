@@ -391,7 +391,7 @@ Fast Mode isn't available with Amazon Bedrock. Fast Mode uses priority
             },
             {
               name: "Plugin sharing",
-              href: "/codex/build-plugins#share-a-local-plugin-with-your-workspace",
+              href: "https://developers.openai.com/plugins/build/plugins#share-a-local-plugin-with-your-workspace",
               availability: {
                 bedrock: "unavailable",
               },

@@ -70,16 +70,17 @@ your plan and workspace settings.
 
 ### Use plugins
 
-Plugins give ChatGPT reusable instructions and connections to tools such as
-Google Drive, Gmail, Slack, and GitHub. Ask for the result you need and let
-ChatGPT choose from the tools available to it. To choose a specific plugin, type
-`@` in the composer.
+Plugins give ChatGPT and Codex reusable instructions and connections to tools
+such as Google Drive, Gmail, Slack, and GitHub. Both products draw public
+plugins from the same universal directory. Ask for the result you need and let
+the active surface choose from the tools available to it. In ChatGPT, type `@`
+in the composer to choose a specific plugin.
 
 [<IconItem title="Learn about plugins" className="mt-4">
     <span slot="icon">
       <Plugin />
     </span>
-    Find, install, and use plugins in ChatGPT.
+    Find, install, and use plugins in ChatGPT and Codex.
   </IconItem>](https://learn.chatgpt.com/docs/plugins)
 
 ### Personalize ChatGPT
@@ -233,22 +234,24 @@ ingredients across meals, and finish with one consolidated shopping list.
 ```
 
 <a id="prompting-for-work"></a>
+<a id="prompting-in-work-mode"></a>
 
-## Prompting in Work mode
+## Prompting for ChatGPT Work
 
-Use Chat mode for quick questions, short rewrites, brainstorming, and lightweight
-drafts. Use Work mode for tasks that draw on different sources or tools, involve a
+Use Chat for quick questions, short rewrites, brainstorming, and lightweight
+drafts. Use ChatGPT Work for tasks that draw on different sources or tools, involve a
 sequence of steps, make changes, or produce a larger deliverable.
 
-In Work mode, describe the result you need, provide the source material, name
+In ChatGPT Work, describe the result you need, provide the source material, name
 the audience, and explain how you'll review the work. Ask ChatGPT to plan,
 gather the needed information, create files, and check them before it finishes.
 
 <a id="use-work-efficiently"></a>
+<a id="use-work-mode-efficiently"></a>
 
-### Use Work mode efficiently
+### Use ChatGPT Work efficiently
 
-Work mode is useful for time-consuming or recurring tasks, or for finished files you
+ChatGPT Work is useful for time-consuming or recurring tasks, or for finished files you
 can reuse. A task that uses more credits can still be worthwhile if it saves
 time, improves quality, or helps you make an important decision.
 

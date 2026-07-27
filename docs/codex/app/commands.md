@@ -163,7 +163,7 @@ Use these links when you need to open **Scheduled**.
 
 ### Plugins
 
-Plugin links use different forms depending on whether you are installing from a marketplace, opening a plugin, or working from a local `marketplace.json`. For plugin basics, see [Plugins](https://learn.chatgpt.com/docs/plugins). For local or repo marketplace setup, see [Build plugins](https://learn.chatgpt.com/docs/build-plugins#build-your-own-curated-plugin-list).
+Plugin links use different forms depending on whether you are installing from a marketplace, opening a plugin, or working from a local `marketplace.json`. For plugin basics, see [Plugins](https://learn.chatgpt.com/docs/plugins). For local or repo marketplace setup, see [Build plugins](https://developers.openai.com/plugins/build/plugins#build-your-own-curated-plugin-list).
 
 #### Plugin install
 
@@ -198,7 +198,7 @@ Example: [Open the OpenAI Developers plugin](codex://plugins/openai-developers@o
 
 #### Local plugin
 
-For local or repo marketplace setup, see [Build plugins](https://learn.chatgpt.com/docs/build-plugins#build-your-own-curated-plugin-list).
+For local or repo marketplace setup, see [Build plugins](https://developers.openai.com/plugins/build/plugins#build-your-own-curated-plugin-list).
 
 | Deep link                                                                   | Opens                                                |
 | --------------------------------------------------------------------------- | ---------------------------------------------------- |
