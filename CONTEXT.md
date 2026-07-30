@@ -63,33 +63,40 @@ _Avoid_: treating `rm` as a permanent removal.
 
 ---
 
-> ⚠️ **Aspirational multi-CLI sections below.** Claude Code is first-class and
-> exercised daily. The Gemini and Codex adapters emit output but that output is **not
-> regularly exercised** — "stable" here means "untouched since inception," not "proven."
-> Treat the Gemini/Codex paths as present-but-unverified: check the generated files
-> before relying on them, and expect latent bugs (e.g. the `created:22` reporting quirk
-> lives in exactly these emitters). Only "What" and "Why this structure" above are the
-> load-bearing core.
+## Goal: full multi-CLI parity (active)
 
-## CLI support status
+**The north-star is (iii) full 1:1 parity** — every Claude Code feature has a working
+equivalent on every supported CLI, shimming where the target CLI has no native concept.
+This is an **active goal**, not inherited baggage: Claude Code is simply the furthest-built
+spoke, and Gemini/Codex are destinations we are driving toward — not "kept warm."
 
-| CLI | Status | Entry context file |
-|---|---|---|
-| Claude Code | First-class — exercised daily | `CLAUDE.md` |
-| Gemini CLI | Emitters present, output **not regularly exercised** | `GEMINI.md` |
-| Codex CLI | Emitters present, output **not regularly exercised** | `AGENTS.md` |
+**Parity is gated behind a per-CLI capability catalog.** "Full parity" is undefinable
+without knowing each CLI's native config surface, so the first milestone for each target
+CLI is a `docs/<cli>/CAPABILITIES.md` enumerating its native surfaces and the
+Claude-feature → CLI-feature mapping (with an explicit shim strategy wherever no native
+equivalent exists). See [ADR-0002](docs/adr/0002-multi-cli-parity-target.md).
+
+| CLI | Parity status | Catalog | Entry context file |
+|---|---|---|---|
+| Claude Code | Complete (reference implementation) | n/a — it *is* the baseline | `CLAUDE.md` |
+| Codex CLI | In progress — catalog buildable from mirrored `docs/codex/` | [`docs/codex/CAPABILITIES.md`](docs/codex/CAPABILITIES.md) | `AGENTS.md` |
+| Gemini CLI | **Blocked** — upstream docs not yet mirrored (prerequisite) | [`docs/gemini/CAPABILITIES.md`](docs/gemini/CAPABILITIES.md) (placeholder) | `GEMINI.md` |
+
+> ⚠️ **Reality check for the impatient.** The adapters already *emit* output for all three
+> CLIs, but emission ≠ verified parity. Gemini/Codex output is not yet exercised end-to-end,
+> and latent bugs exist (e.g. the `created:22` reporting quirk lives in exactly these
+> emitters). "Emits a file" is a necessary step toward parity, not proof of it.
 
 ## Cross-CLI terminology map
 
-Structural facts about each CLI's config surface (these are accurate regardless of how
-much each path is exercised):
+Structural facts about each CLI's config surface (accurate regardless of parity progress):
 
 | Concept | Claude Code | Gemini CLI | Codex CLI |
 |---|---|---|---|
 | Session entry context | `CLAUDE.md` | `GEMINI.md` | `AGENTS.md` |
-| File-import syntax | `@path/to/file.md` | `@path/to/file.md` | Not supported (inlined by `install.sh`) |
+| File-import syntax | `@path/to/file.md` | `@path/to/file.md` | Not supported (inlined by `install.sh`; cf. `docs/codex/import.md`) |
 | Global + project layers | `~/.claude/` + `./` | `~/.gemini/` + `./` | `~/.codex/` + directory-hierarchy concatenation |
-| Skill / Agent / Hook | Native | Emitters exist (`gemini.sh`), lightly exercised | Emitters exist (`codex.sh`), lightly exercised |
+| Skill / Agent / Hook | Native (baseline) | Emitters exist (`gemini.sh`) — parity unverified | Native concepts exist (`docs/codex/{hooks,skills-and-plugins}.md`); emitters in `codex.sh` — parity unverified |
 
 ## Fork boundary
 
