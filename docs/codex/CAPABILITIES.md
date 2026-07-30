@@ -26,7 +26,7 @@
 | `skills/` | Codex skills (agent-skills standard) | Emitted (`codex.sh`) | **Potentially portable, not mimicked** — same standard. Verify Codex loads them. |
 | `agents/` | `agent-configuration/` (`_agent_md_to_codex_yaml`) | Emitted | Verify Codex honors the emitted YAML. |
 | `commands/` | `custom-prompts.md` | ❓ Unmapped | Confirm custom-prompt format, then emit. |
-| `hooks/` | `~/.codex/hooks.json` (`_codex_build_hooks_json`) | Emitted | Verify events fire at runtime — the real parity test. |
+| `hooks/` | `~/.codex/hooks.json` (`_codex_build_hooks_json`) | Emitted | Verify events fire at runtime — the verified-parity test. |
 | `mcp/` | `_codex_build_mcp_toml` | Emitted | Verify against `mcp-server.md` schema. |
 | `settings/` | `config.toml` | Emitted | Verify against `config-reference.md`. |
 

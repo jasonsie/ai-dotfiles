@@ -1,13 +1,23 @@
 # Project Context
 
-> Shared project context for three AI CLIs (Claude Code / Gemini CLI / Codex CLI).
-> Auto-loaded at session start so the AI understands what this project is from the first message.
+> Context for a portable AI-agent capability library delivered to multiple CLIs
+> (Claude Code / Gemini CLI / Codex CLI). Auto-loaded at session start so the AI
+> understands what this project is from the first message.
 
 ## What
 
-`ai-cli-workspace` is a customized fork of [`zeuikli/claude-code-workspace`](https://github.com/zeuikli/claude-code-workspace),
-**repositioned** as a shared personal workspace for **Claude Code, Gemini CLI, and Codex CLI**.
-It is no longer Claude-Code-only.
+`ai-cli-workspace` is a **portable library of AI-agent capabilities** — **35 skills,
+14 hooks, 10 rules, 9 agents, 4 commands** — authored in CLI-neutral form under `tools/`
+and compiled into each CLI's native config. The library is the product; the per-CLI
+adapters are its delivery mechanism.
+
+**Full multi-CLI parity is the delivery guarantee, not the identity** (see
+[ADR-0002](docs/adr/0002-multi-cli-parity-target.md)): the goal is that the *same* library
+works on **Claude Code, Gemini CLI, and Codex CLI**, not just Claude. Parity = "the library
+reaches every CLI," which is why the definitions are authored neutrally in the first place.
+
+> Originally a fork of [`zeuikli/claude-code-workspace`](https://github.com/zeuikli/claude-code-workspace)
+> (Claude-Code-only); repositioned around the portable-library framing above.
 
 ## Why this structure
 
@@ -61,6 +71,23 @@ version control is `.gitignore`, not deletion. "Cleaning" the working tree of a
 generated file is temporary by nature.
 _Avoid_: treating `rm` as a permanent removal.
 
+**Feature parity** (a *mapping-completeness* axis):
+Every Claude feature has an *emitted* equivalent on the target CLI — the adapter
+produces the right file. Says nothing about whether it works. Codex is partial here;
+Gemini is at zero (no catalog yet).
+_Avoid_: bare "parity" (ambiguous — see verified parity).
+
+**Verified parity** (a *runtime-correctness* axis):
+An emitted equivalent is confirmed to work end-to-end on the target CLI at runtime.
+The real bar. **No non-Claude CLI has any verified parity yet** — emission is not
+verification. Orthogonal to feature parity: a feature can be emitted (feature-parity ✓)
+yet unverified (verified-parity ✗).
+_Avoid_: treating "the adapter emits it" as proof it works.
+
+**Full 1:1 parity** (the (iii) goal — see [ADR-0002](docs/adr/0002-multi-cli-parity-target.md)):
+The **conjunction** of both axes maxed — every Claude feature emitted *and* verified on a
+CLI. A CLI is "complete" only when both are true.
+
 ---
 
 ## Goal: full multi-CLI parity (active)
@@ -76,11 +103,14 @@ CLI is a `docs/<cli>/CAPABILITIES.md` enumerating its native surfaces and the
 Claude-feature → CLI-feature mapping (with an explicit shim strategy wherever no native
 equivalent exists). See [ADR-0002](docs/adr/0002-multi-cli-parity-target.md).
 
-| CLI | Parity status | Catalog | Entry context file |
-|---|---|---|---|
-| Claude Code | Complete (reference implementation) | n/a — it *is* the baseline | `CLAUDE.md` |
-| Codex CLI | In progress — catalog buildable from mirrored `docs/codex/` | [`docs/codex/CAPABILITIES.md`](docs/codex/CAPABILITIES.md) | `AGENTS.md` |
-| Gemini CLI | **Blocked** — upstream docs not yet mirrored (prerequisite) | [`docs/gemini/CAPABILITIES.md`](docs/gemini/CAPABILITIES.md) (placeholder) | `GEMINI.md` |
+Status uses the two parity axes from the glossary (feature parity = emitted;
+verified parity = works at runtime). "Full 1:1 parity" = both complete.
+
+| CLI | Feature parity | Verified parity | Catalog | Entry file |
+|---|---|---|---|---|
+| Claude Code | ✅ baseline (reference impl) | ✅ baseline | n/a — it *is* the baseline | `CLAUDE.md` |
+| Codex CLI | 🟡 partial (emitters exist) | ❌ none | [`docs/codex/CAPABILITIES.md`](docs/codex/CAPABILITIES.md) | `AGENTS.md` |
+| Gemini CLI | ❌ zero (no catalog) | ❌ none | [`docs/gemini/CAPABILITIES.md`](docs/gemini/CAPABILITIES.md) — **blocked**, docs not mirrored | `GEMINI.md` |
 
 > ⚠️ **Reality check for the impatient.** The adapters already *emit* output for all three
 > CLIs, but emission ≠ verified parity. Gemini/Codex output is not yet exercised end-to-end,
@@ -96,7 +126,7 @@ Structural facts about each CLI's config surface (accurate regardless of parity 
 | Session entry context | `CLAUDE.md` | `GEMINI.md` | `AGENTS.md` |
 | File-import syntax | `@path/to/file.md` | `@path/to/file.md` | Not supported (inlined by `install.sh`; cf. `docs/codex/import.md`) |
 | Global + project layers | `~/.claude/` + `./` | `~/.gemini/` + `./` | `~/.codex/` + directory-hierarchy concatenation |
-| Skill / Agent / Hook | Native (baseline) | Emitters exist (`gemini.sh`) — parity unverified | Native concepts exist (`docs/codex/{hooks,skills-and-plugins}.md`); emitters in `codex.sh` — parity unverified |
+| Skill / Agent / Hook | Native (baseline) | Emitters exist (`gemini.sh`) — verified parity: none | Native concepts exist (`docs/codex/{hooks,skills-and-plugins}.md`); emitters in `codex.sh` — verified parity: none |
 
 ## Fork boundary
 
