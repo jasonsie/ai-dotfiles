@@ -110,7 +110,7 @@ verified parity = works at runtime). "Full 1:1 parity" = both complete.
 |---|---|---|---|---|
 | Claude Code | ✅ baseline (reference impl) | ✅ baseline | n/a — it *is* the baseline | `CLAUDE.md` |
 | Codex CLI | 🟡 partial (emitters exist) | ❌ none | [`docs/codex/CAPABILITIES.md`](docs/codex/CAPABILITIES.md) | `AGENTS.md` |
-| Gemini CLI | ❌ zero (no catalog) | ❌ none | [`docs/gemini/CAPABILITIES.md`](docs/gemini/CAPABILITIES.md) — **blocked**, docs not mirrored | `GEMINI.md` |
+| Gemini CLI | 🟡 unstarted (catalog **ready**) | ❌ none | [`docs/gemini/CAPABILITIES.md`](docs/gemini/CAPABILITIES.md) — **unblocked**; docs are raw MD in-repo, mirror not yet run | `GEMINI.md` |
 
 > ⚠️ **Reality check for the impatient.** The adapters already *emit* output for all three
 > CLIs, but emission ≠ verified parity. Gemini/Codex output is not yet exercised end-to-end,

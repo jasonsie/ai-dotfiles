@@ -1,31 +1,40 @@
 # Gemini CLI — Capability Catalog
 
-> **STATUS: BLOCKED — placeholder.** This catalog cannot be written yet.
-> See [ADR-0002](../adr/0002-multi-cli-parity-target.md) for the (iii) full-parity goal.
+> **STATUS: READY — unblocked; docs-mirror not yet run.** No obstacle remains; the source
+> is confirmed raw Markdown in `google-gemini/gemini-cli/docs/`. See
+> [ADR-0002](../adr/0002-multi-cli-parity-target.md) for the (iii) full-parity goal.
 
-## Why this is empty
+## What "mirror" means here (verified)
 
-The **(iii) full 1:1 parity** goal requires enumerating Gemini CLI's native config surfaces
-before any Claude-feature → Gemini-feature mapping can be defined. That inventory does not
-exist because **Gemini's upstream docs are not mirrored** into this repo:
+Gemini CLI publishes structured raw-Markdown docs **in-repo** — no SPA, no crawler, no
+`/assets/` archaeology (that was the Antigravity problem, not Gemini's). Mirroring =
+add a `sync_gemini()` to `scripts/sync-cli-docs.sh` that fetches the `docs/` Markdown tree
+from `github.com/google-gemini/gemini-cli` (raw), banner-wraps it, and writes into
+`docs/gemini/` — the same shape as `sync_claude()` / `sync_codex()`.
 
-- `docs/gemini/` contains no mirrored upstream documentation (only this placeholder).
-- `scripts/sync-cli-docs.sh` has **no Gemini path** — it mirrors Claude, Codex, and
-  Antigravity, but not Gemini.
+## Discovered native surfaces (head-start — from browsing the repo `docs/` tree)
 
-Any parity claim about Gemini today is therefore **unfalsifiable**. The `gemini.sh` adapter
-*emits* output (rules, hooks with event-name mapping, MCP, skills, commands), but "emits a
-file" is not "verified parity," and we have no native-surface reference to check it against.
+These are confirmed to exist in Gemini CLI's docs; enumerate precisely once mirrored.
 
-## Unblock prerequisite (the actual first task)
+| Gemini surface | Doc | Maps to Claude | Mapping kind |
+|---|---|---|---|
+| Agent Skills | `docs/cli/creating-skills.md` | `skills/` | **Native — same standard.** Gemini skills use `SKILL.md` + YAML frontmatter (`name`,`description`) + `scripts/`/`references/`/`assets/`, installed to `.gemini/skills/<name>/`. Likely a near-passthrough copy, **not a shim.** |
+| Hooks | `docs/hooks/{reference,writing-hooks}.md` | `hooks/` | Native hooks runtime — real target (already emitted by `gemini.sh` with event-name mapping). |
+| Subagents | `docs/core/subagents.md` | `agents/` | Native subagent concept. |
+| Custom commands | `docs/cli/custom-commands.md` | `commands/` | Native. |
+| Memory | `docs/cli/auto-memory.md` | (Claude memory) | Native. |
+| Extensions | `docs/extensions/` | (no direct Claude analogue) | Gemini-specific; note for completeness. |
 
-1. **Extend `scripts/sync-cli-docs.sh` to mirror Gemini's upstream docs** into `docs/gemini/`.
-   (Precedent: the Antigravity docs turned out to be curl-able from `/assets/docs/*.md`
-   despite the SPA front-end — Gemini's may be similarly reachable; investigate before
-   assuming a heavier crawler is needed.)
-2. Once mirrored, enumerate Gemini's native surfaces here (mirror the structure of
-   `docs/codex/CAPABILITIES.md`).
-3. Then build the Claude-feature → Gemini-feature mapping with per-gap shim strategies.
+> **Framing correction:** Gemini is *not* the hardest parity target. Its native surfaces
+> (skills/hooks/subagents/commands/memory) largely match Claude concepts on shared
+> standards, so Gemini parity looks **mostly native-mapping, minimal shim** — potentially
+> a richer catalog than Codex's once built.
 
-Until step 1 lands, this file stays a placeholder and Gemini's row in `CONTEXT.md` reads
-**"Blocked."**
+## Next steps
+
+1. **Add `sync_gemini()`** to `scripts/sync-cli-docs.sh` (source: `google-gemini/gemini-cli`
+   `docs/` raw Markdown). Register it in the sync flow + the weekly cron workflow.
+2. Enumerate the mirrored surfaces here precisely (replace the "discovered" table above with
+   doc-cited detail, mirroring `docs/codex/CAPABILITIES.md`'s structure).
+3. Build the Claude-feature → Gemini-feature mapping; flag any genuine gaps needing an
+   emit-time shim (expected to be few).
