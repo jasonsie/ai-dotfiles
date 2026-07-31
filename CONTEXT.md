@@ -128,11 +128,39 @@ Structural facts about each CLI's config surface (accurate regardless of parity 
 | Global + project layers | `~/.claude/` + `./` | `~/.gemini/` + `./` | `~/.codex/` + directory-hierarchy concatenation |
 | Skill / Agent / Hook | Native (baseline) | Emitters exist (`gemini.sh`) — verified parity: none | Native concepts exist (`docs/codex/{hooks,skills-and-plugins}.md`); emitters in `codex.sh` — verified parity: none |
 
-## Fork boundary
+## Fork boundary — inherited the concepts, re-platformed the delivery
 
-- **Upstream-maintained**: Claude Code native features (skills, agents, hooks, rules core)
-- **Added in this fork**: Multi-CLI adapter layer, the `tools/` canonical structure, `scripts/install.sh --target=claude|gemini|codex|all`
-- Inspect upstream history: `git log upstream/main -- <path>` (requires an `upstream` remote)
+Forked from [`zeuikli/claude-code-workspace`](https://github.com/zeuikli/claude-code-workspace)
+(Claude-Code-only). The fork **inherited the original's conceptual advantages** — its
+design philosophy and content — while **replacing its delivery mechanism**. "Inherited the
+advantage" is true of the *ideas and content*, not the *architecture* (which was rebuilt
+on purpose, because the original's Claude-only plumbing was what blocked multi-CLI).
+
+**Inherited (concept + content), preserved deliberately:**
+
+- **Four-layer loading framework + its cache-granularity design.** The compiler
+  (`rules.sh`) still emits `@-imports` for per-rule cache invalidation — the rationale is
+  encoded in its own comments ("per-file cache granularity beats one monolithic inline
+  blob", `rules.sh:176`). `load-plan.sh` still surfaces the live token budget.
+  ⚠️ *The upstream's specific figures (~4,160 fixed tok) do **not** transfer* — this fork's
+  rule set diverged (10 auto-rules vs the original's 4). Run `/load-plan` for the current
+  number; never cite a static one.
+- **Advisor mode** — inherited *and enhanced* (`subagent-strategy.md` keeps the three-tier
+  routing; `subagent-advanced.md` adds the API-layer `advisor` tool).
+- **Automation hooks** (grew from ~10 → 14), the broad command coverage, `healthcheck.sh`.
+
+**Re-platformed (the deliberate rebuild):**
+
+- **Source of truth inverted.** Original: flat, hand-maintained `.claude/` *is* the truth.
+  Fork: `tools/` is truth; `.claude/` (+ `AGENTS.md`/`GEMINI.md`) are **generated** from it
+  by a compiler that did not exist upstream (`scripts/install.sh` + `adapters/` +
+  577-line `_common.sh`; upstream `scripts/` had only `healthcheck.sh` + `load-plan.sh`).
+- **Multi-CLI adapter layer** and `install.sh --target=claude|gemini|codex|all` — new.
+
+**Dropped:** upstream's `output-discipline.md` rule (not carried forward).
+
+> Inspect the upstream directly (no `upstream` git remote is configured):
+> `gh api repos/zeuikli/claude-code-workspace/contents/<path>`.
 
 ## Two-stage install model
 
