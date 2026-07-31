@@ -110,7 +110,7 @@ verified parity = works at runtime). "Full 1:1 parity" = both complete.
 |---|---|---|---|---|
 | Claude Code | ✅ baseline (reference impl) | ✅ baseline | n/a — it *is* the baseline | `CLAUDE.md` |
 | Codex CLI | 🟡 partial (emitters exist) | ❌ none | [`docs/codex/CAPABILITIES.md`](docs/codex/CAPABILITIES.md) | `AGENTS.md` |
-| Gemini CLI | 🟡 unstarted (catalog **ready**) | ❌ none | [`docs/gemini/CAPABILITIES.md`](docs/gemini/CAPABILITIES.md) — **unblocked**; docs are raw MD in-repo, mirror not yet run | `GEMINI.md` |
+| Gemini CLI | 🟡 partial (emitters exist) | ❌ none | [`docs/gemini/CAPABILITIES.md`](docs/gemini/CAPABILITIES.md) — **built** from mirrored `docs/gemini/upstream/` | `GEMINI.md` |
 
 > ⚠️ **Reality check for the impatient.** The adapters already *emit* output for all three
 > CLIs, but emission ≠ verified parity. Gemini/Codex output is not yet exercised end-to-end,
@@ -126,7 +126,7 @@ Structural facts about each CLI's config surface (accurate regardless of parity 
 | Session entry context | `CLAUDE.md` | `GEMINI.md` | `AGENTS.md` |
 | File-import syntax | `@path/to/file.md` | `@path/to/file.md` | Not supported (inlined by `install.sh`; cf. `docs/codex/import.md`) |
 | Global + project layers | `~/.claude/` + `./` | `~/.gemini/` + `./` | `~/.codex/` + directory-hierarchy concatenation |
-| Skill / Agent / Hook | Native (baseline) | Emitters exist (`gemini.sh`) — verified parity: none | Native concepts exist (`docs/codex/{hooks,skills-and-plugins}.md`); emitters in `codex.sh` — verified parity: none |
+| Skill / Agent / Hook | Native (baseline) | Emitters exist (`gemini.sh`) — verified parity: none | Native concepts exist (`docs/codex/upstream/{hooks,skills-and-plugins}.md`); emitters in `codex.sh` — verified parity: none |
 
 ## Fork boundary — inherited the concepts, re-platformed the delivery
 

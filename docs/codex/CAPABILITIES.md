@@ -4,19 +4,19 @@
 > [ADR-0002](../adr/0002-multi-cli-parity-target.md)). Maps each Claude Code feature
 > (`tools/<feature>/`) onto a Codex native surface, or records the shim strategy where no
 > native equivalent exists. Native surfaces are cited from the mirrored upstream docs under
-> `docs/codex/` — **do not treat a row as done until its output is verified end-to-end.**
+> `docs/codex/upstream/` — **do not treat a row as done until its output is verified end-to-end.**
 
 ## Codex native config surfaces (from mirrored upstream docs)
 
 | Surface | Upstream doc | Notes |
 |---|---|---|
-| Config file | `docs/codex/config-file/config-reference.md` | `~/.codex/config.toml` (TOML, not JSON) |
-| Hooks | `docs/codex/hooks.md` | Native hooks runtime — real target for Claude hooks |
-| Skills | `docs/codex/skills-and-plugins.md`, `build-skills.md` | Open agent-skills standard (`agentskills.io`) — same standard Claude skills use |
-| Custom prompts | `docs/codex/custom-prompts.md` | Closest analogue to Claude slash-commands |
-| MCP | `docs/codex/mcp-server.md` | Native MCP support |
-| Import / inlining | `docs/codex/import.md` | Codex lacks `@import`; entry context is inlined by `install.sh` |
-| Agent config | `docs/codex/agent-configuration/` | Target for Claude agents |
+| Config file | `docs/codex/upstream/config-file/config-reference.md` | `~/.codex/config.toml` (TOML, not JSON) |
+| Hooks | `docs/codex/upstream/hooks.md` | Native hooks runtime — real target for Claude hooks |
+| Skills | `docs/codex/upstream/skills-and-plugins.md`, `build-skills.md` | Open agent-skills standard (`agentskills.io`) — same standard Claude skills use |
+| Custom prompts | `docs/codex/upstream/custom-prompts.md` | Closest analogue to Claude slash-commands |
+| MCP | `docs/codex/upstream/mcp-server.md` | Native MCP support |
+| Import / inlining | `docs/codex/upstream/import.md` | Codex lacks `@import`; entry context is inlined by `install.sh` |
+| Agent config | `docs/codex/upstream/agent-configuration/` | Target for Claude agents |
 
 ## Claude feature → Codex mapping
 

@@ -1,40 +1,40 @@
 # Gemini CLI — Capability Catalog
 
-> **STATUS: READY — unblocked; docs-mirror not yet run.** No obstacle remains; the source
-> is confirmed raw Markdown in `google-gemini/gemini-cli/docs/`. See
-> [ADR-0002](../adr/0002-multi-cli-parity-target.md) for the (iii) full-parity goal.
+> Parity catalog for the **(iii) full 1:1 parity** goal (see
+> [ADR-0002](../adr/0002-multi-cli-parity-target.md)). Maps each Claude Code feature
+> (`tools/<feature>/`) onto a Gemini CLI native surface, or records the shim strategy where
+> no native equivalent exists. Native surfaces are cited from the mirrored upstream docs
+> under `docs/gemini/upstream/` — **do not treat a row as done until its output is verified
+> end-to-end** (no Gemini row has *verified parity* yet; see the CONTEXT.md glossary).
 
-## What "mirror" means here (verified)
+## Gemini native config surfaces (from mirrored upstream docs)
 
-Gemini CLI publishes structured raw-Markdown docs **in-repo** — no SPA, no crawler, no
-`/assets/` archaeology (that was the Antigravity problem, not Gemini's). Mirroring =
-add a `sync_gemini()` to `scripts/sync-cli-docs.sh` that fetches the `docs/` Markdown tree
-from `github.com/google-gemini/gemini-cli` (raw), banner-wraps it, and writes into
-`docs/gemini/` — the same shape as `sync_claude()` / `sync_codex()`.
+| Surface | Upstream doc | Notes |
+|---|---|---|
+| Entry context | `upstream/cli/gemini-md.md` | `GEMINI.md` — persistent workspace context (Claude `CLAUDE.md` analogue) |
+| Hooks | `upstream/hooks/{index,reference,writing-hooks,best-practices}.md` | Native hooks runtime — fires synchronously in the agent loop |
+| Skills | `upstream/cli/{skills,using-agent-skills,creating-skills,skills-best-practices}.md` | Open agent-skills standard (`agentskills.io`) — **same standard Claude & Codex skills use** |
+| Subagents | `upstream/core/subagents.md` | Target for Claude agents |
+| Custom commands | `upstream/cli/custom-commands.md`, `upstream/reference/commands.md` | Claude slash-command analogue |
+| Settings | `upstream/cli/settings.md`, `upstream/reference/configuration.md` | Target for Claude settings |
+| MCP | `upstream/tools/mcp-server.md` | Native MCP support |
+| Extensions | `upstream/extensions/{index,reference,writing-extensions}.md` | Packaging/distribution surface |
 
-## Discovered native surfaces (head-start — from browsing the repo `docs/` tree)
+## Claude feature → Gemini mapping
 
-These are confirmed to exist in Gemini CLI's docs; enumerate precisely once mirrored.
-
-| Gemini surface | Doc | Maps to Claude | Mapping kind |
+| Claude feature (`tools/`) | Gemini target | Status | Shim / notes |
 |---|---|---|---|
-| Agent Skills | `docs/cli/creating-skills.md` | `skills/` | **Native — same standard.** Gemini skills use `SKILL.md` + YAML frontmatter (`name`,`description`) + `scripts/`/`references/`/`assets/`, installed to `.gemini/skills/<name>/`. Likely a near-passthrough copy, **not a shim.** |
-| Hooks | `docs/hooks/{reference,writing-hooks}.md` | `hooks/` | Native hooks runtime — real target (already emitted by `gemini.sh` with event-name mapping). |
-| Subagents | `docs/core/subagents.md` | `agents/` | Native subagent concept. |
-| Custom commands | `docs/cli/custom-commands.md` | `commands/` | Native. |
-| Memory | `docs/cli/auto-memory.md` | (Claude memory) | Native. |
-| Extensions | `docs/extensions/` | (no direct Claude analogue) | Gemini-specific; note for completeness. |
+| `rules/` | Inlined into `GEMINI.md` (`_build_rules_for_target gemini`) | Emitted (`gemini.sh`) | Gemini supports `@import`; today rules are inlined. Verify `GEMINI.md` loads. |
+| `skills/` | Gemini skills (agent-skills standard) | Emitted (`_agent_md_to_gemini_skill`) | **Potentially portable across all 3 CLIs** — shared `agentskills.io` standard. Verify Gemini loads them unchanged. |
+| `agents/` | `core/subagents.md` | ❓ Unmapped | Confirm subagent format, then emit. |
+| `commands/` | `cli/custom-commands.md` (`_command_md_to_gemini_toml`) | Emitted | Verify custom-command TOML format matches upstream. |
+| `hooks/` | Gemini hooks (`_gemini_build_hooks_json`, event-name mapping) | Emitted | Verify events fire at runtime — the verified-parity test. |
+| `mcp/` | `_gemini_build_mcp_json` | Emitted | Verify against `tools/mcp-server.md` schema. |
+| `settings/` | `_gemini_render_settings` | Emitted | Verify against `reference/configuration.md`. |
 
-> **Framing correction:** Gemini is *not* the hardest parity target. Its native surfaces
-> (skills/hooks/subagents/commands/memory) largely match Claude concepts on shared
-> standards, so Gemini parity looks **mostly native-mapping, minimal shim** — potentially
-> a richer catalog than Codex's once built.
+## Open questions before Gemini can be declared "complete"
 
-## Next steps
-
-1. **Add `sync_gemini()`** to `scripts/sync-cli-docs.sh` (source: `google-gemini/gemini-cli`
-   `docs/` raw Markdown). Register it in the sync flow + the weekly cron workflow.
-2. Enumerate the mirrored surfaces here precisely (replace the "discovered" table above with
-   doc-cited detail, mirroring `docs/codex/CAPABILITIES.md`'s structure).
-3. Build the Claude-feature → Gemini-feature mapping; flag any genuine gaps needing an
-   emit-time shim (expected to be few).
+1. Do the emitted hooks actually fire under Gemini CLI at runtime? (necessary verified-parity proof)
+2. Are Claude skills loadable by Gemini unchanged? (the agentskills.io standard suggests yes — verify)
+3. Does the `created:22` reporting quirk in `gemini.sh` mask real non-idempotency? (see ONBOARDING)
+4. What has *no* Gemini equivalent and therefore needs a genuine emit-time shim?

@@ -23,10 +23,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      # All three CLIs (Claude, Codex, AGY) are mirrored by the bash+curl sync.
+      # All four CLIs (Claude, Codex, Gemini, AGY) are mirrored by the bash+curl sync.
+      # Gemini docs are raw markdown in its GitHub repo (Git Trees API + raw fetch);
       # AGY no longer needs a headless browser — its docs are static markdown
       # assets fetched directly. See docs/inventory/crawler-tech-research-2026-06-07.md.
-      - name: Sync CLI docs (Claude + Codex + AGY)
+      - name: Sync CLI docs (Claude + Codex + Gemini + AGY)
         run: bash scripts/sync-cli-docs.sh
 
       - name: Commit and push
