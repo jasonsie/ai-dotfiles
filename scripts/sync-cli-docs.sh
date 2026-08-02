@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
 #
-# sync-cli-docs.sh — mirror Claude Code, Codex, and Antigravity CLI docs into docs/.
+# sync-cli-docs.sh — mirror Claude Code, Codex, Gemini, and Antigravity CLI docs into docs/.
 #
-# All three expose clean markdown fetchable with plain curl:
+# All four expose clean markdown fetchable with plain curl:
 #   - Claude: every page has a `.md` twin; index at code.claude.com/docs/llms.txt
 #   - Codex:  append `.md` to any page URL; pages discoverable via developers.openai.com/llms.txt
+#   - Gemini: raw markdown in its GitHub repo; tree via the Git Trees API, then raw fetch.
 #   - AGY:    SPA, but content lives in static `/assets/docs/cli/<slug>.md` assets;
 #             slugs discovered from the hashed JS bundle's nav manifest (best-effort).
 #
-# Output: docs/claude/, docs/codex/, and docs/agy/, one .md per page, faithful upstream content
+# Output: docs/claude/, docs/codex/upstream/, docs/gemini/upstream/, and docs/agy/,
+# one .md per page, faithful upstream content
 # prefixed with a static `> Source:` header (no timestamp, so unchanged docs do not
 # produce diffs). "Last synced" is recorded by the git commit, not in the files.
 # Each source directory gets an auto-generated INDEX.md. Directories are rebuilt
@@ -131,7 +133,10 @@ sync_claude() {
 }
 
 sync_codex() {
-  local dir="docs/codex" stage="docs/codex.tmp"
+  # Mirror lands in docs/codex/upstream/ (ADR-0004): the hand-written
+  # docs/codex/CAPABILITIES.md is a sibling, so the destructive rm -rf/mv below
+  # must target only upstream/ — never the parent dir that holds the catalog.
+  local dir="docs/codex/upstream" stage="docs/codex/upstream.tmp"
   local urls=() pages=() url rel dest ok=0 fail=0
 
   echo "[codex] discovering pages from $CODEX_LLMS"
@@ -162,7 +167,7 @@ sync_codex() {
   done
 
   if [ "$ok" -eq 0 ]; then
-    echo "[codex] ERROR: every page failed; keeping previous docs/codex" >&2
+    echo "[codex] ERROR: every page failed; keeping previous docs/codex/upstream" >&2
     rm -rf "$stage"
     return 1
   fi
@@ -171,6 +176,168 @@ sync_codex() {
   rm -rf "$dir"
   mv "$stage" "$dir"
   echo "[codex] done: ok=$ok fail=$fail -> $dir"
+}
+
+GEMINI_TREES_API="https://api.github.com/repos/google-gemini/gemini-cli/git/trees/main?recursive=1"
+GEMINI_RAW_PREFIX="https://raw.githubusercontent.com/google-gemini/gemini-cli/main/docs/"
+GEMINI_PAGE_PREFIX="https://github.com/google-gemini/gemini-cli/blob/main/docs/"
+
+# Snapshot 2026-07-31: 94 docs/**/*.md paths discovered from the GitHub Git Trees
+# API. Used only as a fallback when the Trees API yields nothing (rate limit,
+# outage, or a repo-layout change). To regenerate this list:
+#   curl --compressed -A "$USER_AGENT" \
+#     "https://api.github.com/repos/google-gemini/gemini-cli/git/trees/main?recursive=1" \
+#     | grep -oE '"path":"docs/[A-Za-z0-9._/-]+\.md"' \
+#     | sed -E 's/"path":"docs\/(.*)"/\1/' | sort
+GEMINI_FALLBACK_PATHS=(
+  admin/enterprise-controls.md
+  changelogs/index.md
+  changelogs/latest.md
+  changelogs/preview.md
+  cli/acp-mode.md
+  cli/auto-memory.md
+  cli/checkpointing.md
+  cli/cli-reference.md
+  cli/creating-skills.md
+  cli/custom-commands.md
+  cli/enterprise.md
+  cli/gemini-ignore.md
+  cli/gemini-md.md
+  cli/generation-settings.md
+  cli/git-worktrees.md
+  cli/headless.md
+  cli/model-routing.md
+  cli/model-steering.md
+  cli/model.md
+  cli/notifications.md
+  cli/plan-mode.md
+  cli/rewind.md
+  cli/sandbox.md
+  cli/session-management.md
+  cli/settings.md
+  cli/skills-best-practices.md
+  cli/skills.md
+  cli/system-prompt.md
+  cli/telemetry.md
+  cli/themes.md
+  cli/token-caching.md
+  cli/trusted-folders.md
+  cli/tutorials/automation.md
+  cli/tutorials/file-management.md
+  cli/tutorials/mcp-setup.md
+  cli/tutorials/memory-management.md
+  cli/tutorials/plan-mode-steering.md
+  cli/tutorials/session-management.md
+  cli/tutorials/shell-commands.md
+  cli/tutorials/skills-getting-started.md
+  cli/tutorials/task-planning.md
+  cli/tutorials/web-tools.md
+  cli/using-agent-skills.md
+  CONTRIBUTING.md
+  core/gemma-setup.md
+  core/index.md
+  core/local-model-routing.md
+  core/remote-agents.md
+  core/subagents.md
+  examples/proxy-script.md
+  extensions/best-practices.md
+  extensions/index.md
+  extensions/reference.md
+  extensions/releasing.md
+  extensions/writing-extensions.md
+  get-started/gemini-3.md
+  get-started/index.md
+  hooks/best-practices.md
+  hooks/index.md
+  hooks/reference.md
+  hooks/writing-hooks.md
+  ide-integration/ide-companion-spec.md
+  ide-integration/index.md
+  index.md
+  integration-tests.md
+  issue-and-pr-automation.md
+  local-development.md
+  npm.md
+  reference/commands.md
+  reference/configuration.md
+  reference/keyboard-shortcuts.md
+  reference/memport.md
+  reference/policy-engine.md
+  reference/tools.md
+  release-confidence.md
+  releases.md
+  resources/faq.md
+  resources/quota-and-pricing.md
+  resources/tos-privacy.md
+  resources/troubleshooting.md
+  resources/uninstall.md
+  tools/activate-skill.md
+  tools/ask-user.md
+  tools/file-system.md
+  tools/internal-docs.md
+  tools/mcp-resources.md
+  tools/mcp-server.md
+  tools/memory.md
+  tools/planning.md
+  tools/shell.md
+  tools/todos.md
+  tools/tracker.md
+  tools/web-fetch.md
+  tools/web-search.md
+)
+
+# Gemini CLI docs are clean markdown in its GitHub repo. Discover the docs/**/*.md
+# tree via the Git Trees API (recursive), then raw-fetch each — no browser, no
+# .md-twin trick. Mirror lands in docs/gemini/upstream/ (ADR-0004) so the
+# rm -rf/mv can never touch the hand-written docs/gemini/CAPABILITIES.md sibling.
+sync_gemini() {
+  local dir="docs/gemini/upstream" stage="docs/gemini/upstream.tmp"
+  local paths=() pages=() rel dest ok=0 fail=0 src
+
+  echo "[gemini] discovering docs from $GEMINI_TREES_API"
+  read_lines paths < <(fetch "$GEMINI_TREES_API" \
+    | grep -oE '"path":"docs/[A-Za-z0-9._/-]+\.md"' \
+    | sed -E 's#"path":"docs/(.*)"#\1#' \
+    | sort -u)
+
+  if [ "${#paths[@]}" -eq 0 ]; then
+    echo "[gemini] WARN: Trees API found no paths; using hardcoded fallback list" >&2
+    paths=("${GEMINI_FALLBACK_PATHS[@]}")
+    src="fallback list"
+  else
+    src="Git Trees API"
+  fi
+  echo "[gemini] discovery source: $src (${#paths[@]} paths)"
+
+  # Sanity floor: if discovery+fallback still gives an implausibly small set,
+  # fail closed and leave the existing docs/gemini/upstream untouched.
+  if [ "${#paths[@]}" -lt 80 ]; then
+    echo "[gemini] ERROR: only ${#paths[@]} paths (< 80); refusing to touch docs/gemini/upstream" >&2
+    return 1
+  fi
+
+  rm -rf "$stage"
+  mkdir -p "$stage"
+  for rel in "${paths[@]}"; do
+    dest="$stage/${rel}"
+    if write_page "${GEMINI_RAW_PREFIX}${rel}" "${GEMINI_PAGE_PREFIX}${rel}" "$dest"; then
+      pages+=("$rel")
+      ok=$((ok + 1))
+    else
+      fail=$((fail + 1))
+    fi
+  done
+
+  if [ "$ok" -eq 0 ]; then
+    echo "[gemini] ERROR: every page failed; keeping previous docs/gemini/upstream" >&2
+    rm -rf "$stage"
+    return 1
+  fi
+
+  write_index "$stage" "Gemini CLI" "${pages[@]}"
+  rm -rf "$dir"
+  mv "$stage" "$dir"
+  echo "[gemini] done: ok=$ok fail=$fail -> $dir"
 }
 
 # Snapshot 2026-06-07: 21 CLI doc slugs discovered from the JS-bundle nav manifest.
@@ -312,6 +479,7 @@ sync_agy() {
 main() {
   sync_claude || EXIT_CODE=1
   sync_codex || EXIT_CODE=1
+  sync_gemini || EXIT_CODE=1
   sync_agy || echo "[agy] WARN: sync failed; kept previous docs/agy" >&2
   exit "$EXIT_CODE"
 }
