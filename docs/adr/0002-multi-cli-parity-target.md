@@ -39,12 +39,12 @@ strategy for genuine gaps. No parity claim about a CLI is valid until its catalo
   catalog can be built now.
 - **Gemini** at decision time was recorded as "blocked" on a prerequisite: `docs/gemini/`
   not mirrored and `sync-cli-docs.sh` has no Gemini path.
-  - **Update (later verified):** the "blocker" is trivial. `google-gemini/gemini-cli`
+  - **Update (mirror implemented):** the "blocker" was trivial. `google-gemini/gemini-cli`
     publishes raw-Markdown docs in-repo under `docs/` (skills via `SKILL.md`, hooks,
-    subagents, commands, memory), so mirroring is an ordinary `sync_gemini()`, not a
-    crawler project. Gemini is now **"ready — unblocked, mirror not yet run"**, and its
-    native surfaces largely match Claude's on shared standards. See
-    [`docs/gemini/CAPABILITIES.md`](../gemini/CAPABILITIES.md).
+    subagents, commands, memory), so mirroring became a routine `sync_gemini()` task (Git Trees
+    API discovery + raw fetch, ~94 files into `docs/gemini/upstream/` per ADR-0004). Gemini's
+    native surfaces largely match Claude's on shared standards. Mirror now runs in
+    `.github/workflows/sync-cli-docs.yml`. See [`docs/gemini/CAPABILITIES.md`](../gemini/CAPABILITIES.md).
 - "Emits a file" is downgraded from evidence-of-support to a necessary-but-insufficient step.
   Parity requires end-to-end verification, which no non-Claude CLI has yet.
 - Graduating a CLI from "in progress" to "complete" is itself an ADR-worthy event (records

@@ -160,7 +160,7 @@ echo "@$HOME/claude-code-workspace/CLAUDE.md" > ~/.claude/CLAUDE.md
 | `main` | 穩定的日常工作環境（預設使用） |
 | `blog-archive` | Anthropic 官方部落格歸檔（凍結；不再自動更新） |
 
-> CLI 文件（Claude Code / Codex / Antigravity CLI）由 `.github/workflows/sync-cli-docs.yml` 每週同步至 `main` 的 `docs/claude/`、`docs/codex/`、`docs/agy/`。
+> CLI 文件（Claude Code / Codex / Gemini / Antigravity CLI）由 `.github/workflows/sync-cli-docs.yml` 每週同步至 `main` 的 `docs/claude/`、`docs/codex/upstream/`、`docs/gemini/upstream/`、`docs/agy/`。
 
 ---
 
