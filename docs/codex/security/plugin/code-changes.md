@@ -3,23 +3,29 @@
 
 # Review code changes for security
 
-Use a security change review when you need evidence about regressions introduced
-by one Git-backed change set. The workflow reviews every changed source-like
-file and directly supporting code without turning the task into a general
-repository audit.
+> For the complete documentation index, see [llms.txt](https://learn.chatgpt.com/llms.txt). Markdown versions of documentation pages are available by appending `.md` to the page URL.
 
-If you want to scan a full repository instead of a specific change, see [Run a
-security scan](https://learn.chatgpt.com/docs/security/plugin/scans).
+Run a security change review to find regressions in one Git-backed change set.
+Codex reviews each changed source-like file and its directly supporting code.
+It doesn't expand the review into a full repository audit.
+
+To scan an entire repository instead of a specific change, see [Run a security
+scan](https://learn.chatgpt.com/docs/security/plugin/scans).
 
 ## Run a manual review
 
-For uncommitted changes, send:
+In the desktop app, open **Security**, select **Scans**, and select **+ Scan**.
+Choose the repository, then select **Changes**. Review uncommitted changes, a
+single commit, or a base and head revision. **Deep scan** isn't available for a
+changes scan.
+
+You can also ask Codex to review uncommitted changes in a conversation:
 
 ```text
 Use $codex-security:security-diff-scan to review my current uncommitted changes for security regressions.
 ```
 
-For a commit or branch range, identify both ends when needed:
+For a commit or branch range, specify both revisions when needed:
 
 ```text
 Use $codex-security:security-diff-scan to review the changes from origin/main to HEAD for security regressions. Focus on authentication, authorization, input handling, filesystem access, network requests, and secrets.
@@ -32,8 +38,8 @@ in the local checkout.
 
 <WorkflowSteps>
 
-1. Confirm **Scan type** is `Changes`.
-2. Confirm the checked-out **Codebase**, **Current branch**, and **Last commit**.
+1. Select **Changes**.
+2. Confirm the checked-out repository, current branch, and latest commit.
 3. Under **Changes to review**, choose:
    - `Uncommitted changes` for the current working tree.
    - The latest commit for a single-commit review.
@@ -43,9 +49,9 @@ in the local checkout.
 
 </WorkflowSteps>
 
-The workflow doesn't check out another branch or change the selected working
-tree. If a requested revision isn't available locally, fetch it before the
-review or provide a locally available base and head.
+Codex doesn't check out another branch or switch the selected working tree. If
+a requested revision isn't available locally, fetch it before the review or
+provide a locally available base and head.
 
 ## Act on findings
 
@@ -55,17 +61,32 @@ findings](https://learn.chatgpt.com/docs/security/plugin/export-findings).
 
 ## Automate reviews in CI/CD
 
-Run the same `$codex-security:security-diff-scan` skill from CI when the runner
-can invoke the Codex CLI without interaction. First install the CLI and plugin
-without exposing the scan credential:
+If you have access to the beta standalone CLI, see [Run Codex Security in
+CI](https://learn.chatgpt.com/docs/security/cli/ci) for structured JSON, a severity policy, and SARIF
+upload. Continue with this section to invoke the installed plugin skill
+through `codex exec`.
+
+Run `$codex-security:security-diff-scan` in CI when the runner can invoke the
+Codex CLI without interaction. First, install the CLI without exposing the scan
+credential:
 
 ```bash
 npm install --global @openai/codex
+```
+
+Install the Codex Security plugin in the CLI:
+
+```bash
 codex plugin add codex-security@openai-curated
 ```
 
-Then expose an OpenAI API key from your CI secret store as
-`CODEX_SECURITY_API_KEY` only for the scan:
+The install command uses the public Codex CLI plugin marketplace, which can
+offer a different version from the hosted desktop-app catalog. Check the
+[plugin changelog](https://learn.chatgpt.com/docs/security/plugin/changelog) before you depend on a
+specific plugin version or feature in CI.
+
+Next, provide an OpenAI API key from your CI secret store as
+`CODEX_SECURITY_API_KEY`. Expose the credential only for the scan:
 
 ```bash
 CODEX_API_KEY="$CODEX_SECURITY_API_KEY" codex exec \
@@ -73,20 +94,23 @@ CODEX_API_KEY="$CODEX_SECURITY_API_KEY" codex exec \
   "Use \$codex-security:security-diff-scan to review changes from $BASE_REVISION to $HEAD_REVISION for security regressions. Do not modify the checkout."
 ```
 
+The writable sandbox lets the scan create temporary artifacts. The prompt
+still requires Codex to leave the source checkout unchanged.
+
 The scan writes its output to
 `$TMPDIR/codex-security-scans/<repository>/<scan-id>/`:
 
-| File                 | Contents                                                                                                                                                    |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `report.md`          | Primary readable entry point to the complete scan directory.                                                                                                |
-| `findings/<slug>/`   | One detailed vulnerability report per reportable finding, with supporting proof-of-concept files when available.                                            |
-| `hardening/`         | Structural hardening portfolio and supporting proposals or diagrams when the scan has reportable findings.                                                  |
-| `findings.json`      | Findings with stable identifiers, severity, confidence, source locations, and remediation. Use it to create pull-request comments or feed downstream tools. |
-| `scan-manifest.json` | Sealed scan receipt with the reviewed target, revisions, and artifact hashes.                                                                               |
-| `coverage.json`      | Reviewed and deferred surfaces, exclusions, and coverage completeness.                                                                                      |
+| File                 | Contents                                                                                                                                                  |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `report.md`          | Primary readable entry point to the complete scan directory.                                                                                              |
+| `findings/<slug>/`   | One detailed vulnerability report per reportable finding, with supporting proof-of-concept files when available.                                          |
+| `hardening/`         | Structural hardening portfolio and supporting proposals or diagrams when the scan has reportable findings.                                                |
+| `findings.json`      | Findings with stable identifiers, severity, confidence, source locations, and remediation. Feed approved internal security workflows or downstream tools. |
+| `scan-manifest.json` | Sealed scan receipt with the reviewed target, revisions, and artifact hashes.                                                                             |
+| `coverage.json`      | Reviewed and deferred surfaces, exclusions, and coverage completeness.                                                                                    |
 
 The [`findings.json` schema](https://github.com/openai/plugins/blob/main/plugins/codex-security/schemas/findings.schema.json)
-defines the complete structure. Some key fields are:
+defines the complete structure. The schema includes these fields:
 
 | Field                     | Type   | Description                                                            |
 | ------------------------- | ------ | ---------------------------------------------------------------------- |
@@ -122,7 +146,11 @@ These examples assume a trusted Linux runner with Node.js and `npm`, Git, Python
 3, `jq`, and the provider's command-line tools. The `npm` global package prefix
 must be writable.
 
-Here are examples of how to use Codex Security in common pipelines:
+Choose the example for your CI provider:
+
+Scan results can include sensitive vulnerability details. Keep artifacts
+private, and publish findings only after reviewing the audience, content, and
+required approvals.
 
 <Tabs
   id="codex-security-ci-examples"
@@ -135,7 +163,8 @@ Here are examples of how to use Codex Security in common pipelines:
     { id: "jenkins", label: "Jenkins" },
   ]}
 >
-  <div slot="github">
+  
+
 
 ```yaml
 name: Codex Security review
@@ -149,7 +178,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: write
     steps:
       - uses: actions/checkout@v5
         with:
@@ -177,22 +205,6 @@ jobs:
             --sandbox workspace-write \
             "Use \$codex-security:security-diff-scan to review changes from $BASE_REVISION to $HEAD_REVISION for security regressions. Do not modify the checkout."
 
-      - name: Comment with findings
-        if: always()
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: |
-          findings="$(find "${{ runner.temp }}/codex-security/codex-security-scans" -name findings.json -print -quit 2>/dev/null || true)"
-          test -n "$findings" || exit 0
-          jq -r '
-            "## Codex Security findings",
-            "",
-            if (.findings | length) == 0 then "No findings reported."
-            else .findings[] | "- **\(.severity.level | ascii_upcase)**: \(.title) (`\(.locations[0].path):\(.locations[0].startLine)`)\n  \(.summary)"
-            end
-          ' "$findings" | gh pr comment "$PR_NUMBER" --body-file -
-
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -200,12 +212,14 @@ jobs:
           path: ${{ runner.temp }}/codex-security/codex-security-scans
 ```
 
-  </div>
+  
 
-  <div slot="gitlab">
 
-Create masked `CODEX_SECURITY_API_KEY` and `GITLAB_TOKEN` CI/CD variables. The
-GitLab token needs API access to create a merge-request note.
+  
+
+
+Create a masked `CODEX_SECURITY_API_KEY` CI/CD variable and review the scan
+artifacts privately before sharing findings.
 
 ```yaml
 codex-security-review:
@@ -216,7 +230,7 @@ codex-security-review:
   script:
     - |
       codex_security_api_key="$CODEX_SECURITY_API_KEY"
-      unset CODEX_SECURITY_API_KEY GITLAB_TOKEN
+      unset CODEX_SECURITY_API_KEY
       export CODEX_HOME="/tmp/codex-home-$CI_JOB_ID"
       export TMPDIR="/tmp/codex-security-$CI_JOB_ID"
       export BASE_REVISION="$CI_MERGE_REQUEST_DIFF_BASE_SHA"
@@ -228,23 +242,8 @@ codex-security-review:
         "Use \$codex-security:security-diff-scan to review changes from $BASE_REVISION to $HEAD_REVISION for security regressions. Do not modify the checkout."
   after_script:
     - |
-      gitlab_token="$GITLAB_TOKEN"
-      unset CODEX_SECURITY_API_KEY GITLAB_TOKEN
+      unset CODEX_SECURITY_API_KEY
       scan_root="/tmp/codex-security-$CI_JOB_ID/codex-security-scans"
-      findings="$(find "$scan_root" -name findings.json -print -quit 2>/dev/null || true)"
-      if [ -n "$findings" ]; then
-        jq -r '
-          "## Codex Security findings",
-          "",
-          if (.findings | length) == 0 then "No findings reported."
-          else .findings[] | "- **\(.severity.level | ascii_upcase)**: \(.title) (`\(.locations[0].path):\(.locations[0].startLine)`)\n  \(.summary)"
-          end
-        ' "$findings" > codex-security-comment.md
-        curl --fail --request POST \
-          --header "PRIVATE-TOKEN: $gitlab_token" \
-          --form "body=<codex-security-comment.md" \
-          "$CI_API_V4_URL/projects/$CI_PROJECT_ID/merge_requests/$CI_MERGE_REQUEST_IID/notes"
-      fi
       if [ -d "$scan_root" ]; then
         tar -czf codex-security-artifacts.tar.gz -C "$scan_root" .
       fi
@@ -254,9 +253,11 @@ codex-security-review:
       - codex-security-artifacts.tar.gz
 ```
 
-  </div>
+  
 
-  <div slot="azure">
+
+  
+
 
 ```yaml
 trigger: none
@@ -297,9 +298,11 @@ steps:
 For Azure Repos, configure a **Build validation** branch policy to run the
 pipeline on pull requests.
 
-  </div>
+  
 
-  <div slot="jenkins">
+
+  
+
 
 ```groovy
 pipeline {
@@ -357,7 +360,8 @@ pipeline {
 }
 ```
 
-  </div>
+  
+
 </Tabs>
 
 The examples skip forked pull requests. Run credentialed jobs only from a

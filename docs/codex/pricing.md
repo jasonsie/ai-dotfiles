@@ -3,7 +3,9 @@
 
 # Pricing
 
-<strong>ChatGPT Work and Codex share usage.</strong> ChatGPT Work usage inside
+> For the complete documentation index, see [llms.txt](https://learn.chatgpt.com/llms.txt). Markdown versions of documentation pages are available by appending `.md` to the page URL.
+
+**ChatGPT Work and Codex share usage.** ChatGPT Work usage inside
   ChatGPT uses the same pricing, credits, and usage limits as Codex.
 
 <h2 class="sr-only">Pricing options</h2>
@@ -22,8 +24,10 @@
     },
   ]}
 >
-  <div data-content-switcher-pane data-value="individual">
-    <div class="codex-pricing-grid">
+  
+
+    
+
       <PricingCard
         name="Free"
         subtitle="Explore Codex capabilities on quick coding tasks."
@@ -93,12 +97,16 @@
         - Pay only for the tokens Codex uses, based on [API
           pricing](https://platform.openai.com/docs/pricing)
       </PricingCard>
-    </div>
+    
 
-  </div>
 
-  <div data-content-switcher-pane data-value="business-enterprise" hidden>
-    <div class="codex-pricing-grid">
+  
+
+
+  
+
+    
+
       <PricingCard
         name="Business"
         subtitle="Bring Codex into your startup or growing business."
@@ -136,9 +144,11 @@
         - Other [ChatGPT features](https://chatgpt.com/pricing) as part of the
           Enterprise plan
       </PricingCard>
-    </div>
+    
 
-    <div class="mt-8 mb-10 codex-pricing-grid">
+
+    
+
       <PricingCard
         class="codex-pricing-card--span-two"
         name="API Key"
@@ -155,9 +165,11 @@
         - Pay only for the tokens Codex uses, based on [API
           pricing](https://platform.openai.com/docs/pricing)
       </PricingCard>
-    </div>
+    
 
-  </div>
+
+  
+
 </ContentSwitcher>
 
 ## Invite friends and coworkers
@@ -201,14 +213,16 @@ so prompt length alone isn't a reliable estimate.
 
 Choose the GPT-5.6 model that best fits your work:
 
-- **Sol** is the best choice when quality and reasoning depth matter most. Use
-  it for complex analysis, coding, research, and advanced workflows.
-- **Terra** is the everyday default: strong capability with a better balance of
-  performance and price.
-- **Luna** is optimized for speed and affordability, making it a good fit for
-  lighter-weight or high-volume workloads.
+- **Sol** is built for the hardest work—complex reasoning, ambiguous problems,
+  advanced coding, and high-stakes decisions.
+- **Terra** is the everyday workhorse for production tasks, reporting, document
+  analysis, coding, and work that requires sound judgment.
+- **Luna** is optimized for fast, high-volume work such as routing,
+  classification, extraction, support, background automation, and focused coding
+  tasks.
 
-<div id="usage-limits">
+
+
   <ContentSwitcher
     id="codex-usage-limits"
     initialValue="plus"
@@ -236,8 +250,11 @@ Choose the GPT-5.6 model that best fits your work:
       },
     ]}
   >
-    <div data-content-switcher-pane data-value="plus">
-      <div class="hidden">Plus</div>
+    
+
+      
+Plus
+
 
       <table>
         <thead>
@@ -257,19 +274,19 @@ Choose the GPT-5.6 model that best fits your work:
         <tbody>
           <tr>
             <td>GPT-5.6 Sol</td>
-            <td style="text-align:center">15-90</td>
+            <td style="text-align:center">10-100</td>
             <td style="text-align:center">Not available</td>
             <td style="text-align:center">Not available</td>
           </tr>
           <tr>
             <td>GPT-5.6 Terra</td>
-            <td style="text-align:center">20-110</td>
+            <td style="text-align:center">25-200</td>
             <td style="text-align:center">Not available</td>
             <td style="text-align:center">Not available</td>
           </tr>
           <tr>
             <td>GPT-5.6 Luna</td>
-            <td style="text-align:center">50-280</td>
+            <td style="text-align:center">250-2,000</td>
             <td style="text-align:center">Not available</td>
             <td style="text-align:center">Not available</td>
           </tr>
@@ -316,9 +333,13 @@ Choose the GPT-5.6 model that best fits your work:
           </tr>
         </tfoot>
       </table>
-    </div>
-    <div data-content-switcher-pane data-value="pro" hidden>
-      <div class="hidden">Pro 5x</div>
+    
+
+    
+
+      
+Pro 5x
+
 
       <table>
         <thead>
@@ -338,19 +359,19 @@ Choose the GPT-5.6 model that best fits your work:
         <tbody>
           <tr>
             <td>GPT-5.6 Sol</td>
-            <td style="text-align:center">75-450</td>
+            <td style="text-align:center">50-500</td>
             <td style="text-align:center">Not available</td>
             <td style="text-align:center">Not available</td>
           </tr>
           <tr>
             <td>GPT-5.6 Terra</td>
-            <td style="text-align:center">100-550</td>
+            <td style="text-align:center">125-1,000</td>
             <td style="text-align:center">Not available</td>
             <td style="text-align:center">Not available</td>
           </tr>
           <tr>
             <td>GPT-5.6 Luna</td>
-            <td style="text-align:center">250-1400</td>
+            <td style="text-align:center">1,250-10,000</td>
             <td style="text-align:center">Not available</td>
             <td style="text-align:center">Not available</td>
           </tr>
@@ -397,9 +418,13 @@ Choose the GPT-5.6 model that best fits your work:
           </tr>
         </tfoot>
       </table>
-    </div>
-    <div data-content-switcher-pane data-value="pro-20x" hidden>
-      <div class="hidden">Pro 20x</div>
+    
+
+    
+
+      
+Pro 20x
+
 
       <table>
         <thead>
@@ -419,19 +444,19 @@ Choose the GPT-5.6 model that best fits your work:
         <tbody>
           <tr>
             <td>GPT-5.6 Sol</td>
-            <td style="text-align:center">300-1800</td>
+            <td style="text-align:center">200-2,000</td>
             <td style="text-align:center">Not available</td>
             <td style="text-align:center">Not available</td>
           </tr>
           <tr>
             <td>GPT-5.6 Terra</td>
-            <td style="text-align:center">400-2200</td>
+            <td style="text-align:center">500-4,000</td>
             <td style="text-align:center">Not available</td>
             <td style="text-align:center">Not available</td>
           </tr>
           <tr>
             <td>GPT-5.6 Luna</td>
-            <td style="text-align:center">1000-5600</td>
+            <td style="text-align:center">5,000-40,000</td>
             <td style="text-align:center">Not available</td>
             <td style="text-align:center">Not available</td>
           </tr>
@@ -478,9 +503,13 @@ Choose the GPT-5.6 model that best fits your work:
           </tr>
         </tfoot>
       </table>
-    </div>
-    <div data-content-switcher-pane data-value="business" hidden>
-      <div class="hidden">Business</div>
+    
+
+    
+
+      
+Business
+
 
       <table>
         <thead>
@@ -500,19 +529,19 @@ Choose the GPT-5.6 model that best fits your work:
         <tbody>
           <tr>
             <td>GPT-5.6 Sol</td>
-            <td style="text-align:center">15-90</td>
+            <td style="text-align:center">10-100</td>
             <td style="text-align:center">Not available</td>
             <td style="text-align:center">Not available</td>
           </tr>
           <tr>
             <td>GPT-5.6 Terra</td>
-            <td style="text-align:center">20-110</td>
+            <td style="text-align:center">25-200</td>
             <td style="text-align:center">Not available</td>
             <td style="text-align:center">Not available</td>
           </tr>
           <tr>
             <td>GPT-5.6 Luna</td>
-            <td style="text-align:center">50-280</td>
+            <td style="text-align:center">250-2,000</td>
             <td style="text-align:center">Not available</td>
             <td style="text-align:center">Not available</td>
           </tr>
@@ -559,9 +588,13 @@ Choose the GPT-5.6 model that best fits your work:
           </tr>
         </tfoot>
       </table>
-    </div>
-    <div data-content-switcher-pane data-value="api-key" hidden>
-      <div class="hidden">API Key</div>
+    
+
+    
+
+      
+API Key
+
 
       <table>
         <thead>
@@ -652,10 +685,12 @@ Choose the GPT-5.6 model that best fits your work:
           </tr>
         </tfoot>
       </table>
-    </div>
+    
+
 
   </ContentSwitcher>
-</div>
+
+
 
 Usage limits are shared with other agentic features once pricing for those
 features is effective. This currently includes [ChatGPT for
@@ -758,7 +793,8 @@ card until we migrate you to the new token-based pricing. For more information,
 [contact OpenAI
 sales](https://chatgpt.com/contact-sales?utm_internal_source=openai_developers_codex).
 
-<div id="credits-overview">
+
+
   <table>
     <thead>
       <tr>
@@ -783,15 +819,15 @@ sales](https://chatgpt.com/contact-sales?utm_internal_source=openai_developers_c
       </tr>
       <tr>
         <td>GPT-5.6 Terra</td>
-        <td style="text-align:center">62.5 credits</td>
-        <td style="text-align:center">6.25 credits</td>
-        <td style="text-align:center">375 credits</td>
+        <td style="text-align:center">50 credits</td>
+        <td style="text-align:center">5 credits</td>
+        <td style="text-align:center">300 credits</td>
       </tr>
       <tr>
         <td>GPT-5.6 Luna</td>
-        <td style="text-align:center">25 credits</td>
-        <td style="text-align:center">2.5 credits</td>
-        <td style="text-align:center">150 credits</td>
+        <td style="text-align:center">5 credits</td>
+        <td style="text-align:center">0.5 credits</td>
+        <td style="text-align:center">30 credits</td>
       </tr>
       <tr>
         <td>GPT-5.5</td>
@@ -839,12 +875,13 @@ sales](https://chatgpt.com/contact-sales?utm_internal_source=openai_developers_c
       <tr>
         <td colspan="4" style="text-align:center">
           Fast mode consumes credits at a higher rate for supported models. See
-          <a href="/codex/agent-configuration/speed">Speed</a> for rates.
+          [Speed](https://learn.chatgpt.com/docs/agent-configuration/speed) for rates.
         </td>
       </tr>
     </tfoot>
   </table>
-</div>
+
+
 
 Speed configurations will increase credit consumption for all models that apply.
 Fast mode consumes credits at a higher rate for supported models. See
@@ -880,8 +917,8 @@ tips to maximize your limits:
 - **Limit the number of MCP servers you use.** Every
   [MCP](https://learn.chatgpt.com/docs/extend/mcp) server adds more context to your messages and uses
   more of your limit. Disable MCP servers when you don’t need them.
-- **Switch to a smaller model for routine tasks.** Using GPT-5.4 or
-  GPT-5.4 mini can extend your local-message usage limits, depending on the
+- **Switch to a smaller model for routine tasks.** Using GPT-5.6 Terra or
+  GPT-5.6 Luna can extend your local-message usage limits, depending on the
   model you switch from.
 
 For guidance on choosing and scoping tasks, see [Use Work
@@ -1633,10 +1670,10 @@ efficiently](https://learn.chatgpt.com/docs/prompting#use-work-efficiently).
 >
   <sup>*</sup> Feature is currently limited to only specific regions. Check the
   individual feature documentation to learn more about geo restrictions.
-</div>
+
+
 <div
   id="codex-plan-plugin-limits"
   className="not-prose mt-1 text-sm text-secondary"
 >
   <sup>†</sup> Some first party plugins are not available.
-</div>

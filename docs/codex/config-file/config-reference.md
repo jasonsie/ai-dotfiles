@@ -3,6 +3,8 @@
 
 # Configuration Reference
 
+> For the complete documentation index, see [llms.txt](https://learn.chatgpt.com/llms.txt). Markdown versions of documentation pages are available by appending `.md` to the page URL.
+
 Use this page as a searchable reference for Codex configuration files. For conceptual guidance and examples, start with [Config basics](https://learn.chatgpt.com/docs/config-file/config-basic) and [Advanced Config](https://learn.chatgpt.com/docs/config-file/config-advanced).
 
 ## `config.toml`
@@ -428,13 +430,19 @@ For sandbox and approval keys (`approval_policy`, `sandbox_mode`, and `sandbox_w
       key: "hooks.<Event>",
       type: "array<table>",
       description:
-        "Matcher groups for hook events such as `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PreCompact`, `PostCompact`, `SessionStart`, `SubagentStart`, `SubagentStop`, `UserPromptSubmit`, or `Stop`.",
+        "Matcher groups for hook events such as `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PreCompact`, `PostCompact`, `SessionStart`, `SessionEnd`, `SubagentStart`, `SubagentStop`, `UserPromptSubmit`, or `Stop`.",
     },
     {
       key: "hooks.<Event>[].hooks",
       type: "array<table>",
       description:
         "Hook handlers for a matcher group. Command hooks are currently supported; prompt and agent hook handlers are parsed but skipped.",
+    },
+    {
+      key: "hooks.<Event>[].hooks[].additionalContextLimit",
+      type: "integer",
+      description:
+        "Approximate per-handler token threshold for saving oversized `additionalContext` to disk and showing the model a shorter preview. Defaults to `2500`; `0` passes the full context directly to the model. See [Large hook output](https://learn.chatgpt.com/docs/hooks#large-hook-output).",
     },
     {
       key: "hooks.<Event>[].hooks[].commandWindows",
@@ -930,6 +938,12 @@ For sandbox and approval keys (`approval_policy`, `sandbox_mode`, and `sandbox_w
         "Whether that provider supports the Responses API WebSocket transport.",
     },
     {
+      key: "model_providers.<id>.supports_standalone_web_search",
+      type: "boolean",
+      description:
+        "Advertise support for a compatible standalone web search endpoint (default: false). Standalone search remains under development and off by default; provider compatibility alone doesn't enable it.",
+    },
+    {
       key: "model_providers.<id>.auth",
       type: "table",
       description:
@@ -1013,25 +1027,31 @@ For sandbox and approval keys (`approval_policy`, `sandbox_mode`, and `sandbox_w
       key: "shell_environment_policy.ignore_default_excludes",
       type: "boolean",
       description:
-        "Keep variables containing KEY/SECRET/TOKEN before other filters run.",
+        "Keep variables containing KEY, SECRET, or TOKEN before other filters run (default: true). Set to false to apply automatic secret-name exclusions.",
+    },
+    {
+      key: "shell_environment_policy.filters",
+      type: "map<string, include | exclude>",
+      description:
+        "Canonical case-insensitive environment-variable pattern filters. Include entries create an allowlist and can't restore excluded values. Explicit `set` values apply after exclusions. Don't combine filters with legacy `exclude` or `include_only` arrays in the same layer.",
     },
     {
       key: "shell_environment_policy.exclude",
       type: "array<string>",
       description:
-        "Glob patterns for removing environment variables after the defaults.",
+        "Legacy environment-variable exclusion patterns. Use `shell_environment_policy.filters` for new configuration; don't combine both forms in the same layer.",
     },
     {
       key: "shell_environment_policy.include_only",
       type: "array<string>",
       description:
-        "Whitelist of patterns; when set only matching variables are kept.",
+        "Legacy allowlist of environment-variable patterns. Use `shell_environment_policy.filters` for new configuration; don't combine both forms in the same layer.",
     },
     {
       key: "shell_environment_policy.set",
       type: "map<string,string>",
       description:
-        "Explicit environment overrides injected into every subprocess.",
+        "Explicit environment values injected after exclusions; include filters can still remove them.",
     },
     {
       key: "shell_environment_policy.experimental_use_profile",
@@ -1251,6 +1271,12 @@ For sandbox and approval keys (`approval_policy`, `sandbox_mode`, and `sandbox_w
       type: "auto | always | never",
       description:
         "Control alternate screen usage for the TUI (default: auto; auto skips it in Zellij to preserve scrollback).",
+    },
+    {
+      key: "tui.resume_cwd",
+      type: "current | session",
+      description:
+        "Working directory to use when resuming or forking a session. When unset, Codex asks you to choose if your current directory differs from the session's saved directory.",
     },
     {
       key: "tui.vim_mode_default",
@@ -1617,6 +1643,10 @@ canonical keys that `config.toml` uses. Requirements can also include documented
 app-only keys that don't belong in `config.toml`. Omitted keys remain
 unconstrained.
 
+Some managed requirements enforce an exact configuration value instead of an
+allowlist. Users can't override an enforced path, update preference, login-shell
+policy, feedback setting, or Windows private-desktop setting.
+
 Managed permission-profile allowlists require Codex 0.138.0 or later. Codex
 0.137.0 and earlier ignore `allowed_permission_profiles` and managed
 `default_permissions`.
@@ -1632,6 +1662,43 @@ model fields; `service_tier` is independent.
 
 <ConfigTable
   options={[
+    {
+      key: "sqlite_home",
+      type: "string (path)",
+      description:
+        "Enforce the directory where Codex stores SQLite-backed runtime state.",
+    },
+    {
+      key: "log_dir",
+      type: "string (path)",
+      description: "Enforce the directory where Codex writes local log files.",
+    },
+    {
+      key: "model_catalog_json",
+      type: "string (path)",
+      description: "Enforce the JSON model catalog Codex uses at startup.",
+    },
+    {
+      key: "check_for_update_on_startup",
+      type: "boolean",
+      description: "Enforce whether Codex checks for updates when it starts.",
+    },
+    {
+      key: "allow_login_shell",
+      type: "boolean",
+      description: "Enforce whether shell tools can start a login shell.",
+    },
+    {
+      key: "feedback",
+      type: "table",
+      description: "Managed feedback settings.",
+    },
+    {
+      key: "feedback.enabled",
+      type: "boolean",
+      description:
+        "Enforce whether users can submit feedback across Codex clients.",
+    },
     {
       key: "allowed_approval_policies",
       type: "array<string>",
@@ -1733,6 +1800,12 @@ model fields; `service_tier` is independent.
         "Allowed native Windows sandbox implementations for `windows.sandbox` (`elevated` and `unelevated`). The list must not be empty. When both are allowed and no mode is selected, Codex prefers `elevated`.",
     },
     {
+      key: "windows.sandbox_private_desktop",
+      type: "boolean",
+      description:
+        "Enforce whether the native Windows sandbox starts its child process on a private desktop.",
+    },
+    {
       key: "remote_sandbox_config",
       type: "array<table>",
       description:
@@ -1797,6 +1870,12 @@ model fields; `service_tier` is independent.
       type: "boolean",
       description:
         "Pin Apps integration availability on or off for managed users.",
+    },
+    {
+      key: "features.in_app_updates",
+      type: "boolean",
+      description:
+        "Set to `false` in `requirements.toml` to disable in-app updates. Updates remain enabled by default when this requirement is omitted.",
     },
     {
       key: "features.in_app_browser",
@@ -1979,13 +2058,19 @@ model fields; `service_tier` is independent.
       key: "hooks.<Event>",
       type: "array<table>",
       description:
-        "Matcher groups for a hook event such as `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PreCompact`, `PostCompact`, `SessionStart`, `SubagentStart`, `SubagentStop`, `UserPromptSubmit`, or `Stop`.",
+        "Matcher groups for a hook event such as `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PreCompact`, `PostCompact`, `SessionStart`, `SessionEnd`, `SubagentStart`, `SubagentStop`, `UserPromptSubmit`, or `Stop`.",
     },
     {
       key: "hooks.<Event>[].hooks",
       type: "array<table>",
       description:
         "Hook handlers for a matcher group. Command hooks are currently supported; prompt and agent hook handlers are parsed but skipped.",
+    },
+    {
+      key: "hooks.<Event>[].hooks[].additionalContextLimit",
+      type: "integer",
+      description:
+        "Approximate per-handler token threshold for saving oversized `additionalContext` to disk and showing the model a shorter preview. Defaults to `2500`; `0` passes the full context directly to the model. See [Large hook output](https://learn.chatgpt.com/docs/hooks#large-hook-output).",
     },
     {
       key: "hooks.<Event>[].hooks[].commandWindows",

@@ -3,6 +3,8 @@
 
 # Sample Configuration
 
+> For the complete documentation index, see [llms.txt](https://learn.chatgpt.com/llms.txt). Markdown versions of documentation pages are available by appending `.md` to the page URL.
+
 Use this example configuration as a starting point. It includes most keys Codex reads from `config.toml`, along with default behaviors, recommended values where helpful, and short notes.
 
 For explanations and guidance, see:
@@ -406,25 +408,33 @@ exclude_slash_tmp = false
 
 inherit = "all"
 
-# Skip default excludes for names containing KEY/SECRET/TOKEN (case-insensitive). Default: false
+# Skip automatic filtering for names containing KEY/SECRET/TOKEN. Default: true.
+
+# Set false to remove those variables before applying explicit filters.
 
 ignore_default_excludes = false
 
-# Case-insensitive glob patterns to remove (e.g., "AWS*\*", "AZURE*\*"). Default: []
-
-exclude = []
-
-# Explicit key/value overrides (always win). Default: {}
+# Explicit key/value overrides. Include filters can still remove them. Default: {}
 
 set = {}
-
-# Whitelist; if non-empty, keep only matching vars. Default: []
-
-include_only = []
 
 # Experimental: run via user shell profile. Default: false
 
 experimental_use_profile = false
+
+# Canonical case-insensitive filters. "include" entries create an allowlist.
+
+# Excludes apply before explicit set values and the include allowlist.
+
+# Don't combine filters with legacy exclude or
+
+# include_only arrays in the same configuration layer.
+
+[shell_environment_policy.filters]
+
+"AWS\_\*" = "exclude"
+
+"AZURE\_\*" = "exclude"
 
 ################################################################################
 
@@ -574,6 +584,12 @@ show_tooltips = true
 
 # alternate_screen = "auto"
 
+# Working directory for resumed or forked sessions: current | session.
+
+# Leave unset to choose when the current and saved session directories differ.
+
+# resume_cwd = "session"
+
 # Ordered list of footer status-line item IDs. When unset, Codex uses:
 
 # ["model-with-reasoning", "context-remaining", "current-dir"].
@@ -622,7 +638,7 @@ show_tooltips = true
 
 # [tui.model_availability_nux]
 
-# "gpt-5.4" = 1
+# "gpt-5.6-terra" = 1
 
 # Enable or disable analytics for this machine. When unset, Codex uses its default behavior.
 
@@ -648,7 +664,7 @@ enabled = true
 
 # "hide_gpt-5.1-codex-max_migration_prompt" = true
 
-# model_migrations = { "gpt-5.3-codex" = "gpt-5.4" }
+# model_migrations = { "gpt-5.4" = "gpt-5.6-terra" }
 
 ################################################################################
 
@@ -878,6 +894,8 @@ enabled = true
 
 # # supports_websockets = true # optional
 
+# # supports_standalone_web_search = true # optional; search is under development and off by default
+
 # # experimental_bearer_token = "sk-example" # optional dev-only direct bearer token
 
 # # http_headers = { "X-Example" = "value" }
@@ -1012,7 +1030,7 @@ enabled = true
 
 # For example, a CI profile could live at $CODEX_HOME/ci.config.toml:
 
-# model = "gpt-5.4"
+# model = "gpt-5.6-terra"
 
 # approval_policy = "on-request"
 

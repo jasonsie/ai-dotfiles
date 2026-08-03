@@ -3,8 +3,14 @@
 
 # Models
 
-<div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_14rem] lg:items-start">
-  <div class="min-w-0">
+> For the complete documentation index, see [llms.txt](https://learn.chatgpt.com/llms.txt). Markdown versions of documentation pages are available by appending `.md` to the page URL.
+
+<ContentModeSwitch group="codex-surface" id="app">
+
+
+
+  
+
 
 ## Choose a model
 
@@ -15,22 +21,122 @@ Higher reasoning effort can improve results for complex tasks, but it takes
 longer and uses more tokens. Start with the default effort and increase it when
 the task needs deeper planning or analysis.
 
-<strong className="text-[#8756e8] dark:text-[#bda4ff]">Ultra</strong> mode goes
+**Ultra** mode goes
 beyond a single-agent run. It uses
 [subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents) to accelerate complex work,
 making it useful for larger tasks that can be split across subagents.
 
-  </div>
+  
+
   <CodexModelSwitcher client:visible className="lg:mt-7" />
-</div>
 
 
 
+</ContentModeSwitch>
+
+<ContentModeSwitch group="codex-surface" id="web">
 
 
 
+  
 
 
+## Choose a model
+
+These recommendations apply to **ChatGPT Work** on the web. Use the
+model and reasoning control beneath the composer to choose an available model
+and adjust its reasoning effort.
+
+Higher reasoning effort can improve results for complex tasks, but it takes
+longer and uses more tokens. Start with the default effort and increase it when
+the task needs deeper planning or analysis.
+
+**Ultra** mode goes
+beyond a single-agent run. It uses
+[subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents) to accelerate complex work,
+making it useful for larger tasks that can be split across subagents.
+
+  
+
+  <CodexModelSwitcher client:visible className="lg:mt-7" />
+
+
+
+</ContentModeSwitch>
+
+<ContentModeSwitch group="codex-surface" id="cli">
+
+
+
+  
+
+
+## Choose a model
+
+In an interactive CLI session, use `/model` to switch models or adjust
+reasoning effort. You can also choose a model when you launch Codex with
+`--model` or its `-m` alias:
+
+```bash
+codex --model gpt-5.6
+```
+
+
+The same option works with non-interactive runs. For example:
+
+```bash
+codex exec -m gpt-5.6 "Review the current changes"
+```
+
+
+Higher reasoning effort can improve results for complex tasks, but it takes
+longer and uses more tokens. Start with the default effort and increase it when
+the task needs deeper planning or analysis.
+
+**Ultra** mode goes
+beyond a single-agent run. It uses
+[subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents) to accelerate complex work,
+making it useful for larger tasks that can be split across subagents.
+
+  
+
+  <CodexReasoningLevelTerminal
+    client:load
+    className="lg:mt-7 lg:justify-self-end"
+  />
+
+
+
+</ContentModeSwitch>
+
+<ContentModeSwitch group="codex-surface" id="ide">
+
+
+
+  
+
+
+## Choose a model
+
+Use the model switcher below the composer to choose an available model and
+reasoning effort.
+
+Higher reasoning effort can improve results for complex tasks, but it takes
+longer and uses more tokens. Start with the default effort and increase it when
+the task needs deeper planning or analysis.
+
+**Ultra** mode goes
+beyond a single-agent run. It uses
+[subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents) to accelerate complex work,
+making it useful for larger tasks that can be split across subagents.
+
+  
+
+  <CodexModelSwitcher client:visible forceDark className="lg:mt-7" />
+
+
+
+</ContentModeSwitch>
 
 <a id="recommended-models"></a>
 <a id="other-models"></a>
@@ -38,11 +144,12 @@ making it useful for larger tasks that can be split across subagents.
 <a id="configure-your-default-local-model"></a>
 <a id="choose-a-model-for-cloud-tasks"></a>
 
-
+<ContentModeSwitch group="codex-surface" ids="app,web,cli,ide">
 
 ## Recommended models
 
-<div class="not-prose grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+
+
   <ModelDetails
     client:load
     name="gpt-5.6-sol"
@@ -72,7 +179,7 @@ making it useful for larger tasks that can be split across subagents.
         { title: "ChatGPT web", value: true },
         { title: "Codex CLI", value: true },
         { title: "Codex IDE extension", value: true },
-        { title: "Codex cloud", value: false },
+        { title: "Codex cloud", value: true },
         { title: "ChatGPT Credits", value: true },
         { title: "API Access", value: true },
       ],
@@ -148,44 +255,7 @@ making it useful for larger tasks that can be split across subagents.
   }}
 />
 
-
-  <ModelDetails
-    client:load
-    name="gpt-5.5"
-    slug="gpt-5.5"
-    imageLabel="5.5"
-    wallpaperUrl="/images/api/models/gpt-5.5.jpg"
-    description="Previous-generation frontier model for complex coding, computer use, knowledge work, and research workflows."
-    data={{
-      features: [
-        {
-          title: "Capability",
-          value: "",
-          icons: [
-            "openai.SparklesFilled",
-            "openai.SparklesFilled",
-            "openai.SparklesFilled",
-            "openai.SparklesFilled",
-          ],
-        },
-        {
-          title: "Speed",
-          value: "",
-          icons: ["openai.Flash", "openai.Flash", "openai.Flash"],
-        },
-        { title: "ChatGPT desktop app", value: true },
-        { title: "ChatGPT web", value: true },
-        { title: "Codex CLI", value: true },
-        { title: "Codex IDE extension", value: true },
-        { title: "Codex cloud", value: true },
-        { title: "ChatGPT Credits", value: true },
-        { title: "API Access", value: true },
-      ],
-    }}
-  />
-
-
-
+<ContentModeSwitch group="codex-surface" ids="app,cli,ide">
   <ModelDetails
     client:load
     name="gpt-5.3-codex-spark"
@@ -221,9 +291,10 @@ making it useful for larger tasks that can be split across subagents.
       ],
     }}
   />
+</ContentModeSwitch>
 
 
-</div>
+
 
 Start with the default Power setting, which uses `gpt-5.6-sol` with medium
   reasoning. Move toward **Smarter** for deeper reasoning or **Faster** for
@@ -276,16 +347,60 @@ work into meaningful parts. Most tasks do not need Max or Ultra.
 If Ultra doesn't appear in the desktop app's model slider, go to
 **Settings** > **Configuration**, then turn on **Ultra in model picker slider**.
 
+</ContentModeSwitch>
 
-
-
+<ContentModeSwitch group="codex-surface" ids="app,cli,ide">
 
 ## Other models
 
 When you sign in with ChatGPT, Codex works best with the recommended models listed above.
 
+**
+    GPT-5.4 and GPT-5.4 mini retire from Codex on August 31, 2026.
+  ** 
+  If you sign in with ChatGPT, replace `gpt-5.4` with `gpt-5.6-terra` and
+  `gpt-5.4-mini` with `gpt-5.6-luna` in saved configurations, custom agents, and
+  scheduled tasks. The OpenAI API and Codex authenticated with your own API key
+  aren't affected.
+
 <ToggleSection title="View other models">
-  <div class="not-prose grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+  
+
+    <ModelDetails
+      client:load
+      name="gpt-5.5"
+      slug="gpt-5.5"
+      imageLabel="5.5"
+      wallpaperUrl="/images/api/models/gpt-5.5.jpg"
+      description="Previous-generation frontier model for complex coding, computer use, knowledge work, and research workflows."
+      data={{
+        features: [
+          {
+            title: "Capability",
+            value: "",
+            icons: [
+              "openai.SparklesFilled",
+              "openai.SparklesFilled",
+              "openai.SparklesFilled",
+              "openai.SparklesFilled",
+            ],
+          },
+          {
+            title: "Speed",
+            value: "",
+            icons: ["openai.Flash", "openai.Flash", "openai.Flash"],
+          },
+          { title: "ChatGPT desktop app", value: true },
+          { title: "ChatGPT web", value: true },
+          { title: "Codex CLI", value: true },
+          { title: "Codex IDE extension", value: true },
+          { title: "Codex cloud", value: false },
+          { title: "ChatGPT Credits", value: true },
+          { title: "API Access", value: true },
+        ],
+      }}
+    />
+
     <ModelDetails
       client:load
       name="gpt-5.4"
@@ -355,7 +470,8 @@ When you sign in with ChatGPT, Codex works best with the recommended models list
       }}
     />
 
-  </div>
+  
+
 </ToggleSection>
 
 You can also point Codex at any model and provider that supports either the [Chat Completions](https://platform.openai.com/docs/api-reference/chat) or [Responses APIs](https://platform.openai.com/docs/api-reference/responses) to fit your specific use case.
@@ -365,9 +481,18 @@ Support for the Chat Completions API is deprecated and will be removed in
 
 ## Deprecated Codex models
 
-The `gpt-5.2` and `gpt-5.3-codex` models are deprecated in Codex when you sign in with ChatGPT. If your scripts, configuration files, or `codex exec --model` commands still reference deprecated models, update them to the latest model listed above.
+The `gpt-5.4` and `gpt-5.4-mini` models retire from Codex with ChatGPT sign-in
+on August 31, 2026. Replace `gpt-5.4` with `gpt-5.6-terra` and
+`gpt-5.4-mini` with `gpt-5.6-luna` in workspace defaults, saved model
+settings, managed configurations, custom agents, and scheduled tasks.
 
-Some models that are deprecated for ChatGPT sign-in may still be available in the API. If your workflow depends on one of those models, use API-key authentication and check the [API models page](https://developers.openai.com/api/docs/models) for current availability.
+The `gpt-5.2` and `gpt-5.3-codex` models are already deprecated in Codex when
+you sign in with ChatGPT. Update scripts, configuration files, and
+`codex exec --model` commands that still reference those models.
+
+The OpenAI API and Codex authenticated with your own API key aren't affected
+by the GPT-5.4 retirement. For current API model availability, see the
+[API models page](https://developers.openai.com/api/docs/models).
 
 ## Configure your default local model
 
@@ -384,3 +509,5 @@ model = "gpt-5.6"
 ## Choose a model for cloud chats
 
 Currently, you can't change the default model for Codex cloud chats.
+
+</ContentModeSwitch>

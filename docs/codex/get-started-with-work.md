@@ -3,6 +3,8 @@
 
 # Get started with ChatGPT Work
 
+> For the complete documentation index, see [llms.txt](https://learn.chatgpt.com/llms.txt). Markdown versions of documentation pages are available by appending `.md` to the page URL.
+
 <VideoPlayer src="https://cdn.openai.com/devhub/superapp-video-v1.mp4" />
 
 <a id="introducing-work-mode"></a>
@@ -62,12 +64,13 @@ deck.
   class="my-6 p-4 md:p-8"
 />
 
-<PromptComponent
-  openInCodex
-  actionsPlacement="header"
-  label="Example prompt"
-  prompt={`Review the attached source materials and create an eight-slide presentation for [audience]. Focus on the main themes, include supporting evidence, and flag anything that needs human review. Return a draft for my review.`}
-/>
+
+
+**Example prompt:**
+
+```text
+Review the attached source materials and create an eight-slide presentation for [audience]. Focus on the main themes, include supporting evidence, and flag anything that needs human review. Return a draft for my review.
+```
 
 ### Create a comparison spreadsheet
 
@@ -82,12 +85,13 @@ options and helps you make a decision.
   class="my-6 p-4 md:p-8"
 />
 
-<PromptComponent
-  openInCodex
-  actionsPlacement="header"
-  label="Example prompt"
-  prompt={`Create a spreadsheet comparing the options for [decision]. Use the attached notes and source materials. Include the most important criteria, score each option, flag risks or missing information, and add a summary tab with a recommendation and next steps.`}
-/>
+
+
+**Example prompt:**
+
+```text
+Create a spreadsheet comparing the options for [decision]. Use the attached notes and source materials. Include the most important criteria, score each option, flag risks or missing information, and add a summary tab with a recommendation and next steps.
+```
 
 ### Set up a recurring update
 
@@ -102,12 +106,13 @@ over time.
   class="my-6 p-4 md:p-8"
 />
 
-<PromptComponent
-  openInCodex
-  actionsPlacement="header"
-  label="Example prompt"
-  prompt={`Every Monday morning, review new updates from @Slack and @Google Drive for [project]. Refresh the meeting agenda with decisions, blockers, owners, and open questions. Send me a draft before sharing it.`}
-/>
+
+
+**Example prompt:**
+
+```text
+Every Monday morning, review new updates from @Slack and @Google Drive for [project]. Refresh the meeting agenda with decisions, blockers, owners, and open questions. Send me a draft before sharing it.
+```
 
 Learn more about [scheduled tasks](https://learn.chatgpt.com/docs/automations?surface=app).
 
@@ -130,12 +135,13 @@ review or approval.
 
 **Instead of:** Make me a presentation about our customer research.
 
-<PromptComponent
-  openInCodex
-  actionsPlacement="header"
-  label="Example prompt"
-  prompt={`Review the attached interview notes and survey results. Create an eight-slide presentation for the product leadership meeting. Focus on the three most common customer problems, include supporting evidence, separate findings from recommendations, and flag any claims that are not well supported. Use @Google Drive for the source docs. Return a draft for my review before treating it as final.`}
-/>
+
+
+**Example prompt:**
+
+```text
+Review the attached interview notes and survey results. Create an eight-slide presentation for the product leadership meeting. Focus on the three most common customer problems, include supporting evidence, separate findings from recommendations, and flag any claims that are not well supported. Use @Google Drive for the source docs. Return a draft for my review before treating it as final.
+```
 
 Learn more about [prompting for ChatGPT Work](https://learn.chatgpt.com/docs/prompting#prompting-for-work).
 

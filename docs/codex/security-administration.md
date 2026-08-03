@@ -3,6 +3,8 @@
 
 # Security
 
+> For the complete documentation index, see [llms.txt](https://learn.chatgpt.com/llms.txt). Markdown versions of documentation pages are available by appending `.md` to the page URL.
+
 <CodexDocsOverviewLanding
   title="Security"
   description="Control what ChatGPT and Codex developer tools can access, understand how work is isolated, and apply safeguards for security-sensitive tasks."
@@ -69,18 +71,25 @@
           icon: "shieldCheck",
         },
         {
-          title: "Codex Security cloud FAQ",
-          description:
-            "Get answers about cloud scans, findings, privacy, and access.",
-          href: "/codex/security/faq",
-          icon: "chat",
-        },
-        {
           title: "Codex Security plugin",
           description:
             "Run security workflows from the ChatGPT desktop app and Codex CLI.",
           href: "/codex/security/plugin",
           icon: "plugin",
+        },
+        {
+          title: "Codex Security CLI",
+          description:
+            "Run local security scans and automate repository reviews.",
+          href: "/codex/security/cli",
+          icon: "terminal",
+        },
+        {
+          title: "Codex Security TypeScript SDK",
+          description:
+            "Integrate security scanning and progress reporting into developer tools.",
+          href: "/codex/security/sdk",
+          icon: "code",
         },
         {
           title: "Codex Security cloud setup",
@@ -94,6 +103,13 @@
           description: "Review and improve the threat model for your codebase.",
           href: "/codex/security/threat-model",
           icon: "webSearch",
+        },
+        {
+          title: "Codex Security cloud FAQ",
+          description:
+            "Get answers about cloud scans, findings, privacy, and access.",
+          href: "/codex/security/faq",
+          icon: "chat",
         },
       ],
     },

@@ -3,6 +3,8 @@
 
 # Config basics
 
+> For the complete documentation index, see [llms.txt](https://learn.chatgpt.com/llms.txt). Markdown versions of documentation pages are available by appending `.md` to the page URL.
+
 Codex reads configuration details from more than one location. Your personal defaults live in `~/.codex/config.toml`, and you can add project overrides with `.codex/config.toml` files. For security, Codex loads project `.codex/` layers only when you trust the project.
 
 ## Codex configuration file
@@ -141,12 +143,23 @@ interrupt_turn = "f12"
 
 #### Command environment
 
-Control which environment variables Codex forwards to spawned commands.
+Control which environment variables Codex forwards to spawned commands. Use
+keyed filters to keep only the variables you need:
 
 ```toml
 [shell_environment_policy]
-include_only = ["PATH", "HOME"]
+ignore_default_excludes = false
+
+[shell_environment_policy.filters]
+"PATH" = "include"
+"HOME" = "include"
 ```
+
+`ignore_default_excludes` defaults to `true`, which skips automatic filtering
+for variable names containing `KEY`, `SECRET`, or `TOKEN`. Set it to `false`
+when you want that automatic filtering. For exclusion rules, precedence, and
+legacy configuration, see [Shell environment
+policy](https://learn.chatgpt.com/docs/config-file/config-advanced#shell-environment-policy).
 
 #### Log directory
 

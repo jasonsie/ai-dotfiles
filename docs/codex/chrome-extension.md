@@ -3,6 +3,8 @@
 
 # Chrome extension
 
+> For the complete documentation index, see [llms.txt](https://learn.chatgpt.com/llms.txt). Markdown versions of documentation pages are available by appending `.md` to the page URL.
+
 Use the Chrome extension to let ChatGPT control your Chrome browser. ChatGPT can
 read or act on sites where you're already signed in, such as LinkedIn,
 Salesforce, Gmail, or internal tools.
@@ -16,14 +18,16 @@ ChatGPT can also switch between tools as a task requires, using plugins when a
 dedicated integration is available, Chrome when it needs logged-in browser
 context, and the built-in browser for localhost.
 
-<div className="not-prose my-4">
+
+
   <Alert
     client:load
     color="warning"
     variant="soft"
     description="Treat page content as untrusted context, and review the website before allowing ChatGPT to continue."
   />
-</div>
+
+
 
 ## Use ChatGPT from Chrome
 
@@ -46,6 +50,26 @@ Chrome, so you can continue work in either place.
     backgroundImage="/images/codex/codex-wallpaper-1.webp"
   />
 </Illustration>
+
+## Bring tabs and selected text into a chat
+
+Mention an open Chrome tab in the side chat when you want ChatGPT to use that
+page as context. You can also highlight text on a page and bring the selection
+into your chat to ask about a specific passage without copying the whole page.
+
+To start from the page instead, right-click it and select **Ask ChatGPT**. The
+side chat opens with the relevant page context so you can continue the request
+in Chrome.
+
+### Ask about a YouTube video
+
+Open a YouTube video, then ask a question about it in the Chrome side chat.
+When captions are available, ChatGPT can use the video's timestamped transcript
+to explain, summarize, or answer questions about the content.
+
+Treat webpage content, selected text, and video transcripts as untrusted
+context. Review the page and any requested permissions before asking ChatGPT to
+use or act on that information.
 
 ## Set up the Chrome extension
 

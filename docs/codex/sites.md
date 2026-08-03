@@ -3,6 +3,8 @@
 
 # Sites
 
+> For the complete documentation index, see [llms.txt](https://learn.chatgpt.com/llms.txt). Markdown versions of documentation pages are available by appending `.md` to the page URL.
+
 Sites is in public beta. Availability can depend on your plan, region, and
   workspace settings. Plan-specific usage limits apply across all Sites during
   the beta. ChatGPT shows the current limits and notifies you as you approach
@@ -14,18 +16,36 @@ Sites lets ChatGPT create, host, refine, and share websites, web apps, and games
 Use Sites when you want to turn a prompt or compatible existing project into a
 hosted experience without setting up a separate deployment workflow.
 
-
+<ContentModeSwitch group="codex-surface" id="app">
 
 Open **Sites** in the ChatGPT desktop app. You can start a site from a prompt or
 from a compatible local project, then return to the Sites view to manage it.
 
+</ContentModeSwitch>
 
+<ContentModeSwitch group="codex-surface" id="web">
 
+Use Sites in ChatGPT on the web to create and manage hosted sites. Select
+**More** > **Sites**, or go directly to
+[chatgpt.com/sites](https://chatgpt.com/sites), to find Sites you've created.
 
+</ContentModeSwitch>
 
+<ContentModeSwitch group="codex-surface" id="cli">
 
+Sites doesn't have a standalone Codex CLI management view. Use ChatGPT web or
+the desktop app to create, save, deploy, and manage a Sites project. You can
+still use Codex CLI to edit and test a local project before publishing it.
 
+</ContentModeSwitch>
 
+<ContentModeSwitch group="codex-surface" id="ide">
+
+Sites doesn't have a standalone IDE extension management view. Use ChatGPT web
+or the desktop app for Sites operations, and use the IDE extension to edit and
+test the local source project.
+
+</ContentModeSwitch>
 
 Every Sites deployment URL is a production deployment. If you want to review a
   build before it becomes live, ask ChatGPT to save a version without deploying
@@ -60,7 +80,13 @@ start the Sites workflow explicitly.
 
 </WorkflowSteps>
 
+<ContentModeSwitch group="codex-surface" id="web">
 
+In the preview, select **Edit**. Under **Describe website edits**, describe the
+changes you want. Use **Screenshot** or **Add files and more** when additional
+context would help.
+
+</ContentModeSwitch>
 
 ## Prompt Sites for common tasks
 
@@ -74,7 +100,7 @@ Require people to sign in with their workspace account, and keep the request
 data saved between visits.
 ```
 
-
+<ContentModeSwitch group="codex-surface" ids="app,cli,ide">
 
 For an existing project, ask Sites to prepare and publish the current app:
 
@@ -83,7 +109,7 @@ Deploy this project with Sites. Check whether it is compatible, make any
 required changes, and give me the deployment URL.
 ```
 
-
+</ContentModeSwitch>
 
 When a site needs durable application data or uploaded files, say so in the
 request:
@@ -103,15 +129,25 @@ Site without adding an analytics SDK. The analytics view shows total unique
 visitors and page views, plus both metrics over time. Change the date range or
 granularity to inspect a different period.
 
-
+<ContentModeSwitch group="codex-surface" id="app">
 
 Open **Sites**, find the Site, then select **More actions** > **Analytics**.
 
+</ContentModeSwitch>
 
+<ContentModeSwitch group="codex-surface" id="web">
 
+Go to [chatgpt.com/sites](https://chatgpt.com/sites), find the Site, then select
+**More actions** > **Analytics**.
 
+</ContentModeSwitch>
 
+<ContentModeSwitch group="codex-surface" ids="cli,ide">
 
+Sites doesn't have a standalone analytics view in the CLI or IDE extension. Open
+the Site in ChatGPT on the web or in the desktop app to review its analytics.
+
+</ContentModeSwitch>
 
 <Illustration description="Interactive Sites analytics dashboard showing unique visitors and page views over seven days.">
   <SitesAnalyticsIllustration />
@@ -160,7 +196,7 @@ name-split headers.
 A Site is a persistent hosted output that you can reopen, refine, configure,
 and share from **Sites** in ChatGPT.
 
-
+<ContentModeSwitch group="codex-surface" ids="app,cli,ide">
 
 A Sites project links a local source project to hosting managed through Sites.
 Sites stores that linkage and optional storage binding names in
@@ -178,11 +214,17 @@ file storage can contain:
 }
 ```
 
+</ContentModeSwitch>
 
+<ContentModeSwitch group="codex-surface" id="web">
 
+A Site appears in your Sites list even after the ChatGPT Work chat that created it ends.
+You don't need a local project or manifest to start a Site on the web. A Site is
+separate from a ChatGPT Project.
 
+</ContentModeSwitch>
 
-
+<ContentModeSwitch group="codex-surface" ids="app,cli,ide">
 
 Sites publishing has two separate stages:
 
@@ -196,7 +238,7 @@ Sites publishing has two separate stages:
 Ask ChatGPT to list or inspect saved versions when you need to identify a
 previous deployment candidate.
 
-
+</ContentModeSwitch>
 
 ## Choose a supported site shape
 
@@ -254,9 +296,14 @@ Open **Sites**, then open the Site's settings to add, update, or remove hosted
 environment variables and secrets. Keep secret values out of prompts, attached
 files, and Site content.
 
+<ContentModeSwitch group="codex-surface" id="web">
 
+Go to [chatgpt.com/sites](https://chatgpt.com/sites), find the Site, then select
+**More actions** > **Settings**.
 
+</ContentModeSwitch>
 
+<ContentModeSwitch group="codex-surface" ids="app,cli,ide">
 
 Don't store these values in `.openai/hosting.json`. Keep local `.env` and
 `.env.example` files aligned with the keys needed for local development, and
@@ -266,7 +313,7 @@ When you add, update, or remove hosted environment values, ask ChatGPT to
 redeploy the approved saved version so the next deployment uses the updated
 configuration.
 
-
+</ContentModeSwitch>
 
 ## Connect a custom domain
 
@@ -307,12 +354,12 @@ Before you share a Site:
 - Choose the narrowest sharing option that fits the intended audience.
 - Open the shared Site and confirm that the intended audience can visit it.
 
-
+<ContentModeSwitch group="codex-surface" id="app">
 
 For a Site built from a local project, also review the source changes and any
 database migrations in the Codex [review pane](https://learn.chatgpt.com/docs/code-review?surface=app).
 
-
+</ContentModeSwitch>
 
 ## Take down or delete a Site
 
@@ -347,8 +394,31 @@ for the current limits and policy links.
 
 ## Related documentation
 
-
+<ContentModeSwitch group="codex-surface" id="app">
 
 - [ChatGPT desktop app](https://learn.chatgpt.com/docs/app) introduces app navigation, projects, and chats.
 - [Review and ship changes](https://learn.chatgpt.com/docs/code-review?surface=app) explains how to inspect source
   changes before publishing them.
+
+</ContentModeSwitch>
+
+<ContentModeSwitch group="codex-surface" ids="cli,ide">
+
+- [Projects and chats](https://learn.chatgpt.com/docs/projects) explains how folder and workspace
+  context carries across chats.
+- [Review and ship changes](https://learn.chatgpt.com/docs/code-review) explains the review workflow for
+  each Codex client.
+- [Sandboxing](https://learn.chatgpt.com/docs/sandboxing) explains the local execution boundary.
+
+</ContentModeSwitch>
+
+<ContentModeSwitch group="codex-surface" id="web">
+
+- [Open Sites in ChatGPT](https://chatgpt.com/sites) to return to Sites you've
+  created.
+- [Projects and chats](https://learn.chatgpt.com/docs/projects?surface=web) explains how to keep
+  related chats and source files together.
+- [Work with files](https://learn.chatgpt.com/docs/artifacts-viewer?surface=web) explains how to review
+  generated files in ChatGPT web.
+
+</ContentModeSwitch>

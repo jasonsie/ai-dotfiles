@@ -3,6 +3,8 @@
 
 # Visualizations
 
+> For the complete documentation index, see [llms.txt](https://learn.chatgpt.com/llms.txt). Markdown versions of documentation pages are available by appending `.md` to the page URL.
+
 Visualizations turn questions, ideas, and information into charts, maps,
 diagrams, calculators, simulations, and interactive explanations you can explore
 in a ChatGPT chat. Use one when adjusting inputs or seeing a
@@ -12,7 +14,7 @@ act on.
 The Visualizations preview is rolling out. Availability can depend on your
   plan, platform, account, and workspace settings.
 
-
+<ContentModeSwitch group="codex-surface" id="app">
 
 The Visualizations preview is rolling out in the ChatGPT desktop app. When
 **Visualize** is available, type `@` in the composer, start entering
@@ -22,9 +24,18 @@ The Visualizations preview is rolling out in the ChatGPT desktop app. When
 If **Visualize** doesn't appear, use ChatGPT on the web or try again after the
 preview reaches your account.
 
+</ContentModeSwitch>
 
+<ContentModeSwitch group="codex-surface" id="web">
 
+In a supported Chat or ChatGPT Work chat, type `@` in the composer,
+start entering `Visualize`, and select **Visualize** under **Plugins**. Its
+description is **Create visualizations and interactive tools**. The composer
+adds a **Visualize** tag before your request.
 
+You can also type `@Visualize` and select the matching suggestion.
+
+</ContentModeSwitch>
 
 
 
@@ -63,14 +74,13 @@ Ask for the smallest format that fits the job:
 A strong request names the outcome, source material, question, and useful
 interactions. Try this example:
 
-<CodexPromptComposer
-  client:load
-  id="visualization-prompt-example"
-  destination="web"
-  placeholder="Message ChatGPT"
-  prompt="@Visualize how supply and demand determine a market price. Let me shift each curve, mark the equilibrium, and explain how price and quantity change."
-  className="!mt-3 !mb-8 w-full max-w-3xl min-w-0"
-/>
+
+
+**Prompt:**
+
+```text
+@Visualize how supply and demand determine a market price. Let me shift each curve, mark the equilibrium, and explain how price and quantity change.
+```
 
 Tell ChatGPT which information to use, such as content already in the
 chat, pasted data, an attached file, or an available connected source.

@@ -3,6 +3,8 @@
 
 # Advanced Configuration
 
+> For the complete documentation index, see [llms.txt](https://learn.chatgpt.com/llms.txt). Markdown versions of documentation pages are available by appending `.md` to the page URL.
+
 Use these options when you need more control over providers, policies, and integrations. For a quick start, see [Config basics](https://learn.chatgpt.com/docs/config-file/config-basic).
 
 For background on project guidance, reusable capabilities, custom slash commands, subagent workflows, and integrations, see [Customization](https://learn.chatgpt.com/docs/customization/overview). For configuration keys, see [Configuration Reference](https://learn.chatgpt.com/docs/config-file/config-reference).
@@ -53,10 +55,10 @@ Examples:
 
 ```shell
 # Dedicated flag
-codex --model gpt-5.4
+codex --model gpt-5.6-terra
 
 # Generic key/value override (value is TOML, not JSON)
-codex --config model='"gpt-5.4"'
+codex --config model='"gpt-5.6-terra"'
 codex --config sandbox_workspace_write.network_access=true
 codex --config 'shell_environment_policy.include_only=["PATH","HOME"]'
 ```
@@ -165,7 +167,7 @@ A model provider defines how Codex connects to a model (base URL, wire API, auth
 Define additional providers and point `model_provider` at them:
 
 ```toml
-model = "gpt-5.4"
+model = "gpt-5.6-terra"
 model_provider = "proxy"
 
 [model_providers.proxy]
@@ -182,6 +184,24 @@ name = "Mistral"
 base_url = "https://api.mistral.ai/v1"
 env_key = "MISTRAL_API_KEY"
 ```
+
+If a custom provider supports the standalone web search endpoint, advertise
+that capability in its provider configuration:
+
+```toml
+[model_providers.proxy]
+name = "OpenAI using LLM proxy"
+base_url = "https://proxy.example.com/v1"
+env_key = "OPENAI_API_KEY"
+supports_standalone_web_search = true
+```
+
+The setting defaults to `false` for custom providers. Standalone web search is
+under development and off by default. Setting the provider capability to `true`
+doesn't enable it: the provider must support a compatible endpoint,
+and the selected model and runtime must support standalone search. The
+configured [`web_search` mode](https://learn.chatgpt.com/docs/web-search) and
+managed search restrictions still apply.
 
 Add request headers when needed:
 
@@ -338,7 +358,7 @@ In workspace-write mode, some environments keep `.git/` and `.codex/`
   commands like `git commit` may still require approval to run outside the
   sandbox. If you want Codex to skip specific commands (for example, block `git
   commit` outside the sandbox), use
-  <a href="/codex/agent-configuration/rules">rules</a>.
+  [rules](https://learn.chatgpt.com/docs/agent-configuration/rules).
 
 Disable sandboxing entirely (use only if your environment already isolates processes):
 
@@ -348,18 +368,41 @@ sandbox_mode = "danger-full-access"
 
 ## Shell environment policy
 
-`shell_environment_policy` controls which environment variables Codex passes to any subprocess it launches (for example, when running a tool-command the model proposes). Start from a clean start (`inherit = "none"`) or a trimmed set (`inherit = "core"`), then layer on excludes, includes, and overrides to avoid leaking secrets while still providing the paths, keys, or flags your tasks need.
+`shell_environment_policy` controls which environment variables Codex passes to
+spawned commands. Start with an empty environment using `inherit = "none"`, or
+inherit a trimmed set using `inherit = "core"`. Add explicit values and keyed
+filters to avoid passing unnecessary secrets to spawned commands.
 
 ```toml
 [shell_environment_policy]
-inherit = "none"
-set = { PATH = "/usr/bin", MY_FLAG = "1" }
+inherit = "core"
+set = { MY_FLAG = "1" }
 ignore_default_excludes = false
-exclude = ["AWS_*", "AZURE_*"]
-include_only = ["PATH", "HOME"]
+
+[shell_environment_policy.filters]
+"AWS_*" = "exclude"
+"AZURE_*" = "exclude"
 ```
 
-Patterns are case-insensitive globs (`*`, `?`, `[A-Z]`); `ignore_default_excludes = false` keeps the automatic KEY/SECRET/TOKEN filter before your includes/excludes run.
+Filter patterns are case-insensitive and support `*` and `?`. Use `"exclude"`
+to remove matching variables. When any pattern uses `"include"`, Codex keeps
+only variables matching an include pattern. Includes don't restore variables
+that were already excluded. Filter keys merge case-insensitively across
+configuration layers.
+
+`ignore_default_excludes` defaults to `true`, so Codex doesn't automatically
+remove variable names containing `KEY`, `SECRET`, or `TOKEN`. Set it to `false`
+to apply those automatic exclusions before your explicit filters run.
+
+Codex applies automatic exclusions first, then custom exclusions, values from
+`set`, and finally the include-pattern allowlist. Because `set` runs after
+exclusions, it can restore an excluded variable. An include-pattern allowlist
+can still remove that restored value.
+
+The older `exclude` and `include_only` arrays remain supported for existing
+configurations. Don't combine either array with
+`[shell_environment_policy.filters]` in the same configuration layer; Codex
+rejects that combination.
 
 ## MCP servers
 

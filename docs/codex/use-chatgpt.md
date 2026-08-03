@@ -3,6 +3,8 @@
 
 # Use ChatGPT
 
+> For the complete documentation index, see [llms.txt](https://learn.chatgpt.com/llms.txt). Markdown versions of documentation pages are available by appending `.md` to the page URL.
+
 {/* vale alex.Condescending = NO */}
 
 ## Go from idea to useful result
@@ -26,9 +28,9 @@ ChatGPT is an AI agent that you communicate with in natural language:
 
 ## Choose how you want to work
 
-Use Chat for a question or back-and-forth. Turn on Work in the switcher when you want
-ChatGPT to carry a larger task through to a reviewable result. Select Codex when
-you want developer views or more technical detail, especially for software
+Use Chat for a question or back-and-forth. Turn on Work in the switcher when you
+want ChatGPT to carry a larger task through to a reviewable result. Select Codex
+when you want developer views or more technical detail, especially for software
 development.
 
 | Choose       | When you want to                              | Examples                                                                     |
@@ -37,21 +39,71 @@ development.
 | ChatGPT Work | Define an outcome and get a reviewable result | Create a deck, analyze files, draft a report, build a project plan           |
 | Codex        | Use developer tools and see technical details | Debug code, run tests, review a PR, implement a feature                      |
 
-In Codex, point to **New chat**, then select the **Quick chat** icon on its right
-when you want to:
+Use Chat to ask questions, brainstorm, draft or revise text, summarize files,
+compare options, or clarify a larger task. In Codex, point to **New chat**, then
+select **Quick chat** when that option is available.
 
-- Ask a question, search the web, or learn about a topic.
-- Get an unfamiliar idea explained in simpler language.
-- Brainstorm possibilities.
-- Draft a message, outline, or piece of content.
-- Rewrite something for a different tone or audience.
-- Summarize notes, text, or a file.
-- Compare options or think through a decision.
-- Clarify what you need before starting a larger task.
+When you need a finished, reviewable result, switch to **Work** and describe
+what it should include. See [Get started with ChatGPT
+Work](https://learn.chatgpt.com/docs/get-started-with-work) for example tasks, prompts, and best
+practices.
 
-When you need a substantial, reviewable result, turn on Work in the switcher and describe
-the outcome you need. See [Get started with ChatGPT Work](https://learn.chatgpt.com/docs/get-started-with-work)
-for example tasks, prompts, and best practices.
+### What ChatGPT Work can do
+
+ChatGPT Work can plan a task, gather context, use tools, and carry the work
+through to a result you can review. Ask it to:
+
+- **Research and analyze information.** Search the web, browse websites,
+  compare sources, read files, analyze data, and summarize findings.
+- **Use your files and tools.** Bring in uploaded files,
+  [projects](https://learn.chatgpt.com/docs/projects), memories, ChatGPT Library, and installed
+  [plugins](https://learn.chatgpt.com/docs/plugins). Plugins can provide connected information, reusable
+  workflows, and supported actions.
+- **Create finished files.** Draft and refine [documents, presentations,
+  spreadsheets, and PDF files](https://learn.chatgpt.com/docs/artifacts-viewer). Review the result, ask
+  for specific changes, and download the completed file.
+- **Create visual and interactive work.** Generate or edit
+  [images](https://learn.chatgpt.com/docs/image-generation), make interactive
+  [visualizations](https://learn.chatgpt.com/docs/visualizations), and build or share websites and apps
+  with [Sites](https://learn.chatgpt.com/docs/sites).
+- **Work across websites and apps.** Use the [browser](https://learn.chatgpt.com/docs/browser) to
+  research and interact with websites. In the desktop app, use the
+  [Chrome extension](https://learn.chatgpt.com/docs/chrome-extension),
+  [Computer Use](https://learn.chatgpt.com/docs/computer-use), and [appshots](https://learn.chatgpt.com/docs/appshots) when
+  those features are available.
+- **Run code and review technical work.** Run code and shell commands, analyze
+  data, inspect files, [review code](https://learn.chatgpt.com/docs/code-review), and work with
+  repositories your selected environment can access.
+- **Delegate and continue longer tasks.** Split independent work across
+  [subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents), follow their progress, and
+  keep [long-running work](https://learn.chatgpt.com/docs/long-running-work) active.
+- **Repeat useful workflows.** Set up [scheduled
+  tasks](https://learn.chatgpt.com/docs/automations) for recurring work and use
+  [skills](https://learn.chatgpt.com/docs/skills-and-plugins) to reuse a workflow.
+- **Talk through a task.** On supported plans in the desktop app, use
+  [ChatGPT Voice](https://learn.chatgpt.com/docs/features/voice) to start work, check progress, or
+  change direction.
+
+Features depend on your plan, platform, region, rollout, and workspace
+  settings. Your workspace administrator can control access to ChatGPT Work,
+  plugins, browser use, and network access. ChatGPT Work and Codex share [usage
+  limits](https://learn.chatgpt.com/docs/pricing).
+
+### Choose cloud or local work
+
+On the web, ChatGPT Work runs in a managed cloud environment. In the desktop
+app, you may also be able to choose where a task runs:
+
+- **Cloud:** Run work in an isolated hosted environment. A task can keep going
+  after you close the desktop app and continue from the web or mobile app. Cloud
+  work can use uploaded files, connected tools, and approved websites.
+- **Work locally:** Use files, apps, or the browser on your computer. Local
+  work is available in the desktop app when enabled for your account or
+  workspace.
+
+ChatGPT shows its progress and pauses when it needs information or approval.
+Review consequential actions before approving them, and check the final result
+before you use or share it.
 
 <a id="compare-work-mode-and-codex-on-desktop"></a>
 
@@ -82,30 +134,25 @@ you want to accomplish, add the details that change the answer, and describe the
 format you need. Your first prompt is only a starting point—you can add context
 or refine the result with follow-up messages.
 
-<CodexPromptComposer
-  client:load
-  id="natural-chatgpt-prompt-example"
-  destination="web"
-  placeholder="Message ChatGPT"
-  promptOptions={[
-    {
-      label: "Start simple",
-      prompt:
-        "Help me plan a 30-minute team meeting about our new customer feedback process.",
-    },
-    {
-      label: "Add context",
-      prompt:
-        "Help me plan a 30-minute team meeting about our new customer feedback process. The audience is a customer support team that hasn't seen the process before. Include five minutes for questions and end with clear next steps.",
-    },
-    {
-      label: "Choose a format",
-      prompt:
-        "Create a 30-minute agenda for a customer support team that hasn't seen our new customer feedback process before. Include five minutes for questions, end with clear next steps, and format it so I can paste it into a calendar invitation.",
-    },
-  ]}
-  className="!mt-4 !mb-8 w-full max-w-3xl min-w-0"
-/>
+
+
+**Start simple:**
+
+```text
+Help me plan a 30-minute team meeting about our new customer feedback process.
+```
+
+**Add context:**
+
+```text
+Help me plan a 30-minute team meeting about our new customer feedback process. The audience is a customer support team that hasn't seen the process before. Include five minutes for questions and end with clear next steps.
+```
+
+**Choose a format:**
+
+```text
+Create a 30-minute agenda for a customer support team that hasn't seen our new customer feedback process before. Include five minutes for questions, end with clear next steps, and format it so I can paste it into a calendar invitation.
+```
 
 You can continue with simple directions such as:
 
@@ -187,25 +234,31 @@ Legal, financial, medical, security, and other high-stakes decisions require
 
 ## Next steps
 
-<div class="not-prose flex flex-col gap-4 pt-4 [&_.icon-item-right]:min-w-0 [&>a]:min-w-0 [&>a]:no-underline">
-  [<IconItem title="Open the quickstart">
-      <span slot="icon">
+
+a]:min-w-0 [&>a]:no-underline">
+  [Open the quickstart
+
+
+
         <OpenBook />
-      </span>
-      Start using ChatGPT with a guided first task.
-    </IconItem>](https://learn.chatgpt.com/docs/quickstart)
+      
 
-[<IconItem title="Learn about prompting">
-    <span slot="icon">
+      Start using ChatGPT with a guided first task.](https://learn.chatgpt.com/docs/quickstart)
+
+[Learn about prompting
+
+
+
       <Chat />
-    </span>
-    Write useful prompts for questions, finished work, and coding tasks.
-  </IconItem>](https://learn.chatgpt.com/docs/prompting)
+    
 
-  [<IconItem title="Personalize ChatGPT">
-      <span slot="icon">
+    Write useful prompts for questions, finished work, and coding tasks.](https://learn.chatgpt.com/docs/prompting)
+
+  [Personalize ChatGPT
+
+
+
         <Settings />
-      </span>
-      Set preferences and carry useful context across chats.
-    </IconItem>](https://learn.chatgpt.com/docs/personalize)
-</div>
+      
+
+      Set preferences and carry useful context across chats.](https://learn.chatgpt.com/docs/personalize)

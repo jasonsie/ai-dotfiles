@@ -3,6 +3,8 @@
 
 # Use Codex with the Agents SDK
 
+> For the complete documentation index, see [llms.txt](https://learn.chatgpt.com/llms.txt). Markdown versions of documentation pages are available by appending `.md` to the page URL.
+
 # Running Codex as an MCP server
 
 You can run Codex as an MCP server and connect it from other MCP clients (for example, an agent built with the [OpenAI Agents SDK MCP integration](https://developers.openai.com/api/docs/guides/agents/integrations-observability#mcp)).
@@ -32,7 +34,7 @@ Send a `tools/list` request to see two tools:
 | `config`                 | `object` | Individual configuration settings that override what's in `$CODEX_HOME/config.toml`.                     |
 | `cwd`                    | `string` | Working directory for the session. If relative, resolved against the server process's current directory. |
 | `developer-instructions` | `string` | Developer instructions injected as a developer-role message.                                             |
-| `model`                  | `string` | Optional override for the model name (for example, `gpt-5.4`).                                           |
+| `model`                  | `string` | Optional override for the model name (for example, `gpt-5.6-terra`).                                     |
 | `sandbox`                | `string` | Sandbox mode: `read-only`, `workspace-write`, or `danger-full-access`.                                   |
 
 **`codex-reply`**: Continue a Codex session by providing the thread ID and prompt. The `codex-reply` tool takes these properties:

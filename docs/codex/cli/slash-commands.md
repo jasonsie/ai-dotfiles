@@ -3,12 +3,14 @@
 
 # Developer commands
 
+> For the complete documentation index, see [llms.txt](https://learn.chatgpt.com/llms.txt). Markdown versions of documentation pages are available by appending `.md` to the page URL.
+
 ## How to read this reference
 
 This page catalogs every documented Codex CLI command and flag. Use the interactive tables to search by key or description. Each section indicates whether the option is stable or experimental and calls out risky combinations.
 
-The CLI inherits most defaults from <code>~/.codex/config.toml</code>. Any
-  <code>-c key=value</code> overrides you pass at the command line take
+The CLI inherits most defaults from `~/.codex/config.toml`. Any
+  `-c key=value` overrides you pass at the command line take
   precedence for that invocation. See [Config
   basics](https://learn.chatgpt.com/docs/config-file/config-basic#configuration-precedence) for more
   information.
@@ -50,6 +52,11 @@ Launch the Codex app server locally. This is primarily for development and debug
 <ConfigTable client:load options={appServerOptions} />
 
 `codex app-server --listen stdio://` keeps the default JSONL-over-stdio behavior, and `codex app-server --stdio` is an alias for that transport. `--listen ws://IP:PORT` enables WebSocket transport for app-server clients. The server accepts `ws://` listen URLs; use TLS termination or a secure proxy when clients connect with `wss://`. Use `--listen unix://` to accept WebSocket handshakes on Codex's default Unix socket, or `--listen unix:///absolute/path.sock` to choose a socket path. If you generate schemas for client bindings, add `--experimental` to include gated fields and methods.
+
+Add `--code-mode-host wss://code-mode.example.com/host` to connect app-server to
+a remote Code Mode host instead of starting a local host. This outbound
+connection is separate from `--listen` and shared by every thread in the
+app-server process. Use `ws://` only for a localhost or SSH-forwarded host.
 
 ### `codex remote-control`
 
@@ -270,11 +277,20 @@ Run Codex as an MCP server over stdio so that other tools can connect. This comm
 
 Continue an interactive session by ID or resume the most recent chat. `codex resume` scopes `--last` to the current working directory unless you pass `--all`. It accepts the same global flags as `codex`, including model and sandbox overrides.
 
+If the current working directory differs from the session's saved directory,
+Codex asks which directory to use. Set
+[`tui.resume_cwd`](https://learn.chatgpt.com/docs/config-file/config-reference) to `"current"` or
+`"session"` to reuse that choice without a prompt. An explicit `--cd` (`-C`)
+override takes precedence over `tui.resume_cwd`.
+
 <ConfigTable client:load options={resumeOptions} />
 
 ### `codex fork`
 
 Fork a previous interactive session into a new chat. By default, `codex fork` opens the session picker; add `--last` to fork your most recent session instead.
+
+When the current and saved session directories differ, `codex fork` uses the
+same working-directory prompt and `tui.resume_cwd` setting as `codex resume`.
 
 <ConfigTable client:load options={forkOptions} />
 
@@ -368,13 +384,13 @@ completion still works before you queue the command.
 | [`/approve`](#approve-an-auto-review-denial-with-approve)                                   | Approve one retry of a recent auto review denial.               | Retry a command or action that the auto reviewer denied.                                                   |
 | [`/memories`](#configure-memories-with-memories)                                            | Configure memory use and generation.                            | Turn memory injection or memory generation on or off without leaving the TUI.                              |
 | [`/skills`](#use-skills-with-skills)                                                        | Browse and use skills.                                          | Improve task-specific behavior by selecting a relevant local skill.                                        |
-| [`/import`](#import-claude-code-configuration-with-import)                                  | Import Claude Code setup, project files, and recent chats.      | Migrate supported external-agent artifacts into Codex configuration and local files.                       |
+| [`/import`](#import-claude-code-or-cursor-configuration-with-import)                        | Import Claude Code or Cursor setup, projects, and recent chats. | Migrate supported external-agent artifacts into Codex configuration and local files.                       |
 | [`/feedback`](#send-feedback-with-feedback)                                                 | Send logs to the Codex maintainers.                             | Report issues or share diagnostics with support.                                                           |
 | [`/init`](#generate-agentsmd-with-init)                                                     | Generate an `AGENTS.md` scaffold in the current directory.      | Capture persistent instructions for the repository or subdirectory you're working in.                      |
 | [`/logout`](#sign-out-with-logout)                                                          | Sign out of Codex.                                              | Clear local credentials when using a shared machine.                                                       |
 | [`/mcp`](#list-mcp-tools-with-mcp)                                                          | List configured Model Context Protocol (MCP) tools.             | Check which external tools Codex can call during the session; add `verbose` for server details.            |
 | [`/mention`](#highlight-files-with-mention)                                                 | Attach a file to the chat.                                      | Point Codex at specific files or folders you want it to inspect next.                                      |
-| [`/model`](#set-the-active-model-with-model)                                                | Choose the active model (and reasoning effort, when available). | Switch between models such as `gpt-5.4-mini` and `gpt-5.5` before running a task.                          |
+| [`/model`](#set-the-active-model-with-model)                                                | Choose the active model (and reasoning effort, when available). | Switch between models such as `gpt-5.6-luna` and `gpt-5.6-terra` before running a task.                    |
 | [`/fast`](#toggle-fast-mode-with-fast)                                                      | Toggle a Fast service tier when the model catalog exposes one.  | Turn the current model's Fast tier on or off and persist the selection.                                    |
 | [`/plan`](#switch-to-plan-mode-with-plan)                                                   | Switch to plan mode and optionally send a prompt.               | Ask Codex to propose an execution plan before implementation work starts.                                  |
 | [`/goal`](#set-or-view-a-task-goal-with-goal)                                               | Set, edit, pause, resume, view, or clear a task goal.           | Give Codex a persistent target to track while a larger task runs.                                          |
@@ -412,7 +428,7 @@ The following workflows keep your session on track without restarting Codex.
 
 1. Start Codex and open the composer.
 2. Type `/model` and press Enter.
-3. Choose a model such as `gpt-5.4-mini` or `gpt-5.5` from the popup.
+3. Choose a model such as `gpt-5.6-luna` or `gpt-5.6-terra` from the popup.
 
 Expected: Codex confirms the new model in the transcript. Run `/status` to verify the change.
 
@@ -499,16 +515,23 @@ Expected: Codex updates the relevant memory settings for future sessions.
 Expected: Codex inserts the selected skill context so the next request follows
 that skill's instructions.
 
-### Import Claude Code configuration with `/import`
+<a id="import-claude-code-configuration-with-import"></a>
+
+### Import Claude Code or Cursor configuration with `/import`
 
 1. Type `/import`.
-2. Choose the Claude Code setup, project files, or recent chats you want to migrate.
+2. Choose **Claude Code** or **Cursor**.
+3. Select the setup, project files, or recent chats you want to migrate.
 
 Expected: Codex opens the external-agent import picker and imports the selected
-supported artifacts into Codex configuration and local files.
+supported artifacts into Codex configuration and local files. Session discovery
+includes up to 50 chats from the last 30 days.
 
 Run `/import` from a local TUI session. It's unavailable while a task is running,
 in remote sessions, and while connected to the local app-server daemon.
+
+For the desktop app workflow and supported artifact types, see [Import from
+another agent](https://learn.chatgpt.com/docs/import).
 
 <a id="clear-the-terminal-and-start-a-new-chat-with-clear"></a>
 <a id="clear-the-terminal-and-start-a-new-task-with-clear"></a>
@@ -519,6 +542,8 @@ in remote sessions, and while connected to the local app-server daemon.
 
 Expected: Codex clears the terminal, resets the visible transcript, and starts
 a fresh chat in the same CLI session.
+
+To name the new chat as you create it, run `/clear release prep`.
 
 Unlike <kbd>Ctrl</kbd>+<kbd>L</kbd>, `/clear` starts a new chat.
 
@@ -749,6 +774,8 @@ Expected: Codex adds the file to the chat, ensuring follow-up turns reference it
 
 Expected: Codex starts a fresh chat in the same CLI session, so you
 can switch chats without leaving your terminal.
+
+To name the new chat as you create it, run `/new bug bash`.
 
 Unlike `/clear`, `/new` doesn't clear the current terminal view first.
 

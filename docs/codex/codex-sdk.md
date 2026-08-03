@@ -3,6 +3,8 @@
 
 # Codex SDK
 
+> For the complete documentation index, see [llms.txt](https://learn.chatgpt.com/llms.txt). Markdown versions of documentation pages are available by appending `.md` to the page URL.
+
 If you use Codex through Codex CLI, the IDE extension, or Codex cloud, you can also control it programmatically.
 
 Use the SDK when you need to:
@@ -14,9 +16,13 @@ Use the SDK when you need to:
 
 Use the Codex SDK for coding-focused Codex threads. If Codex is one specialist inside a broader orchestrated workflow, [run Codex CLI as an MCP server and orchestrate it with the Agents SDK](https://learn.chatgpt.com/docs/mcp-server).
 
+If you have beta access and need repository or change scans with structured
+security findings and coverage, use the [Codex Security TypeScript
+SDK](https://learn.chatgpt.com/docs/security/sdk).
+
 ## TypeScript library
 
-The TypeScript library provides a way to control Codex from within your application that's more comprehensive and flexible than non-interactive mode.
+The TypeScript library lets your application start, continue, and resume local Codex threads.
 
 Use the library server-side; it requires Node.js 18 or later.
 
@@ -90,7 +96,7 @@ from openai_codex import Codex, Sandbox
 
 with Codex() as codex:
     thread = codex.thread_start(
-        model="gpt-5.4",
+        model="gpt-5.6-terra",
         sandbox=Sandbox.workspace_write,
     )
     result = thread.run("Make a plan to diagnose and fix the CI failures")
@@ -107,7 +113,7 @@ from openai_codex import AsyncCodex
 
 async def main() -> None:
     async with AsyncCodex() as codex:
-        thread = await codex.thread_start(model="gpt-5.4")
+        thread = await codex.thread_start(model="gpt-5.6-terra")
         result = await thread.run("Implement the plan")
         print(result.final_response)
 

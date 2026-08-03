@@ -3,6 +3,8 @@
 
 # Plugins
 
+> For the complete documentation index, see [llms.txt](https://learn.chatgpt.com/llms.txt). Markdown versions of documentation pages are available by appending `.md` to the page URL.
+
 ## Overview
 
 Plugins bundle capabilities into reusable workflows in ChatGPT and Codex. They
@@ -15,19 +17,40 @@ Codex in the ChatGPT desktop app. Codex
 CLI also has a plugin browser for Codex environments. Plugins aren't available
 in Chat, the IDE extension, or mobile.
 
-
+<ContentModeSwitch group="codex-surface" id="app">
 
 In the ChatGPT desktop app, select ChatGPT and turn on Work in the switcher, or select
 Codex. Then open **Plugins** to browse, install, and use plugins. Installed
 plugins can add skills, connectors, and MCP tools to new chats.
 
+</ContentModeSwitch>
 
+<ContentModeSwitch group="codex-surface" id="web">
 
+In ChatGPT web, turn on Work in the switcher and open **Plugins** to browse, install, and
+use plugins. A plugin can prompt you to connect an external service before its
+tools become available.
 
+</ContentModeSwitch>
 
+<ContentModeSwitch group="codex-surface" id="cli">
 
+In Codex CLI, enter `/plugins` to open the plugin browser. Install a plugin from
+a configured marketplace, then start a new session before using its bundled
+skills or tools.
 
+</ContentModeSwitch>
 
+<ContentModeSwitch group="codex-surface" id="ide">
+
+<a id="plugin-directory-in-the-ide-extension"></a>
+
+### Use plugins from a supported surface
+
+Plugins aren't available in the IDE extension. To browse and install plugins
+for Codex, use the ChatGPT desktop app or Codex CLI.
+
+</ContentModeSwitch>
 
 Extend what ChatGPT and Codex can do, for example:
 
@@ -70,7 +93,7 @@ If the plugin needs custom UI, use the
 
 <a id="plugin-directory-in-the-codex-app"></a>
 
-
+<ContentModeSwitch group="codex-surface" ids="app,web">
 
 ### Universal plugin directory
 
@@ -81,9 +104,9 @@ plugins from a supported graphical surface:
 - In the ChatGPT desktop app, select ChatGPT and turn on Work in the switcher, or select
   Codex. Then open **Plugins**.
 
+</ContentModeSwitch>
 
-
-
+<ContentModeSwitch group="codex-surface" id="app">
 
 <CodexScreenshot
   alt="Plugins Directory in the ChatGPT desktop app"
@@ -91,9 +114,9 @@ plugins from a supported graphical surface:
   darkSrc="/images/codex/plugins/directory-dark.webp"
 />
 
+</ContentModeSwitch>
 
-
-
+<ContentModeSwitch group="codex-surface" ids="app,web">
 
 The Plugins Directory organizes plugins into tabs:
 
@@ -120,11 +143,23 @@ Once you open the Plugins Directory:
 
 </WorkflowSteps>
 
+### Connect supported partners with Sign in with ChatGPT
+
+**Sign in with ChatGPT** is rolling out in beta for supported plugins and
+partner sites, including Airtable, GitLab, HubSpot, Notion, Supabase, and
+Vercel. When the option is available, select **Sign in with ChatGPT** while
+connecting the plugin to create or link your account with that service.
+
+Signing in shares only your name, email address, and profile picture, when
+available, with the partner. It doesn't grant the plugin access to your data or
+approve actions automatically. Review and approve the plugin's requested
+permissions as a separate step before using the connection.
+
 After you install a plugin, you can use it directly in the prompt window:
 
+</ContentModeSwitch>
 
-
-
+<ContentModeSwitch group="codex-surface" id="app">
 
 <CodexScreenshot
   alt="Installed plugin on the Plugins page"
@@ -132,43 +167,85 @@ After you install a plugin, you can use it directly in the prompt window:
   darkSrc="/images/codex/plugins/plugin-github-invoke-dark.png"
 />
 
+</ContentModeSwitch>
+
+<ContentModeSwitch group="codex-surface" ids="app,web">
 
 
 
+  
 
-<div class="not-prose mt-4 grid gap-4 md:grid-cols-2">
-  <div class="rounded-xl border border-subtle bg-surface px-5 py-4">
-    <p class="text-sm font-semibold text-default">Describe the task directly</p>
-    <p class="mt-2 text-sm text-secondary">
+    
+Describe the task directly
+
+    
+
       Ask for the outcome you want, such as "Summarize unread Gmail threads
       from today" or "Pull the latest launch notes from Google Drive."
-    </p>
-    <p class="mt-3 text-sm text-secondary">
+    
+
+    
+
       Use this when you want ChatGPT to choose the right installed tools for the
       task.
-    </p>
-  </div>
+    
 
-  <div class="rounded-xl border border-subtle bg-surface px-5 py-4">
-    <p class="text-sm font-semibold text-default">Choose a specific plugin</p>
-    <p class="mt-2 text-sm text-secondary">
-      Type <code>@</code> to invoke the plugin or one of its bundled skills
+  
+
+
+  
+
+    
+Choose a specific plugin
+
+    
+
+      Type `@` to invoke the plugin or one of its bundled skills
       explicitly.
-    </p>
-    <p class="mt-3 text-sm text-secondary">
+    
+
+    
+
       Use this when you want to be specific about which plugin or skill ChatGPT
-      should use. See <a href="/codex/skills-and-plugins">Skills & Plugins</a>.
-    </p>
-  </div>
-</div>
+      should use. See [Skills & Plugins](https://learn.chatgpt.com/docs/skills-and-plugins).
+    
+
+  
 
 
 
 
+</ContentModeSwitch>
+
+<ContentModeSwitch group="codex-surface" id="cli">
+
+<a id="plugin-directory-in-codex-cli"></a>
+
+### Plugin browser in Codex CLI
+
+In Codex CLI, run the following command to open the plugin browser:
+
+```text
+codex
+/plugins
+```
+
+<CodexScreenshot
+  alt="Plugins list in Codex CLI"
+  lightSrc="/images/codex/plugins/cli_light.png"
+  darkSrc="/images/codex/plugins/codex-plugin-cli.png"
+/>
+
+The CLI plugin browser groups plugins by marketplace. Use the marketplace tabs
+to switch sources, open a plugin to inspect details, install or uninstall
+marketplace entries, and press <kbd>Space</kbd> on an installed plugin to turn it
+on or off.
+
+</ContentModeSwitch>
 
 <a id="api-key-availability"></a>
 
-
+<ContentModeSwitch group="codex-surface" ids="app,cli">
 
 ### API key availability
 
@@ -179,20 +256,26 @@ app. Some plugins aren't available with API key authentication because their
 connection flows require unsupported OAuth capabilities. Review plugin usage
 on the [Platform Usage page](https://platform.openai.com/usage).
 
-
+</ContentModeSwitch>
 
 ### How permissions and data sharing work
 
+<ContentModeSwitch group="codex-surface" id="web">
 
+On ChatGPT web, ChatGPT Work chats use the workspace permissions and
+tools available to that chat. Connectors still require their own sign-in
+and access.
 
+</ContentModeSwitch>
 
+<ContentModeSwitch group="codex-surface" ids="app,cli">
 
 When a plugin capability runs through a Codex host, the host's [sandbox and
 approval policy](https://learn.chatgpt.com/docs/agent-approvals-security) applies.
 Connections to external services use that service's own authentication and
 access controls.
 
-
+</ContentModeSwitch>
 
 - Bundled skills become available when you start a new chat or CLI session
   after installation.

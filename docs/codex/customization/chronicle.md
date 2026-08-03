@@ -3,6 +3,8 @@
 
 # Chronicle
 
+> For the complete documentation index, see [llms.txt](https://learn.chatgpt.com/llms.txt). Markdown versions of documentation pages are available by appending `.md` to the page URL.
+
 Chronicle is in an **opt-in research preview**. It is only available for
   ChatGPT Pro subscribers on macOS. Please review the [Privacy and
   Security](#privacy-and-security) section for details and to understand the
@@ -26,14 +28,16 @@ the right source to use, and pick up on the tools and workflows you rely on.
 
 <section class="feature-grid mt-4">
 
-<div>
+
+
 
 ### Use what’s on screen
 
 With Chronicle Codex can understand what you are currently looking at, saving
 you time and context switching.
 
-</div>
+
+
 
 <ChronicleThreadDemo client:load scenario="screen" />
 
@@ -41,14 +45,16 @@ you time and context switching.
 
 <section class="feature-grid inverse">
 
-<div>
+
+
 
 ### Fill in missing context
 
 No need to carefully craft your context and start from zero. Chronicle lets
 Codex fill in the gaps in your context.
 
-</div>
+
+
 
 <ChronicleThreadDemo client:load scenario="project" />
 
@@ -56,14 +62,16 @@ Codex fill in the gaps in your context.
 
 <section class="feature-grid">
 
-<div>
+
+
 
 ### Remember tools and workflows
 
 No need to explain to Codex which tools to use to perform your work. Codex
 learns as you work to save you time in the long run.
 
-</div>
+
+
 
 <ChronicleThreadDemo client:load scenario="tools" />
 
@@ -130,14 +138,16 @@ add new information. The generated Chronicle memories are stored locally on your
 computer under `$CODEX_HOME/memories_extensions/chronicle/` (typically
 `~/.codex/memories_extensions/chronicle`).
 
-<div className="not-prose my-4">
+
+
   <Alert
     client:load
     color="danger"
     variant="soft"
     description="Both directories for your screen captures and memories might contain sensitive information. Make sure you do not share content with others, and be aware that other programs on your computer can also access these files."
   />
-</div>
+
+
 
 ### What data gets shared with OpenAI?
 
@@ -190,5 +200,5 @@ specific model, update the `consolidation_model` in your
 
 ```toml
 [memories]
-consolidation_model = "gpt-5.4-mini"
+consolidation_model = "gpt-5.6-luna"
 ```

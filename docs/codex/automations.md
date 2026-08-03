@@ -3,23 +3,45 @@
 
 # Scheduled tasks
 
+> For the complete documentation index, see [llms.txt](https://learn.chatgpt.com/llms.txt). Markdown versions of documentation pages are available by appending `.md` to the page URL.
+
 Schedule recurring tasks to run in the background. Review active, paused, and
 completed tasks and recent runs in **Scheduled**. You can combine scheduled
 tasks with [skills](https://learn.chatgpt.com/docs/build-skills) for more complex work.
 
-
+<ContentModeSwitch group="codex-surface" id="app">
 
 In the ChatGPT desktop app, scheduled tasks can work with local projects and
 run in the project directory or an isolated worktree. Keep the computer on and
 the app running when a scheduled task needs local files.
 
+</ContentModeSwitch>
 
+<ContentModeSwitch group="codex-surface" id="web">
 
+When scheduled tasks are enabled for your workspace, create them from Chat or
+ChatGPT Work on the web and manage their runs from **Scheduled**. Web tasks
+can use uploaded context and connected tools, but they can't work directly in
+a folder on your computer.
 
+</ContentModeSwitch>
 
+<ContentModeSwitch group="codex-surface" id="cli">
 
+Codex CLI doesn't provide the Scheduled management interface. Use ChatGPT web
+or the desktop app to create and manage scheduled tasks. The CLI can help you
+prepare and test a prompt, skill, or script first.
 
+</ContentModeSwitch>
 
+<ContentModeSwitch group="codex-surface" id="ide">
+
+The IDE extension doesn't provide the Scheduled management interface. Use
+ChatGPT web or the desktop app to create and manage scheduled tasks. The IDE
+extension can help you prepare and test a prompt, skill, or workspace change
+first.
+
+</ContentModeSwitch>
 
 <a id="managing-tasks"></a>
 <a id="ask-codex-to-create-or-update-automations"></a>
@@ -40,9 +62,28 @@ the app running when a scheduled task needs local files.
 <a id="combining-automations-with-skills-to-fix-your-own-bugs"></a>
 <a id="combining-scheduled-tasks-with-skills-to-fix-your-own-bugs"></a>
 
+<ContentModeSwitch group="codex-surface" id="web">
 
+## Manage scheduled tasks on the web
 
+Open **Scheduled** to review task status and recent runs. Use a standalone scheduled task
+when each run should start from the saved prompt. Use a scheduled task in a
+chat when you want ChatGPT to return to the same chat with its existing
+context.
 
+Scheduled tasks on the web can use uploaded files, connected tools, skills, and
+plugins available to that chat. They don't keep a local folder or
+worktree available between runs. Put durable instructions in the task prompt
+or an attached skill, and keep required source material in an accessible
+project, upload, or connected service.
+
+Before you schedule a task, test its prompt in a regular web chat.
+Review the first few runs, then adjust the prompt, tools, or cadence if the
+results are too broad or need additional context.
+
+</ContentModeSwitch>
+
+<ContentModeSwitch group="codex-surface" id="app">
 
 For example, schedule a task to evaluate telemetry errors and submit fixes,
 or to create reports about recent codebase changes. For ongoing work that
@@ -61,6 +102,10 @@ project directory.
 
 You can also leave the model and reasoning effort on their default settings, or
 choose them explicitly if you want more control over how the scheduled task runs.
+
+If a scheduled task uses `gpt-5.4` or `gpt-5.4-mini` with ChatGPT sign-in,
+update it before those models retire on August 31, 2026. Replace `gpt-5.4` with
+`gpt-5.6-terra` and `gpt-5.4-mini` with `gpt-5.6-luna`.
 
 <Illustration description="ChatGPT composer ready to create a scheduled task with 5.6 Sol Extended selected.">
   <CodexScheduledTasksIllustration
@@ -103,9 +148,9 @@ checkout, keeping in mind that it can change files you are actively editing.
 In non-version-controlled projects, scheduled tasks run directly in the project
 directory. You can have the same scheduled task run on more than one project.
 
+</ContentModeSwitch>
 
-
-
+<ContentModeSwitch group="codex-surface" ids="app,web">
 
 Scheduled tasks created with ChatGPT Work on the web, or with ChatGPT Work or
 Codex in the desktop app, can use plugins. Scheduled tasks can also use
@@ -169,9 +214,9 @@ first. This helps you confirm:
 When you start scheduling runs, review the first few outputs and adjust the
 prompt or cadence as needed.
 
+</ContentModeSwitch>
 
-
-
+<ContentModeSwitch group="codex-surface" id="app">
 
 In the ChatGPT desktop app, you can explicitly trigger a skill in a scheduled
 task prompt by using `$skill-name`.
@@ -315,3 +360,5 @@ Afterward, create a new scheduled task:
 ```markdown
 Check my commits from the last 24h and submit a $recent-code-bugfix.
 ```
+
+</ContentModeSwitch>

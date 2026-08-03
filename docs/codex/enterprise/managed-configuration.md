@@ -3,6 +3,8 @@
 
 # Managed configuration
 
+> For the complete documentation index, see [llms.txt](https://learn.chatgpt.com/llms.txt). Markdown versions of documentation pages are available by appending `.md` to the page URL.
+
 Managed configuration controls supported local runtime behavior for covered capabilities in the ChatGPT desktop app, Codex CLI, and IDE extension. Supported requirements can differ by client and version. Managed configuration doesn't grant ChatGPT workspace access, assign seats, or replace workspace role-based access control (RBAC). Use [Roles and workspace permissions](https://learn.chatgpt.com/docs/enterprise/roles-and-workspace-permissions) for workspace feature access and this page for local runtime policy.
 
 Enterprise admins can control supported local client behavior in two ways:
@@ -580,6 +582,12 @@ Managed defaults merge on top of a user's local `config.toml` and take
 precedence over any CLI `--config` overrides, setting the starting values when a
 supported local client launches. Users can still change those settings during a
 run; the client reapplies managed defaults the next time it starts.
+
+If a managed default, macOS MDM profile, or saved configuration pins `gpt-5.4`
+or `gpt-5.4-mini` for users signed in with ChatGPT, update it before August 31, 2026. Replace `gpt-5.4` with `gpt-5.6-terra` and `gpt-5.4-mini` with
+`gpt-5.6-luna`. The OpenAI API and Codex authenticated with your own API key
+aren't affected. See [workspace model
+availability](https://learn.chatgpt.com/docs/enterprise/workspace-model-availability#prepare-for-the-gpt-54-retirement).
 
 Make sure your managed defaults meet your requirements; the local runtime
 rejects disallowed values.
