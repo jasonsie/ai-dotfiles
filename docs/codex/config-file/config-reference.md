@@ -24,6 +24,12 @@ keys in user-level config instead. Config [profile files](https://learn.chatgpt.
 
 For sandbox and approval keys (`approval_policy`, `sandbox_mode`, and `sandbox_workspace_write.*`), pair this reference with [Sandbox and approvals](https://learn.chatgpt.com/docs/agent-approvals-security#sandbox-and-approvals), [Protected paths in writable roots](https://learn.chatgpt.com/docs/agent-approvals-security#protected-paths-in-writable-roots), and [Network access](https://learn.chatgpt.com/docs/agent-approvals-security#network-access). For beta permission profiles, see [Permissions](https://learn.chatgpt.com/docs/permissions).
 
+Codex and ChatGPT Work no longer support `approval_policy = "untrusted"`.
+Remove the setting or choose a supported policy. Project entries with
+`trust_level = "untrusted"` in user-level `~/.codex/config.toml` remain supported. See
+[Migrate from the retired `untrusted` approval policy](https://learn.chatgpt.com/docs/agent-approvals-security#migrate-from-the-retired-untrusted-approval-policy)
+for examples and approval tradeoffs.
+
 <ConfigTable
   options={[
     {
@@ -79,9 +85,9 @@ For sandbox and approval keys (`approval_policy`, `sandbox_mode`, and `sandbox_w
     },
     {
       key: "approval_policy",
-      type: "untrusted | on-request | never | { granular = { sandbox_approval = bool, rules = bool, mcp_elicitations = bool, request_permissions = bool, skill_approval = bool } }",
+      type: "on-request | never | { granular = { sandbox_approval = bool, rules = bool, mcp_elicitations = bool, request_permissions = bool, skill_approval = bool } }",
       description:
-        "Controls when Codex pauses for approval before executing commands. You can also use `approval_policy = { granular = { ... } }` to allow or auto-reject specific prompt categories while keeping other prompts interactive. `on-failure` is deprecated; use `on-request` for interactive runs or `never` for non-interactive runs.",
+        "Controls when Codex pauses for approval before executing commands. You can also use `approval_policy = { granular = { ... } }` to allow or auto-reject specific prompt categories while keeping other prompts interactive. `untrusted` is unsupported, and `on-failure` is deprecated; use `on-request` for interactive runs or `never` for non-interactive runs.",
     },
     {
       key: "approval_policy.granular.sandbox_approval",
@@ -1423,6 +1429,35 @@ For sandbox and approval keys (`approval_policy`, `sandbox_mode`, and `sandbox_w
         "Unbind the action in that keymap context. Key names use normalized strings such as `ctrl-a`, `shift-enter`, `page-down`, or `minus`.",
     },
     {
+      key: "marketplaces.<name>.source_type",
+      type: "git | local",
+      description:
+        "Source kind for a configured plugin marketplace. Marketplaces can be defined in system, cloud-managed, user, or trusted-project config.toml.",
+    },
+    {
+      key: "marketplaces.<name>.source",
+      type: "string",
+      description:
+        "Git repository location or local marketplace root directory. Use an absolute path for a local source; the directory contains .agents/plugins/marketplace.json.",
+    },
+    {
+      key: "marketplaces.<name>.ref",
+      type: "string",
+      description: "Optional Git branch, tag, or commit for the marketplace.",
+    },
+    {
+      key: "marketplaces.<name>.sparse_paths",
+      type: "array<string>",
+      description:
+        "Optional sparse checkout paths for a Git marketplace. Include the marketplace catalog and any local plugin directories it references.",
+    },
+    {
+      key: "plugins.<plugin>.enabled",
+      type: "boolean",
+      description:
+        "Enable or disable a local-marketplace plugin using a `plugin-name@marketplace-name` key. Read from the effective merged config; trusted-project settings can override user, cloud-managed, and system defaults. Marketplace refresh can install or refresh configured plugins even when disabled. This does not override workspace-managed enabled states.",
+    },
+    {
       key: "plugins.<plugin>.mcp_servers.<server>.enabled",
       type: "boolean",
       description:
@@ -1486,9 +1521,8 @@ For sandbox and approval keys (`approval_policy`, `sandbox_mode`, and `sandbox_w
     },
     {
       key: "cli_auth_credentials_store",
-      type: "file | keyring | auto",
-      description:
-        "Control where the CLI stores cached credentials (file-based auth.json vs OS keychain).",
+      type: "file | keyring | auto | ephemeral",
+      description: "Control where the CLI stores cached credentials.",
     },
     {
       key: "mcp_oauth_credentials_store",
@@ -1751,10 +1785,15 @@ Use `allowed_sandbox_modes` with `sandbox_mode`. For permission-profile
 deployments, use `allowed_permission_profiles` with managed
 `default_permissions`.
 
+An `untrusted` entry in `allowed_approval_policies` is still valid for the
+stricter approval behavior Codex derives when a project uses
+`trust_level = "untrusted"`. It does not permit explicitly setting
+`approval_policy = "untrusted"`.
+
 The `[models.new_thread]` table supplies managed defaults, not enforcement.
-Explicit launch choices from dedicated CLI flags or `--config` overrides take
-precedence. An explicit model or reasoning-effort override skips both managed
-model fields; `service_tier` is independent.
+If you explicitly override the model or reasoning effort with `--model`,
+`--config`, or `--profile`, Codex ignores both `model` and
+`model_reasoning_effort` in `[models.new_thread]`. `service_tier` is independent.
 
 The browser requirements cover three separate surfaces. `in_app_browser`
 controls the browser pane that a person opens and uses directly. `browser_use`
@@ -1796,6 +1835,30 @@ from either one wins.
       description: "Enforce whether shell tools can start a login shell.",
     },
     {
+      key: "allowed_login_methods",
+      type: "array<string>",
+      description:
+        "Allow `chatgpt`, `api`, or both. If omitted, this setting doesn't restrict login methods. If set, the list must contain at least one method. `api` permits API authentication, including Amazon Bedrock. Set through the local system requirements file or macOS MDM. Cloud-managed values are ignored.",
+    },
+    {
+      key: "allowed_chatgpt_workspaces",
+      type: "array<string>",
+      description:
+        "Restrict ChatGPT login, including Codex access tokens, to the listed workspace IDs. An empty list disables ChatGPT login; API authentication remains available when permitted. Set through the local system requirements file or macOS MDM; cloud-managed values are ignored.",
+    },
+    {
+      key: "cli_auth_credentials_store",
+      type: "file | keyring | auto | ephemeral",
+      description:
+        "Enforce the CLI credential store before authentication loads. `file` uses `CODEX_HOME/auth.json`; `keyring` requires the OS credential store; `auto` falls back to a file if the credential store is unavailable; `ephemeral` keeps credentials in memory for the current process. Set through the local system requirements file or macOS MDM; cloud-managed values are ignored.",
+    },
+    {
+      key: "chatgpt_base_url",
+      type: "string",
+      description:
+        "Enforce the ChatGPT service base URL before authentication and cloud-policy retrieval. This doesn't configure every Codex network destination. Set through the local system requirements file or macOS MDM; cloud-managed values are ignored.",
+    },
+    {
       key: "feedback",
       type: "table",
       description: "Managed feedback settings.",
@@ -1810,7 +1873,7 @@ from either one wins.
       key: "allowed_approval_policies",
       type: "array<string>",
       description:
-        "Allowed values for `approval_policy` (for example `untrusted`, `on-request`, `never`, and `granular`).",
+        "Allowed approval policies, such as `on-request`, `never`, and `granular`. Include `untrusted` to permit the stricter policy derived from an untrusted project; it cannot be selected directly with `approval_policy`.",
     },
     {
       key: "allowed_approvals_reviewers",
@@ -1851,32 +1914,31 @@ from either one wins.
     {
       key: "models",
       type: "table",
-      description:
-        "Managed model defaults for new threads. These values take priority over user and project defaults, but an explicit selection for the new thread can override them.",
+      description: "Contains the `[models.new_thread]` table.",
     },
     {
       key: "models.new_thread",
       type: "table",
       description:
-        "Defaults to apply when a new local thread starts. Each model setting is optional.",
+        "Optional defaults to apply when a new local thread starts. They take priority over user and project defaults, but can be superseded by explicit overrides.",
     },
     {
       key: "models.new_thread.model",
       type: "string",
       description:
-        "Default model for new threads. An explicit `--model` or model/reasoning `--config` override takes precedence.",
+        "Default model for new threads. An explicit override of either the model or reasoning effort causes both fields to be ignored.",
     },
     {
       key: "models.new_thread.model_reasoning_effort",
       type: "string",
       description:
-        "Default reasoning effort for new threads. An explicit model or reasoning-effort override skips both managed model fields.",
+        "Default reasoning effort for new threads. An explicit override of either the model or reasoning effort causes both fields to be ignored.",
     },
     {
       key: "models.new_thread.service_tier",
       type: "string",
       description:
-        "Default service tier for new threads. An explicit service-tier override takes precedence independently of the model fields.",
+        "Default service tier for new threads. An explicit service-tier override causes this field to be ignored.",
     },
     {
       key: "permissions",
@@ -2569,7 +2631,7 @@ from either one wins.
       key: "marketplaces.restrict_to_allowed_sources",
       type: "boolean",
       description:
-        "When `true`, require user-configured marketplace sources to match `allowed_sources` for marketplace add, plugin install, and configured Git marketplace refresh operations. Codex-managed OpenAI marketplaces remain allowed when their reserved source and name match. This doesn't filter already configured user marketplaces at runtime.",
+        "When `true`, require configured marketplace sources to match `allowed_sources` for marketplace add, plugin install, refresh, and runtime loading. OpenAI-curated Git catalogs, including the API-key catalog, must also match the allowlist. Bundled and remotely installed workspace plugins are separate from this curated Git source policy.",
     },
     {
       key: "marketplaces.allowed_sources",
