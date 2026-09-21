@@ -35,7 +35,7 @@ for examples and approval tradeoffs.
     {
       key: "model",
       type: "string",
-      description: "Model to use (e.g., `gpt-5.5`).",
+      description: "Model to use (e.g., `gpt-5.6-sol`).",
     },
     {
       key: "review_model",
