@@ -32,6 +32,15 @@ bash scripts/install.sh                # apply (backs up first)
 bash scripts/healthcheck.sh            # verify live state
 ```
 
+Claude plugins are a per-machine choice, not managed here. The current set:
+
+```bash
+claude plugin marketplace add https://github.com/jasonsie/zkfy.git
+for p in zkfy@zkfy-marketplace pyright-lsp@claude-plugins-official typescript-lsp@claude-plugins-official; do
+  claude plugin install "$p"
+done
+```
+
 `--target=claude|codex|gemini|pi` limits the run; `--instructions-only` links instructions only.
 Unknown existing instruction files are refused until reviewed (`--replace-instructions`);
 see [global instructions](docs/global-instructions.md). Backups go to

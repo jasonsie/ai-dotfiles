@@ -1,5 +1,8 @@
 # Codex CLI — Capability Catalog
 
+> **Superseded** by [ADR-0005](../adr/0005-global-config-single-source.md): full parity and the
+> `tools/<feature>/` emitters were retired. Kept as a reference for native surfaces only.
+
 > Parity catalog for the **(iii) full 1:1 parity** goal (see
 > [ADR-0002](../adr/0002-multi-cli-parity-target.md)). Maps each Claude Code feature
 > (`tools/<feature>/`) onto a Codex native surface, or records the shim strategy where no
