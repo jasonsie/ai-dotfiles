@@ -10,6 +10,11 @@ CLAUDE.local.md
 /CLAUDE.md
 /.claude/settings.json
 /.claude/settings.json.bak
+# Generated native discovery links; canonical files live under tools/.
+/.claude/agents/
+/.claude/commands/
+/.claude/hooks/
+/.claude/rules/
 
 # Secrets & credentials
 .env
