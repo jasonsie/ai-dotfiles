@@ -1,5 +1,7 @@
 # Multi-CLI support target is (iii) full 1:1 parity, gated behind capability catalogs
 
+> **Superseded** by [ADR-0005](0005-global-config-single-source.md) (2026-10-05).
+
 ## Context
 
 This workspace is a fork of a Claude-Code-only project, repositioned as multi-CLI

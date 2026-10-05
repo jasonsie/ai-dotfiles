@@ -1,5 +1,7 @@
 # CLAUDE.md scaffolding lives in a template file, not a rules.sh heredoc
 
+> **Superseded** by [ADR-0005](0005-global-config-single-source.md) (2026-10-05).
+
 ## Context
 
 `rules.sh` generates the repo-root `AGENTS.md`, `GEMINI.md`, and `CLAUDE.md` entry

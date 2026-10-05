@@ -1,179 +1,49 @@
 # Project Context
 
-> Context for a portable AI-agent capability library delivered to multiple CLIs
-> (Claude Code / Gemini CLI / Codex CLI). Auto-loaded at session start so the AI
-> understands what this project is from the first message.
-
 ## What
 
-`ai-cli-workspace` is a **portable library of AI-agent capabilities** — **35 skills,
-14 hooks, 10 rules, 9 agents, 4 commands** — authored in CLI-neutral form under `tools/`
-and compiled into each CLI's native config. The library is the product; the per-CLI
-adapters are its delivery mechanism.
+`ai-cli-workspace` is the **single source of global AI CLI configuration** for the
+owner's Macs: Claude Code, Codex CLI, Gemini CLI, and Pi. It owns four things —
+shared instructions, a small set of must-match settings keys, shared MCP servers,
+and the binding to the zkfy knowledge vault — and nothing per-project.
+Decided in [ADR-0005](docs/adr/0005-global-config-single-source.md), which supersedes
+the full-parity goal of [ADR-0002](docs/adr/0002-multi-cli-parity-target.md).
 
-**Full multi-CLI parity is the delivery guarantee, not the identity** (see
-[ADR-0002](docs/adr/0002-multi-cli-parity-target.md)): the goal is that the *same* library
-works on **Claude Code, Gemini CLI, and Codex CLI**, not just Claude. Parity = "the library
-reaches every CLI," which is why the definitions are authored neutrally in the first place.
+## Principles
 
-> Originally a fork of [`zeuikli/claude-code-workspace`](https://github.com/zeuikli/claude-code-workspace)
-> (Claude-Code-only); repositioned around the portable-library framing above.
-
-## Why this structure
-
-**Single-source-of-truth principle (load-bearing)**: `tools/` is the single source of truth.
-Every per-CLI config and entry file is a **generated artifact** of that truth — there is no
-exception, including the files at the repo root.
-
-`scripts/install.sh` runs adapters (`scripts/adapters/{claude,gemini,codex,rules}.sh`) that
-read `tools/` and emit:
-
-- **Per-user configs**: `.claude/`, `~/.gemini/`, `~/.codex/`
-- **Repo-root entry files**: `AGENTS.md`, `GEMINI.md`, `CLAUDE.md` — all **fully
-  generated** by `rules.sh` and gitignored. `rules.sh` writes each file wholesale via
-  `write_if_changed`; there is no hand-maintained region in any of them.
-  - The `CLAUDE.md` scaffolding (the four-layer framework, maintainer guide, etc.) is
-    **not** sourced from `tools/rules/*.md` — it lives as a heredoc literal inside
-    `rules.sh` (the `claude_header`). Only the `## 常駐規則` import list is derived from
-    `tools/rules/manifest.yaml`. To change the scaffolding, edit the heredoc in `rules.sh`.
-
-**⚠️ Do not edit directly** — these are all generated artifacts and will be overwritten
-on the next install:
-- `.claude/`, `~/.gemini/`, `~/.codex/` (per-user)
-- `AGENTS.md`, `GEMINI.md`, `CLAUDE.md` (repo root — all fully generated)
-
-**To change anything that ends up in those files, edit the source under `tools/`** and re-run
-`bash scripts/install.sh`. If `tools/` doesn't yet have the right surface for what you want
-to change, extend `tools/` first — never patch the generated file as a shortcut.
+- **Shared behavior, native differences.** The same intent reaches every CLI where it
+  has a native surface. Missing capabilities (e.g. Pi has no MCP) are documented, not
+  shimmed.
+- **Link what is read-only, merge what the CLI writes.** Instruction files are
+  symlinks to one source. Settings files are never symlinked; only managed keys are
+  merged in, because each CLI writes its own runtime state back to them.
+- **Portable across Macs.** No usernames, checkout paths, or Homebrew prefixes in
+  `tools/` or `scripts/`; the installer resolves its own location.
+- **Safe by default.** Dry-run unless told otherwise, idempotent, backup before
+  write, refuse to overwrite what it does not own, roll back on failure.
 
 ## Language
 
-Precise terms for this workspace. These distinctions have caused real confusion —
-keep them sharp.
+**Source**: a file under `tools/` (or the zkfy checkout for vault tooling) that an
+installer applies. Edit the source, never the destination.
 
-**Source of truth (SoT)**:
-The canonical definition a generated artifact derives from. Almost always somewhere
-under `tools/`. Editing an artifact instead of its SoT is always a bug.
-_Avoid_: "the config", "the real file" (ambiguous about which layer).
+**Managed key**: a settings key listed in `tools/settings/managed.json`. The
+installer sets it; every other key in that settings file belongs to the CLI or the
+user.
 
-**Generated (fully)**:
-Written *wholesale* by `write_if_changed` — the entire file is output, with **no**
-hand-maintained region. `CLAUDE.md`, `AGENTS.md`, `GEMINI.md` are all fully generated.
-"Fully generated" says nothing about *which* SoT: a single generated file can draw from
-several (`CLAUDE.md` = scaffold from `tools/templates/claude-header.md` + rules from
-`tools/rules/*.md` + import list from `manifest.yaml`).
-_Avoid_: "partially generated" (no file here is — that was a stale claim).
+**Emitted vs verified**: a config being written is not proof it works. "Verified"
+means the CLI itself reports it (`<cli> mcp list`, a session loading the
+instructions). The healthcheck checks live CLI state for this reason.
 
-**Clean / delete a generated file**:
-`rm`-ing a generated artifact (e.g. `AGENTS.md`) is **cosmetic** — the next
-`install.sh` recreates it. The durable mechanism that keeps generated files out of
-version control is `.gitignore`, not deletion. "Cleaning" the working tree of a
-generated file is temporary by nature.
-_Avoid_: treating `rm` as a permanent removal.
+**Retired generator**: the earlier per-project rule/hook/agent compiler (`tools/rules`,
+`tools/hooks`, `rules.sh`, `init-project.sh`). Removed by ADR-0005; its design notes
+remain in `docs/archive/`.
 
-**Feature parity** (a *mapping-completeness* axis):
-Every Claude feature has an *emitted* equivalent on the target CLI — the adapter
-produces the right file. Says nothing about whether it works. Codex is partial here;
-Gemini is at zero (no catalog yet).
-_Avoid_: bare "parity" (ambiguous — see verified parity).
+## Cross-CLI surfaces
 
-**Verified parity** (a *runtime-correctness* axis):
-An emitted equivalent is confirmed to work end-to-end on the target CLI at runtime.
-The real bar. **No non-Claude CLI has any verified parity yet** — emission is not
-verification. Orthogonal to feature parity: a feature can be emitted (feature-parity ✓)
-yet unverified (verified-parity ✗).
-_Avoid_: treating "the adapter emits it" as proof it works.
-
-**Full 1:1 parity** (the (iii) goal — see [ADR-0002](docs/adr/0002-multi-cli-parity-target.md)):
-The **conjunction** of both axes maxed — every Claude feature emitted *and* verified on a
-CLI. A CLI is "complete" only when both are true.
-
----
-
-## Goal: full multi-CLI parity (active)
-
-**The north-star is (iii) full 1:1 parity** — every Claude Code feature has a working
-equivalent on every supported CLI, shimming where the target CLI has no native concept.
-This is an **active goal**, not inherited baggage: Claude Code is simply the furthest-built
-spoke, and Gemini/Codex are destinations we are driving toward — not "kept warm."
-
-**Parity is gated behind a per-CLI capability catalog.** "Full parity" is undefinable
-without knowing each CLI's native config surface, so the first milestone for each target
-CLI is a `docs/<cli>/CAPABILITIES.md` enumerating its native surfaces and the
-Claude-feature → CLI-feature mapping (with an explicit shim strategy wherever no native
-equivalent exists). See [ADR-0002](docs/adr/0002-multi-cli-parity-target.md).
-
-Status uses the two parity axes from the glossary (feature parity = emitted;
-verified parity = works at runtime). "Full 1:1 parity" = both complete.
-
-| CLI | Feature parity | Verified parity | Catalog | Entry file |
+| Concept | Claude Code | Codex CLI | Gemini CLI | Pi |
 |---|---|---|---|---|
-| Claude Code | ✅ baseline (reference impl) | ✅ baseline | n/a — it *is* the baseline | `CLAUDE.md` |
-| Codex CLI | 🟡 partial (emitters exist) | ❌ none | [`docs/codex/CAPABILITIES.md`](docs/codex/CAPABILITIES.md) | `AGENTS.md` |
-| Gemini CLI | 🟡 partial (emitters exist) | ❌ none | [`docs/gemini/CAPABILITIES.md`](docs/gemini/CAPABILITIES.md) — **built** from mirrored `docs/gemini/upstream/` | `GEMINI.md` |
-
-> ⚠️ **Reality check for the impatient.** The adapters already *emit* output for all three
-> CLIs, but emission ≠ verified parity. Gemini/Codex output is not yet exercised end-to-end,
-> and latent bugs exist (e.g. the `created:22` reporting quirk lives in exactly these
-> emitters). "Emits a file" is a necessary step toward parity, not proof of it.
-
-## Cross-CLI terminology map
-
-Structural facts about each CLI's config surface (accurate regardless of parity progress):
-
-| Concept | Claude Code | Gemini CLI | Codex CLI |
-|---|---|---|---|
-| Session entry context | `CLAUDE.md` | `GEMINI.md` | `AGENTS.md` |
-| File-import syntax | `@path/to/file.md` | `@path/to/file.md` | Not supported (inlined by `install.sh`; cf. `docs/codex/import.md`) |
-| Global + project layers | `~/.claude/` + `./` | `~/.gemini/` + `./` | `~/.codex/` + directory-hierarchy concatenation |
-| Skill / Agent / Hook | Native (baseline) | Emitters exist (`gemini.sh`) — verified parity: none | Native concepts exist (`docs/codex/upstream/{hooks,skills-and-plugins}.md`); emitters in `codex.sh` — verified parity: none |
-
-## Fork boundary — inherited the concepts, re-platformed the delivery
-
-Forked from [`zeuikli/claude-code-workspace`](https://github.com/zeuikli/claude-code-workspace)
-(Claude-Code-only). The fork **inherited the original's conceptual advantages** — its
-design philosophy and content — while **replacing its delivery mechanism**. "Inherited the
-advantage" is true of the *ideas and content*, not the *architecture* (which was rebuilt
-on purpose, because the original's Claude-only plumbing was what blocked multi-CLI).
-
-**Inherited (concept + content), preserved deliberately:**
-
-- **Four-layer loading framework + its cache-granularity design.** The compiler
-  (`rules.sh`) still emits `@-imports` for per-rule cache invalidation — the rationale is
-  encoded in its own comments ("per-file cache granularity beats one monolithic inline
-  blob", `rules.sh:176`). `load-plan.sh` still surfaces the live token budget.
-  ⚠️ *The upstream's specific figures (~4,160 fixed tok) do **not** transfer* — this fork's
-  rule set diverged (10 auto-rules vs the original's 4). Run `/load-plan` for the current
-  number; never cite a static one.
-- **Advisor mode** — inherited *and enhanced* (`subagent-strategy.md` keeps the three-tier
-  routing; `subagent-advanced.md` adds the API-layer `advisor` tool).
-- **Automation hooks** (grew from ~10 → 14), the broad command coverage, `healthcheck.sh`.
-
-**Re-platformed (the deliberate rebuild):**
-
-- **Source of truth inverted.** Original: flat, hand-maintained `.claude/` *is* the truth.
-  Fork: `tools/` is truth; `.claude/` (+ `AGENTS.md`/`GEMINI.md`) are **generated** from it
-  by a compiler that did not exist upstream (`scripts/install.sh` + `adapters/` +
-  577-line `_common.sh`; upstream `scripts/` had only `healthcheck.sh` + `load-plan.sh`).
-- **Multi-CLI adapter layer** and `install.sh --target=claude|gemini|codex|all` — new.
-
-**Dropped:** upstream's `output-discipline.md` rule (not carried forward).
-
-> Inspect the upstream directly (no `upstream` git remote is configured):
-> `gh api repos/zeuikli/claude-code-workspace/contents/<path>`.
-
-## Two-stage install model
-
-- **Stage 1** — `bash scripts/install.sh` produces global artifacts under
-  `~/.claude/`, `~/.gemini/`, `~/.codex/`. Skills install as marker-tracked
-  copies (`.workspace-managed` sentinel), so user-added entries survive
-  re-installs and removed entries are pruned on next run.
-- **Stage 2** — `bash scripts/init-project.sh` (or `/init-project` from
-  any CLI) runs inside a target project and writes a project-local
-  `.claude/CLAUDE.md` as a strict additive layer on top of Stage 1.
-  Profiles live in `tools/profiles/<dimension>.yaml`; multi-select
-  composes by union of skills. Content below the
-  `<!-- USER-CONTENT-BELOW -->` sentinel is preserved across re-runs.
-
-Adding a new dimension: drop a YAML file in `tools/profiles/` listing
-the skills it surfaces. No code changes required.
+| Global instructions | `~/.claude/CLAUDE.md` | `~/.codex/AGENTS.md` | `~/.gemini/GEMINI.md` | `~/.pi/agent/AGENTS.md` |
+| Settings | `settings.json` | `config.toml` | `settings.json` | `settings.json` |
+| User MCP | `~/.claude.json` via `claude mcp add -s user` | `config.toml` via `codex mcp add` | `settings.json` via `gemini mcp add -s user` | none |
+| Skills | `~/.claude/skills/` | — | — | `~/.pi/agent/skills/` |

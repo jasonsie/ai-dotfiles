@@ -1,5 +1,7 @@
 # The project's identity is a portable capability library, not a multi-CLI workspace
 
+> **Superseded** by [ADR-0005](0005-global-config-single-source.md) (2026-10-05).
+
 ## Context
 
 The project began as a fork of a Claude-Code-only workspace and was repositioned as

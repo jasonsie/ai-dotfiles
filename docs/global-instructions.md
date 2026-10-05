@@ -33,14 +33,13 @@ bash scripts/install.sh --instructions-only
 ```
 
 - `--target=claude|gemini|codex|pi` limits the affected CLI; default is `all`.
-  Pi supports `--instructions-only`; no full Pi adapter is provided.
 - Missing entries, empty files, and the exact old Claude workspace pointer can
   migrate automatically. Existing files are backed up, including empty files.
 - Unknown instructions or symlinks are refused before any entry changes. Read
   and reconcile their content first, then explicitly use `--replace-instructions`.
 - Non-empty Codex or Pi `AGENTS.override.md` is refused because it shadows `AGENTS.md`.
-- Full installs also install the shared entries. `--instructions-only` skips all
-  settings/rules adapters; use it for this migration to avoid unrelated changes.
+- Full installs also merge managed settings keys, register shared MCP servers, and
+  bind the vault tooling. `--instructions-only` skips those steps.
 - Direct Python invocation defaults to dry-run:
   `python3 scripts/install-global-instructions.py --target all` (`--apply` writes).
   `--home /temporary/home` isolates installation and ignores config-dir overrides.
