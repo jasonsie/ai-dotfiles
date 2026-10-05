@@ -10,6 +10,7 @@ cross-project instructions. The installer links it to:
 | Claude Code | `~/.claude/CLAUDE.md` |
 | Gemini CLI | `~/.gemini/GEMINI.md` |
 | Codex CLI | `~/.codex/AGENTS.md` |
+| Pi | `~/.pi/agent/AGENTS.md` |
 
 The file contains no imports, provider-specific models, or workspace-maintainer
 rules. Codex does not need to interpret Claude's `@` imports. Existing Claude
@@ -31,21 +32,22 @@ bash scripts/install.sh --instructions-only --dry-run
 bash scripts/install.sh --instructions-only
 ```
 
-- `--target=claude|gemini|codex` limits the affected CLI; default is `all`.
+- `--target=claude|gemini|codex|pi` limits the affected CLI; default is `all`.
+  Pi supports `--instructions-only`; no full Pi adapter is provided.
 - Missing entries, empty files, and the exact old Claude workspace pointer can
   migrate automatically. Existing files are backed up, including empty files.
 - Unknown instructions or symlinks are refused before any entry changes. Read
   and reconcile their content first, then explicitly use `--replace-instructions`.
-- Non-empty Codex `AGENTS.override.md` is refused because it shadows `AGENTS.md`.
+- Non-empty Codex or Pi `AGENTS.override.md` is refused because it shadows `AGENTS.md`.
 - Full installs also install the shared entries. `--instructions-only` skips all
   settings/rules adapters; use it for this migration to avoid unrelated changes.
 - Direct Python invocation defaults to dry-run:
   `python3 scripts/install-global-instructions.py --target all` (`--apply` writes).
   `--home /temporary/home` isolates installation and ignores config-dir overrides.
-- Normal invocation honors `CLAUDE_CONFIG_DIR` and `CODEX_HOME`. The default
-  Gemini entry is under the user home directory.
+- Normal invocation honors `CLAUDE_CONFIG_DIR`, `CODEX_HOME`, and
+  `PI_CODING_AGENT_DIR`. The default Gemini entry is under the user home directory.
 
-Keep the checkout at a stable path. Editing the shared source updates all three
+Keep the checkout at a stable path. Editing the shared source updates all four
 links without regenerating copies. Start a new CLI session to load the changes.
 Do not use memory commands or old bootstrap scripts to append project/session
 state to these links: a write through any link changes the source for **all** CLIs.
@@ -72,7 +74,7 @@ or redirect text onto a linked entry without first removing the link.
 ```bash
 python3 -m unittest discover -s tests -p 'test_global_instructions.py'
 bash scripts/install.sh --instructions-only --dry-run
-ls -l ~/.claude/CLAUDE.md ~/.gemini/GEMINI.md ~/.codex/AGENTS.md
+ls -l ~/.claude/CLAUDE.md ~/.gemini/GEMINI.md ~/.codex/AGENTS.md ~/.pi/agent/AGENTS.md
 ```
 
 The second command should report zero changes after installation. Tests cover
@@ -82,7 +84,8 @@ preservation. They do not prove end-to-end model behavior.
 
 For runtime verification, start each CLI in an unrelated project: use Claude's
 `/context`, Gemini's `/memory show`, and ask Codex to identify its loaded global
-instructions. Native discovery is documented in the checked-in mirrors:
+instructions. Pi reloads instructions with `/reload`; inspect its loaded context
+in a new unrelated-project session. Native discovery is documented in the checked-in mirrors:
 `docs/claude/memory.md`, `docs/gemini/upstream/cli/gemini-md.md`, and
 `docs/codex/upstream/agent-configuration/agents-md.md`. Codex's combined instruction
 budget is finite (32 KiB by default); large project rules can still exhaust it.

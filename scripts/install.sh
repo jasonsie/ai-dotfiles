@@ -45,7 +45,8 @@ Usage: bash scripts/install.sh [OPTIONS]
 
 Options:
   --target=TARGET   Which adapter(s) to run (default: all)
-                    Values: all | claude | gemini | codex
+                    Values: all | claude | gemini | codex | pi
+                    Pi supports --instructions-only (no full adapter yet)
   --instructions-only
                     Link shared global instructions only; preserve all settings
   --replace-instructions
@@ -86,9 +87,9 @@ done
 
 # Validate target
 case "$TARGET" in
-  all|claude|gemini|codex) ;;
+  all|claude|gemini|codex|pi) ;;
   *)
-    printf "[ERR] Invalid target: %s (must be all|claude|gemini|codex)\n" "$TARGET" >&2
+    printf "[ERR] Invalid target: %s (must be all|claude|gemini|codex|pi)\n" "$TARGET" >&2
     exit 1
     ;;
 esac
@@ -97,6 +98,11 @@ esac
 # Source common helpers (for logging + summary)
 # ---------------------------------------------------------------------------
 source "${INSTALLER_SCRIPT_DIR}/adapters/_common.sh"
+
+if [ "$TARGET" = "pi" ] && [ "$INSTRUCTIONS_ONLY" != "1" ]; then
+  printf '[ERR] Pi currently supports --instructions-only only.\n' >&2
+  exit 1
+fi
 
 # ---------------------------------------------------------------------------
 # Verify required dependencies

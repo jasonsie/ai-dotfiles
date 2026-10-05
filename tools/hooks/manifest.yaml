@@ -11,7 +11,7 @@ events:
     script: session-start.sh
     description: Session begins (auto-pull, env init)
     claude: SessionStart
-    gemini: session-start
+    gemini: SessionStart
     codex: pre-session
 
   instructions-loaded:
@@ -25,21 +25,21 @@ events:
     script: user-prompt.sh
     description: User submits a prompt; inject reminders
     claude: UserPromptSubmit
-    gemini: user-prompt
+    gemini: BeforeAgent
     codex: pre-prompt
 
   pre-tool:
     script: pre-tool.sh
     description: Before tool invocation (e.g. bash pre-commit review)
     claude: PreToolUse
-    gemini: pre-tool
+    gemini: BeforeTool
     codex: pre-tool
 
   post-edit:
     script: post-edit.sh
     description: After file Edit/Write; syntax validation
     claude: PostToolUse
-    gemini: post-tool
+    gemini: AfterTool
     codex: post-tool
 
   pre-compact:
@@ -74,12 +74,14 @@ events:
     script: session-stop.sh
     description: Session ends; cleanup
     claude: Stop
-    gemini: session-end
+    gemini: SessionEnd
     codex: post-session
 
-# Matchers (CLI-specific narrowing). Only Claude uses them today.
+# Matchers use each CLI's native tool names.
 matchers:
   pre-tool:
     claude: bash
+    gemini: run_shell_command
   post-edit:
     claude: "Edit|Write"
+    gemini: "write_file|replace"

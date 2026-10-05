@@ -40,7 +40,8 @@ for event_key, event_data in events.items():
 
     entry = {
         "matcher": matcher,
-        "command": command
+        "hooks": [{"name": "workspace-" + event_key,
+                   "type": "command", "command": command}]
     }
 
     if gemini_event not in hooks_obj:

@@ -19,6 +19,7 @@ ENTRIES = {
     "claude": (".claude", "CLAUDE.md"),
     "gemini": (".gemini", "GEMINI.md"),
     "codex": (".codex", "AGENTS.md"),
+    "pi": (".pi/agent", "AGENTS.md"),
 }
 
 
@@ -80,7 +81,7 @@ def install(
         for parent in path.parents:
             if parent.exists() and not parent.is_dir():
                 raise ValueError(f"Instruction parent is not a directory: {parent}")
-        if target == "codex":
+        if target in ("codex", "pi"):
             override = path.with_name("AGENTS.override.md")
             if override.is_file() and override.read_text().strip():
                 raise ValueError(
@@ -161,6 +162,7 @@ def main():
         for target, variable in (
             ("claude", "CLAUDE_CONFIG_DIR"),
             ("codex", "CODEX_HOME"),
+            ("pi", "PI_CODING_AGENT_DIR"),
         ):
             if os.environ.get(variable):
                 config_dirs[target] = os.environ[variable]

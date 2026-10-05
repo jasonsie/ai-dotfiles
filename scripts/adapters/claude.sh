@@ -145,8 +145,29 @@ PYEOF
 # ---------------------------------------------------------------------------
 # Main entry point
 # ---------------------------------------------------------------------------
+# Restore native discovery/import paths without copying canonical content.
+# Existing user-owned files are preserved by ensure_symlink.
+_claude_link_resources() {
+  local kind source destination
+  for kind in rules agents hooks commands; do
+    ensure_dir "${WORKSPACE_DIR}/.claude/${kind}"
+    for source in "${WORKSPACE_DIR}/tools/${kind}"/*; do
+      [ -f "$source" ] || continue
+      case "$source" in
+        *.md|*.sh)
+          destination="${WORKSPACE_DIR}/.claude/${kind}/$(basename "$source")"
+          if [ ! -e "$destination" ] && [ ! -L "$destination" ]; then
+            ensure_symlink "$source" "$destination"
+          fi
+          ;;
+      esac
+    done
+  done
+}
+
 claude_adapter_run() {
   log_info "=== Claude adapter ==="
+  _claude_link_resources
 
   local settings_dest="${WORKSPACE_DIR}/.claude/settings.json"
   local settings_bak="${WORKSPACE_DIR}/.claude/settings.json.bak"

@@ -54,11 +54,11 @@ class GlobalInstructionsTest(unittest.TestCase):
         )
 
     def test_dry_run_writes_nothing(self):
-        self.assertEqual(self.install(), 3)
+        self.assertEqual(self.install(), len(adapter.ENTRIES))
         self.assertEqual(list(self.home.iterdir()), [])
 
     def test_same_source_and_live_updates_are_idempotent(self):
-        self.assertEqual(self.install(apply=True), 3)
+        self.assertEqual(self.install(apply=True), len(adapter.ENTRIES))
         original_times = {p: p.lstat().st_mtime_ns for p in self.paths.values()}
         self.source.write_text("# Updated shared preferences\n")
         for path in self.paths.values():
@@ -125,6 +125,14 @@ class GlobalInstructionsTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "shadows shared instructions"):
             self.install(apply=True)
         self.assertEqual(override.read_text(), "Override rules\n")
+
+    def test_pi_override_and_custom_agent_directory(self):
+        custom = self.root / "custom pi agent"
+        self.install(("pi",), apply=True, config_dirs={"pi": custom})
+        self.assertEqual((custom / "AGENTS.md").resolve(), self.source)
+        (custom / "AGENTS.override.md").write_text("override")
+        with self.assertRaisesRegex(ValueError, "shadows shared instructions"):
+            self.install(("pi",), apply=True, config_dirs={"pi": custom})
 
     def test_failure_rolls_back_all_changed_entries(self):
         self.seed("claude", f"@{self.workspace}/CLAUDE.md\n")
@@ -246,7 +254,7 @@ class GlobalInstructionsTest(unittest.TestCase):
 
     def test_installer_instructions_only_and_target_selection(self):
         env = {**os.environ, "HOME": str(self.home)}
-        for key in ("CLAUDE_CONFIG_DIR", "CODEX_HOME"):
+        for key in ("CLAUDE_CONFIG_DIR", "CODEX_HOME", "PI_CODING_AGENT_DIR"):
             env.pop(key, None)
         command = [
             "bash",

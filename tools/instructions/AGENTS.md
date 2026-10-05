@@ -1,8 +1,8 @@
 # Shared global instructions
 
-These personal defaults apply to Claude Code, Gemini CLI, and Codex CLI.
+These personal defaults apply to Claude Code, Gemini CLI, Codex CLI, and Pi.
 The source of truth is `ai-cli-workspace/tools/instructions/AGENTS.md`; the
-three user-level instruction files are links to this file. Keep it CLI-neutral.
+four user-level instruction files are links to this file. Keep it CLI-neutral.
 Repository instructions provide the project-specific workflow; do not treat the
 workspace library's maintainer instructions as rules for unrelated repositories.
 
@@ -44,8 +44,10 @@ Before substantive architecture, harness design, implementation tradeoffs,
 debugging explanations, or learning guidance, consult the configured CS vault.
 This includes advisory tasks; skip trivial edits, greetings, and unrelated work.
 
-Read the shared procedure at `~/.claude/skills/vault-query/SKILL.md` using the
-current CLI's file-reading tool (it is usable outside Claude). Then use
+Read the shared procedure using the current CLI's file-reading tool: Pi uses
+`~/.pi/agent/skills/vault-query/SKILL.md` (respect `PI_CODING_AGENT_DIR`);
+other CLIs use `~/.claude/skills/vault-query/SKILL.md` (respect
+`CLAUDE_CONFIG_DIR`). The procedure is CLI-neutral. Then use
 `~/.local/bin/vault-knowledge search "focused concepts" --limit 6` and the
 launcher's `read` command on supporting sections. Cover distinct facets with
 focused queries, not broad filesystem searches. Cite only sections actually read

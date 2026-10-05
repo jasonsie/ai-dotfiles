@@ -381,7 +381,8 @@ TOOLS_DIR="$WORKSPACE_DIR/tools"
 if [ ! -d "$TOOLS_DIR" ]; then
   warn "tools/ 不存在（尚未執行 install.sh 或 workspace 為 legacy 結構）"
 else
-  for sub in skills agents rules commands mcp hooks settings; do
+  # Shared skills are optional; provider/plugin skills live outside this library.
+  for sub in agents rules commands mcp hooks settings; do
     if [ -d "$TOOLS_DIR/$sub" ]; then
       pass "tools/$sub/ 存在"
     else
