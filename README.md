@@ -6,21 +6,20 @@
 （fork 自 [`zeuikli/claude-code-workspace`](https://github.com/zeuikli/claude-code-workspace)）。
 Claude Code 為 first-class 支援，內建四層載入框架、Advisor 模式與全域自動化 Hooks；Gemini / Codex 目前同步 rules 與 entry context（skills、agents 適配後續迭代）。
 
-> 跨 CLI 專案脈絡定義於 [`CONTEXT.md`](./CONTEXT.md)，三個 CLI 啟動時皆會自動載入。
+> 本 repository 的專案脈絡定義於 [`CONTEXT.md`](./CONTEXT.md)。跨專案的全域指示另由 [`tools/instructions/AGENTS.md`](./tools/instructions/AGENTS.md) 統一提供。
 
 ---
 
 ## 快速開始
 
-將以下指令貼進任何 Claude Code session 即可套用所有設定：
+在此 repository 中執行，先預覽、再安裝三個 CLI 的共用全域指示：
 
 ```bash
-請執行：DIR="${CLAUDE_CODE_REMOTE:+/tmp/claude-code-workspace}"; DIR="${DIR:-$HOME/claude-code-workspace}"; command -v git >/dev/null 2>&1 && (([ -d "$DIR/.git" ] && git -C "$DIR" pull -q origin main 2>/dev/null || ([ -n "$DIR" ] && rm -rf "$DIR"; git clone --depth 1 --filter=blob:none -q https://github.com/zeuikli/claude-code-workspace.git "$DIR" || { echo "⚠️ Clone failed" >&2; exit 1; })) && bash "$DIR/scripts/install.sh" --target=all)
-
-完成後讀取並遵循 ${DIR}/CLAUDE.md
+bash scripts/install.sh --instructions-only --dry-run
+bash scripts/install.sh --instructions-only
 ```
 
-完成後執行 `/load-plan` 查看所有可用工具與 token 成本。
+此模式不更動模型、權限、hooks、MCP 或登入設定。完整能力安裝請見下一節。
 
 ### 跨 CLI 安裝
 
@@ -35,7 +34,23 @@ bash scripts/install.sh --dry-run             # 不寫入，僅顯示變更
 bash scripts/install.sh --force               # 強制覆寫即使內容相同
 ```
 
-每次 `git pull` 後重跑可安全更新所有 CLI 設定。
+完整安裝會重新產生各 CLI 設定；只要統一全域指示時，請使用 `--instructions-only`。
+
+### Shared global instructions
+
+One source, loaded through each CLI's native user-level entry file:
+
+```text
+tools/instructions/AGENTS.md
+  ├── ~/.claude/CLAUDE.md   (symlink)
+  ├── ~/.gemini/GEMINI.md   (symlink)
+  └── ~/.codex/AGENTS.md    (symlink)
+```
+
+Edit the source once; all three entries immediately read the same content on
+reload. Project rules and CLI-specific settings remain separate. Existing entry
+files are backed up before migration; unknown content requires review and
+`--replace-instructions`. See [migration, verification, and rollback](docs/global-instructions.md).
 
 ### `tools/` Canonical 結構
 
@@ -122,34 +137,13 @@ tools/
 
 ---
 
-## 本機安裝
+## 本機安裝與跨專案共用
 
-```bash
-git clone https://github.com/zeuikli/claude-code-workspace.git
-cd claude-code-workspace
-mkdir -p ~/.claude
-echo "@$HOME/claude-code-workspace/CLAUDE.md" > ~/.claude/CLAUDE.md
-```
+在此 repository 執行 `bash scripts/install.sh --instructions-only`，三個 CLI 即可
+透過原生的使用者層級指示檔跨專案讀取同一份內容，不需要 SessionStart Hook。
 
-## 跨專案共用
-
-任何專案的 `.claude/settings.json` 加入 SessionStart Hook：
-
-```json
-{
-  "hooks": {
-    "SessionStart": [{
-      "matcher": "",
-      "hooks": [{
-        "type": "command",
-        "command": "bash -c 'DIR=/tmp/claude-code-workspace; [ -d \"$DIR/.git\" ] && git -C \"$DIR\" pull -q origin main 2>/dev/null || { [ -n \"$DIR\" ] && rm -rf \"$DIR\"; git clone --depth 1 --filter=blob:none -q https://github.com/zeuikli/claude-code-workspace.git \"$DIR\" || { echo \"⚠️ Clone failed\" >&2; exit 1; }; }; mkdir -p ~/.claude; printf \"@${DIR}/CLAUDE.md\n\" > ~/.claude/CLAUDE.md'"
-      }]
-    }]
-  }
-}
-```
-
-設定完成後，快速啟動會在前 5 分鐘內命中 fetch 時間戳快取，重啟時暖啟動延遲僅 20–40ms。
+**不要**再用 `echo` / `printf > ~/.claude/CLAUDE.md` 的舊式安裝範例；重導向會
+沿著 symlink 覆寫所有 CLI 共用的來源。舊版自訂 bootstrap hook 也應移除。
 
 ---
 
@@ -172,17 +166,21 @@ A shared personal workspace for [Claude Code](https://code.claude.com), [Gemini 
 (forked from [`zeuikli/claude-code-workspace`](https://github.com/zeuikli/claude-code-workspace)).
 Claude Code is first-class with a **4-tier load framework**, Advisor Strategy, and automated hooks;
 Gemini and Codex currently receive synchronized rules and entry context (skills / agents adaptation pending).
-Cross-CLI project context lives in [`CONTEXT.md`](./CONTEXT.md), auto-loaded by all three CLIs at session start.
+This repository's project context lives in [`CONTEXT.md`](./CONTEXT.md).
+Cross-project defaults live in [`tools/instructions/AGENTS.md`](./tools/instructions/AGENTS.md).
 
 ### Quick Start
 
-Paste into any Claude Code session:
+Run from this checkout to unify global instructions without changing CLI settings:
 
 ```bash
-DIR="${CLAUDE_CODE_REMOTE:+/tmp/claude-code-workspace}"; DIR="${DIR:-$HOME/claude-code-workspace}"; command -v git >/dev/null 2>&1 && (([ -d "$DIR/.git" ] && git -C "$DIR" pull -q origin main 2>/dev/null || ([ -n "$DIR" ] && rm -rf "$DIR"; git clone --depth 1 --filter=blob:none -q https://github.com/zeuikli/claude-code-workspace.git "$DIR" || { echo "⚠️ Clone failed" >&2; exit 1; })) && mkdir -p ~/.claude && printf "@${DIR}/CLAUDE.md\n" > ~/.claude/CLAUDE.md)
+bash scripts/install.sh --instructions-only --dry-run
+bash scripts/install.sh --instructions-only
 ```
 
-Then run `/load-plan` to see all available tools with token cost estimates.
+Use `--target=claude|gemini|codex` to select one CLI. See
+[global instructions](docs/global-instructions.md) for backups and verification.
+Omit `--instructions-only` only when you also want the full configuration install.
 
 ### Performance Optimizations
 
@@ -225,31 +223,10 @@ Then run `/load-plan` to see all available tools with token cost estimates.
 
 ### Cross-Project Usage
 
-Add SessionStart Hook to any project's `.claude/settings.json`:
-
-```json
-{
-  "hooks": {
-    "SessionStart": [{
-      "matcher": "",
-      "hooks": [{
-        "type": "command",
-        "command": "bash -c 'DIR=/tmp/claude-code-workspace; [ -d \"$DIR/.git\" ] && git -C \"$DIR\" pull -q origin main 2>/dev/null || { [ -n \"$DIR\" ] && rm -rf \"$DIR\"; git clone --depth 1 --filter=blob:none -q https://github.com/zeuikli/claude-code-workspace.git \"$DIR\" || { echo \"⚠️ Clone failed\" >&2; exit 1; }; }; mkdir -p ~/.claude; printf \"@${DIR}/CLAUDE.md\n\" > ~/.claude/CLAUDE.md'"
-      }]
-    }]
-  }
-}
-```
-
-After setup, fast restarts within 5 minutes hit the fetch timestamp cache for just 20–40ms warm-start latency.
-
-### Local Install
-
-```bash
-git clone https://github.com/zeuikli/claude-code-workspace.git
-mkdir -p ~/.claude
-echo "@$HOME/claude-code-workspace/CLAUDE.md" > ~/.claude/CLAUDE.md
-```
+The native user-level instruction files apply across projects; no bootstrap hook
+is needed. Keep this checkout at a stable path, and edit only the shared source.
+Remove old custom hooks that write `~/.claude/CLAUDE.md`: shell redirection follows
+the symlink and would overwrite the shared source for all three CLIs.
 
 ---
 

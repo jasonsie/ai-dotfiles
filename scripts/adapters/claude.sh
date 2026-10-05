@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# scripts/adapters/claude.sh — Regenerate .claude/settings.json and ~/.claude/CLAUDE.md
+# scripts/adapters/claude.sh — Regenerate workspace .claude/settings.json
+# Global instructions are installed separately by install-global-instructions.py.
 #
 # WARNING: This script FULLY overwrites .claude/settings.json on each run
 #          (a .bak is saved on first run for safety). User-added keys will be
@@ -149,13 +150,6 @@ claude_adapter_run() {
 
   local settings_dest="${WORKSPACE_DIR}/.claude/settings.json"
   local settings_bak="${WORKSPACE_DIR}/.claude/settings.json.bak"
-  local home_claude="${HOME}/.claude/CLAUDE.md"
-
-  # 1. Write ~/.claude/CLAUDE.md pointer (only if different)
-  ensure_dir "${HOME}/.claude"
-  local pointer_content="@${WORKSPACE_DIR}/CLAUDE.md"
-  write_if_changed "${home_claude}" "${pointer_content}"
-
   # 2. Save .bak on first run (never overwrite existing .bak)
   if [ -f "$settings_dest" ] && [ ! -f "$settings_bak" ]; then
     if ! is_dry_run; then

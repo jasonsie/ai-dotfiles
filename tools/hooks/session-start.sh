@@ -20,6 +20,15 @@ WORKSPACE_DIR="${WORKSPACE_DIR:-${CLAUDE_PROJECT_DIR:-}}"
 export WORKSPACE_CLI_NAME WORKSPACE_DIR
 # --- end shim ---
 
+# The legacy bootstrap below writes ~/.claude/CLAUDE.md in place. Never follow
+# a managed symlink (that would overwrite the shared source for every CLI),
+# and never let another CLI or a custom Claude config home rewrite this file.
+if [ "$WORKSPACE_CLI_NAME" != "claude" ] || \
+   [ -L "$HOME/.claude/CLAUDE.md" ] || [ -n "${CLAUDE_CONFIG_DIR:-}" ]; then
+  echo "[session-init] Preserving managed global instructions; legacy bootstrap skipped"
+  exit 0
+fi
+
 CONFIG_REPO="https://github.com/zeuikli/claude-code-workspace.git"
 CONFIG_DIR="$HOME/claude-code-workspace"
 CLOUD_CONFIG_DIR="/tmp/claude-code-workspace"

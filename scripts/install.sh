@@ -2,7 +2,8 @@
 # scripts/install.sh — Cross-AI-CLI workspace installer
 #
 # Usage:
-#   bash scripts/install.sh [--target=all|claude|gemini|codex] [--dry-run] [--force] [--help]
+#   bash scripts/install.sh [--target=all|claude|gemini|codex] [--instructions-only]
+#                           [--replace-instructions] [--dry-run] [--force] [--help]
 #
 # Targets:
 #   all    (default) — run all adapters
@@ -10,7 +11,8 @@
 #   gemini — generate ~/.gemini/settings.json and related files
 #   codex  — generate ~/.codex/config.toml and related files
 #
-# Rules generation always runs, regardless of --target.
+# Repo rules generation runs for full installs, regardless of --target.
+# --instructions-only links global instructions without touching other config.
 
 set -euo pipefail
 
@@ -27,6 +29,8 @@ WORKSPACE_DIR="$(cd "${INSTALLER_SCRIPT_DIR}/.." && pwd)"
 # Defaults
 # ---------------------------------------------------------------------------
 TARGET="all"
+INSTRUCTIONS_ONLY=0
+REPLACE_INSTRUCTIONS=0
 export DRY_RUN=0
 export FORCE=0
 
@@ -42,8 +46,12 @@ Usage: bash scripts/install.sh [OPTIONS]
 Options:
   --target=TARGET   Which adapter(s) to run (default: all)
                     Values: all | claude | gemini | codex
+  --instructions-only
+                    Link shared global instructions only; preserve all settings
+  --replace-instructions
+                    Back up and replace unknown existing instruction entry files
   --dry-run         Print intended actions without making changes
-  --force           Force overwrites even if content matches
+  --force           Force generated config overwrites (not instruction collisions)
   --help            Show this help message
 
 Examples:
@@ -63,6 +71,8 @@ EOF
 for arg in "$@"; do
   case "$arg" in
     --target=*)  TARGET="${arg#--target=}" ;;
+    --instructions-only) INSTRUCTIONS_ONLY=1 ;;
+    --replace-instructions) REPLACE_INSTRUCTIONS=1 ;;
     --dry-run)   DRY_RUN=1 ;;
     --force)     FORCE=1 ;;
     --help|-h)   usage; exit 0 ;;
@@ -142,6 +152,21 @@ _run_adapter() {
 # Main
 # ---------------------------------------------------------------------------
 _print_banner
+
+# Shared instructions have no YAML dependency and must also survive full installs.
+# Preflight/migrate them before any broader adapter writes settings.
+INSTRUCTION_ARGS=(--target "$TARGET")
+if [ "$DRY_RUN" != "1" ]; then
+  INSTRUCTION_ARGS+=(--apply)
+fi
+if [ "$REPLACE_INSTRUCTIONS" = "1" ]; then
+  INSTRUCTION_ARGS+=(--replace-existing)
+fi
+python3 "${INSTALLER_SCRIPT_DIR}/install-global-instructions.py" "${INSTRUCTION_ARGS[@]}"
+if [ "$INSTRUCTIONS_ONLY" = "1" ]; then
+  exit 0
+fi
+
 _check_deps
 
 case "$TARGET" in
