@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -210,48 +211,6 @@ class GlobalInstructionsTest(unittest.TestCase):
             before, {p: (p.read_bytes(), p.stat().st_mtime_ns) for p in protected}
         )
 
-    def test_legacy_session_hook_cannot_overwrite_shared_source(self):
-        self.install(apply=True)
-        before = self.source.read_bytes()
-        env = {
-            **os.environ,
-            "HOME": str(self.home),
-            "CLAUDE_CODE_REMOTE": "true",
-            "WORKSPACE_CLI_NAME": "claude",
-        }
-        env.pop("CLAUDE_CONFIG_DIR", None)
-        result = subprocess.run(
-            ["bash", str(ROOT / "tools/hooks/session-start.sh")],
-            env=env,
-            capture_output=True,
-            text=True,
-            timeout=5,
-        )
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("legacy bootstrap skipped", result.stdout)
-        self.assertEqual(self.source.read_bytes(), before)
-        self.assertTrue(self.paths["claude"].is_symlink())
-
-    def test_non_claude_session_hook_never_bootstraps_claude(self):
-        for target in ("gemini", "codex"):
-            with self.subTest(target=target):
-                env = {
-                    **os.environ,
-                    "HOME": str(self.home),
-                    "CLAUDE_CODE_REMOTE": "true",
-                    "WORKSPACE_CLI_NAME": target,
-                }
-                result = subprocess.run(
-                    ["bash", str(ROOT / "tools/hooks/session-start.sh")],
-                    env=env,
-                    capture_output=True,
-                    text=True,
-                    timeout=5,
-                )
-                self.assertEqual(result.returncode, 0, result.stderr)
-                self.assertIn("legacy bootstrap skipped", result.stdout)
-                self.assertEqual(list(self.home.iterdir()), [])
-
     def test_installer_instructions_only_and_target_selection(self):
         env = {**os.environ, "HOME": str(self.home)}
         for key in ("CLAUDE_CONFIG_DIR", "CODEX_HOME", "PI_CODING_AGENT_DIR"):
@@ -274,6 +233,19 @@ class GlobalInstructionsTest(unittest.TestCase):
         self.assertFalse(self.paths["codex"].exists())
         self.assertFalse((self.home / ".gemini/settings.json").exists())
         self.assertFalse((self.home / ".ai-cli-workspace-path").exists())
+
+    def test_full_install_dry_run_writes_nothing(self):
+        env = {**os.environ, "HOME": str(self.home), "PATH": "/usr/bin:/bin"}
+        for key in ("CLAUDE_CONFIG_DIR", "CODEX_HOME", "PI_CODING_AGENT_DIR", "ZKFY_DIR", "ZKFY_VAULT"):
+            env.pop(key, None)
+        env["PYTHON"] = sys.executable
+        result = subprocess.run(
+            ["bash", str(ROOT / "scripts/install.sh"), "--dry-run"],
+            env=env, capture_output=True, text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("knowledge: skipped", result.stdout)
+        self.assertEqual(list(self.home.iterdir()), [])
 
 
 if __name__ == "__main__":

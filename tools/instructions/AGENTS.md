@@ -23,6 +23,7 @@ workspace library's maintainer instructions as rules for unrelated repositories.
   you could not run; do not present generated configuration as runtime-verified.
 - Follow the project's Git workflow. Stage only intended files, not `git add -A`.
   Use clear commit messages such as `fix: ...`, `feat: ...`, or `docs: ...`.
+  For a PR, summarize the whole branch (`git diff <base>...HEAD`) and include a test plan.
 - Do not expose credentials or broaden permissions to make a task succeed.
   Back up existing configuration before a migration.
 
