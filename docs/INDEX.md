@@ -8,6 +8,7 @@
 
 | 檔案 | 主題 | 何時讀 |
 |---|---|---|
+| `plans/project-redesign.md` | 專案重新命名、理解、簡化結構與上游更新的需求訪談 | 跨 session／AI CLI 接續規劃時 |
 | `advisor-strategy.md` | Advisor 模式完整論述（Haiku 4.5 / Sonnet 4.6 / Opus 4.7 三層分工 + `advisor_20260301` API） | 設計新 Sub Agent 工作流、評估是否升級顧問呼叫時 |
 | `opus47-migration.md` | Opus 4.6 → 4.7 完整遷移指引（settings diff / prompt 習慣 / 驗證清單 / FAQ） | 從 4.6 升級、調整 effort 等級前 |
 | `multi-agent-coordination.md` | **5 種多 agent 協調模式決策表**（Generator-Verifier / Orchestrator-Subagent / Agent Teams / Message Bus / Shared State） | 評估平行 subagent 架構、選擇協調模式前 |

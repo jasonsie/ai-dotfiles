@@ -9,6 +9,8 @@ gets the same instructions, the same must-match settings keys, the same MCP serv
 are documented, not emulated. Forked from
 [zeuikli/claude-code-workspace](https://github.com/zeuikli/claude-code-workspace).
 
+Active planning: [project redesign requirements and session handoff](docs/plans/project-redesign.md).
+
 ## What it manages
 
 | Source | Claude Code | Codex CLI | Gemini CLI | Pi |

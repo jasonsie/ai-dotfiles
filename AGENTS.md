@@ -5,6 +5,10 @@ This repo is the single source for **global** AI CLI config on the owner's Macs
 [ADR-0005](docs/adr/0005-global-config-single-source.md). `CLAUDE.md` and `GEMINI.md`
 are symlinks to this file.
 
+For the active redesign interview and its cross-session handoff, read
+[the planning document](docs/plans/project-redesign.md). It records open proposals;
+the current design remains the baseline until decisions are made.
+
 ## What lives here
 
 | Source | Applied by | Lands in |
