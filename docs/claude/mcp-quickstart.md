@@ -59,14 +59,15 @@ The steps are the same for any server: add it, check the connection status, then
 
     The server appears with a status indicator:
 
-    | Status                                           | Meaning                                                                                                                                                                       |
-    | :----------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-    | `✔ Connected`                                    | Ready to use. This is what you should see for `claude-code-docs`                                                                                                              |
-    | `! Connected · tools fetch failed`               | The server connected but couldn't list its tools. Run `claude mcp get <name>` for the error detail                                                                            |
-    | `! Needs authentication`                         | The server is reachable but needs a browser sign-in, or a token passed with `--header`. See [Connect a server that requires sign-in](#connect-a-server-that-requires-sign-in) |
-    | `✘ Failed to connect`                            | Server didn't respond. See [Troubleshooting](#troubleshooting)                                                                                                                |
-    | `✘ Connection error`                             | The connection attempt threw an error. See [Troubleshooting](#troubleshooting)                                                                                                |
-    | ``⏸ Pending approval (run `claude` to approve)`` | A project-scoped server you haven't approved yet. See [Edit .mcp.json directly](#edit-mcp-json-directly)                                                                      |
+    | Status | Meaning |
+    | :- | :- |
+    | `✔ Connected` | Ready to use. This is what you should see for `claude-code-docs` |
+    | `! Connected · tools fetch failed` | The server connected but couldn't list its tools. Run `claude mcp get <name>` for the error detail |
+    | `! Needs authentication` | The server is reachable but needs a browser sign-in, or a token passed with `--header`. See [Connect a server that requires sign-in](#connect-a-server-that-requires-sign-in) |
+    | `✘ Failed to connect` | Server didn't respond. See [Troubleshooting](#troubleshooting) |
+    | `✘ Connection error` | The connection attempt threw an error. See [Troubleshooting](#troubleshooting) |
+    | ``⏸ Pending approval (run `claude` to approve)`` | A project-scoped server you haven't approved yet. See [Edit .mcp.json directly](#edit-mcp-json-directly) |
+    | `⊘ Disabled for this project (re-enable via /mcp)` | A server turned off for this project by the project's `disabledMcpServers` list. See [Disable a server without removing it](/docs/en/mcp#disable-a-server-without-removing-it) |
 
     Some legacy Windows consoles, such as the default console on Windows 10, don't support these Unicode glyphs and show `√` and `×` in place of `✔` and `✘`.
   </Step>
@@ -78,7 +79,7 @@ The steps are the same for any server: add it, check the connection status, then
     claude
     ```
 
-    ```text theme={null}
+    ```text wrap theme={null}
     Use the claude-code-docs server to look up what MCP_TIMEOUT does
     ```
 
@@ -86,7 +87,7 @@ The steps are the same for any server: add it, check the connection status, then
       You don't normally need to name a server in your prompt, since Claude chooses relevant tools on its own. Naming it here guarantees the demonstration goes through the new server rather than another tool, such as web fetch, that could answer the same question.
     </Info>
 
-    The first time Claude calls the server, it asks for permission to use the new tool. Approve it to continue. The tool call in Claude's output is labeled with the server name, which is how you confirm the answer came from the MCP server rather than Claude's built-in knowledge.
+    If Claude Code asks for permission the first time Claude calls the server, approve it. The tool call in Claude's output is labeled with the server name, which is how you confirm the answer came from the MCP server rather than Claude's built-in knowledge.
   </Step>
 
   <Step title="Remove the server">
@@ -112,7 +113,7 @@ The `claude mcp add` command writes the server's details to a configuration file
   `claude mcp add` works the same in every shell, including PowerShell and Command Prompt. Inside a `claude` session, use the `/mcp` command to check and manage servers you've already added.
 </Note>
 
-There are other ways to add a server, each covered later on this page:
+There are other ways to add a server, each with its own section:
 
 * [Add a local server](#add-a-local-server): run a program on your machine instead of connecting to a URL.
 * [Edit `.mcp.json` directly](#edit-mcp-json-directly): write the JSON entry yourself instead of using the command.
@@ -122,11 +123,11 @@ There are other ways to add a server, each covered later on this page:
 
 The `claude mcp add` command writes the server to one of three scopes, stored across two files, depending on the `--scope` flag. You don't need to edit these files directly, but knowing where they are helps with debugging and version control.
 
-| Scope     | File                                                   | Available to                             |
-| :-------- | :----------------------------------------------------- | :--------------------------------------- |
-| `local`   | `~/.claude.json`, under the entry for this project     | Only you, only this project. The default |
-| `project` | `.mcp.json` in your project root                       | Everyone who clones the project          |
-| `user`    | `~/.claude.json`, under the top-level `mcpServers` key | Only you, all projects                   |
+| Scope | File | Available to |
+| :- | :- | :- |
+| `local` | `~/.claude.json`, under the entry for this project | Only you, only this project. The default |
+| `project` | `.mcp.json` in your project root | Everyone who clones the project |
+| `user` | `~/.claude.json`, under the top-level `mcpServers` key | Only you, all projects |
 
 On Windows, `~/.claude.json` resolves to `%USERPROFILE%\.claude.json`, typically `C:\Users\YourName\.claude.json`. If you've set [`CLAUDE_CONFIG_DIR`](/docs/en/env-vars), Claude Code reads `.claude.json` from inside that directory instead.
 
@@ -200,7 +201,7 @@ The [Playwright MCP server](https://github.com/microsoft/playwright-mcp) is a go
   <Step title="Use the browser">
     Give Claude a task that needs the browser:
 
-    ```text theme={null}
+    ```text wrap theme={null}
     Use playwright to open https://example.com and tell me the page title
     ```
 
@@ -230,7 +231,7 @@ The steps below use Sentry as the example. To connect a different service, subst
   <Step title="Authenticate in your browser">
     Start a Claude Code session and open the MCP panel:
 
-    ```text theme={null}
+    ```text wrap theme={null}
     /mcp
     ```
 
@@ -286,7 +287,7 @@ This guide uses the `claude mcp` CLI commands, but every Claude Code surface can
 * **Claude Code desktop app**: add servers through the [Connectors UI](/docs/en/desktop#connect-external-tools).
 * **Claude Desktop chat app**: a separate app from Claude Code. To copy servers from its `claude_desktop_config.json` into the CLI, run `claude mcp add-from-claude-desktop` on macOS or WSL.
 * **VS Code**: see [Connect to external tools with MCP](/docs/en/vs-code#connect-to-external-tools-with-mcp).
-* **Claude Code on the web**: reads `.mcp.json` from your repository. See [Edit .mcp.json directly](#edit-mcp-json-directly).
+* **Cloud sessions**: commit a `.mcp.json` to your repository; a session with one repository loads it. See [Edit .mcp.json directly](#edit-mcp-json-directly) and [What carries over from your setup](/docs/en/cloud-environments#what-carries-over-from-your-setup).
 * **Claude.ai**: connectors you add at [claude.ai/customize/connectors](https://claude.ai/customize/connectors) load automatically in the CLI when you sign in with that account. See [Use MCP servers from Claude.ai](/docs/en/mcp#use-mcp-servers-from-claude-ai).
 
 ## Troubleshooting
@@ -299,12 +300,20 @@ If a server doesn't connect, check its status with `/mcp` inside a session or `c
 
     * You ran `claude mcp add` from a different project. Local-scoped servers are tied to the project where you added them: the repository root, or the exact directory if you weren't in a git repository. Re-add the server from the project you're in now, or add it with `--scope user` so it isn't tied to a project.
     * You edited a configuration file at the wrong path. The correct files are `~/.claude.json` and `<project>/.mcp.json`. Claude Code doesn't read paths such as `~/.claude/.mcp.json`, `~/.claude/config/mcp.json`, `~/.claude/mcp.json`, or `%APPDATA%\Claude\mcp.json`. For user-scoped servers, run `claude mcp add --scope user`, which writes to the `mcpServers` key in `~/.claude.json`; for project-scoped servers, edit `.mcp.json` at the project root.
+    * You wrote a malformed entry in `.mcp.json`. Claude Code skips that entry and still loads the others. Run `claude mcp list` from your shell and look for the parse warning, which names the offending field.
   </Accordion>
 
   <Accordion title="Status shows Failed to connect or Connection error">
-    Both statuses mean the server didn't start or the URL didn't respond. They can also appear for HTTP servers that expect a token rather than the browser sign-in covered in [Connect a server that requires sign-in](#connect-a-server-that-requires-sign-in).
+    Both statuses mean the server didn't start or the URL didn't respond. They can also appear for HTTP servers that reject the token you configured in `headers.Authorization`; a server that wants a token you haven't configured shows `! Needs authentication` instead, covered in [Connect a server that requires sign-in](#connect-a-server-that-requires-sign-in).
 
-    As of v2.1.191, an HTTP server that returns `404 Not Found` shows `MCP endpoint not found at <url>. Check the URL in your MCP config.` when you select the server in `/mcp`, with the URL Claude Code tried. Earlier versions show a generic `Error POSTing to endpoint` message without the URL. Compare the URL to the server's documented MCP endpoint path, then run `claude mcp remove <name>` and re-add with the correct URL.
+    Your first step depends on which status you see:
+
+    * `Failed to connect`: start with the failure detail on the status itself. `claude mcp list` and `claude mcp get <name>` show the HTTP status or error code and any error text the server returned, which often names the problem directly, such as a missing header or a rejected token. Before v2.1.219, `Failed to connect` showed only the bare status, and you needed the curl and command checks later in this section to find the cause.
+    * `Connection error`: Claude Code appends no detail to this status on any version, so go straight to the curl and command checks later in this section.
+
+    If the detail points to a credential or URL, also check the warnings in the `claude mcp list` output. Claude Code flags config values with hidden leading or trailing whitespace, a common cause of authentication failures after pasting a token.
+
+    If an HTTP server returns `404 Not Found`, Claude Code shows `MCP endpoint not found at <origin>. Check the URL in your MCP config.` when you select the server in `/mcp`. The message names the URL's origin, such as `https://mcp.example.com`, without its path, so run `claude mcp get <name>` to see the full URL you configured. Compare its path to the server's documented MCP endpoint path, then run `claude mcp remove <name>` and re-add with the correct URL. Before v2.1.219, the message included the URL's path as well, and before v2.1.191, a `404` showed a generic `Error POSTing to endpoint` message without the URL.
 
     For HTTP servers, confirm the URL is reachable from your machine:
 
@@ -328,7 +337,9 @@ If a server doesn't connect, check its status with `/mcp` inside a session or `c
 
     What happens next tells you where the problem is:
 
-    * The command starts and waits for input: the server itself works. Run `claude mcp get <name>` and confirm the command shown there matches what you just ran. If the command shown differs from what you typed, you likely omitted the `--` separator before the server command. Remove the server and re-add it with `--` in place. If you wrote `.mcp.json` by hand, check its syntax and location.
+    * The command starts and waits for input: the server itself works.
+
+      Run `claude mcp get <name>` and confirm the command shown there matches what you just ran. If the command shown differs from what you typed, you likely omitted the `--` separator before the server command. Remove the server and re-add it with `--` in place. If you wrote `.mcp.json` by hand, check its syntax and location. Before v2.1.285, `claude mcp get` printed no `Command` line for a stdio entry saved without a `type` field, such as a hand-written `.mcp.json` entry. On those versions, run `claude mcp list` instead, which prints the command line either way.
     * The command errors: the message names what's missing, such as Node.js or a browser.
   </Accordion>
 
@@ -365,7 +376,7 @@ If a server doesn't connect, check its status with `/mcp` inside a session or `c
   <Accordion title="Changes to .mcp.json don't take effect">
     Claude Code reads `.mcp.json` at session start. Exit and restart the session after editing the file.
 
-    If your servers still don't appear, run `/mcp` and look for a parse warning. Claude Code skips malformed entries and shows the offending field there.
+    If your servers still don't appear, run `claude mcp list` and look for a parse warning. Claude Code skips malformed entries and shows the offending field there.
 
     If you previously rejected the server when prompted, reset project approvals:
 

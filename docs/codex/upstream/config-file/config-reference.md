@@ -7,6 +7,74 @@
 
 Use this page as a searchable reference for Codex configuration files. For conceptual guidance and examples, start with [Config basics](https://learn.chatgpt.com/docs/config-file/config-basic) and [Advanced Config](https://learn.chatgpt.com/docs/config-file/config-advanced).
 
+<a id="settings-for-synced-chatgpt-work"></a>
+
+## Settings for Local computer access with Work Cloud
+
+With Local computer access with Work Cloud enabled, OpenAI's cloud coordinates the task while supported tools run in the cloud or on a connected computer. Requirements set limits; configuration values provide defaults.
+
+Use the policy API to manage Global settings. To manage Local or Codex Cloud settings, use the Agent Security UI. Existing Global API workflows remain available after migration. Test your scripts and Terraform integrations, and confirm that policy assignments and ordering are unchanged. Support for a `requirements.toml` field does not by itself establish API compatibility.
+
+| Setting or setting family                                           | Scope in Local computer access with Work Cloud                                                                                   | Guidance                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Approval policies and review requirements                           | Global orchestrator policy when managed policy is enabled                                                                        | Keep approval and review controls in Global. Environment overrides cannot change orchestrator controls. Local execution and cloud-container execution have separate policy scopes.                                                                                                                                                                                                                                                                  |
+| Managed apps, MCP servers, plugins, marketplaces, and command rules | Global policy                                                                                                                    | Keep these controls global. Do not treat the field's presence in a schema as proof that the field can be edited per environment.                                                                                                                                                                                                                                                                                                                    |
+| File, sandbox, and portable network requirements                    | Local execution                                                                                                                  | For local execution, MDM and legacy managed-device requirements rank above Agent Security. The device's system requirements file ranks below Agent Security. The new enterprise `requirements.toml` configuration does not apply to Work cloud containers, which retain existing Work Cloud policies.                                                                                                                                               |
+| Platform-specific executor controls                                 | Computer running the step                                                                                                        | Support depends on the executor and platform.                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Managed hooks                                                       | Where enabled, admin-defined MCP hooks that run on the cloud coordinator (orchestrator) for supported lifecycle and tool events. | Before relying on these hooks, test the callback connection, confirm the events it receives, and check how failures affect the task. MCP hooks do not provide a complete Compliance API audit trail. Command, local-config, and plugin hooks are unsupported with cloud orchestration, even when tools execute locally. Existing supported hooks still apply to local-only Work and Codex threads where orchestration and execution are both local. |
+| Proxy listener addresses, ports, and process settings               | Not portable environment policy                                                                                                  | Managed HTTP/SOCKS listener ports and non-loopback proxy listeners are unsupported by the cloud runtime; socket-rule support depends on the execution path. Custom proxy configuration is separate from supported destination restrictions.                                                                                                                                                                                                         |
+| App-only settings and ordinary local defaults                       | Not necessarily consumed by cloud coordination                                                                                   | App-enforced controls can remain effective even when Local computer access with Work Cloud does not consume them. Cloud delivery and cloud-browser behavior need separate validation.                                                                                                                                                                                                                                                               |
+
+<a id="agent-security-requirements-used-by-work-cloud"></a>
+
+<a id="agent-security-requirements-for-synced-work"></a>
+
+### Agent Security requirements for Local computer access with Work Cloud
+
+For Work with local access and dots, supported Global policy applies to the shared cloud orchestrator when managed policy is enabled. Local execution requirements govern the connected computer. Work cloud containers and dots cloud computers use their own execution configuration and requirements. Test local and cloud controls separately.
+
+#### Exposed in the Agent Security UI
+
+- Allowed approval policies
+- Allowed web search modes
+
+#### Configured through TOML
+
+- `allowed_approvals_reviewers`
+- `auto_review`
+- `guardian_policy_config`
+- `apps`
+- `mcp_servers`
+- `plugins`
+- `rules`
+
+These orchestrator requirements stay in Global. They do not configure shared cloud capability permissions or make local execution settings portable to Work cloud containers or dots cloud computers.
+
+<a id="work-sync-compatibility-limits"></a>
+
+<a id="local-computer-access-compatibility-limits"></a>
+
+### Local computer access with Work Cloud compatibility limits
+
+Support depends on the field, how the policy is delivered, and where the task runs. Check the member's effective policy before enabling sync. Some controls need to be tested in your deployment, as noted in the table.
+
+Within a policy, the order from highest to lowest is OS-specific environment override → all-OS environment override → Global. A higher-priority policy wins even when a lower-priority policy is more specific.
+
+For local execution, MDM and legacy managed-device requirements take precedence over Agent Security, which takes precedence over the device's system requirements file. Some requirements, including network requirements, have field-specific merge rules and runtime limits. See [Managed configuration](https://learn.chatgpt.com/docs/enterprise/managed-configuration) for examples.
+
+| **Setting or family**                                                                              | **Local computer access with Work Cloud compatibility**                                                               | **Admin guidance**                                                                                                                                                                                                                                                                    |
+| -------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sqlite_home`, `log_dir`, `model_catalog_json`                                                     | Not supported as managed cloud overrides.                                                                             | Local paths cannot move cloud storage or logs. A local model catalog does not carry over.                                                                                                                                                                                             |
+| `model_provider`, `model_providers`                                                                | Not supported in managed Local computer access with Work Cloud requirements or configuration.                         | Custom inference gateways and provider connections do not carry over through these fields. This is separate from model selection.                                                                                                                                                     |
+| `enforce_residency`                                                                                | Blocks Local computer access with Work Cloud when enabled in any cloud policy.                                        | If `enforce_residency` is enabled in any cloud policy, **Allow local computer access** is disabled for both Work and dots. This safeguard does not configure workspace residency or, by itself, disable Work Cloud or dots.                                                           |
+| `application.network.enabled` and `application.network.domains`                                    | Not supported by Local computer access with Work Cloud.                                                               | Do not use these application-destination restrictions as Local computer access with Work Cloud command-networking controls.                                                                                                                                                           |
+| `allow_browser_and_computer_use`, `in_app_browser`, `additional_developer_instructions`            | Cloud policy delivery needs validation. Local computer access with Work Cloud rejects these managed requirement keys. | Browser restrictions have app-side checks. That does not prove cloud delivery or cloud-browser enforcement. `additional_developer_instructions` requires orchestrator support.                                                                                                        |
+| `experimental_network` and `permissions.<profile>.network`                                         | Partial. Supported destination and executor restrictions differ from custom proxy configuration.                      | Managed HTTP/SOCKS listener ports and non-loopback proxy listeners are unsupported by the cloud runtime; socket-rule support depends on the execution path. Local-execution merge behavior is separate. Command-network restrictions do not disable hosted search, MCP, or app tools. |
+| features / `feature_requirements`, models, `computer_use`                                          | Partial.                                                                                                              | Retired switches such as `tool_search` = false, `tool_search_always_defer_mcp_tools` = false, `js_repl` = true, and `remote_control` = true are rejected. Some computer-use settings still need end-to-end validation.                                                                |
+| `browser_use`, `allow_appshots`, feedback, `allow_remote_control`, marketplace source restrictions | The app or app-server enforces these controls on some policy delivery paths.                                          | App controls can still apply when Local computer access with Work Cloud ignores a field. Desktop browser site rules do not apply to Work cloud containers. Validate the actual surface and policy delivery path.                                                                      |
+
+The configuration schema includes keys that may not work with Local computer access with Work Cloud or support environment overrides. See [Managed configuration](https://learn.chatgpt.com/docs/enterprise/managed-configuration) for the global baseline and precedence.
+
 ## `config.toml`
 
 User-level configuration lives in `~/.codex/config.toml`. You can also add project-scoped overrides in `.codex/config.toml` files. Codex loads project-scoped config files only when you trust the project.
@@ -24,12 +92,21 @@ keys in user-level config instead. Config [profile files](https://learn.chatgpt.
 
 For sandbox and approval keys (`approval_policy`, `sandbox_mode`, and `sandbox_workspace_write.*`), pair this reference with [Sandbox and approvals](https://learn.chatgpt.com/docs/agent-approvals-security#sandbox-and-approvals), [Protected paths in writable roots](https://learn.chatgpt.com/docs/agent-approvals-security#protected-paths-in-writable-roots), and [Network access](https://learn.chatgpt.com/docs/agent-approvals-security#network-access). For beta permission profiles, see [Permissions](https://learn.chatgpt.com/docs/permissions).
 
+Codex and ChatGPT Work no longer support `approval_policy = "untrusted"`.
+Remove the setting or choose a supported policy. Project entries with
+`trust_level = "untrusted"` in user-level `~/.codex/config.toml` remain supported. See
+[Migrate from the retired `untrusted` approval policy](https://learn.chatgpt.com/docs/agent-approvals-security#migrate-from-the-retired-untrusted-approval-policy)
+for examples and approval tradeoffs.
+
+Set `model` to one available to your signed-in account or workspace. See
+[GPT-6.1 Sol availability](https://learn.chatgpt.com/docs/models#gpt-6.1-sol) before using the example value.
+
 <ConfigTable
   options={[
     {
       key: "model",
       type: "string",
-      description: "Model to use (e.g., `gpt-5.5`).",
+      description: "Model to use (e.g., `gpt-6.1-sol`).",
     },
     {
       key: "review_model",
@@ -79,9 +156,9 @@ For sandbox and approval keys (`approval_policy`, `sandbox_mode`, and `sandbox_w
     },
     {
       key: "approval_policy",
-      type: "untrusted | on-request | never | { granular = { sandbox_approval = bool, rules = bool, mcp_elicitations = bool, request_permissions = bool, skill_approval = bool } }",
+      type: "on-request | never | { granular = { sandbox_approval = bool, rules = bool, mcp_elicitations = bool, request_permissions = bool, skill_approval = bool } }",
       description:
-        "Controls when Codex pauses for approval before executing commands. You can also use `approval_policy = { granular = { ... } }` to allow or auto-reject specific prompt categories while keeping other prompts interactive. `on-failure` is deprecated; use `on-request` for interactive runs or `never` for non-interactive runs.",
+        "Controls when Codex pauses for approval before executing commands. You can also use `approval_policy = { granular = { ... } }` to allow or auto-reject specific prompt categories while keeping other prompts interactive. `untrusted` is unsupported, and `on-failure` is deprecated; use `on-request` for interactive runs or `never` for non-interactive runs.",
     },
     {
       key: "approval_policy.granular.sandbox_approval",
@@ -126,6 +203,12 @@ For sandbox and approval keys (`approval_policy`, `sandbox_mode`, and `sandbox_w
         "Local Markdown policy instructions for automatic review. Managed `guardian_policy_config` takes precedence. Blank values are ignored.",
     },
     {
+      key: "auto_review.extra_policy",
+      type: "string",
+      description:
+        "Additional local Markdown policy for automatic review, included alongside the main policy. Managed `guardian_extra_policy` takes precedence. Blank values are ignored.",
+    },
+    {
       key: "allow_login_shell",
       type: "boolean",
       description:
@@ -163,15 +246,50 @@ For sandbox and approval keys (`approval_policy`, `sandbox_mode`, and `sandbox_w
     },
     {
       key: "windows.sandbox",
-      type: "unelevated | elevated",
+      type: "mxc | elevated | unelevated",
       description:
-        "Windows-only native sandbox mode when running Codex natively on Windows.",
+        "Native Windows sandbox implementation. Explicit `mxc` selection fails when MXC is unavailable or prohibited by managed requirements. Use `features.prefer_mxc` with a legacy selection for automatic MXC selection with fallback.",
     },
     {
-      key: "windows.sandbox_private_desktop",
+      key: "browser_use.allow_history_access",
       type: "boolean",
       description:
-        "Run the final sandboxed child process on a private desktop by default on native Windows. Set `false` only for compatibility with the older `Winsta0\\\\Default` behavior.",
+        "Set to `false` to restrict browser-history access. Managed requirements can enforce this restriction.",
+    },
+    {
+      key: "browser_use.default_origin_policy",
+      type: "table",
+      description:
+        "Fallback browser-origin restrictions. Supports `access`, `uploads`, `downloads`, and `full_cdp_access`, each set to `allow` or `deny`.",
+    },
+    {
+      key: "browser_use.origins.<origin>",
+      type: "table",
+      description:
+        "Per-origin browser restrictions with the same fields as `browser_use.default_origin_policy`. Include an HTTP or HTTPS scheme and optional port; omit paths, queries, and fragments. Local values cannot relax managed denies.",
+    },
+    {
+      key: "computer_use.default_app_access",
+      type: "allow | deny",
+      description:
+        "Fallback native-app access policy for Computer Use. App-specific entries can supply a policy; local configuration cannot relax managed restrictions.",
+    },
+    {
+      key: "computer_use.macos.bundle_ids",
+      type: "map<string, allow | deny>",
+      description: "Native macOS app access keyed by bundle identifier.",
+    },
+    {
+      key: "computer_use.windows.aumids",
+      type: "map<string, allow | deny>",
+      description:
+        "Packaged Windows app access keyed by Application User Model ID (AUMID).",
+    },
+    {
+      key: "computer_use.windows.exes",
+      type: "array<table>",
+      description:
+        "Windows executable access rules. Each rule requires `publisher_name`, `product_name`, and `access` (`allow` or `deny`); `binary_name` is optional.",
     },
     {
       key: "computer_use.windows.always_allowed_app_ids",
@@ -255,6 +373,12 @@ For sandbox and approval keys (`approval_policy`, `sandbox_mode`, and `sandbox_w
       type: "string (path)",
       description:
         "Load the compaction prompt override from a file (experimental).",
+    },
+    {
+      key: "skills.max_context_tokens",
+      type: "integer (positive)",
+      description:
+        "Token budget for the available-skills catalog. Defaults to 2% of the model's context window. Explicit values are capped at `10000` tokens.",
     },
     {
       key: "skills.config",
@@ -364,7 +488,7 @@ For sandbox and approval keys (`approval_policy`, `sandbox_mode`, and `sandbox_w
       key: "features.apps",
       type: "boolean",
       description:
-        "Enable app (connector) integrations (stable; on by default).",
+        "Enable app (connector) integrations (stable; on by default). App and connector traffic is not controlled by the sandboxed-command network proxy or its domain allowlist.",
     },
     {
       key: "features.hooks",
@@ -389,6 +513,12 @@ For sandbox and approval keys (`approval_policy`, `sandbox_mode`, and `sandbox_w
       type: "array<string>",
       description:
         "Tool namespaces code mode can use only through direct tool calls.",
+    },
+    {
+      key: "features.context_management.experimental_mode",
+      type: "boolean",
+      description:
+        "Experimental context-management setting. The feature is not currently available.",
     },
     {
       key: "features.rollout_budget.enabled",
@@ -430,13 +560,19 @@ For sandbox and approval keys (`approval_policy`, `sandbox_mode`, and `sandbox_w
       key: "hooks.<Event>",
       type: "array<table>",
       description:
-        "Matcher groups for hook events such as `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PreCompact`, `PostCompact`, `SessionStart`, `SessionEnd`, `SubagentStart`, `SubagentStop`, `UserPromptSubmit`, or `Stop`.",
+        "Matcher groups for hook events such as `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PreCompact`, `PostCompact`, `SessionStart`, `SessionEnd`, `SubagentStart`, `SubagentStop`, `UserPromptSubmit`, `Stop`, or `Interrupt`.",
     },
     {
       key: "hooks.<Event>[].hooks",
       type: "array<table>",
       description:
-        "Hook handlers for a matcher group. Command hooks are currently supported; prompt and agent hook handlers are parsed but skipped.",
+        "Hook handlers for a matcher group. Command and MCP tool hooks are supported while prompt and agent hook handlers are parsed but skipped.",
+    },
+    {
+      key: "hooks.<Event>[].hooks[].async",
+      type: "boolean",
+      description:
+        "Run a command hook in the background without delaying the triggering operation. Defaults to `false`; `SessionEnd` always runs synchronously. See [Run hooks in the background](https://learn.chatgpt.com/docs/hooks#run-hooks-in-the-background).",
     },
     {
       key: "hooks.<Event>[].hooks[].additionalContextLimit",
@@ -455,6 +591,12 @@ For sandbox and approval keys (`approval_policy`, `sandbox_mode`, and `sandbox_w
       type: "boolean",
       description:
         "Enable [Memories](https://learn.chatgpt.com/docs/customization/memories) (off by default).",
+    },
+    {
+      key: "mcp_optional_startup_grace_ms",
+      type: "integer (milliseconds)",
+      description:
+        "Shared wait for optional MCP servers when building the initial tool catalog. Defaults to `1000`. Set to `0` to wait for each server's `startup_timeout_sec` instead.",
     },
     {
       key: "mcp_servers.<id>.command",
@@ -494,6 +636,24 @@ For sandbox and approval keys (`approval_policy`, `sandbox_mode`, and `sandbox_w
         "Authentication fallback for an MCP HTTP server after configured bearer tokens and authorization headers. `oauth` (default) uses stored MCP OAuth credentials when available. `chatgpt` uses the current ChatGPT session for the trusted first-party ChatGPT origin, then falls back to stored OAuth. Both modes can connect without authentication if no credential source resolves.",
     },
     {
+      key: "mcp_servers.<id>.oauth.client_id",
+      type: "string",
+      description:
+        "Pre-registered OAuth client ID used for authorization and token exchange with this MCP server.",
+    },
+    {
+      key: "mcp_servers.<id>.oauth.callback_url",
+      type: "string",
+      description:
+        "Server-specific OAuth callback. Pre-registered clients reuse it when issuer identification is supported or the URL already ends in the server-specific callback ID. Otherwise, Codex uses the global or default callback with that ID appended. Clients without a pre-registered ID use this callback during client registration.",
+    },
+    {
+      key: "mcp_servers.<id>.oauth.callback_port",
+      type: "integer",
+      description:
+        "Fixed OAuth callback listener port for this MCP server. Overrides `mcp_oauth_callback_port`. For a direct loopback callback with an explicit URL port, configure the same listener port.",
+    },
+    {
       key: "mcp_servers.<id>.bearer_token_env_var",
       type: "string",
       description:
@@ -503,6 +663,12 @@ For sandbox and approval keys (`approval_policy`, `sandbox_mode`, and `sandbox_w
       key: "mcp_servers.<id>.http_headers",
       type: "map<string,string>",
       description: "Static HTTP headers included with each MCP HTTP request.",
+    },
+    {
+      key: "mcp_servers.<id>.http_headers_helper",
+      type: "string (command)",
+      description:
+        "Local command that prints a JSON object of HTTP header names and values. Supported only for locally connected HTTP MCP servers. Explicit bearer tokens and OAuth credentials take precedence over helper-provided Authorization headers.",
     },
     {
       key: "mcp_servers.<id>.env_http_headers",
@@ -560,6 +726,12 @@ For sandbox and approval keys (`approval_policy`, `sandbox_mode`, and `sandbox_w
       type: "auto | prompt | writes | approve",
       description:
         "Per-tool approval behavior override for one MCP tool on this server.",
+    },
+    {
+      key: "mcp_servers.<id>.tools.<tool>.output_token_limit",
+      type: "integer (positive)",
+      description:
+        "Token budget for one MCP tool's output, before the standard 20% serialization allowance. Overrides the model's default output truncation budget for that tool.",
     },
     {
       key: "mcp_servers.<id>.scopes",
@@ -697,6 +869,12 @@ For sandbox and approval keys (`approval_policy`, `sandbox_mode`, and `sandbox_w
       description: "Optional model override for global memory consolidation.",
     },
     {
+      key: "features.prefer_mxc",
+      type: "boolean",
+      description:
+        "Prefer MXC for local Windows execution when native capabilities and policy allow it; otherwise retain the configured legacy sandbox and setup. Disabled by default in the standalone CLI; the desktop app can enable it through rollout configuration. Command failures don't trigger fallback.",
+    },
+    {
       key: "features.unified_exec",
       type: "boolean",
       description:
@@ -735,18 +913,19 @@ For sandbox and approval keys (`approval_policy`, `sandbox_mode`, and `sandbox_w
       key: "features.network_proxy",
       type: "boolean | table",
       description:
-        "Enable sandboxed networking. Use a table form when setting network policy options such as `domains` (experimental; off by default).",
+        "Start the network proxy for sandboxed commands (experimental; off by default). Required to enforce permission-profile domain rules unless enabled administrator-managed `experimental_network` requirements start the proxy. Use a table when setting feature-level policy options such as `domains`. Does not filter web search, apps, MCP, or other hosted tools.",
     },
     {
       key: "features.network_proxy.enabled",
       type: "boolean",
-      description: "Enable sandboxed networking. Defaults to `false`.",
+      description:
+        "Start the sandboxed-command network proxy when command network access is enabled. Defaults to `false`; permission-profile domain rules are not enforced while the proxy is off.",
     },
     {
       key: "features.network_proxy.domains",
       type: "map<string, allow | deny>",
       description:
-        "Domain policy for sandboxed networking. Unset by default, which means no external destinations are allowed until you add `allow` rules. Supports exact hosts, `*.example.com` for subdomains only, `**.example.com` for apex plus subdomains, and global `*` allow rules; prefer scoped rules because `*` broadly opens public outbound access. Add `deny` rules for blocked destinations; `deny` wins on conflicts.",
+        "Domain policy for sandboxed networking. Unset by default, which means no external destinations are allowed until you add `allow` rules. Supports exact hosts, `*.example.com` for subdomains only, `**.example.com` for apex plus subdomains, and global `*` allow rules. Prefer scoped rules because `*` broadly opens public outbound access. Add `deny` rules for blocked destinations; `deny` wins on conflicts.",
     },
     {
       key: "features.network_proxy.unix_sockets",
@@ -938,6 +1117,12 @@ For sandbox and approval keys (`approval_policy`, `sandbox_mode`, and `sandbox_w
         "Whether that provider supports the Responses API WebSocket transport.",
     },
     {
+      key: "model_providers.<id>.supports_standalone_web_search",
+      type: "boolean",
+      description:
+        "Advertise support for a compatible standalone web search endpoint (default: false). Standalone search remains under development and off by default; provider compatibility alone doesn't enable it.",
+    },
+    {
       key: "model_providers.<id>.auth",
       type: "table",
       description:
@@ -984,15 +1169,15 @@ For sandbox and approval keys (`approval_policy`, `sandbox_mode`, and `sandbox_w
     },
     {
       key: "model_reasoning_effort",
-      type: "minimal | low | medium | high | xhigh",
+      type: "string",
       description:
-        "Adjust reasoning effort for supported models (Responses API only; `xhigh` is model-dependent).",
+        "Reasoning effort advertised by the selected model, such as `low`, `medium`, `high`, `xhigh`, `max`, or `ultra`. Available levels depend on the model and client.",
     },
     {
       key: "plan_mode_reasoning_effort",
-      type: "none | minimal | low | medium | high | xhigh",
+      type: "string",
       description:
-        "Plan-mode-specific reasoning override. When unset, Plan mode uses its built-in preset default.",
+        "Plan-mode-specific reasoning override using a level supported by the selected model. When unset, Plan mode uses its built-in preset default.",
     },
     {
       key: "model_reasoning_summary",
@@ -1021,25 +1206,31 @@ For sandbox and approval keys (`approval_policy`, `sandbox_mode`, and `sandbox_w
       key: "shell_environment_policy.ignore_default_excludes",
       type: "boolean",
       description:
-        "Keep variables containing KEY/SECRET/TOKEN before other filters run.",
+        "Keep variables containing KEY, SECRET, or TOKEN before other filters run (default: true). Set to false to apply automatic secret-name exclusions.",
+    },
+    {
+      key: "shell_environment_policy.filters",
+      type: "map<string, include | exclude>",
+      description:
+        "Canonical case-insensitive environment-variable pattern filters. Include entries create an allowlist and can't restore excluded values. Explicit `set` values apply after exclusions. Don't combine filters with legacy `exclude` or `include_only` arrays in the same layer.",
     },
     {
       key: "shell_environment_policy.exclude",
       type: "array<string>",
       description:
-        "Glob patterns for removing environment variables after the defaults.",
+        "Legacy environment-variable exclusion patterns. Use `shell_environment_policy.filters` for new configuration; don't combine both forms in the same layer.",
     },
     {
       key: "shell_environment_policy.include_only",
       type: "array<string>",
       description:
-        "Whitelist of patterns; when set only matching variables are kept.",
+        "Legacy allowlist of environment-variable patterns. Use `shell_environment_policy.filters` for new configuration; don't combine both forms in the same layer.",
     },
     {
       key: "shell_environment_policy.set",
       type: "map<string,string>",
       description:
-        "Explicit environment overrides injected into every subprocess.",
+        "Explicit environment values injected after exclusions; include filters can still remove them.",
     },
     {
       key: "shell_environment_policy.experimental_use_profile",
@@ -1315,6 +1506,35 @@ For sandbox and approval keys (`approval_policy`, `sandbox_mode`, and `sandbox_w
         "Unbind the action in that keymap context. Key names use normalized strings such as `ctrl-a`, `shift-enter`, `page-down`, or `minus`.",
     },
     {
+      key: "marketplaces.<name>.source_type",
+      type: "git | local",
+      description:
+        "Source kind for a configured plugin marketplace. Marketplaces can be defined in system, cloud-managed, user, or trusted-project config.toml.",
+    },
+    {
+      key: "marketplaces.<name>.source",
+      type: "string",
+      description:
+        "Git repository location or local marketplace root directory. Use an absolute path for a local source; the directory contains .agents/plugins/marketplace.json.",
+    },
+    {
+      key: "marketplaces.<name>.ref",
+      type: "string",
+      description: "Optional Git branch, tag, or commit for the marketplace.",
+    },
+    {
+      key: "marketplaces.<name>.sparse_paths",
+      type: "array<string>",
+      description:
+        "Optional sparse checkout paths for a Git marketplace. Include the marketplace catalog and any local plugin directories it references.",
+    },
+    {
+      key: "plugins.<plugin>.enabled",
+      type: "boolean",
+      description:
+        "Enable or disable a local-marketplace plugin using a `plugin-name@marketplace-name` key. Read from the effective merged config; trusted-project settings can override user, cloud-managed, and system defaults. Marketplace refresh can install or refresh configured plugins even when disabled. This does not override workspace-managed enabled states.",
+    },
+    {
       key: "plugins.<plugin>.mcp_servers.<server>.enabled",
       type: "boolean",
       description:
@@ -1378,9 +1598,8 @@ For sandbox and approval keys (`approval_policy`, `sandbox_mode`, and `sandbox_w
     },
     {
       key: "cli_auth_credentials_store",
-      type: "file | keyring | auto",
-      description:
-        "Control where the CLI stores cached credentials (file-based auth.json vs OS keychain).",
+      type: "file | keyring | auto | ephemeral",
+      description: "Control where the CLI stores cached credentials.",
     },
     {
       key: "mcp_oauth_credentials_store",
@@ -1391,13 +1610,13 @@ For sandbox and approval keys (`approval_policy`, `sandbox_mode`, and `sandbox_w
       key: "mcp_oauth_callback_port",
       type: "integer",
       description:
-        "Optional fixed port for the local HTTP callback server used during MCP OAuth login. When unset, Codex binds to an ephemeral port chosen by the OS.",
+        "Optional global fixed port for the local HTTP callback server used during MCP OAuth login. A server-specific `oauth.callback_port` takes precedence. When neither is set, Codex binds to an ephemeral port chosen by the OS.",
     },
     {
       key: "mcp_oauth_callback_url",
       type: "string",
       description:
-        "Optional base callback URL override for MCP OAuth login (for example, a devbox ingress URL). Codex appends a server-specific callback ID before sending the final OAuth `redirect_uri`, so register the full derived URI with your provider. `mcp_oauth_callback_port` still controls the callback listener port.",
+        "Optional base callback URL for MCP OAuth login, such as a devbox ingress URL. Newly added pre-registered clients use this URL unchanged when the authorization server supports issuer identification; existing clients without a saved callback append a server-specific callback ID. Without issuer support, any pre-registered MCP server whose configured callback lacks the required ID falls back to this URL with the ID appended. Callback URL ports don't select the listener port.",
     },
     {
       key: "experimental_use_unified_exec_tool",
@@ -1409,7 +1628,7 @@ For sandbox and approval keys (`approval_policy`, `sandbox_mode`, and `sandbox_w
       key: "tools.web_search",
       type: 'boolean | { context_size = "low|medium|high", allowed_domains = [string], location = { country, region, city, timezone } }',
       description:
-        "Optional web search tool configuration. The legacy boolean form is still accepted, but the object form lets you set search context size, allowed domains, and approximate user location.",
+        "Optional web search tool configuration. The object form can set search context size, allowed search domains, and approximate user location. These search-domain filters are separate from sandboxed-command network domain rules and do not restrict connectors or MCP servers.",
     },
     {
       key: "tools.view_image",
@@ -1480,7 +1699,7 @@ For sandbox and approval keys (`approval_policy`, `sandbox_mode`, and `sandbox_w
       key: "permissions.<name>.network.enabled",
       type: "boolean",
       description:
-        "Enable network access for this named permissions profile. This changes the sandbox network policy; it does not start the network proxy by itself.",
+        "Enable network access for commands in this permission profile. This does not start the network proxy. Without `features.network_proxy` or enabled administrator-managed networking requirements, command network access is direct and profile domain rules are not enforced.",
     },
     {
       key: "permissions.<name>.network.proxy_url",
@@ -1531,7 +1750,7 @@ For sandbox and approval keys (`approval_policy`, `sandbox_mode`, and `sandbox_w
       key: "permissions.<name>.network.domains",
       type: "table",
       description:
-        "Domain rules for sandboxed networking. Supports exact hosts, `*.example.com` for subdomains only, `**.example.com` for apex plus subdomains, and global `*` allow rules. `deny` wins on conflicts.",
+        "Domain rules for sandboxed commands. Enforced only when `features.network_proxy` or enabled administrator-managed networking requirements activate the proxy. Supports exact hosts, `*.example.com`, `**.example.com`, and global `*` allow rules; `deny` wins. Does not restrict web search, apps, or MCP servers.",
     },
     {
       key: "permissions.<name>.network.domains.<pattern>",
@@ -1633,7 +1852,7 @@ unconstrained.
 
 Some managed requirements enforce an exact configuration value instead of an
 allowlist. Users can't override an enforced path, update preference, login-shell
-policy, feedback setting, or Windows private-desktop setting.
+policy, or feedback setting.
 
 Managed permission-profile allowlists require Codex 0.138.0 or later. Codex
 0.137.0 and earlier ignore `allowed_permission_profiles` and managed
@@ -1643,10 +1862,26 @@ Use `allowed_sandbox_modes` with `sandbox_mode`. For permission-profile
 deployments, use `allowed_permission_profiles` with managed
 `default_permissions`.
 
+An `untrusted` entry in `allowed_approval_policies` is still valid for the
+stricter approval behavior Codex derives when a project uses
+`trust_level = "untrusted"`. It does not permit explicitly setting
+`approval_policy = "untrusted"`.
+
 The `[models.new_thread]` table supplies managed defaults, not enforcement.
-Explicit launch choices from dedicated CLI flags or `--config` overrides take
-precedence. An explicit model or reasoning-effort override skips both managed
-model fields; `service_tier` is independent.
+If you explicitly override the model or reasoning effort with `--model`,
+`--config`, or `--profile`, Codex ignores both `model` and
+`model_reasoning_effort` in `[models.new_thread]`. `service_tier` is independent.
+
+The browser requirements cover three separate surfaces. `in_app_browser`
+controls the browser pane that a person opens and uses directly. `browser_use`
+controls agent-driven work in a browser. `computer_use` controls agent-driven
+work in native desktop apps.
+
+The nested Browser Use and Computer Use policy values do not grant access by
+themselves. An origin- or app-specific `allow` can override the fallback for
+the same policy source, but normal feature, approval, and other policy checks
+still apply. Where managed requirements and `config.toml` both apply, a `deny`
+from either one wins.
 
 <ConfigTable
   options={[
@@ -1677,6 +1912,30 @@ model fields; `service_tier` is independent.
       description: "Enforce whether shell tools can start a login shell.",
     },
     {
+      key: "allowed_login_methods",
+      type: "array<string>",
+      description:
+        "Allow `chatgpt`, `api`, or both. If omitted, this setting doesn't restrict login methods. If set, the list must contain at least one method. `api` permits API authentication, including Amazon Bedrock. Set through the local system requirements file or macOS MDM. Cloud-managed values are ignored.",
+    },
+    {
+      key: "allowed_chatgpt_workspaces",
+      type: "array<string>",
+      description:
+        "Restrict ChatGPT login, including Codex access tokens, to the listed workspace IDs. An empty list disables ChatGPT login; API authentication remains available when permitted. Set through the local system requirements file or macOS MDM; cloud-managed values are ignored.",
+    },
+    {
+      key: "cli_auth_credentials_store",
+      type: "file | keyring | auto | ephemeral",
+      description:
+        "Enforce the CLI credential store before authentication loads. `file` uses `CODEX_HOME/auth.json`; `keyring` requires the OS credential store; `auto` falls back to a file if the credential store is unavailable; `ephemeral` keeps credentials in memory for the current process. Set through the local system requirements file or macOS MDM; cloud-managed values are ignored.",
+    },
+    {
+      key: "chatgpt_base_url",
+      type: "string",
+      description:
+        "Enforce the ChatGPT service base URL before authentication and cloud-policy retrieval. This doesn't configure every Codex network destination. Set through the local system requirements file or macOS MDM; cloud-managed values are ignored.",
+    },
+    {
       key: "feedback",
       type: "table",
       description: "Managed feedback settings.",
@@ -1691,7 +1950,7 @@ model fields; `service_tier` is independent.
       key: "allowed_approval_policies",
       type: "array<string>",
       description:
-        "Allowed values for `approval_policy` (for example `untrusted`, `on-request`, `never`, and `granular`).",
+        "Allowed approval policies, such as `on-request`, `never`, and `granular`. Include `untrusted` to permit the stricter policy derived from an untrusted project; it cannot be selected directly with `approval_policy`.",
     },
     {
       key: "allowed_approvals_reviewers",
@@ -1704,6 +1963,35 @@ model fields; `service_tier` is independent.
       type: "string",
       description:
         "Managed Markdown policy instructions for automatic review. This takes precedence over local `[auto_review].policy`. Blank values are ignored.",
+    },
+    {
+      key: "guardian_extra_policy",
+      type: "string",
+      description:
+        "Additional managed Markdown policy for automatic review, included alongside the main policy. This takes precedence over local `[auto_review].extra_policy`. Blank values are ignored.",
+    },
+    {
+      key: "additional_developer_instructions",
+      type: "string",
+      description:
+        "Managed developer instructions added as a separate developer message. Codex rejects instructions that exceed a limit of 10,000 estimated tokens, including context markers.",
+    },
+    {
+      key: "auto_review",
+      type: "table",
+      description: "Managed automatic-review requirements.",
+    },
+    {
+      key: "auto_review.required_on_models",
+      type: "array<string>",
+      description:
+        "Model slugs that must use automatic review. Slugs must be non-empty, omit provider namespaces, and have no surrounding whitespace. Lists from multiple requirements sources are combined.",
+    },
+    {
+      key: "auto_review.ignore_rules",
+      type: "array<string>",
+      description:
+        "Full model slugs for which Codex ignores `allow` prefix rules in command execution policy. Match the slug exactly, including its provider namespace when present; unlike `required_on_models`, this does not accept a namespace-free alias. Deny and network rules still apply.",
     },
     {
       key: "allowed_permission_profiles",
@@ -1730,34 +2018,51 @@ model fields; `service_tier` is independent.
         "Require Codex service traffic to use a supported data residency. Currently accepts `us`.",
     },
     {
-      key: "models",
+      key: "model_provider",
+      type: "string",
+      description:
+        "Enforce the model provider ID, overriding local and session configuration.",
+    },
+    {
+      key: "model_providers",
+      type: "map<string, table>",
+      description:
+        "Managed model provider definitions. Each entry replaces the complete configured provider with the same ID; fields aren't merged with the user's definition. Providers with other IDs remain available.",
+    },
+    {
+      key: "model_providers.<id>",
       type: "table",
       description:
-        "Managed model defaults for new threads. These values take priority over user and project defaults, but an explicit selection for the new thread can override them.",
+        "Complete managed provider definition. Uses the same provider fields as `config.toml`, including `name`, `base_url`, authentication, and transport settings.",
+    },
+    {
+      key: "models",
+      type: "table",
+      description: "Contains the `[models.new_thread]` table.",
     },
     {
       key: "models.new_thread",
       type: "table",
       description:
-        "Defaults to apply when a new local thread starts. Each model setting is optional.",
+        "Optional defaults to apply when a new local thread starts. They take priority over user and project defaults, but can be superseded by explicit overrides.",
     },
     {
       key: "models.new_thread.model",
       type: "string",
       description:
-        "Default model for new threads. An explicit `--model` or model/reasoning `--config` override takes precedence.",
+        "Default model for new threads. An explicit override of either the model or reasoning effort causes both fields to be ignored.",
     },
     {
       key: "models.new_thread.model_reasoning_effort",
       type: "string",
       description:
-        "Default reasoning effort for new threads. An explicit model or reasoning-effort override skips both managed model fields.",
+        "Default reasoning effort for new threads. An explicit override of either the model or reasoning effort causes both fields to be ignored.",
     },
     {
       key: "models.new_thread.service_tier",
       type: "string",
       description:
-        "Default service tier for new threads. An explicit service-tier override takes precedence independently of the model fields.",
+        "Default service tier for new threads. An explicit service-tier override causes this field to be ignored.",
     },
     {
       key: "permissions",
@@ -1785,13 +2090,13 @@ model fields; `service_tier` is independent.
       key: "windows.allowed_sandbox_implementations",
       type: "array<string>",
       description:
-        "Allowed native Windows sandbox implementations for `windows.sandbox` (`elevated` and `unelevated`). The list must not be empty. When both are allowed and no mode is selected, Codex prefers `elevated`.",
+        "Allowed legacy native Windows sandbox implementations (`elevated` and `unelevated`). The list must not be empty. When both are allowed and no mode is selected, Codex prefers `elevated`. This list does not restrict the `mxc` sandbox when it is available.",
     },
     {
-      key: "windows.sandbox_private_desktop",
+      key: "windows.allow_mxc",
       type: "boolean",
       description:
-        "Enforce whether the native Windows sandbox starts its child process on a private desktop.",
+        "Set to `false` to prohibit both explicit MXC selection and automatic selection through `features.prefer_mxc`. Omitting this requirement or setting it to `true` permits MXC but doesn't enable it or require it. Legacy implementation restrictions still apply to fallback.",
     },
     {
       key: "remote_sandbox_config",
@@ -1836,6 +2141,12 @@ model fields; `service_tier` is independent.
         "Set to `false` to disable device remote control for managed users. If omitted, device remote control remains unconstrained by requirements and follows normal product availability.",
     },
     {
+      key: "allow_browser_and_computer_use",
+      type: "boolean",
+      description:
+        "Set to `false` to block both agent-driven Browser Use and native-app Computer Use. Setting it to `true` or omitting it does not enable either feature; the remaining feature, policy, and approval checks still apply.",
+    },
+    {
       key: "features.plugin_sharing",
       type: "boolean",
       description:
@@ -1869,19 +2180,37 @@ model fields; `service_tier` is independent.
       key: "features.in_app_browser",
       type: "boolean",
       description:
-        "Set to `false` in `requirements.toml` to disable the built-in browser pane.",
+        "Set to `false` in `requirements.toml` to disable the built-in browser pane that users open and control directly.",
+    },
+    {
+      key: "features.in_app_chat",
+      type: "boolean",
+      description:
+        "Set to `false` to hide ChatGPT and ChatGPT Work conversation screens and related cloud automation UI in the ChatGPT desktop app. This setting does not block ChatGPT Voice or stop existing cloud tasks. Setting it to `true` does not bypass account, workspace-permission, or rollout checks.",
+    },
+    {
+      key: "features.in_app_dictation",
+      type: "boolean",
+      description:
+        "Set to `false` to disable in-app dictation in the desktop app. Setting it to `true` does not bypass other availability checks.",
+    },
+    {
+      key: "features.in_app_local_automation",
+      type: "boolean",
+      description:
+        "Set to `false` to disable local scheduled tasks in the desktop app. Setting it to `true` does not bypass other availability checks.",
     },
     {
       key: "features.browser_use",
       type: "boolean",
       description:
-        "Set to `false` in `requirements.toml` to disable Computer Use in browsers and Browser Agent availability.",
+        "Set to `false` in `requirements.toml` to disable agent-driven Browser Use.",
     },
     {
       key: "features.browser_use_external",
       type: "boolean",
       description:
-        "Set to `false` in `requirements.toml` to disable Computer Use in external browsers.",
+        "Set to `false` in `requirements.toml` to prevent Codex from operating supported browsers through the ChatGPT browser extension, including existing tabs and signed-in sessions.",
     },
     {
       key: "features.browser_use_full_cdp_access",
@@ -1923,6 +2252,12 @@ model fields; `service_tier` is independent.
         "Pin remote plugin catalog availability on or off for managed users.",
     },
     {
+      key: "features.realtime_conversation",
+      type: "boolean",
+      description:
+        "Set to `false` to disable the experimental `/voice` command in the Codex CLI. Do not rely on this setting to block [ChatGPT Voice](https://learn.chatgpt.com/docs/features/voice) in the desktop app or app-server voice sessions. Setting it to `true` does not bypass client or rollout checks.",
+    },
+    {
       key: "features.computer_use",
       type: "boolean",
       description:
@@ -1935,22 +2270,265 @@ model fields; `service_tier` is independent.
         "Pin bundled workspace-dependency runtime availability on or off for managed users.",
     },
     {
+      key: "in_app_browser",
+      type: "table",
+      description:
+        "Requirements for the built-in browser pane. These settings do not control agent-driven Browser Use.",
+    },
+    {
+      key: "in_app_browser.allow_external_browser_settings_import",
+      type: "boolean",
+      description:
+        "Set to `false` to prevent users from importing settings or browsing data from an external browser into the built-in browser. Setting it to `true` or omitting it leaves the import available when other product checks allow it. This is a managed-only setting with no `config.toml` override.",
+    },
+    {
+      key: "browser_use",
+      type: "table",
+      description: "Managed requirements for agent-driven Browser Use.",
+    },
+    {
+      key: "browser_use.allow_history_access",
+      type: "boolean",
+      description:
+        "Set to `false` to prevent Browser Use from reading browser history. Setting it to `true` or omitting it leaves normal history settings and availability checks in place.",
+    },
+    {
+      key: "browser_use.disable_auto_review",
+      type: "boolean",
+      description:
+        "Set to `true` to skip automatic review for Browser Use and ask the user for approval instead. Setting it to `false` or omitting it leaves automatic review available when other settings allow it.",
+    },
+    {
+      key: "browser_use.allow_global_persistent_approval",
+      type: "boolean",
+      description:
+        "Set to `false` to prevent Browser Use from creating or honoring `Always allow` approvals that cover every site, such as allowing downloads from any site. Existing saved approvals are ignored, not deleted. Setting it to `true` or omitting it does not create an approval.",
+    },
+    {
+      key: "browser_use.default_origin_policy",
+      type: "table",
+      description:
+        "Fallback for each Browser Use setting when no matching entry under `browser_use.origins` defines it. A matching origin rule replaces the fallback for that source. Codex then applies the stricter result from managed requirements and user configuration.",
+    },
+    {
+      key: "browser_use.default_origin_policy.access",
+      type: "allow | deny",
+      description:
+        "Use `deny` to block Browser Use on origins that use the fallback. A denied origin also blocks uploads, downloads, full browser debugging access, and automatic review there. `allow` only lets normal approval and policy checks continue.",
+    },
+    {
+      key: "browser_use.default_origin_policy.downloads",
+      type: "allow | deny",
+      description:
+        "Use `deny` to block Browser Use downloads on origins that use the fallback. `allow` only lets normal approval and policy checks continue.",
+    },
+    {
+      key: "browser_use.default_origin_policy.uploads",
+      type: "allow | deny",
+      description:
+        "Use `deny` to block Browser Use uploads on origins that use the fallback. `allow` only lets normal approval and policy checks continue.",
+    },
+    {
+      key: "browser_use.default_origin_policy.full_cdp_access",
+      type: "allow | deny",
+      description:
+        "Use `deny` to block full Chrome DevTools Protocol (CDP) access on origins that use the fallback. `allow` only lets normal opt-in and approval checks continue.",
+    },
+    {
+      key: "browser_use.default_origin_policy.auto_review",
+      type: "allow | deny",
+      description:
+        "Use `deny` to skip automatic review on origins that use the fallback and ask the user for approval instead. `allow` leaves automatic review available when other settings allow it.",
+    },
+    {
+      key: "browser_use.default_origin_policy.persistent_approval",
+      type: "boolean",
+      description:
+        "Set to `false` to prevent Browser Use from saving or honoring an `Always allow` approval on origins that use the fallback. Approvals for the current turn or thread can still apply. `true` makes `Always allow` available when otherwise permitted but does not create an approval.",
+    },
+    {
+      key: "browser_use.default_origin_policy.access_approval_lifetime",
+      type: "turn | thread",
+      description:
+        "Set how long a non-persistent site-access approval lasts: `turn` limits it to the current turn, and `thread` keeps it for the rest of the current thread. `persistent_approval` separately controls whether `Always allow` is available. The product default is `thread`.",
+    },
+    {
+      key: "browser_use.origins",
+      type: "map<string, table>",
+      description:
+        'Origin-specific Browser Use policies. Keys use `<scheme>://<host-pattern>[:<port>]` with `http` or `https`. Use an exact host, `*.example.com` for subdomains only, or `**.example.com` for the base domain and its subdomains. Other `*` wildcards can span dots, so `region*.example.com` also matches `region.api.example.com`; a host of `*` matches every host for that scheme. Schemes and nondefault ports are significant; explicit default ports are normalized away. Paths, queries, embedded usernames or passwords, and wildcard schemes or ports are invalid. Quote the pattern in TOML, for example `[browser_use.origins."https://**.example.com"]`.',
+    },
+    {
+      key: "browser_use.origins.<pattern>",
+      type: "table",
+      description:
+        "Policy for origins matching this pattern. If several patterns match, Codex uses the most restrictive value for each capability: `deny` over `allow`, `false` over `true`, and `turn` over `thread`.",
+    },
+    {
+      key: "browser_use.origins.<pattern>.access",
+      type: "allow | deny",
+      description:
+        "Use `deny` to block Browser Use on matching origins. Denial also blocks uploads, downloads, full browser debugging access, and automatic review there. `allow` only lets normal approval and policy checks continue.",
+    },
+    {
+      key: "browser_use.origins.<pattern>.downloads",
+      type: "allow | deny",
+      description:
+        "Use `deny` to block Browser Use downloads on matching origins. `allow` only lets normal approval and policy checks continue.",
+    },
+    {
+      key: "browser_use.origins.<pattern>.uploads",
+      type: "allow | deny",
+      description:
+        "Use `deny` to block Browser Use uploads on matching origins. `allow` only lets normal approval and policy checks continue.",
+    },
+    {
+      key: "browser_use.origins.<pattern>.full_cdp_access",
+      type: "allow | deny",
+      description:
+        "Use `deny` to block full Chrome DevTools Protocol (CDP) access on matching origins. `allow` only lets normal opt-in and approval checks continue.",
+    },
+    {
+      key: "browser_use.origins.<pattern>.auto_review",
+      type: "allow | deny",
+      description:
+        "Use `deny` to skip automatic review on matching origins and ask the user for approval instead. `allow` leaves automatic review available when other settings allow it.",
+    },
+    {
+      key: "browser_use.origins.<pattern>.persistent_approval",
+      type: "boolean",
+      description:
+        "Set to `false` to prevent Browser Use from saving or honoring an `Always allow` approval on matching origins. Approvals for the current turn or thread can still apply. `true` makes `Always allow` available when otherwise permitted but does not create an approval.",
+    },
+    {
+      key: "browser_use.origins.<pattern>.access_approval_lifetime",
+      type: "turn | thread",
+      description:
+        "Set how long a non-persistent site-access approval for matching origins lasts: `turn` limits it to the current turn, and `thread` keeps it for the rest of the current thread. `persistent_approval` separately controls whether `Always allow` is available.",
+    },
+    {
       key: "computer_use",
       type: "table",
       description:
-        "Computer Use requirements enforced from `requirements.toml`.",
+        "Managed requirements for agent-driven work in native desktop apps. Managed app rules and `config.toml` app rules are both enforced; an app must be allowed by each policy source.",
     },
     {
       key: "computer_use.allow_locked_computer_use",
       type: "boolean",
       description:
-        "Set to `false` to prevent Computer Use from operating after a managed macOS device locks. If omitted, locked use remains unconstrained by requirements.",
+        "Set to `false` to prevent users from enabling Locked Use on a managed macOS device. This requirement removes the enablement controls; it does not turn off Locked Use if it is already enabled. If omitted, normal product availability applies.",
+    },
+    {
+      key: "computer_use.allow_persistent_approval",
+      type: "boolean",
+      description:
+        "Set to `false` to remove the option to save app approvals across sessions. Approvals for the current session remain available. Setting it to `true` or omitting it does not approve an app.",
+    },
+    {
+      key: "computer_use.default_app_access",
+      type: "allow | deny",
+      description:
+        "Fallback access for native apps that do not match a platform-specific rule. `deny` blocks access. `allow` only lets normal approval and policy checks continue. The product default is `allow`.",
+    },
+    {
+      key: "computer_use.macos",
+      type: "table",
+      description: "Computer Use app rules for macOS.",
+    },
+    {
+      key: "computer_use.macos.bundle_ids",
+      type: "map<string, allow | deny>",
+      description:
+        "Map exact macOS bundle identifiers to `allow` or `deny`. A matching rule replaces `computer_use.default_app_access` within the same policy source. A deny from either managed requirements or user configuration still blocks access.",
+    },
+    {
+      key: "computer_use.macos.bundle_ids.<bundle-id>",
+      type: "allow | deny",
+      description:
+        "Use `deny` to block the exact bundle identifier. `allow` overrides only this policy source's default and still requires any other policy source and the normal approval flow to allow the app.",
+    },
+    {
+      key: "computer_use.windows",
+      type: "table",
+      description:
+        "Computer Use app rules for packaged and unpackaged Windows apps.",
+    },
+    {
+      key: "computer_use.windows.aumids",
+      type: "map<string, allow | deny>",
+      description:
+        "Map exact, registered Application User Model IDs (AUMIDs) for signed packaged apps to `allow` or `deny`. A matching rule replaces `computer_use.default_app_access` within the same policy source.",
+    },
+    {
+      key: "computer_use.windows.aumids.<aumid>",
+      type: "allow | deny",
+      description:
+        "Use `deny` to block the exact packaged-app identity. `allow` overrides only this policy source's default and still requires any other policy source and the normal approval flow to allow the app.",
+    },
+    {
+      key: "computer_use.windows.exes",
+      type: "array<table>",
+      description:
+        "Rules for signed, unpackaged Windows executables. Rules match the executable's verified publisher and signed version information, not its path or current file name. A matching deny takes precedence over matching allows. Unsigned executables use `computer_use.default_app_access`; executables whose signed identity cannot be verified unambiguously are blocked.",
+    },
+    {
+      key: "computer_use.windows.exes[].publisher_name",
+      type: "string",
+      description:
+        "Required exact publisher name from the executable's trusted signing certificate, formatted as a Windows X.500 distinguished name.",
+    },
+    {
+      key: "computer_use.windows.exes[].product_name",
+      type: "string",
+      description:
+        "Required exact `ProductName` from the executable's signed version information.",
+    },
+    {
+      key: "computer_use.windows.exes[].binary_name",
+      type: "string",
+      description:
+        "Optional `OriginalFilename` from the executable's signed version information. Matching is case-insensitive. If a matching publisher and product rule requires this value but the executable does not provide it, Computer Use blocks the executable.",
+    },
+    {
+      key: "computer_use.windows.exes[].access",
+      type: "allow | deny",
+      description:
+        "Required access decision for matching executables. `deny` blocks access. `allow` overrides only this policy source's default and still requires any other policy source and the normal approval flow to allow the app.",
+    },
+    {
+      key: "application",
+      type: "table",
+      description: "Managed desktop application requirements.",
+    },
+    {
+      key: "application.network",
+      type: "table",
+      description:
+        "Destination restrictions for desktop app network requests, separate from command networking and browser origin rules. This doesn't impose destination restrictions on native modules or spawned processes.",
+    },
+    {
+      key: "application.network.enabled",
+      type: "boolean",
+      description:
+        "Defaults to true when the table is present. When true, external desktop app requests require an explicitly allowed domain. An empty domain map allows no external destinations. An absent application network policy or false value doesn't restrict destinations through this policy.",
+    },
+    {
+      key: "application.network.domains",
+      type: "table<allow | deny>",
+      description:
+        "Exact domain rules for desktop app requests. Enabled policies allow HTTPS and WSS requests only to explicitly allowed domains; subdomains aren't implicitly allowed.",
+    },
+    {
+      key: "application.network.domains.<domain>",
+      type: "allow | deny",
+      description:
+        "Allow or deny an exact domain. Use domain names without URL schemes, ports, or wildcards.",
     },
     {
       key: "experimental_network",
       type: "table",
       description:
-        "Network access requirements enforced from `requirements.toml`. These constraints are separate from `features.network_proxy` and can configure sandboxed networking without the user feature flag.",
+        "Administrator-managed network requirements for sandboxed local commands, enforced from `requirements.toml`. When enabled, these requirements can start the command network proxy without `features.network_proxy`. Browser tools separately check managed network denies and exclusive allowlists. These requirements do not route browser traffic through the proxy or control web search, apps, MCP servers, native-app traffic, or other capability-specific traffic. On supported managed Codex Cloud paths, these requirements constrain command networking alongside separate Cloud environment internet settings. Approved full sandbox escalation can bypass the command proxy where policy permits it. Work Cloud does not inherit these requirements.",
     },
     {
       key: "experimental_network.enabled",
@@ -1992,13 +2570,19 @@ model fields; `service_tier` is independent.
       key: "experimental_network.domains",
       type: "map<string, allow | deny>",
       description:
-        "Map-shaped administrator domain policy for sandboxed networking. Supports exact hosts, `*.example.com` for subdomains only, `**.example.com` for apex plus subdomains, and global `*` allow rules; prefer scoped rules because `*` broadly opens public outbound access. `deny` wins on conflicts. Do not combine this with `experimental_network.allowed_domains` or `experimental_network.denied_domains`.",
+        "Map-shaped administrator domain policy for sandboxed networking. Supports exact hosts, `*.example.com` for subdomains only, `**.example.com` for apex plus subdomains, and global `*` allow rules. Prefer scoped rules because `*` broadly opens public outbound access. Environment rules can replace the same Global domain key within a policy. Higher-priority values replace the same key, while other inherited keys remain. After composition, a different matching `deny`, including an inherited wildcard, still blocks a request. Empty environment maps do not clear Global rules. Verify executor support. Do not combine this with `experimental_network.allowed_domains` or `experimental_network.denied_domains`.",
+    },
+    {
+      key: "experimental_network.domains.<pattern>",
+      type: "allow | deny",
+      description:
+        "Allow or deny sandboxed network access for the matching domain pattern. A deny rule wins when several patterns match.",
     },
     {
       key: "experimental_network.allowed_domains",
       type: "array<string>",
       description:
-        "List-shaped administrator allow rules for sandboxed networking. Do not combine this with `experimental_network.domains`.",
+        "Administrator allow rules for sandboxed-command networking while the managed network proxy is enabled. These rules do not apply to web search, apps, or MCP servers. Do not combine this with `experimental_network.domains`.",
     },
     {
       key: "experimental_network.denied_domains",
@@ -2010,19 +2594,25 @@ model fields; `service_tier` is independent.
       key: "experimental_network.managed_allowed_domains_only",
       type: "boolean",
       description:
-        "When `true`, only administrator-managed allow rules remain effective while sandboxed networking requirements are active; user allowlist additions are ignored. Without managed allow rules, user-added domain allow rules do not remain effective.",
+        "When networking requirements are enabled and this is true, ordinary user configuration and per-domain approvals cannot expand the managed proxy allowlist. With no effective configured or inherited Allow entries, ordinary managed commands have no allowed destinations. A deny-only policy does not allow the rest of the internet. This does not cover every tool or approved full sandbox escalation.",
     },
     {
       key: "experimental_network.unix_sockets",
       type: "map<string, allow | deny>",
       description:
-        "Administrator-managed Unix socket policy for sandboxed networking.",
+        "Administrator-managed Unix socket allowlist for sandboxed networking on macOS. Paths must be absolute.",
+    },
+    {
+      key: "experimental_network.unix_sockets.<path>",
+      type: "allow | deny",
+      description:
+        "On macOS, `allow` adds an absolute Unix socket path to the allowlist; `deny` leaves it out. A `deny` entry cannot block a socket when allow-all Unix sockets is enabled.",
     },
     {
       key: "experimental_network.allow_local_binding",
       type: "boolean",
       description:
-        "Permit broader local/private-network access for sandboxed networking. Exact local IP literal or `localhost` allow rules can still permit specific local targets when this stays `false`.",
+        "Permit broader local/private-network access for sandboxed networking. On the supported Codex Cloud proxy path, an explicit false can prevent upstream-proxy access even if a domain is allowed. It defaults to true only if no applicable requirement, selected network profile, or proxy feature setting provides a value. Inherited false remains explicit. A supported higher-priority Cloud override can change it without broadening Global for Local or adding domain Allow entries. Verify executor support. Do not apply this Cloud default to Local.",
     },
     {
       key: "hooks",
@@ -2052,7 +2642,13 @@ model fields; `service_tier` is independent.
       key: "hooks.<Event>[].hooks",
       type: "array<table>",
       description:
-        "Hook handlers for a matcher group. Command hooks are currently supported; prompt and agent hook handlers are parsed but skipped.",
+        "Hook handlers for a matcher group. Command and MCP tool hooks are supported while prompt and agent hook handlers are parsed but skipped.",
+    },
+    {
+      key: "hooks.<Event>[].hooks[].async",
+      type: "boolean",
+      description:
+        "Run a command hook in the background without delaying the triggering operation. Defaults to `false`; `SessionEnd` always runs synchronously. See [Run hooks in the background](https://learn.chatgpt.com/docs/hooks#run-hooks-in-the-background).",
     },
     {
       key: "hooks.<Event>[].hooks[].additionalContextLimit",
@@ -2224,7 +2820,7 @@ model fields; `service_tier` is independent.
       key: "marketplaces.restrict_to_allowed_sources",
       type: "boolean",
       description:
-        "When `true`, require user-configured marketplace sources to match `allowed_sources` for marketplace add, plugin install, and configured Git marketplace refresh operations. Codex-managed OpenAI marketplaces remain allowed when their reserved source and name match. This doesn't filter already configured user marketplaces at runtime.",
+        "When `true`, require configured marketplace sources to match `allowed_sources` for marketplace add, plugin install, refresh, and runtime loading. OpenAI-curated Git catalogs, including the API-key catalog, must also match the allowlist. Bundled and remotely installed workspace plugins are separate from this curated Git source policy.",
     },
     {
       key: "marketplaces.allowed_sources",

@@ -1,9 +1,9 @@
 > Source: https://github.com/google-gemini/gemini-cli/blob/main/docs/changelogs/preview.md
 > Mirror maintained by .github/workflows/sync-cli-docs.yml — do not edit by hand.
 
-# Preview release: v0.54.0-preview.0
+# Preview release: v0.64.0-preview.0
 
-Released: July 28, 2026
+Released: October 6, 2026
 
 Our preview release includes the latest, new, and experimental features. This
 release may not be as stable as our [latest weekly release](latest.md).
@@ -16,59 +16,67 @@ npm install -g @google/gemini-cli@preview
 
 ## Highlights
 
-- **Antigravity Agent & PR Generator:** Integrated the Antigravity agent runner,
-  Firestore dual-locking for concurrency, prompt templates, and ingestion
-  testing utilities.
-- **Caretaker Triage & Issue Management:** Enhanced the issue triage workflow by
-  automatically posting a comment before closing issues, and sanitizing and
-  wrapping issue titles in `untrusted_context`.
-- **Core API & Session Stability:** Enforced HTTPS for
-  GoogleCredentialsAuthProvider to prevent cleartext leakage, rotated session
-  IDs on model fallback to prevent stateful API errors, and refined chat history
-  by filtering out thought parts when context management is disabled.
+- **Atomic File Operations & State Recovery**: Serialized file tool operations
+  with atomic writes and introduced atomic CLI state persistence with automatic
+  recovery from backup on corruption.
+- **Chat Recording Optimization**: Implemented append-only delta patching and
+  bounded history windowing in ChatRecordingService to optimize memory and disk
+  efficiency during long-running sessions.
+- **CLI Input & Reference Resolution**: Added support for resolving `@file:line`
+  references, resolved CPU hangs and quote swallowing on `@` symbols within code
+  blocks, and prevented ghost text wrap hangs.
+- **Terminal UI & Interaction Stability**: Ensured Ctrl+C emergency aborts reach
+  active cancellation handlers, made selection list confirmation with Enter and
+  Spacebar reliable, and fixed Windows ConPTY IME cursor forwarding.
 
 ## What's Changed
 
-- Changelog for v0.53.0-preview.0 by @gemini-cli-robot in
-  [#28507](https://github.com/google-gemini/gemini-cli/pull/28507)
-- Changelog for v0.52.0 by @gemini-cli-robot in
-  [#28508](https://github.com/google-gemini/gemini-cli/pull/28508)
-- chore(release): bump version to 0.54.0-nightly.20260722.gf743ab579 by
+- refactor(a2a-server): implement V1 to V2 settings migration logic by
+  @jvargassanchez-dot in
+  [#29450](https://github.com/google-gemini/gemini-cli/pull/29450)
+- fix(acp): bridge PromptResponse.usage and emit usage_update notifications
+  (#29389) by @elberthc-byte in
+  [#29549](https://github.com/google-gemini/gemini-cli/pull/29549)
+- Changelog for v0.63.0-preview.0 by @gemini-cli-robot in
+  [#29565](https://github.com/google-gemini/gemini-cli/pull/29565)
+- fix(cli): propagate resolved folder trust state in headless mode (#29031) by
+  @amelidev in [#29528](https://github.com/google-gemini/gemini-cli/pull/29528)
+- chore(release): bump version to 0.64.0-nightly.20260929.gd75234cae by
   @gemini-cli-robot in
-  [#28510](https://github.com/google-gemini/gemini-cli/pull/28510)
-- fix(caretaker): sanitize and wrap issue title in untrusted_context by @chadd28
-  in [#28352](https://github.com/google-gemini/gemini-cli/pull/28352)
-- chore(caretaker): update vitest to v3.2.4 and add package-lock.json files by
-  @chadd28 in [#28409](https://github.com/google-gemini/gemini-cli/pull/28409)
-- fix(core): rotate session ID on model fallback to prevent stateful API errors
-  by @amelidev in
-  [#28469](https://github.com/google-gemini/gemini-cli/pull/28469)
-- feat(caretaker-triage): post comment before auto-closing issues by @chadd28 in
-  [#28411](https://github.com/google-gemini/gemini-cli/pull/28411)
-- fix(core): enforce HTTPS for GoogleCredentialsAuthProvider to prevent
-  cleartext leakage by @amelidev in
-  [#28517](https://github.com/google-gemini/gemini-cli/pull/28517)
-- fix(core): filter out thought parts from getHistoryTurns when context
-  management is disabled by @DavidAPierce in
-  [#28509](https://github.com/google-gemini/gemini-cli/pull/28509)
-- fix(a2a-server): normalize CRLF line endings to LF in getProposedContent by
+  [#29567](https://github.com/google-gemini/gemini-cli/pull/29567)
+- fix(cli): prevent CPU hang and quote swallowing on @ within code (#29434) by
+  @elberthc-byte in
+  [#29557](https://github.com/google-gemini/gemini-cli/pull/29557)
+- fix(core): serialize file tool operations and make writes atomic (#29078) by
+  @elberthc-byte in
+  [#29499](https://github.com/google-gemini/gemini-cli/pull/29499)
+- fix(core): implement append-only delta patching and bounded history windowing
+  in ChatRecordingService by @jvargassanchez-dot in
+  [#29568](https://github.com/google-gemini/gemini-cli/pull/29568)
+- fix(cli): persist state atomically and recover from backup on corruption by
+  @urielefrenvirtusa in
+  [#29558](https://github.com/google-gemini/gemini-cli/pull/29558)
+- fix(cli): ensure Ctrl+C emergency abort reaches cancellation handler during
+  active operations by @urielefrenvirtusa in
+  [#29586](https://github.com/google-gemini/gemini-cli/pull/29586)
+- fix(cli): resolve @file:line references and prevent ghost text wrap hang by
+  @jesussamuel-byte in
+  [#29581](https://github.com/google-gemini/gemini-cli/pull/29581)
+- fix(ui): ensure Windows ConPTY forwards IME cursor position by
+  @jesussamuel-byte in
+  [#29560](https://github.com/google-gemini/gemini-cli/pull/29560)
+- fix(cli): retry directory removal on Windows locking errors during extension
+  updates by @jesussamuel-byte in
+  [#29540](https://github.com/google-gemini/gemini-cli/pull/29540)
+- fix(acp): resolve session by exact id and handle listener cleanup on session
+  failure by @diegogodinezr in
+  [#29580](https://github.com/google-gemini/gemini-cli/pull/29580)
+- fix(cli): preserve scroll position and partition pending height budget by
   @luisfelipe-alt in
-  [#28531](https://github.com/google-gemini/gemini-cli/pull/28531)
-- fix(core): enforce explicit tag length and validation in file keychain by
-  @luisfelipe-alt in
-  [#28523](https://github.com/google-gemini/gemini-cli/pull/28523)
-- chore/release: bump version to 0.54.0-nightly.20260728.gbef611950 by
-  @gemini-cli-robot in
-  [#28552](https://github.com/google-gemini/gemini-cli/pull/28552)
-- feat(pr-generator-db): implement Firestore concurrency dual-locking and test
-  ingestion utilities by @joneba-google in
-  [#28432](https://github.com/google-gemini/gemini-cli/pull/28432)
-- feat(pr-generator-agent): implement Antigravity agent runner and prompt
-  templates … by @joneba-google in
-  [#28434](https://github.com/google-gemini/gemini-cli/pull/28434)
-- fix(core): skip merged function-response turns when finding the active loop by
-  @adamfweidman in
-  [#28565](https://github.com/google-gemini/gemini-cli/pull/28565)
+  [#29520](https://github.com/google-gemini/gemini-cli/pull/29520)
+- fix(cli): ensure Enter and Spacebar reliably confirm selection list options by
+  @ugorla-dev in
+  [#29502](https://github.com/google-gemini/gemini-cli/pull/29502)
 
 **Full Changelog**:
-https://github.com/google-gemini/gemini-cli/compare/v0.53.0-preview.0...v0.54.0-preview.0
+https://github.com/google-gemini/gemini-cli/compare/v0.63.0-preview.0...v0.64.0-preview.0
