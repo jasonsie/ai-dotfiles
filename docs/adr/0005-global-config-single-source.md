@@ -137,6 +137,28 @@ can be reviewed separately).
   `~/Developer/repo/project/ai/workspace/.claude/settings.local.json`, and 14 project skills
   in that parent folder's `.claude/skills/`. Both are project-level and outside Q11's scope.
 
+## Follow-up (2026-10-12)
+
+- **Plugins:** the disabled leftovers were uninstalled at every scope, including the project
+  and local installs in two work repos: feature-dev (×2), figma, frontend-design, hookify (×2), playwright.
+  `claude plugin list` now shows only zkfy, pyright-lsp, typescript-lsp (plus claude.ai `@synced`).
+- **Serena:** Q9 removed only the plugin. The MCP server still came from `.mcp.json` files in
+  parent folders (which apply to every repo below them) and from `enabledMcpjsonServers` in
+  project settings. All of those entries, the `.serena/` folders, and the `serena-agent` uv tool
+  were removed. Each affected repo got a local commit; nothing was pushed.
+- **GitHub access (Q8 completed):** `gh` replaces the github MCP server. Two accounts are logged
+  in, both in the macOS Keychain with `repo, read:org, gist, workflow`. The personal account is the
+  default. A one-line `.envrc` (`export GH_TOKEN=$(gh auth token --user <account>)`, loaded
+  by direnv and excluded through `.git/info/exclude`) switches `gh` per repo for the second
+  account. `git` still selects accounts by SSH host aliases in `~/.ssh/config`, which `gh`
+  does not use for authentication. HTTPS git uses `gh auth setup-git`. The plaintext GitHub
+  token in `~/.git-credentials` and the plaintext `gh` token in `hosts.yml` were removed. An
+  unused third SSH alias and its key were deleted.
+- **Manual (user):** revoke the old MCP PAT, the old classic `gh` token, and the old
+  `~/.git-credentials` token on GitHub; delete the retired SSH key from the account that held it.
+- This is machine state, not managed by this repo (Q12): the workspace does not store tokens,
+  `.envrc` files, or SSH config.
+
 ## Verification (definition of done)
 
 - `codex mcp list` and `gemini mcp list` show context7. `claude mcp list` shows context7 and not github.
