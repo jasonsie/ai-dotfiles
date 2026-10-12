@@ -154,6 +154,14 @@ can be reviewed separately).
   does not use for authentication. HTTPS git uses `gh auth setup-git`. The plaintext GitHub
   token in `~/.git-credentials` and the plaintext `gh` token in `hosts.yml` were removed. An
   unused third SSH alias and its key were deleted.
+- **Parent `workspace/.claude/`:** brought into scope and retired. It held a copy of the
+  retired generator's output (10 hook events into `.claude/hooks/`, 34 skills, stale model
+  IDs, an ECC codebase map) that loaded for any session started in the parent folder.
+  Backed up as a tarball before removal.
+- **Plugin cache:** the `everything-claude-code` and `claude-code-plugins` caches under
+  `~/.claude/plugins/cache/` were removed; no installed plugin uses them.
+- **Codex model drift** (live config differs from `managed.json`) is a known healthcheck
+  failure the user accepted; it is not changed here.
 - **Manual (user):** revoke the old MCP PAT, the old classic `gh` token, and the old
   `~/.git-credentials` token on GitHub; delete the retired SSH key from the account that held it.
 - This is machine state, not managed by this repo (Q12): the workspace does not store tokens,
