@@ -1,7 +1,7 @@
 # 進階文件索引
 
 > 此目錄存放深度分析與設計文件，**不會自動載入**到 Claude context。
-> 需要時透過 `Read /tmp/claude-code-workspace/docs/<file>.md` 主動讀取，避免占用 token 預算。
+> 需要時直接讀取 `docs/<file>.md`，避免占用 token 預算。設定範圍見 `adr/0005-global-config-single-source.md`。
 > 最後更新：2026-05-17（v4 — 新增 Claude Code 各面向最佳實踐完整研究報告）
 
 ## 設計論述與官方對齊
@@ -28,18 +28,16 @@
 | 檔案 | 主題 | 何時讀 |
 |---|---|---|
 | `timeout-guide.md` | **Stream timeout 完整指南**（整合自三份 timeout 文件） | 遇到串流中斷、長 Bash 卡住、調整 timeout 設定前 |
-| `hook-lifecycle.md` | 10 個 Hook 腳本 + 7 種事件的 sequenceDiagram + 競態防護 + 除錯指南 | Hook 除錯、新人理解 hook 生命週期 |
 
 ## 歸檔（`docs/archive/`）
 
-已被取代或純歷史記錄的文件，詳見 `docs/archive/README.md`。
+已被取代或純歷史記錄的文件，詳見 `docs/archive/README.md`。已退役的專案規則產生器（hooks、agents、onboarding、inventory）文件亦移至此。
 
 ## 載入策略
 
 | 場景 | 策略 |
 |---|---|
-| 一般任務 | 主 CLAUDE.md + `.claude/rules/` 即足夠 |
-| **查看所有可用工具** | `/load-plan` 指令（動態顯示） |
+| 一般任務 | 全域 `AGENTS.md` + repo `AGENTS.md` 即足夠 |
 | 架構決策 | 主動讀取 `advisor-strategy.md` |
 | 多 agent 協調設計 | 主動讀取 `multi-agent-coordination.md` |
 | Prompt 設計研究 | 主動讀取 `blog-analysis-report.md` |
@@ -53,5 +51,5 @@
 新增 doc 時：
 1. 在此 INDEX 加一行（檔名 + 主題 + 何時讀），置於合適的分類下
 2. doc 頂部加 `> tags: [...]` 或來源 URL 方便搜尋
-3. **不要**在 CLAUDE.md / `.claude/rules/` 加 `@docs/...` 引用，避免破壞 lazy-load 設計
+3. **不要**在 `AGENTS.md` 加 `@docs/...` 引用，避免破壞 lazy-load 設計
 4. 整合型文件（如 `timeout-guide.md`）應在原始檔頂部標註已被整合，並保留供歷史追溯

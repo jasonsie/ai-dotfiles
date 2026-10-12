@@ -10,7 +10,7 @@ on:
 
 jobs:
   shellcheck:
-    name: ShellCheck (.claude/hooks)
+    name: ShellCheck (scripts)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -19,82 +19,23 @@ jobs:
       - name: Install shellcheck
         run: sudo apt-get update -qq && sudo apt-get install -y shellcheck
 
-      - name: Run shellcheck on hooks and scripts
-        run: |
-          HOOKS_DIR=".claude/hooks"
-          FAILED=0
-          for script in "$HOOKS_DIR"/*.sh; do
-            if [ -f "$script" ]; then
-              echo "Checking: $script"
-              shellcheck --severity=warning "$script" || FAILED=1
-            fi
-          done
-          for script in scripts/sync-cli-docs.sh; do
-            if [ -f "$script" ]; then
-              echo "Checking: $script"
-              shellcheck --severity=warning "$script" || FAILED=1
-            fi
-          done
-          exit $FAILED
+      - name: Run shellcheck
+        run: shellcheck --severity=warning scripts/*.sh
 
-  hooks-dryrun:
-    name: Hooks Dry-Run (syntax check)
+  unit-tests:
+    name: Unit tests (installers)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Dry-run non-destructive hooks
-        env:
-          CLAUDE_PROJECT_DIR: ${{ github.workspace }}
-        run: |
-          set -e
-          HOOKS_DIR=".claude/hooks"
-          FAILED=0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-          # Hooks to dry-run (non-destructive: read-only or informational)
-          DRY_RUN_HOOKS=(
-            "memory-pull.sh"
-            "pre-commit-review.sh"
-          )
-
-          # Optional hook — only run if present
-          OPTIONAL_HOOKS=(
-            "instructions-loaded.sh"
-          )
-
-          # Dummy stdin JSON representing a typical hook payload
-          DUMMY_INPUT='{"tool":"read","file_path":"/tmp/Memory.md","command":""}'
-
-          for hook in "${DRY_RUN_HOOKS[@]}"; do
-            script="$HOOKS_DIR/$hook"
-            if [ -f "$script" ]; then
-              echo "Syntax check: $script"
-              bash -n "$script" || { echo "FAIL: syntax error in $script"; FAILED=1; }
-
-              echo "Dry-run: $script"
-              echo "$DUMMY_INPUT" | timeout 10 bash "$script" || true
-              echo "OK: $hook completed"
-            else
-              echo "SKIP: $script not found"
-            fi
-          done
-
-          for hook in "${OPTIONAL_HOOKS[@]}"; do
-            script="$HOOKS_DIR/$hook"
-            if [ -f "$script" ]; then
-              echo "Syntax check (optional): $script"
-              bash -n "$script" || { echo "FAIL: syntax error in $script"; FAILED=1; }
-
-              echo "Dry-run (optional): $script"
-              echo "$DUMMY_INPUT" | timeout 10 bash "$script" || true
-              echo "OK: $hook completed"
-            else
-              echo "SKIP (optional): $hook not present"
-            fi
-          done
-
-          exit $FAILED
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -v
 
   markdown-lint:
     name: Markdown Lint & Internal Link Check

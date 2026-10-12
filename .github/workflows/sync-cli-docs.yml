@@ -23,10 +23,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      # All three CLIs (Claude, Codex, AGY) are mirrored by the bash+curl sync.
+      # All four CLIs (Claude, Codex, Gemini, AGY) are mirrored by the bash+curl sync.
+      # Gemini docs are raw markdown in its GitHub repo (Git Trees API + raw fetch);
       # AGY no longer needs a headless browser — its docs are static markdown
       # assets fetched directly. See docs/inventory/crawler-tech-research-2026-06-07.md.
-      - name: Sync CLI docs (Claude + Codex + AGY)
+      - name: Sync CLI docs (Claude + Codex + Gemini + AGY)
         run: bash scripts/sync-cli-docs.sh
 
       - name: Commit and push
@@ -36,7 +37,36 @@ jobs:
           git add -A
           if git diff --cached --quiet; then
             echo "No documentation changes."
-          else
-            git commit -m "Sync CLI docs — $(date '+%Y-%m-%d')"
-            git push origin HEAD:main
+            exit 0
           fi
+
+          subject="Sync CLI docs — $(date '+%Y-%m-%d')"
+          msg_file="$(mktemp)"
+          printf '%s\n' "$subject" > "$msg_file"
+
+          # Catalog-drift flag (advisory only; never edits any CAPABILITIES.md).
+          # Only codex and gemini have a hand-written docs/<cli>/CAPABILITIES.md whose
+          # accuracy depends on the mirrored docs/<cli>/upstream/ tree. If any file
+          # under that tree changed in this sync, the catalog may be stale — surface
+          # it in the commit body so a reviewer scanning git log sees the doc change
+          # and the review-needed flag together. Coarse by design (file→catalog, not
+          # row-level): the catalogs are ~14 rows, and a parser over their hand-written
+          # citations would silently miss drift whenever the citation format shifts.
+          drift=""
+          for cli in codex gemini; do
+            changed="$(git diff --cached --name-only -- "docs/$cli/upstream/" || true)"
+            if [ -n "$changed" ]; then
+              drift="${drift}  ${cli}/CAPABILITIES.md — upstream changed:"$'\n'
+              drift="${drift}$(printf '%s\n' "$changed" | sed 's/^/    /')"$'\n'
+            fi
+          done
+          if [ -n "$drift" ]; then
+            {
+              printf '\n⚠ Catalog drift — review these hand-written catalogs:\n'
+              printf '%s' "$drift"
+            } >> "$msg_file"
+          fi
+
+          git commit -F "$msg_file"
+          rm -f "$msg_file"
+          git push origin HEAD:main
