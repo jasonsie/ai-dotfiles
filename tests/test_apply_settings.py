@@ -12,11 +12,18 @@ settings = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(settings)
 
 MANAGED = {
-    'claude': {'model': 'opus', 'skipAutoPermissionPrompt': False},
-    'codex': {'model': 'm', 'approval_policy': 'on-request', 'sandbox_mode': 'workspace-write'},
-    'gemini': {'model.name': 'g', 'tools.sandbox': True},
-    'pi': {'defaultProvider': 'p', 'defaultModel': 'x'},
+    'version': 2,
+    'claude': {'enforce': {'skipAutoPermissionPrompt': False}, 'default': {'model': 'opus'}},
+    'codex': {'enforce': {'approval_policy': 'on-request', 'sandbox_mode': 'workspace-write'},
+              'default': {'model': 'm'}},
+    'gemini': {'enforce': {'tools.sandbox': True}, 'default': {'model.name': 'g'}},
+    'pi': {'default': {'defaultProvider': 'p', 'defaultModel': 'x'}},
 }
+
+
+def keys(cli):
+    """Every managed key of a CLI, as written to a settings file that has none of them yet."""
+    return {**MANAGED[cli].get('enforce', {}), **MANAGED[cli].get('default', {})}
 
 
 class ApplySettingsTest(unittest.TestCase):
@@ -35,15 +42,26 @@ class ApplySettingsTest(unittest.TestCase):
         return path
 
     def test_managed_repo_file_is_valid(self):
-        managed = json.loads(settings.MANAGED.read_text())
+        managed = settings.load_managed(settings.MANAGED)
         self.assertLessEqual(set(managed) - {'version'}, set(settings.FILES))
-        for key in managed['codex']:
-            self.assertNotIn('.', key)
+        for group in managed['codex'].values():
+            for key in group:
+                self.assertNotIn('.', key)
+
+    def test_old_or_ambiguous_managed_files_are_refused(self):
+        path = self.home / 'managed.json'
+        for bad in ({'version': 1, 'claude': {'model': 'opus'}},
+                    {'version': 2, 'claude': {'model': 'opus'}},
+                    {'version': 2, 'claude': {'enforce': {'model': 'a'}, 'default': {'model': 'b'}}},
+                    {'version': 2, 'unknown-cli': {'enforce': {}}}):
+            path.write_text(json.dumps(bad))
+            with self.assertRaises(ValueError):
+                settings.load_managed(path)
 
     def test_json_merge_preserves_unmanaged_keys(self):
         original = {'enabledPlugins': {'mine': True}, 'permissions': {'allow': ['Bash(ls)']},
                     'model': 'sonnet', 'security': {'auth': {'selectedType': 'oauth'}}}
-        result = json.loads(settings.merge_json('claude', json.dumps(original), MANAGED['claude']))
+        result = json.loads(settings.merge_json('claude', json.dumps(original), keys('claude')))
         self.assertEqual(result['model'], 'opus')
         self.assertFalse(result['skipAutoPermissionPrompt'])
         for key in ('enabledPlugins', 'permissions', 'security'):
@@ -51,21 +69,41 @@ class ApplySettingsTest(unittest.TestCase):
 
     def test_dotted_keys_replace_legacy_scalars(self):
         result = json.loads(settings.merge_json('gemini', '{"model": "legacy", "ui": {"theme": "x"}}',
-                                                MANAGED['gemini']))
+                                                keys('gemini')))
         self.assertEqual(result['model'], {'name': 'g'})
         self.assertEqual(result['tools'], {'sandbox': True})
         self.assertEqual(result['ui'], {'theme': 'x'})
 
     def test_unchanged_json_keeps_original_bytes(self):
         text = '{"model":   "opus", "skipAutoPermissionPrompt": false}'
-        self.assertEqual(settings.merge_json('claude', text, MANAGED['claude']), text)
+        self.assertEqual(settings.merge_json('claude', text, keys('claude')), text)
 
     def test_pi_refuses_default_outside_enabled_models(self):
         text = json.dumps({'enabledModels': ['p/other']})
         with self.assertRaisesRegex(ValueError, 'enabledModels'):
-            settings.merge_json('pi', text, MANAGED['pi'])
-        ok = json.loads(settings.merge_json('pi', json.dumps({'enabledModels': ['p/*']}), MANAGED['pi']))
+            settings.merge_json('pi', text, keys('pi'))
+        ok = json.loads(settings.merge_json('pi', json.dumps({'enabledModels': ['p/*']}), keys('pi')))
         self.assertEqual(ok['defaultModel'], 'x')
+
+    def test_pi_default_is_checked_only_when_written(self):
+        self.seed('pi', json.dumps({'enabledModels': ['other/*'], 'defaultProvider': 'other', 'defaultModel': 'y'}))
+        self.assertEqual(settings.plan(self.home, ('pi',), MANAGED), [])
+
+    def test_default_keys_fill_only_missing_values(self):
+        path = self.seed('codex', 'model = "mine"\n')
+        settings.apply(self.home, settings.plan(self.home, ('codex',), MANAGED))
+        parsed = tomllib.loads(path.read_text())
+        self.assertEqual(parsed['model'], 'mine')  # a choice made in the CLI stays
+        self.assertEqual(parsed['sandbox_mode'], 'workspace-write')
+        self.assertEqual(settings.local_choices(self.home, ('codex',), MANAGED), [('codex', 'model', 'mine', 'm')])
+        self.assertEqual(settings.plan(self.home, ('codex',), MANAGED), [])
+
+    def test_enforced_keys_are_put_back(self):
+        self.seed('claude', '{"model": "sonnet", "skipAutoPermissionPrompt": true}')
+        (_, _, after), = settings.plan(self.home, ('claude',), MANAGED)
+        result = json.loads(after)
+        self.assertFalse(result['skipAutoPermissionPrompt'])
+        self.assertEqual(result['model'], 'sonnet')
 
     def test_toml_upserts_header_and_keeps_tables(self):
         before = '''# comment kept
@@ -78,7 +116,7 @@ trust_level = "trusted"
 [mcp_servers.mine]
 command = "x"
 '''
-        result = settings.merge_toml(before, MANAGED['codex'])
+        result = settings.merge_toml(before, keys('codex'))
         parsed = tomllib.loads(result)
         self.assertEqual(parsed['model'], 'm')
         self.assertEqual(parsed['model_reasoning_effort'], 'high')
@@ -86,7 +124,7 @@ command = "x"
         self.assertIn('/home/test/repo', parsed['projects'])
         self.assertEqual(parsed['mcp_servers']['mine']['command'], 'x')
         self.assertTrue(result.startswith('# comment kept\n'))
-        self.assertEqual(settings.merge_toml(result, MANAGED['codex']), result)
+        self.assertEqual(settings.merge_toml(result, keys('codex')), result)
 
     def test_toml_rejects_nested_keys(self):
         with self.assertRaisesRegex(ValueError, 'top-level'):

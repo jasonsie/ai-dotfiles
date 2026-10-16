@@ -33,6 +33,8 @@ echo "-- pending changes (install.sh --dry-run)"
 DRY="$(bash "$ROOT/scripts/install.sh" --dry-run 2>&1)" || fail "install.sh --dry-run exited non-zero"
 PENDING="$(printf '%s\n' "$DRY" | grep -E '(^|: )[1-9][0-9]* changes' || true)"
 if [ -z "$PENDING" ]; then pass "no pending changes"; else fail "pending: $(printf '%s' "$PENDING" | tr '\n' ';')"; fi
+# Model choices made in a CLI itself are kept on purpose; report them, never fail.
+printf '%s\n' "$DRY" | sed -n 's/^Local choice kept: /  info  local choice kept: /p'
 
 echo "-- mcp (native list)"
 for name in $("$PYTHON" -c 'import json,sys; print(" ".join(s["name"] for s in json.load(open(sys.argv[1]))["servers"]))' "$ROOT/tools/mcp/servers.json"); do

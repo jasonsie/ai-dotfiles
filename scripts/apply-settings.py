@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Merge workspace-managed keys into each CLI's live settings; dry-run unless --apply.
 
-Only keys listed in tools/settings/managed.json are written; every other key,
+tools/settings/managed.json lists, per CLI, `enforce` keys (safety settings, put
+back on every run) and `default` keys (model choices, written only while the CLI
+has no value of its own, so a later pick made in the CLI stays). Every other key,
 credential, and runtime value is preserved. Settings files are never symlinked
 because each CLI writes back to them. Backs up privately before writing and
 rolls back on failure. Requires Python 3.11+ for tomllib.
@@ -27,12 +29,32 @@ FILES = {
     'pi': '.pi/agent/settings.json',
     'agy': '.gemini/antigravity-cli/settings.json',
 }
+KINDS = ('enforce', 'default')
+MISSING = object()
 
 
 def settings_path(home, cli):
     if cli == 'pi' and home == Path.home() and os.environ.get('PI_CODING_AGENT_DIR'):
         return Path(os.environ['PI_CODING_AGENT_DIR']).expanduser() / 'settings.json'
     return home / FILES[cli]
+
+
+def load_managed(path):
+    """Read managed.json (version 2) and refuse an old or ambiguous layout."""
+    managed = json.loads(path.read_text())
+    if managed.get('version') != 2:
+        raise ValueError(f'{path}: expected "version": 2 with per-CLI "enforce" and "default" keys')
+    for cli, spec in managed.items():
+        if cli == 'version':
+            continue
+        if cli not in FILES:
+            raise ValueError(f'{path}: unknown CLI {cli!r}')
+        if not isinstance(spec, dict) or not set(spec) <= set(KINDS):
+            raise ValueError(f'{path}: {cli} may only have "enforce" and "default" keys')
+        both = set(spec.get('enforce', {})) & set(spec.get('default', {}))
+        if both:
+            raise ValueError(f'{path}: {cli} lists {", ".join(sorted(both))} as both enforce and default')
+    return managed
 
 
 def set_dotted(data, dotted, value):
@@ -43,6 +65,15 @@ def set_dotted(data, dotted, value):
             node[key] = {}
         node = node[key]
     node[leaf] = value
+
+
+def get_dotted(data, dotted):
+    node = data
+    for key in dotted.split('.'):
+        if not isinstance(node, dict) or key not in node:
+            return MISSING
+        node = node[key]
+    return node
 
 
 def check_pi(data):
@@ -58,7 +89,7 @@ def merge_json(cli, text, keys):
     data = copy.deepcopy(original)
     for key, value in keys.items():
         set_dotted(data, key, value)
-    if cli == 'pi':
+    if cli == 'pi' and keys.keys() & {'defaultProvider', 'defaultModel'}:
         check_pi(data)
     return text if data == original else json.dumps(data, indent=2, ensure_ascii=False) + '\n'
 
@@ -101,21 +132,51 @@ def merge_toml(text, keys):
     return result
 
 
+def split_keys(cli, text, spec):
+    """Keys to write now, and the default keys for which the CLI keeps its own value.
+
+    Enforced keys always apply. A default key applies only while the CLI has no
+    value for it, so a choice made later in the CLI itself is never undone.
+    """
+    current = tomllib.loads(text) if cli == 'codex' else (json.loads(text) if text.strip() else {})
+    keys = dict(spec.get('enforce', {}))
+    kept = []
+    for key, value in spec.get('default', {}).items():
+        mine = get_dotted(current, key)
+        if mine is MISSING:
+            keys[key] = value
+        elif mine != value:
+            kept.append((key, mine, value))
+    return keys, kept
+
+
 def plan(home, targets, managed):
     changes = []
     for cli in targets:
-        keys = managed.get(cli) or {}
+        spec = managed.get(cli) or {}
         path = settings_path(home, cli)
-        if not keys or not path.parent.is_dir():
+        if not spec or not path.parent.is_dir():
             continue  # CLI not set up on this machine; it creates its own file on first run
         if path.is_symlink():
             raise ValueError(f'Refusing to write through symlinked settings: {path}')
         before = path.read_bytes() if path.exists() else b''
         text = before.decode()
+        keys, _ = split_keys(cli, text, spec)
         after = (merge_toml(text, keys) if cli == 'codex' else merge_json(cli, text, keys)).encode()
         if before != after:
             changes.append((path, before, after))
     return changes
+
+
+def local_choices(home, targets, managed):
+    """(cli, key, this machine's value, managed default) wherever the CLI kept its own choice."""
+    kept = []
+    for cli in targets:
+        spec = managed.get(cli) or {}
+        path = settings_path(home, cli)
+        if spec and path.is_file() and not path.is_symlink():
+            kept += [(cli, *item) for item in split_keys(cli, path.read_text(), spec)[1]]
+    return kept
 
 
 def atomic_write(path, content, mode):
@@ -170,7 +231,10 @@ def main():
     home = args.home.expanduser().resolve()
     targets = tuple(FILES) if args.target == 'all' else (args.target,)
     try:
-        changes = plan(home, targets, json.loads(args.managed.read_text()))
+        managed = load_managed(args.managed)
+        changes = plan(home, targets, managed)
+        for cli, key, mine, default in local_choices(home, targets, managed):
+            print(f'Local choice kept: {cli} {key} = {json.dumps(mine)} (default {json.dumps(default)})')
         for path, _, _ in changes:
             print(f'{"Update" if args.apply else "Would update"}: {path}')
         if args.apply and changes:
