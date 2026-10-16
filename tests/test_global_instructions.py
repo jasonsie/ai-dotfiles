@@ -166,13 +166,19 @@ class GlobalInstructionsTest(unittest.TestCase):
         self.paths["claude"].mkdir(parents=True)
         with self.assertRaisesRegex(ValueError, "non-file"):
             self.install(apply=True, replace_existing=True)
-        self.source.write_text("")
-        with self.assertRaisesRegex(ValueError, "Missing or empty"):
+        self.source.unlink()
+        with self.assertRaisesRegex(ValueError, "Missing shared instructions"):
             self.install(apply=True)
         self.source.write_text("a" * (32 * 1024))
         with self.assertRaisesRegex(ValueError, "32 KiB"):
             self.install(apply=True)
         self.assertEqual(self.backups(), [])
+
+    def test_empty_source_is_linked(self):
+        self.source.write_text("")
+        self.install(apply=True)
+        for path in self.paths.values():
+            self.assertEqual(path.resolve(), self.source)
 
     def test_source_cannot_be_replaced_through_a_directory_alias(self):
         alias = self.root / "source alias"
