@@ -1,7 +1,7 @@
 # Project redesign — requirements and plan
 
 Status: **Round 2 interview in progress (Q17 onward, 2026-10-16); Q1–Q16 stand.**
-Updated: 2026-10-16. Current question: Q29 (see "Round 2"). Implementation not
+Updated: 2026-10-16. Current question: Q30 (see "Round 2"). Implementation not
 started; round 2's evidence partly answers research items R-a to R-d.
 
 ## Resume in any AI CLI
@@ -262,6 +262,7 @@ time, numbered combinable options, a recommendation and its tradeoff.
 | Q26 | Decided (user); verified 2026-10-16 | Full Antigravity support in this round. After the user's first sign-in (CLI 1.0.4), `agy -p` showed that AGY loads the global file through `~/.gemini/GEMINI.md` and the project `AGENTS.md`. It does not read `~/.agents/skills`; its machine-wide root is `~/.gemini/config/` (per the bundled `agy-customizations` guide; the mirrored docs disagree), shared by the CLI and the IDE, so `query` is now linked at `~/.gemini/config/skills/query` and AGY lists it (commit `3a2864d`; installer `--target claude|agents|agy|all`). The IDE was not opened to confirm. Settings: AGY writes only non-default values (`~/.gemini/antigravity-cli/settings.json` is `{}`), and its docs say CLI and IDE settings sync both ways. `enableTerminalSandbox` defaults to `false`. Never link `~/.gemini/config/AGENTS.md` (AGY appends rules there). MCP for AGY waits with Q23d. |
 | Q27 | Decided (user); done 2026-10-16 | Antigravity's terminal sandbox is an enforced safety setting: `enableTerminalSandbox: true` in `~/.gemini/antigravity-cli/settings.json` (default `false`), on par with Codex's `workspace-write`. `apply-settings.py` now knows the AGY file; applied with `--target agy` only, because applying every CLI would reset the Codex model until Q24 is built. Verified: the value persists after an `agy` run, AGY reports sandboxing enabled, a second apply makes no changes. Not checked in the IDE (the docs say CLI and IDE settings sync). Commit `fae2fac`. |
 | Q28 | Decided (user) | No extra portability test (no fresh-home end-to-end run, no scripted second-Mac check); the per-installer unit tests, which already run in throwaway home folders, are enough. A new Mac still needs the work pushed first (zkfy `f4caaf2` and this branch are local-only). |
+| Q29 | Decided (user); done 2026-10-16 | Agent default A1 confirmed: `install.sh` previews by default and writes nothing; `--apply` writes; `--dry-run` still previews (the healthcheck uses it). README and `docs/global-instructions.md` updated. Commit `a4df10e`. |
 
 Usage evidence for later questions (Claude Code, last 60 days, 64 sessions): the
 only skill used across several projects is `grill-me` (6 uses, 4 projects);
@@ -271,9 +272,9 @@ claude.ai's Claude Docs connector, 29 calls); sessions concentrate in this repo
 
 Usage in Codex and Pi (last 60 days): about one session a week each; `grill-me` read 3 times in Codex and 2 in Pi; `vault-query` read 3 times in Codex (all prompted by the global instructions) and 5 in Pi; context7 never invoked in Codex.
 
-Implementation so far (2026-10-16): branch `feat/empty-global-instructions-query-skill` in the original checkout holds commits `00859ae` (Q18), `164297d` (Q20), `663ab84` (Q22), `12904ff` (Q23b), `3a2864d` (Q26) and `fae2fac` (Q27); zkfy holds `f4caaf2` (Q21). Nothing is pushed.
+Implementation so far (2026-10-16): branch `feat/empty-global-instructions-query-skill` in the original checkout holds commits `00859ae` (Q18), `164297d` (Q20), `663ab84` (Q22), `12904ff` (Q23b), `3a2864d` (Q26) `fae2fac` (Q27) and `a4df10e` (Q29); zkfy holds `f4caaf2` (Q21). Nothing is pushed.
 
-Current question: Q29, whether install.sh previews by default (agent default A1).
+Current question: Q30, cleaning up leftovers.
 
 ## Layout
 
