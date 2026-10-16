@@ -1,7 +1,7 @@
 # Project redesign — requirements and plan
 
 Status: **Round 2 interview in progress (Q17 onward, 2026-10-16); Q1–Q16 stand.**
-Updated: 2026-10-16. Current question: Q28 (see "Round 2"). Implementation not
+Updated: 2026-10-16. Current question: Q29 (see "Round 2"). Implementation not
 started; round 2's evidence partly answers research items R-a to R-d.
 
 ## Resume in any AI CLI
@@ -261,6 +261,7 @@ time, numbered combinable options, a recommendation and its tradeoff.
 | Q25 | Decided (user); not implemented yet | The weekly docs-update PR (Q17) also flags changes that touch this setup: a deterministic script searches the week's doc diff for what the repo relies on (managed setting names, `AGENTS.md`, `~/.agents/skills`, skills, MCP) and lists hits at the top of the PR. No AI summary and no API key in CI. Already settled for the same job: repair Codex discovery (the index moved to `learn.chatgpt.com/docs/llms.txt`), add Pi (`docs.json`) and Antigravity's missing harness pages, drop Gemini, and refuse to replace a mirror that shrinks sharply (page-count floors for every source). |
 | Q26 | Decided (user); verified 2026-10-16 | Full Antigravity support in this round. After the user's first sign-in (CLI 1.0.4), `agy -p` showed that AGY loads the global file through `~/.gemini/GEMINI.md` and the project `AGENTS.md`. It does not read `~/.agents/skills`; its machine-wide root is `~/.gemini/config/` (per the bundled `agy-customizations` guide; the mirrored docs disagree), shared by the CLI and the IDE, so `query` is now linked at `~/.gemini/config/skills/query` and AGY lists it (commit `3a2864d`; installer `--target claude|agents|agy|all`). The IDE was not opened to confirm. Settings: AGY writes only non-default values (`~/.gemini/antigravity-cli/settings.json` is `{}`), and its docs say CLI and IDE settings sync both ways. `enableTerminalSandbox` defaults to `false`. Never link `~/.gemini/config/AGENTS.md` (AGY appends rules there). MCP for AGY waits with Q23d. |
 | Q27 | Decided (user); done 2026-10-16 | Antigravity's terminal sandbox is an enforced safety setting: `enableTerminalSandbox: true` in `~/.gemini/antigravity-cli/settings.json` (default `false`), on par with Codex's `workspace-write`. `apply-settings.py` now knows the AGY file; applied with `--target agy` only, because applying every CLI would reset the Codex model until Q24 is built. Verified: the value persists after an `agy` run, AGY reports sandboxing enabled, a second apply makes no changes. Not checked in the IDE (the docs say CLI and IDE settings sync). Commit `fae2fac`. |
+| Q28 | Decided (user) | No extra portability test (no fresh-home end-to-end run, no scripted second-Mac check); the per-installer unit tests, which already run in throwaway home folders, are enough. A new Mac still needs the work pushed first (zkfy `f4caaf2` and this branch are local-only). |
 
 Usage evidence for later questions (Claude Code, last 60 days, 64 sessions): the
 only skill used across several projects is `grill-me` (6 uses, 4 projects);
@@ -272,7 +273,7 @@ Usage in Codex and Pi (last 60 days): about one session a week each; `grill-me` 
 
 Implementation so far (2026-10-16): branch `feat/empty-global-instructions-query-skill` in the original checkout holds commits `00859ae` (Q18), `164297d` (Q20), `663ab84` (Q22), `12904ff` (Q23b), `3a2864d` (Q26) and `fae2fac` (Q27); zkfy holds `f4caaf2` (Q21). Nothing is pushed.
 
-Current question: Q28, how portability to a new Mac is proven.
+Current question: Q29, whether install.sh previews by default (agent default A1).
 
 ## Layout
 
