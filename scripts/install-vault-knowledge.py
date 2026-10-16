@@ -2,9 +2,9 @@
 """Bind the zkfy vault tooling for Claude and Pi; dry-run unless --apply.
 
 Installs exactly four artifacts: the launcher binding (~/.config/zkfy/knowledge.json),
-the `vault-knowledge` launcher link, and the `vault-query` skill link for Claude and Pi.
-Retrieval guidance itself lives in tools/instructions/AGENTS.md; instruction files are
-never touched here. A receipt records prior state so --uninstall restores it exactly.
+the `vault-knowledge` launcher link, and the `query` skill link for Claude and Pi.
+Retrieval guidance lives in the skill itself; instruction files are never touched
+here. A receipt records prior state so --uninstall restores it exactly.
 
 Paths come from --vault/--zkfy, then ZKFY_VAULT/ZKFY_DIR, then the existing binding.
 """
@@ -57,7 +57,7 @@ def pi_root(home):
 
 
 def skill_links(home):
-    return {"claude": home / ".claude/skills/vault-query", "pi": pi_root(home) / "skills/vault-query"}
+    return {"claude": home / ".claude/skills/query", "pi": pi_root(home) / "skills/query"}
 
 
 def resolve_sources(home, vault, zkfy):
@@ -77,7 +77,7 @@ def resolve_sources(home, vault, zkfy):
 def desired_state(home, vault, zkfy, targets, python):
     if not (vault / "docs/knowledge/scope.json").is_file():
         raise ValueError("Vault scope must exist before installation")
-    for name in ("scripts/knowledge.py", "scripts/knowledge-launcher.py", "skills/vault-query/SKILL.md"):
+    for name in ("scripts/knowledge.py", "scripts/knowledge-launcher.py", "skills/query/SKILL.md"):
         if not (zkfy / name).is_file():
             raise ValueError(f"Missing shared tooling in {zkfy}: {name}")
     binding = json.dumps({"version": 1, "vault": str(vault), "tool": str(zkfy / "scripts/knowledge.py"),
@@ -88,7 +88,7 @@ def desired_state(home, vault, zkfy, targets, python):
     }
     links = skill_links(home)
     for target in targets:
-        desired[links[target]] = {"kind": "link", "target": str(zkfy / "skills/vault-query")}
+        desired[links[target]] = {"kind": "link", "target": str(zkfy / "skills/query")}
     return desired
 
 

@@ -10,4 +10,4 @@ Everything the installers apply comes from here (see [ADR-0005](../docs/adr/0005
 
 Not here on purpose: credentials, machine-specific values, plugin choices, and per-project rules.
 Shared skills would live in `tools/skills/<name>/SKILL.md`; there are none today
-(`vault-query` is owned by zkfy and linked by `scripts/install-vault-knowledge.py`).
+(the `query` skill is owned by zkfy and linked by `scripts/install-vault-knowledge.py`).
