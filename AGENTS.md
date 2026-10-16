@@ -12,7 +12,7 @@ are symlinks to this file.
 | `tools/instructions/AGENTS.md` | `scripts/install-global-instructions.py` | symlinked as each CLI's global instruction file |
 | `tools/settings/managed.json` | `scripts/apply-settings.py` | only those keys, merged into live settings |
 | `tools/mcp/servers.json` | `scripts/apply-mcp.py` | native `claude/codex/gemini mcp add` (Pi has no MCP) |
-| zkfy checkout (`ZKFY_DIR`) | `scripts/install-vault-knowledge.py` | `vault-knowledge` launcher + `query` skill (Claude, Pi) |
+| zkfy checkout (`ZKFY_DIR`) | `scripts/install-vault-knowledge.py` | `vault-knowledge` launcher + `query` skill (Claude via `~/.claude/skills`; Codex and Pi via `~/.agents/skills`) |
 
 `scripts/install.sh` runs all four in order; `scripts/healthcheck.sh` verifies live state.
 

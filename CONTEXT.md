@@ -46,4 +46,4 @@ remain in `docs/archive/`.
 | Global instructions | `~/.claude/CLAUDE.md` | `~/.codex/AGENTS.md` | `~/.gemini/GEMINI.md` | `~/.pi/agent/AGENTS.md` |
 | Settings | `settings.json` | `config.toml` | `settings.json` | `settings.json` |
 | User MCP | `~/.claude.json` via `claude mcp add -s user` | `config.toml` via `codex mcp add` | `settings.json` via `gemini mcp add -s user` | none |
-| Skills | `~/.claude/skills/` | — | — | `~/.pi/agent/skills/` |
+| Skills | `~/.claude/skills/` | `~/.agents/skills/` | `~/.gemini/skills/` or `~/.agents/skills/` | `~/.pi/agent/skills/` or `~/.agents/skills/` |

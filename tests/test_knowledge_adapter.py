@@ -43,7 +43,7 @@ class AdapterTest(unittest.TestCase):
         self.assertEqual(before, self.snapshot())
         self.install(apply=True)
         self.assertEqual(self.install(), 0)
-        for link in (".claude/skills/query", ".pi/agent/skills/query", ".local/bin/vault-knowledge"):
+        for link in (".claude/skills/query", ".agents/skills/query", ".local/bin/vault-knowledge"):
             self.assertTrue((self.home / link).is_symlink())
         self.assertTrue(agents.is_symlink())  # instruction entries are never touched
         self.install(apply=True, uninstall=True)

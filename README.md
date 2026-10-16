@@ -16,7 +16,7 @@ are documented, not emulated. Forked from
 | `tools/instructions/AGENTS.md` (symlink) | `~/.claude/CLAUDE.md` | `~/.codex/AGENTS.md` | `~/.gemini/GEMINI.md` | `~/.pi/agent/AGENTS.md` |
 | `tools/settings/managed.json` (key merge) | `settings.json` | `config.toml` | `settings.json` | `settings.json` |
 | `tools/mcp/servers.json` (native `mcp add`) | ✓ | ✓ | ✓ (disabled in untrusted folders by Gemini) | — no MCP |
-| zkfy vault tooling | `query` skill | via shell launcher | via shell launcher | `query` skill |
+| zkfy vault tooling | `query` skill (`~/.claude/skills`) | `query` skill (`~/.agents/skills`) | `query` skill (`~/.agents/skills`) | `query` skill (`~/.agents/skills`) |
 
 Not managed: credentials, sessions, plugin choices, local approvals/trust, per-project rules.
 
