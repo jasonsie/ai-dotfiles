@@ -1,8 +1,8 @@
 # Project redesign — requirements and plan
 
-Status: **Plan complete and committed (Q1–Q16); implementation not started.**
-Updated: 2026-10-08. Next task: research items R-a to R-d, then implementation,
-by any AI, in a later session (Q16).
+Status: **Round 2 interview in progress (Q17 onward, 2026-10-16); Q1–Q16 stand.**
+Updated: 2026-10-16. Current question: Q23 (see "Round 2"). Implementation not
+started; round 2's evidence partly answers research items R-a to R-d.
 
 ## Resume in any AI CLI
 
@@ -187,6 +187,84 @@ Observed issues to carry into design:
 | Q14 | Decided (user) | Reconciled with the other plan: this plan's "for others" applies now (skills plugin only, config personal, repo private). The other plan's toolkit, which others run with their own configuration, becomes a later stage. Keep personal values in one place (`tools/settings/managed.json`, no machine paths in scripts) so they can be separated later. |
 | Q15 | Decided (user) | Reconciled with the other plan: Gemini CLI is dropped (confirms Q2). It can return in the later toolkit stage if other developers need it. |
 | Q16 | Decided (user) | Commit this plan on `claude/project-redesign` and stop. Implementation is a separate, later task that any AI can resume from this file. Before it starts: do research items R-a to R-d, confirm agent defaults A1–A6, and retire the other AI's diverging plan copy. Pushing was not requested: this branch sits on 16 unpushed `refactor/global-config-scope` commits, so pushing it would publish those too and needs its own confirmation. |
+
+## Round 2 — five considerations (2026-10-16)
+
+The user asked for a new interview to complete the workspace around five
+considerations: tools, rules (steering), memory (docs), portability to other
+environments, and staying in sync with the latest docs, "based on my using ai
+essential". That is read as their own design note
+`333.ai/methodology/AI-Portable-Harness-Design.md` (the `ai-to-go`
+memory/dev/pipe spine; the vault hub labels it "Own design (ai-to-go)").
+Q1–Q16 stand unless a row below says otherwise. Same method: one question at a
+time, numbered combinable options, a recommendation and its tradeoff.
+
+### New evidence (checked 2026-10-16 against mirrored docs, installed CLIs and git)
+
+- Docs sync: `developers.openai.com/llms.txt` is now a hub, and the Codex index
+  moved (now `learn.chatgpt.com/docs/llms.txt`). `sync_codex` fails closed only
+  at 0 pages, so the 2026-08-10 and 2026-10-12 syncs each cut
+  `docs/codex/upstream/` to 2–3 pages and pushed to `main`. The last full
+  snapshot is `be14c14`. Claude has the same 0-page floor; Antigravity discovery
+  covers only `cli-*` pages (no MCP, skills, rules or hooks pages); Pi is not
+  mirrored.
+- Pi 1.0.2 (Homebrew, `@earendil-works/pi-coding-agent`) has built-in MCP
+  (`pi mcp add`, `~/.pi/agent/mcp.json`), reads skills from `~/.agents/skills`
+  as well as `~/.pi/agent/skills`, and installs packages with `pi install git:…`
+  (skills, prompts, extensions, themes). This answers R-a for Pi and changes A3.
+  Its docs are in `earendil-works/pi`, `packages/coding-agent/docs/` (index
+  `docs.json`).
+- Codex 0.161: user skills live in `~/.agents/skills`; custom prompts are
+  deprecated in favor of skills; plugins exist (`.codex-plugin/plugin.json`,
+  `codex plugin marketplace add`); memories are experimental and off.
+- Claude Code 2.1.301 does not read `.agents/`. A plugin auto-installs on a new
+  Mac when user settings declare `extraKnownMarketplaces` and `enabledPlugins`;
+  omitting `version` makes each commit a version. It reads project `AGENTS.md`
+  natively (since 2.1.277), so per-project `CLAUDE.md` symlinks are optional.
+  Cowork desktop sessions skip a symlinked `~/.claude/CLAUDE.md`; cloud sessions
+  never read `~/.claude`.
+- Write-through hazards to the shared source: Gemini's memory tool can edit the
+  global `~/.gemini/GEMINI.md` (the link); Antigravity's built-in prompt appends
+  rules to `~/.gemini/config/AGENTS.md`, so never link that file;
+  `template/prompts.md` and `docs/prompts-advanced.md` redirect into
+  `~/.claude/CLAUDE.md`.
+- zkfy: `skills/vault-query/` and `scripts/knowledge-launcher.py`, the targets
+  of the live links, are untracked in the zkfy checkout (7 tracked files are
+  also modified). A fresh clone breaks the vault step the shared instructions
+  require.
+- Settings drift: the healthcheck's only failure is Codex `model` and
+  `model_reasoning_effort` (live `gpt-6.1-sol`/`medium`, managed
+  `gpt-6-astra`/`high`), set through Codex's model picker.
+- Personal plugin repos in `../../plugin/` (dev-create, dev-guide, dev-security,
+  dev-utilis, lang-packs, prompt-dev, zkfy) hold 222 skills, agents and
+  commands, mostly from March 2026. None is installed except zkfy, and
+  `prompt-dev` duplicates `dev-create`. Mapped to the spine, nothing covers goal,
+  treehouse or PR.
+- The shared `tools/instructions/AGENTS.md` gained a subagent line on 2026-10-16
+  (live through the links, uncommitted in the original checkout).
+
+### Decisions (round 2)
+
+| ID | State | Decision / rationale |
+|---|---|---|
+| Q17 | Decided (user replied "keep on" to the recommendations) | Conflicts with the other AI's plan (`plan/project-redesign`, uncommitted in `../ai-cli-workspace-planning`, its Q1–Q18 dated 2026-10-12) resolve in this plan's favor: (1) personal-first; others get only the skills plugin, and a toolkit for others is a later stage; (2) Gemini CLI is dropped, and `~/.gemini/GEMINI.md` stays linked for Antigravity; (3) personal values stay in the repo (`tools/settings/managed.json`); (4) a weekly CI job opens a PR. Its other items (four workflows, `~/.config/agent-toolkit/`, local review bundles, the Agent Toolkit name) are not adopted; its workflow list is input to the skill-set question. |
+| Q18 | Decided (user) | The global `AGENTS.md` is empty. The user narrowed the rules question to the global file, reviewed a 53-line "map" draft (admission rule: a line stays only if it applies to every project in every CLI), and answered "If that is the case, leave it empty" and "erase all of the content". The links from each CLI stay, so anything added later reaches every CLI at once. Implementation consequences: `scripts/install-global-instructions.py:65-66` refuses an empty source and `tests/test_global_instructions.py:169-171` asserts that, so the installer must accept an intentionally empty file (keep the missing-file and 32 KiB checks); vault retrieval then depends on the `vault-query` skill's own description (Claude and Pi load it today; Codex and Antigravity once skills are linked); docs that call the retrieval section resident (`docs/pi/CAPABILITIES.md`, the `install-vault-knowledge.py` docstring) need updating. Applied to the original checkout on 2026-10-16 at the user's request ("1 now"), uncommitted: the live source is empty (backup: `~/.local/state/ai-cli-workspace/global-instructions/manual-backup-20261016-144506/AGENTS.md`, which holds the previous 60 lines including the user's subagent line), the installer accepts an empty source (missing-file and 32 KiB checks kept), and a new test covers it (39 tests pass). The healthcheck is unchanged: only the Codex model drift fails. |
+| Q19 | Decided (user) | The starting skill set is `grilling` and `vault-query` (renamed `query`, Q20) only. This revises Q13: `grill-me` (upstream it only calls `grilling`) and `skill-creator` (no uses in 60 days) leave the bundle; Claude keeps its claude.ai-synced copies (A6). Usage evidence: `grill-me` was the only skill used in all three CLIs, `vault-query` was read in Codex and Pi. |
+| Q20 | Decided (user); done 2026-10-16, uncommitted | Rename `vault-query` to `query`, refactored at the skill's source location (zkfy `skills/query/`, `name: query`), not by renaming links. Done: folder moved (it is untracked in zkfy); `scripts/install-vault-knowledge.py`, `scripts/install.sh` and `tests/test_knowledge_adapter.py` updated (39 tests pass); live links migrated to `~/.claude/skills/query` and `~/.pi/agent/skills/query` (old links removed, receipt updated, a re-run shows 0 changes); prose references updated in both repos, while ADRs keep the historical name. No collision: no built-in `/query` in Claude, Codex or Antigravity, and no other skill named `query`. |
+| Q21 | Decided (user); done 2026-10-16 | The `query` skill and its engine stay owned by zkfy and are committed there, which removes the fresh-clone blocker. zkfy commit `f4caaf2` adds only the 7 previously untracked files (`skills/query/SKILL.md`, `scripts/knowledge.py`, `scripts/knowledge-launcher.py`, `scripts/knowledge-hook.py`, `scripts/requirements-knowledge.txt` (PyYAML), `tests/test_knowledge.py` (25 tests pass), ADR-0003); the user's 7 modified zkfy files stay uncommitted. Not pushed (the user's call). Later fix: once the zkfy plugin is reinstalled from a commit that contains `skills/query`, Claude would list both `query` and `zkfy:query`. |
+| Q22 | Decided (user); done for `query` 2026-10-16 | Skills reach every CLI by symlinks from one source, not by per-CLI plugins: `~/.claude/skills/<name>` for Claude (it does not read `~/.agents`) and `~/.agents/skills/<name>` for Codex and Pi (both read it; Pi's own `skills/` link is dropped to avoid a duplicate-name warning). Antigravity follows once its skills path is verified. This replaces installing this repo's plugin on the owner's machines (Q1a/A2); a plugin manifest remains a later item for sharing with others. Done for `query`: `scripts/install-vault-knowledge.py --target claude|agents|both`, `install.sh` maps codex and pi to `agents`, the Pi-only link was removed, and `codex debug prompt-input` (no model call) lists the skill from `~/.agents/skills` (Codex labels it `zkfy:query` because its real folder is inside the zkfy plugin). `grilling` is not imported yet. |
+
+Usage evidence for later questions (Claude Code, last 60 days, 64 sessions): the
+only skill used across several projects is `grill-me` (6 uses, 4 projects);
+`/model` ran 19 times; context7 had zero calls (the only MCP server used was
+claude.ai's Claude Docs connector, 29 calls); sessions concentrate in this repo
+(21), the Obsidian CS vault (21) and the home folder (14).
+
+Usage in Codex and Pi (last 60 days): about one session a week each; `grill-me` read 3 times in Codex and 2 in Pi; `vault-query` read 3 times in Codex (all prompted by the global instructions) and 5 in Pi; context7 never invoked in Codex.
+
+Implementation so far (2026-10-16): branch `feat/empty-global-instructions-query-skill` in the original checkout holds commits `00859ae` (Q18), `164297d` (Q20) and `663ab84` (Q22); zkfy holds `f4caaf2` (Q21). Nothing is pushed.
+
+Current question: Q23, memory (docs).
 
 ## Layout
 
