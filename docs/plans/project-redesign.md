@@ -1,8 +1,8 @@
 # Project redesign — requirements and plan
 
-Status: **Round 2 interview in progress (Q17 onward, 2026-10-16); Q1–Q16 stand.**
-Updated: 2026-10-16. Current question: Q31 (see "Round 2"). Implementation not
-started; round 2's evidence partly answers research items R-a to R-d.
+Status: **active**. Round 2 decisions are recorded through Q31 (2026-10-16);
+Q1–Q16 stand unless round 2 says otherwise. Updated: 2026-10-16. Next step:
+build the remaining decided work (Q31); see "Round 2".
 
 ## Resume in any AI CLI
 
@@ -264,6 +264,7 @@ time, numbered combinable options, a recommendation and its tradeoff.
 | Q28 | Decided (user) | No extra portability test (no fresh-home end-to-end run, no scripted second-Mac check); the per-installer unit tests, which already run in throwaway home folders, are enough. A new Mac still needs the work pushed first (zkfy `f4caaf2` and this branch are local-only). |
 | Q29 | Decided (user); done 2026-10-16 | Agent default A1 confirmed: `install.sh` previews by default and writes nothing; `--apply` writes; `--dry-run` still previews (the healthcheck uses it). README and `docs/global-instructions.md` updated. Commit `a4df10e`. |
 | Q30 | Decided (user, after a read-only preview); done 2026-10-16 | Leftovers cleaned up: the other AI's Plan B files archived in `docs/plans/archive/agent-toolkit/` (commit `f0855db`), then its worktree `../ai-cli-workspace-planning` removed (discarding only three discovery-link edits) and its local branch `plan/project-redesign` deleted (no unique commits; `fab3fb5` stays reachable from this branch). This retires the diverging plan copy (Q16, Q17). Also: `~/.claude/memory/` (two March files Claude Code never reads) moved to `~/.local/state/ai-cli-workspace/cleanup-20261016/claude-memory/`; the empty `~/.claude/skills/learned/` and the stale `~/.codex/prompts/.workspace-managed-files` removed. |
+| Q31 | Decided (user) | Build the remaining decided work now, in order: (1) settings split and Gemini removal (Q24, Q17); (2) `grilling` (Q19, Q22); (3) zkfy `AGENTS.md` (Q23c); (4) docs sync (Q17, Q25); (5) repo docs and ADR-0006 (Plan A Q10–Q12). Subagents do read-only research only; changes are made and checked in the main session; anything outside this repo is previewed first; publishing (pushes, PR) is asked separately. |
 
 Usage evidence for later questions (Claude Code, last 60 days, 64 sessions): the
 only skill used across several projects is `grill-me` (6 uses, 4 projects);
@@ -275,7 +276,7 @@ Usage in Codex and Pi (last 60 days): about one session a week each; `grill-me` 
 
 Implementation so far (2026-10-16): branch `feat/empty-global-instructions-query-skill` in the original checkout holds commits `00859ae` (Q18), `164297d` (Q20), `663ab84` (Q22), `12904ff` (Q23b), `3a2864d` (Q26), `fae2fac` (Q27) and `a4df10e` (Q29); zkfy holds `f4caaf2` (Q21). Nothing is pushed.
 
-Current question: Q31, how to run the remaining implementation batch.
+Current step: Q31 item 1, the settings split and Gemini removal.
 
 ## Layout
 
