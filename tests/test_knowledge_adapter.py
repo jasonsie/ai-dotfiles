@@ -39,11 +39,11 @@ class AdapterTest(unittest.TestCase):
         agents.parent.mkdir(parents=True)
         agents.symlink_to(self.root / "shared-AGENTS.md")
         before = self.snapshot()
-        self.assertEqual(self.install(), 5)
+        self.assertEqual(self.install(), 6)
         self.assertEqual(before, self.snapshot())
         self.install(apply=True)
         self.assertEqual(self.install(), 0)
-        for link in (".claude/skills/query", ".agents/skills/query", ".local/bin/vault-knowledge"):
+        for link in (".claude/skills/query", ".agents/skills/query", ".gemini/config/skills/query", ".local/bin/vault-knowledge"):
             self.assertTrue((self.home / link).is_symlink())
         self.assertTrue(agents.is_symlink())  # instruction entries are never touched
         self.install(apply=True, uninstall=True)
@@ -57,7 +57,7 @@ class AdapterTest(unittest.TestCase):
 
     def test_env_supplies_paths(self):
         with patch.dict(os.environ, {"ZKFY_VAULT": str(self.vault), "ZKFY_DIR": str(self.zkfy)}):
-            self.assertEqual(a.install(self.home, python="/usr/bin/python3"), 5)
+            self.assertEqual(a.install(self.home, python="/usr/bin/python3"), 6)
 
     def test_missing_paths_fail_clearly(self):
         with patch.dict(os.environ, {}, clear=False) as env:

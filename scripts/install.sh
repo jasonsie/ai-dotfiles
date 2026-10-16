@@ -9,7 +9,7 @@
 #   1. instructions  tools/instructions/AGENTS.md → each CLI's global entry (symlink)
 #   2. settings      tools/settings/managed.json  → merged into live settings (only those keys)
 #   3. mcp           tools/mcp/servers.json       → native `<cli> mcp add` when missing
-#   4. knowledge     zkfy vault launcher + query skill (Claude, Codex, Pi); skipped if
+#   4. knowledge     zkfy vault launcher + query skill (Claude, Codex, Pi, AGY); skipped if
 #                    ZKFY_DIR/ZKFY_VAULT are unset and no binding exists yet
 #
 # Requires Python 3.11+ (macOS /usr/bin/python3 is older; use Homebrew/pyenv).
@@ -66,7 +66,7 @@ echo "== mcp"
 
 echo "== knowledge"
 case "$TARGET" in
-  all) KNOWLEDGE_TARGET=both ;;
+  all) KNOWLEDGE_TARGET=all ;;
   claude) KNOWLEDGE_TARGET=claude ;;
   codex|pi) KNOWLEDGE_TARGET=agents ;;
   *) KNOWLEDGE_TARGET="" ;;
