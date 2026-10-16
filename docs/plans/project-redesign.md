@@ -1,7 +1,7 @@
 # Project redesign — requirements and plan
 
 Status: **Round 2 interview in progress (Q17 onward, 2026-10-16); Q1–Q16 stand.**
-Updated: 2026-10-16. Current question: Q23d (see "Round 2"). Implementation not
+Updated: 2026-10-16. Current question: Q25 (see "Round 2"). Implementation not
 started; round 2's evidence partly answers research items R-a to R-d.
 
 ## Resume in any AI CLI
@@ -256,6 +256,8 @@ time, numbered combinable options, a recommendation and its tradeoff.
 | Q23a | Decided (user) | Memory was split by the user into three topics: task memory (handing a half-finished task to the next session or CLI), project memory (per-project files to read, aliases such as "gdocs" for a specific Google Doc) and engineering docs (coding rules, language and framework docs, principles such as SOLID). Task memory exists only for repo work: a task file in that repo at `docs/plans/<task>.md`, committed. Sessions not tied to a repo get no handoff memory. Evidence: in the last 90 days every repo worked in was the user's own (no team repos), about 40% of sessions ran outside any repo (mostly `~`), and the same folders were used from several CLIs. |
 | Q23b | Decided (user); done 2026-10-16 | The user pointed out that the empty global file was why nothing tells a CLI where task state lives, and chose to fix it there, revising Q18: the global `AGENTS.md` holds only rules that apply in every repository and every CLI, and the task-memory rule is the first. Approved text ("y"): in a git repository, a task that spans sessions is recorded in `docs/plans/<task>.md` (or wherever the repository's own instructions say) with status (`active`/`done`), goal, decisions, done and changed files, checks run and next step; read any active task file at session start and update it before stopping or switching tools; outside a repository keep none. No commit rule, so repositories that forbid AI commits (the CS vault) are respected. Live through all four links; commit `12904ff` on the feature branch. Also, with the user's approval, the vault's own `AGENTS.md` now names the `query` skill (the file is untracked in the vault's git; not committed, per the vault's rules). |
 | Q23c | Decided (user); verified 2026-10-16 | Project memory (files every session must read, aliases such as "gdocs" for a specific Google Doc) lives in an `AGENTS.md` at the project root; the user's condition was that every target CLI reads it. Runtime checks with a throwaway project: Codex includes it in its prompt (`codex debug prompt-input`, no model call), Pi and Claude Code (Haiku) both answered a probe word stated only in that file; Claude did so for a project under `~`, where only the user-level `~/.claude/CLAUDE.md` sits above (that file does not switch native `AGENTS.md` reading off). Antigravity reads `AGENTS.md` per its docs, not checked at runtime (never logged in). Rule: when a repo also has a `CLAUDE.md` (or `.claude/CLAUDE.md`), Claude reads that instead, so it must link to `AGENTS.md` (this repo) or import `@AGENTS.md` (the CS vault does). zkfy breaks the rule today: a separate `CLAUDE.md` and no `AGENTS.md`, so Codex and Antigravity read nothing there. Claude's "remember" still writes to its private auto memory unless told to write to `AGENTS.md`. |
+| Q23d | Deferred (user) | Engineering docs (coding rules, language and framework docs, principles such as SOLID) were an illustration, not a requirement for this stage. Nothing is built for them now; the shared MCP list (context7, unused in 60 days) stays unchanged until revisited. |
+| Q24 | Decided (user); not implemented yet | Managed settings split in two. Safety keys (Codex `approval_policy` and `sandbox_mode`, Claude's two skip-permission-prompt flags) are put back on every install, and a difference fails the healthcheck. Preference keys (model, effort, advisor model) are written only when the CLI has no value yet, so a new Mac starts with them and later picks from each CLI's own model menu stay; the healthcheck reports a difference as information. Evidence: the healthcheck's only failure was Codex `model`/`model_reasoning_effort` changed through Codex's picker; `/model` ran 19 times in Claude in 60 days. The Gemini block is removed per Q17. |
 
 Usage evidence for later questions (Claude Code, last 60 days, 64 sessions): the
 only skill used across several projects is `grill-me` (6 uses, 4 projects);
@@ -267,7 +269,7 @@ Usage in Codex and Pi (last 60 days): about one session a week each; `grill-me` 
 
 Implementation so far (2026-10-16): branch `feat/empty-global-instructions-query-skill` in the original checkout holds commits `00859ae` (Q18), `164297d` (Q20), `663ab84` (Q22) and `12904ff` (Q23b); zkfy holds `f4caaf2` (Q21). Nothing is pushed.
 
-Current question: Q23d, engineering docs (coding rules, languages, principles, frameworks).
+Current question: Q25, what the weekly docs update reports.
 
 ## Layout
 
