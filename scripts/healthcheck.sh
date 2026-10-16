@@ -38,9 +38,9 @@ printf '%s\n' "$DRY" | sed -n 's/^Local choice kept: /  info  local choice kept:
 
 echo "-- mcp (native list)"
 for name in $("$PYTHON" -c 'import json,sys; print(" ".join(s["name"] for s in json.load(open(sys.argv[1]))["servers"]))' "$ROOT/tools/mcp/servers.json"); do
-  for cli in claude codex gemini; do
+  for cli in claude codex; do
     if ! command -v "$cli" >/dev/null 2>&1; then skip "$cli not on PATH"; continue; fi
-    # gemini prints its list on stderr; it also disables MCP in untrusted folders by design.
+    # A server disabled for the current folder is still configured; count it as present.
     line="$("$cli" mcp list 2>&1 | grep -m1 "$name" || true)"
     case "$line" in
       "") fail "$cli: $name not listed" ;;

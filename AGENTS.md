@@ -1,7 +1,7 @@
 # ai-cli-workspace — maintainer notes
 
 This repo is the single source for **global** AI CLI config on the owner's Macs
-(Claude Code, Codex CLI, Gemini CLI, Pi). Scope and rationale:
+(Claude Code, Codex CLI, Pi, Antigravity). Scope and rationale:
 [ADR-0005](docs/adr/0005-global-config-single-source.md). `CLAUDE.md` and `GEMINI.md`
 are symlinks to this file.
 
@@ -11,7 +11,7 @@ are symlinks to this file.
 |---|---|---|
 | `tools/instructions/AGENTS.md` | `scripts/install-global-instructions.py` | symlinked as each CLI's global instruction file |
 | `tools/settings/managed.json` | `scripts/apply-settings.py` | only those keys, merged into live settings |
-| `tools/mcp/servers.json` | `scripts/apply-mcp.py` | native `claude/codex/gemini mcp add` (Pi has no MCP) |
+| `tools/mcp/servers.json` | `scripts/apply-mcp.py` | native `claude mcp add` and `codex mcp add` (Pi and Antigravity: not registered yet) |
 | zkfy checkout (`ZKFY_DIR`) | `scripts/install-vault-knowledge.py` | `vault-knowledge` launcher + `query` skill (Claude via `~/.claude/skills`; Codex and Pi via `~/.agents/skills`; Antigravity via `~/.gemini/config/skills`) |
 
 `scripts/install.sh` runs all four in order; `scripts/healthcheck.sh` verifies live state.

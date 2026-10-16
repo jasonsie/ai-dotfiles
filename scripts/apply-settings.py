@@ -25,7 +25,6 @@ MANAGED = WORKSPACE / 'tools/settings/managed.json'
 FILES = {
     'claude': '.claude/settings.json',
     'codex': '.codex/config.toml',
-    'gemini': '.gemini/settings.json',
     'pi': '.pi/agent/settings.json',
     'agy': '.gemini/antigravity-cli/settings.json',
 }

@@ -17,7 +17,7 @@ import tempfile
 WORKSPACE = Path(__file__).resolve().parents[1]
 ENTRIES = {
     "claude": (".claude", "CLAUDE.md"),
-    "gemini": (".gemini", "GEMINI.md"),
+    "agy": (".gemini", "GEMINI.md"),  # Antigravity reads Gemini CLI's global file
     "codex": (".codex", "AGENTS.md"),
     "pi": (".pi/agent", "AGENTS.md"),
 }

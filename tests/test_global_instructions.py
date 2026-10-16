@@ -75,13 +75,13 @@ class GlobalInstructionsTest(unittest.TestCase):
     def test_migrates_legacy_pointer_and_empty_file_with_backups(self):
         claude = self.seed("claude", f"@{self.workspace}/CLAUDE.md\n")
         claude.chmod(0o600)
-        self.seed("gemini", "")
+        self.seed("agy", "")
         before = {p: adapter.snapshot(p) for p in self.paths.values()}
         self.install(apply=True)
         backup = self.backups()[0]
         manifest = json.loads((backup / "manifest.json").read_text())
         self.assertEqual(adapter.snapshot(backup / "claude"), before[claude])
-        self.assertEqual((backup / "gemini").read_bytes(), b"")
+        self.assertEqual((backup / "agy").read_bytes(), b"")
         self.assertIsNone(
             next(r for r in manifest if r["target"] == str(self.paths["codex"]))[
                 "backup"
@@ -99,20 +99,20 @@ class GlobalInstructionsTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Existing instructions"):
             self.install(apply=True)
         self.assertFalse(self.paths["claude"].exists())
-        self.assertFalse(self.paths["gemini"].exists())
+        self.assertFalse(self.paths["agy"].exists())
         self.assertEqual(self.backups(), [])
         self.assertEqual(self.paths["codex"].read_text(), "My personal rules\n")
 
     def test_explicit_replacement_preserves_symlink_target(self):
         original = self.root / "old rules.md"
         original.write_text("Original rules\n")
-        path = self.paths["gemini"]
+        path = self.paths["agy"]
         path.parent.mkdir(parents=True)
         path.symlink_to("../../old rules.md")
         with self.assertRaisesRegex(ValueError, "Existing instructions"):
             self.install(apply=True)
         self.install(apply=True, replace_existing=True)
-        backup = self.backups()[0] / "gemini"
+        backup = self.backups()[0] / "agy"
         self.assertTrue(backup.is_symlink())
         self.assertEqual(os.readlink(backup), "../../old rules.md")
         self.assertEqual(original.read_text(), "Original rules\n")
@@ -137,13 +137,13 @@ class GlobalInstructionsTest(unittest.TestCase):
 
     def test_failure_rolls_back_all_changed_entries(self):
         self.seed("claude", f"@{self.workspace}/CLAUDE.md\n")
-        self.seed("gemini", "")
+        self.seed("agy", "")
         before = {p: adapter.snapshot(p) for p in self.paths.values()}
         original_replace = adapter.replace_link
 
         def failing(path, source):
             original_replace(path, source)
-            if path == self.paths["gemini"]:
+            if path == self.paths["agy"]:
                 raise OSError("injected write failure")
 
         with patch.object(adapter, "replace_link", failing):
@@ -200,7 +200,7 @@ class GlobalInstructionsTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "parent is not a directory"):
             self.install(apply=True)
         self.assertFalse(self.paths["claude"].exists())
-        self.assertFalse(self.paths["gemini"].exists())
+        self.assertFalse(self.paths["agy"].exists())
         self.assertEqual(self.backups(), [])
 
     def test_settings_credentials_and_hooks_are_untouched(self):
@@ -225,7 +225,7 @@ class GlobalInstructionsTest(unittest.TestCase):
             "bash",
             str(ROOT / "scripts/install.sh"),
             "--instructions-only",
-            "--target=gemini",
+            "--target=agy",
         ]
         for preview in ([], ["--dry-run"]):  # previewing is the default
             result = subprocess.run(
@@ -237,7 +237,7 @@ class GlobalInstructionsTest(unittest.TestCase):
             command + ["--apply"], env=env, capture_output=True, text=True
         )
         self.assertEqual(live.returncode, 0, live.stderr)
-        self.assertTrue(self.paths["gemini"].is_symlink())
+        self.assertTrue(self.paths["agy"].is_symlink())
         self.assertFalse(self.paths["claude"].exists())
         self.assertFalse(self.paths["codex"].exists())
         self.assertFalse((self.home / ".gemini/settings.json").exists())

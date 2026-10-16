@@ -16,8 +16,8 @@ MANAGED = {
     'claude': {'enforce': {'skipAutoPermissionPrompt': False}, 'default': {'model': 'opus'}},
     'codex': {'enforce': {'approval_policy': 'on-request', 'sandbox_mode': 'workspace-write'},
               'default': {'model': 'm'}},
-    'gemini': {'enforce': {'tools.sandbox': True}, 'default': {'model.name': 'g'}},
     'pi': {'default': {'defaultProvider': 'p', 'defaultModel': 'x'}},
+    'agy': {'enforce': {'enableTerminalSandbox': True}},
 }
 
 
@@ -68,8 +68,8 @@ class ApplySettingsTest(unittest.TestCase):
             self.assertEqual(result[key], original[key])
 
     def test_dotted_keys_replace_legacy_scalars(self):
-        result = json.loads(settings.merge_json('gemini', '{"model": "legacy", "ui": {"theme": "x"}}',
-                                                keys('gemini')))
+        result = json.loads(settings.merge_json('claude', '{"model": "legacy", "ui": {"theme": "x"}}',
+                                                {'model.name': 'g', 'tools.sandbox': True}))
         self.assertEqual(result['model'], {'name': 'g'})
         self.assertEqual(result['tools'], {'sandbox': True})
         self.assertEqual(result['ui'], {'theme': 'x'})
@@ -131,13 +131,13 @@ command = "x"
             settings.merge_toml('', {'tui.x': True})
 
     def test_plan_skips_uninstalled_cli_and_is_idempotent(self):
-        path = self.seed('gemini', '{}')
+        path = self.seed('agy', '{}')
         changes = settings.plan(self.home, tuple(settings.FILES), MANAGED)
         self.assertEqual([c[0] for c in changes], [path])
         self.assertFalse((self.home / '.claude').exists())
         self.assertFalse((self.home / '.local').exists())  # dry-run writes nothing
         backup = settings.apply(self.home, changes)
-        self.assertEqual((backup / '.gemini/settings.json').read_text(), '{}')
+        self.assertEqual((backup / '.gemini/antigravity-cli/settings.json').read_text(), '{}')
         self.assertEqual(path.stat().st_mode & 0o777, 0o600)
         self.assertEqual(settings.plan(self.home, tuple(settings.FILES), MANAGED), [])
 
@@ -166,9 +166,9 @@ command = "x"
 
     def test_failure_rolls_back(self):
         self.seed('claude', '{}')
-        self.seed('gemini', '{}')
+        self.seed('agy', '{}')
         (self.home / '.codex').mkdir()
-        changes = settings.plan(self.home, ('claude', 'gemini', 'codex'), MANAGED)
+        changes = settings.plan(self.home, ('claude', 'agy', 'codex'), MANAGED)
         original = settings.atomic_write
         calls = 0
 

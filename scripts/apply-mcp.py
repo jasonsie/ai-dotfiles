@@ -3,7 +3,8 @@
 
 Presence is read from each CLI's user-scope config; missing servers are added with
 the native command, so this never hand-edits another tool's settings. Existing
-entries with the same name are left alone (report only). Pi has no MCP support.
+entries with the same name are left alone (report only). Claude Code and Codex only:
+Pi and Antigravity support MCP as well, but registering servers there is deferred.
 """
 import argparse
 import json
@@ -15,7 +16,7 @@ import tomllib
 
 WORKSPACE = Path(__file__).resolve().parents[1]
 SERVERS = WORKSPACE / 'tools/mcp/servers.json'
-CLIS = ('claude', 'codex', 'gemini')
+CLIS = ('claude', 'codex')
 
 
 def configured(home, cli):
@@ -25,8 +26,6 @@ def configured(home, cli):
             return set(json.loads((home / '.claude.json').read_text()).get('mcpServers', {}))
         if cli == 'codex':
             return set(tomllib.loads((home / '.codex/config.toml').read_text()).get('mcp_servers', {}))
-        if cli == 'gemini':
-            return set(json.loads((home / '.gemini/settings.json').read_text()).get('mcpServers', {}))
     except FileNotFoundError:
         return set()
     raise ValueError(cli)
@@ -38,8 +37,6 @@ def add_command(cli, server):
         return ['claude', 'mcp', 'add', '-s', 'user', name, '--', command, *args]
     if cli == 'codex':
         return ['codex', 'mcp', 'add', name, '--', command, *args]
-    if cli == 'gemini':
-        return ['gemini', 'mcp', 'add', '-s', 'user', name, command, *args]
     raise ValueError(cli)
 
 
@@ -59,11 +56,11 @@ def plan(home, targets, servers, which=shutil.which):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--home', type=Path, default=Path.home())
-    parser.add_argument('--target', choices=('all', *CLIS, 'pi'), default='all')
+    parser.add_argument('--target', choices=('all', *CLIS, 'pi', 'agy'), default='all')
     parser.add_argument('--apply', action='store_true')
     args = parser.parse_args()
-    if args.target == 'pi':
-        print('mcp: Pi has no MCP support; nothing to do')
+    if args.target not in ('all', *CLIS):
+        print(f'mcp: shared servers are not registered for {args.target} yet')
         return 0
     targets = CLIS if args.target == 'all' else (args.target,)
     try:

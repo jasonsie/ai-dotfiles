@@ -2,7 +2,7 @@
 # scripts/install.sh — preview or apply the workspace's global CLI config on this Mac.
 #
 # Usage:
-#   bash scripts/install.sh [--apply] [--target=all|claude|codex|gemini|pi]
+#   bash scripts/install.sh [--apply] [--target=all|claude|codex|pi|agy]
 #                           [--instructions-only] [--replace-instructions]
 #   Previews by default and writes nothing; --apply writes (--dry-run also previews).
 #
@@ -40,7 +40,7 @@ for arg in "$@"; do
 done
 
 case "$TARGET" in
-  all|claude|codex|gemini|pi) ;;
+  all|claude|codex|pi|agy) ;;
   *) printf '[ERR] Invalid target: %s\n' "$TARGET" >&2; exit 1 ;;
 esac
 
@@ -71,6 +71,7 @@ case "$TARGET" in
   all) KNOWLEDGE_TARGET=all ;;
   claude) KNOWLEDGE_TARGET=claude ;;
   codex|pi) KNOWLEDGE_TARGET=agents ;;
+  agy) KNOWLEDGE_TARGET=agy ;;
   *) KNOWLEDGE_TARGET="" ;;
 esac
 if [ -z "$KNOWLEDGE_TARGET" ]; then
