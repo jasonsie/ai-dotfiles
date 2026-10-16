@@ -1,7 +1,7 @@
 # Project redesign — requirements and plan
 
 Status: **Round 2 interview in progress (Q17 onward, 2026-10-16); Q1–Q16 stand.**
-Updated: 2026-10-16. Current question: Q26 (see "Round 2"). Implementation not
+Updated: 2026-10-16. Current step: AGY sign-in, then Q26 checks (see "Round 2"). Implementation not
 started; round 2's evidence partly answers research items R-a to R-d.
 
 ## Resume in any AI CLI
@@ -259,6 +259,7 @@ time, numbered combinable options, a recommendation and its tradeoff.
 | Q23d | Deferred (user) | Engineering docs (coding rules, language and framework docs, principles such as SOLID) were an illustration, not a requirement for this stage. Nothing is built for them now; the shared MCP list (context7, unused in 60 days) stays unchanged until revisited. |
 | Q24 | Decided (user); not implemented yet | Managed settings split in two. Safety keys (Codex `approval_policy` and `sandbox_mode`, Claude's two skip-permission-prompt flags) are put back on every install, and a difference fails the healthcheck. Preference keys (model, effort, advisor model) are written only when the CLI has no value yet, so a new Mac starts with them and later picks from each CLI's own model menu stay; the healthcheck reports a difference as information. Evidence: the healthcheck's only failure was Codex `model`/`model_reasoning_effort` changed through Codex's picker; `/model` ran 19 times in Claude in 60 days. The Gemini block is removed per Q17. |
 | Q25 | Decided (user); not implemented yet | The weekly docs-update PR (Q17) also flags changes that touch this setup: a deterministic script searches the week's doc diff for what the repo relies on (managed setting names, `AGENTS.md`, `~/.agents/skills`, skills, MCP) and lists hits at the top of the PR. No AI summary and no API key in CI. Already settled for the same job: repair Codex discovery (the index moved to `learn.chatgpt.com/docs/llms.txt`), add Pi (`docs.json`) and Antigravity's missing harness pages, drop Gemini, and refuse to replace a mirror that shrinks sharply (page-count floors for every source). |
+| Q26 | Decided (user); waiting for the user's first AGY sign-in | Full Antigravity support in this round (CLI and IDE), although neither has been used yet: after one interactive sign-in, verify that AGY loads the global file through `~/.gemini/GEMINI.md` and a project `AGENTS.md`, confirm its real skills folders (its docs disagree) and link both skills there, and test whether AGY's account sync overwrites its settings file. Never link `~/.gemini/config/AGENTS.md` (AGY appends rules there). `agy` 1.0.4 has a `-p` print mode for non-interactive checks. MCP for AGY waits with the deferred MCP topic (Q23d). |
 
 Usage evidence for later questions (Claude Code, last 60 days, 64 sessions): the
 only skill used across several projects is `grill-me` (6 uses, 4 projects);
@@ -270,7 +271,7 @@ Usage in Codex and Pi (last 60 days): about one session a week each; `grill-me` 
 
 Implementation so far (2026-10-16): branch `feat/empty-global-instructions-query-skill` in the original checkout holds commits `00859ae` (Q18), `164297d` (Q20), `663ab84` (Q22) and `12904ff` (Q23b); zkfy holds `f4caaf2` (Q21). Nothing is pushed.
 
-Current question: Q26, Antigravity in this round.
+Current step: the user signs in to `agy` once; then verify and link (Q26).
 
 ## Layout
 
