@@ -276,7 +276,9 @@ Usage in Codex and Pi (last 60 days): about one session a week each; `grill-me` 
 
 Implementation so far (2026-10-16): branch `feat/empty-global-instructions-query-skill` in the original checkout holds commits `00859ae` (Q18), `164297d` (Q20), `663ab84` (Q22), `12904ff` (Q23b), `3a2864d` (Q26), `fae2fac` (Q27) and `a4df10e` (Q29); zkfy holds `f4caaf2` (Q21). Nothing is pushed.
 
-Current step: Q31 item 1, the settings split and Gemini removal.
+Q31 progress: item 1 done on the feature branch: `c3f3236` (fixes a test that `a4df10e` broke: it ran install.sh without `--apply`), `cab3e44` (settings split: `managed.json` version 2 with per-CLI `enforce` and `default` groups; the healthcheck now reports kept model choices as info and is healthy), `1618958` (Gemini CLI dropped from settings, MCP, install.sh and the healthcheck; the `~/.gemini/GEMINI.md` link is relabeled `agy`). 44 tests pass; `install.sh` preview shows 0 changes.
+
+Current step: Q31 items 2 and 3 (grilling, zkfy `AGENTS.md`) need the user's review of a preview.
 
 ## Layout
 
