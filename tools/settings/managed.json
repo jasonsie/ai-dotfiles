@@ -21,5 +21,8 @@
   "pi": {
     "defaultProvider": "openai-codex",
     "defaultModel": "gpt-6-astra"
+  },
+  "agy": {
+    "enableTerminalSandbox": true
   }
 }

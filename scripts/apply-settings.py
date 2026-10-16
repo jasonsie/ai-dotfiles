@@ -25,6 +25,7 @@ FILES = {
     'codex': '.codex/config.toml',
     'gemini': '.gemini/settings.json',
     'pi': '.pi/agent/settings.json',
+    'agy': '.gemini/antigravity-cli/settings.json',
 }
 
 
