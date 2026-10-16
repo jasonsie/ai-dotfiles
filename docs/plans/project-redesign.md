@@ -1,7 +1,7 @@
 # Project redesign — requirements and plan
 
 Status: **Round 2 interview in progress (Q17 onward, 2026-10-16); Q1–Q16 stand.**
-Updated: 2026-10-16. Current question: Q23 (see "Round 2"). Implementation not
+Updated: 2026-10-16. Current question: Q23c (see "Round 2"). Implementation not
 started; round 2's evidence partly answers research items R-a to R-d.
 
 ## Resume in any AI CLI
@@ -253,6 +253,8 @@ time, numbered combinable options, a recommendation and its tradeoff.
 | Q20 | Decided (user); done 2026-10-16, uncommitted | Rename `vault-query` to `query`, refactored at the skill's source location (zkfy `skills/query/`, `name: query`), not by renaming links. Done: folder moved (it is untracked in zkfy); `scripts/install-vault-knowledge.py`, `scripts/install.sh` and `tests/test_knowledge_adapter.py` updated (39 tests pass); live links migrated to `~/.claude/skills/query` and `~/.pi/agent/skills/query` (old links removed, receipt updated, a re-run shows 0 changes); prose references updated in both repos, while ADRs keep the historical name. No collision: no built-in `/query` in Claude, Codex or Antigravity, and no other skill named `query`. |
 | Q21 | Decided (user); done 2026-10-16 | The `query` skill and its engine stay owned by zkfy and are committed there, which removes the fresh-clone blocker. zkfy commit `f4caaf2` adds only the 7 previously untracked files (`skills/query/SKILL.md`, `scripts/knowledge.py`, `scripts/knowledge-launcher.py`, `scripts/knowledge-hook.py`, `scripts/requirements-knowledge.txt` (PyYAML), `tests/test_knowledge.py` (25 tests pass), ADR-0003); the user's 7 modified zkfy files stay uncommitted. Not pushed (the user's call). Later fix: once the zkfy plugin is reinstalled from a commit that contains `skills/query`, Claude would list both `query` and `zkfy:query`. |
 | Q22 | Decided (user); done for `query` 2026-10-16 | Skills reach every CLI by symlinks from one source, not by per-CLI plugins: `~/.claude/skills/<name>` for Claude (it does not read `~/.agents`) and `~/.agents/skills/<name>` for Codex and Pi (both read it; Pi's own `skills/` link is dropped to avoid a duplicate-name warning). Antigravity follows once its skills path is verified. This replaces installing this repo's plugin on the owner's machines (Q1a/A2); a plugin manifest remains a later item for sharing with others. Done for `query`: `scripts/install-vault-knowledge.py --target claude|agents|both`, `install.sh` maps codex and pi to `agents`, the Pi-only link was removed, and `codex debug prompt-input` (no model call) lists the skill from `~/.agents/skills` (Codex labels it `zkfy:query` because its real folder is inside the zkfy plugin). `grilling` is not imported yet. |
+| Q23a | Decided (user) | Memory was split by the user into three topics: task memory (handing a half-finished task to the next session or CLI), project memory (per-project files to read, aliases such as "gdocs" for a specific Google Doc) and engineering docs (coding rules, language and framework docs, principles such as SOLID). Task memory exists only for repo work: a task file in that repo at `docs/plans/<task>.md`, committed. Sessions not tied to a repo get no handoff memory. Evidence: in the last 90 days every repo worked in was the user's own (no team repos), about 40% of sessions ran outside any repo (mostly `~`), and the same folders were used from several CLIs. |
+| Q23b | Decided (user); done 2026-10-16 | The user pointed out that the empty global file was why nothing tells a CLI where task state lives, and chose to fix it there, revising Q18: the global `AGENTS.md` holds only rules that apply in every repository and every CLI, and the task-memory rule is the first. Approved text ("y"): in a git repository, a task that spans sessions is recorded in `docs/plans/<task>.md` (or wherever the repository's own instructions say) with status (`active`/`done`), goal, decisions, done and changed files, checks run and next step; read any active task file at session start and update it before stopping or switching tools; outside a repository keep none. No commit rule, so repositories that forbid AI commits (the CS vault) are respected. Live through all four links; commit `12904ff` on the feature branch. Also, with the user's approval, the vault's own `AGENTS.md` now names the `query` skill (the file is untracked in the vault's git; not committed, per the vault's rules). |
 
 Usage evidence for later questions (Claude Code, last 60 days, 64 sessions): the
 only skill used across several projects is `grill-me` (6 uses, 4 projects);
@@ -262,9 +264,9 @@ claude.ai's Claude Docs connector, 29 calls); sessions concentrate in this repo
 
 Usage in Codex and Pi (last 60 days): about one session a week each; `grill-me` read 3 times in Codex and 2 in Pi; `vault-query` read 3 times in Codex (all prompted by the global instructions) and 5 in Pi; context7 never invoked in Codex.
 
-Implementation so far (2026-10-16): branch `feat/empty-global-instructions-query-skill` in the original checkout holds commits `00859ae` (Q18), `164297d` (Q20) and `663ab84` (Q22); zkfy holds `f4caaf2` (Q21). Nothing is pushed.
+Implementation so far (2026-10-16): branch `feat/empty-global-instructions-query-skill` in the original checkout holds commits `00859ae` (Q18), `164297d` (Q20), `663ab84` (Q22) and `12904ff` (Q23b); zkfy holds `f4caaf2` (Q21). Nothing is pushed.
 
-Current question: Q23, memory (docs).
+Current question: Q23c, project memory (always-read files, aliases such as "gdocs").
 
 ## Layout
 
