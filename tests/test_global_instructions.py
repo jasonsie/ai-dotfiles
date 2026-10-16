@@ -227,12 +227,15 @@ class GlobalInstructionsTest(unittest.TestCase):
             "--instructions-only",
             "--target=gemini",
         ]
-        dry_run = subprocess.run(
-            command + ["--dry-run"], env=env, capture_output=True, text=True
+        for preview in ([], ["--dry-run"]):  # previewing is the default
+            result = subprocess.run(
+                command + preview, env=env, capture_output=True, text=True
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(list(self.home.iterdir()), [])
+        live = subprocess.run(
+            command + ["--apply"], env=env, capture_output=True, text=True
         )
-        self.assertEqual(dry_run.returncode, 0, dry_run.stderr)
-        self.assertEqual(list(self.home.iterdir()), [])
-        live = subprocess.run(command, env=env, capture_output=True, text=True)
         self.assertEqual(live.returncode, 0, live.stderr)
         self.assertTrue(self.paths["gemini"].is_symlink())
         self.assertFalse(self.paths["claude"].exists())
