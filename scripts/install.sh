@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# scripts/install.sh — apply the workspace's global CLI config on this Mac.
+# scripts/install.sh — preview or apply the workspace's global CLI config on this Mac.
 #
 # Usage:
-#   bash scripts/install.sh [--target=all|claude|codex|gemini|pi] [--dry-run]
+#   bash scripts/install.sh [--apply] [--target=all|claude|codex|gemini|pi]
 #                           [--instructions-only] [--replace-instructions]
+#   Previews by default and writes nothing; --apply writes (--dry-run also previews).
 #
 # Steps (each is idempotent, dry-run aware, and backs up before writing):
 #   1. instructions  tools/instructions/AGENTS.md → each CLI's global entry (symlink)
@@ -20,15 +21,16 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 TARGET="all"
-DRY_RUN=0
+DRY_RUN=1
 INSTRUCTIONS_ONLY=0
 REPLACE_INSTRUCTIONS=0
 
-usage() { sed -n '2,17p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,18p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
 
 for arg in "$@"; do
   case "$arg" in
     --target=*) TARGET="${arg#--target=}" ;;
+    --apply) DRY_RUN=0 ;;
     --dry-run) DRY_RUN=1 ;;
     --instructions-only) INSTRUCTIONS_ONLY=1 ;;
     --replace-instructions) REPLACE_INSTRUCTIONS=1 ;;
@@ -79,4 +81,4 @@ else
   echo "knowledge: skipped (set ZKFY_DIR and ZKFY_VAULT to enable vault retrieval)"
 fi
 
-[ "$DRY_RUN" = "1" ] && echo "Dry run: nothing written." || echo "Done. Verify: bash scripts/healthcheck.sh"
+[ "$DRY_RUN" = "1" ] && echo "Preview only: nothing written. Run again with --apply to write." || echo "Done. Verify: bash scripts/healthcheck.sh"

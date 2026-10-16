@@ -27,8 +27,8 @@ Requires Python 3.11+ (stock `/usr/bin/python3` is too old: `brew install python
 ```bash
 git clone <this repo> && git clone https://github.com/jasonsie/zkfy.git
 export ZKFY_DIR=/path/to/zkfy ZKFY_VAULT=/path/to/vault   # optional: vault retrieval
-bash scripts/install.sh --dry-run      # review
-bash scripts/install.sh                # apply (backs up first)
+bash scripts/install.sh                # preview (writes nothing)
+bash scripts/install.sh --apply        # apply (backs up first)
 bash scripts/healthcheck.sh            # verify live state
 ```
 

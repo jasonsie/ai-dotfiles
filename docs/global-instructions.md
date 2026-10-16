@@ -29,7 +29,7 @@ From this checkout (Python 3.8+ required; no new dependencies):
 
 ```bash
 bash scripts/install.sh --instructions-only --dry-run
-bash scripts/install.sh --instructions-only
+bash scripts/install.sh --instructions-only --apply
 ```
 
 - `--target=claude|gemini|codex|pi` limits the affected CLI; default is `all`.
