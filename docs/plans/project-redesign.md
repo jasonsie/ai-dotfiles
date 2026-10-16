@@ -1,7 +1,7 @@
 # Project redesign — requirements and plan
 
 Status: **Round 2 interview in progress (Q17 onward, 2026-10-16); Q1–Q16 stand.**
-Updated: 2026-10-16. Current question: Q30 (see "Round 2"). Implementation not
+Updated: 2026-10-16. Current question: Q31 (see "Round 2"). Implementation not
 started; round 2's evidence partly answers research items R-a to R-d.
 
 ## Resume in any AI CLI
@@ -263,6 +263,7 @@ time, numbered combinable options, a recommendation and its tradeoff.
 | Q27 | Decided (user); done 2026-10-16 | Antigravity's terminal sandbox is an enforced safety setting: `enableTerminalSandbox: true` in `~/.gemini/antigravity-cli/settings.json` (default `false`), on par with Codex's `workspace-write`. `apply-settings.py` now knows the AGY file; applied with `--target agy` only, because applying every CLI would reset the Codex model until Q24 is built. Verified: the value persists after an `agy` run, AGY reports sandboxing enabled, a second apply makes no changes. Not checked in the IDE (the docs say CLI and IDE settings sync). Commit `fae2fac`. |
 | Q28 | Decided (user) | No extra portability test (no fresh-home end-to-end run, no scripted second-Mac check); the per-installer unit tests, which already run in throwaway home folders, are enough. A new Mac still needs the work pushed first (zkfy `f4caaf2` and this branch are local-only). |
 | Q29 | Decided (user); done 2026-10-16 | Agent default A1 confirmed: `install.sh` previews by default and writes nothing; `--apply` writes; `--dry-run` still previews (the healthcheck uses it). README and `docs/global-instructions.md` updated. Commit `a4df10e`. |
+| Q30 | Decided (user, after a read-only preview); done 2026-10-16 | Leftovers cleaned up: the other AI's Plan B files archived in `docs/plans/archive/agent-toolkit/` (commit `f0855db`), then its worktree `../ai-cli-workspace-planning` removed (discarding only three discovery-link edits) and its local branch `plan/project-redesign` deleted (no unique commits; `fab3fb5` stays reachable from this branch). This retires the diverging plan copy (Q16, Q17). Also: `~/.claude/memory/` (two March files Claude Code never reads) moved to `~/.local/state/ai-cli-workspace/cleanup-20261016/claude-memory/`; the empty `~/.claude/skills/learned/` and the stale `~/.codex/prompts/.workspace-managed-files` removed. |
 
 Usage evidence for later questions (Claude Code, last 60 days, 64 sessions): the
 only skill used across several projects is `grill-me` (6 uses, 4 projects);
@@ -272,9 +273,9 @@ claude.ai's Claude Docs connector, 29 calls); sessions concentrate in this repo
 
 Usage in Codex and Pi (last 60 days): about one session a week each; `grill-me` read 3 times in Codex and 2 in Pi; `vault-query` read 3 times in Codex (all prompted by the global instructions) and 5 in Pi; context7 never invoked in Codex.
 
-Implementation so far (2026-10-16): branch `feat/empty-global-instructions-query-skill` in the original checkout holds commits `00859ae` (Q18), `164297d` (Q20), `663ab84` (Q22), `12904ff` (Q23b), `3a2864d` (Q26) `fae2fac` (Q27) and `a4df10e` (Q29); zkfy holds `f4caaf2` (Q21). Nothing is pushed.
+Implementation so far (2026-10-16): branch `feat/empty-global-instructions-query-skill` in the original checkout holds commits `00859ae` (Q18), `164297d` (Q20), `663ab84` (Q22), `12904ff` (Q23b), `3a2864d` (Q26), `fae2fac` (Q27) and `a4df10e` (Q29); zkfy holds `f4caaf2` (Q21). Nothing is pushed.
 
-Current question: Q30, cleaning up leftovers.
+Current question: Q31, how to run the remaining implementation batch.
 
 ## Layout
 
