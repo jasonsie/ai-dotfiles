@@ -1,8 +1,8 @@
 # Project redesign — requirements and plan
 
-Status: **active** (waiting on the user: merge PR #7). Round 2 decisions are recorded through Q32 (2026-10-18);
+Status: **active** (waiting on the user: merge PR #8). Round 2 decisions are recorded through Q32 (2026-10-18);
 Q1–Q16 stand unless round 2 says otherwise. Updated: 2026-10-16. Next step:
-the user merges PR #7; see "Next steps for the user" in "Round 2".
+the user merges PR #8; see "Next steps for the user" in "Round 2".
 
 ## Resume in any AI CLI
 
@@ -316,11 +316,11 @@ folders, so the removals were kept) and opened PR #7 (https://github.com/jasonsi
 
 | Q34 (2026-10-18) | Decided (user: "3"); done | Keep context7 (0 calls in 60 days in Claude and Codex) and also register it in Pi (`pi mcp add`) and Antigravity (merge of `~/.gemini/config/mcp_config.json`, which has no `mcp add`). Commit `c5dde02`, pushed to PR #7. Verified: Pi `mcp list` shows it connected with 2 tools; Antigravity reports it available; the healthcheck checks all four. |
 
-| Q35 (2026-10-18) | Decided (user: "1"); waiting for PR #7 to merge | Rename the repo to `ai-dotfiles` (keeps Plan A Q8) right after PR #7 merges, in one step: (1) `gh repo rename ai-dotfiles` (old URLs redirect) and update `origin` in both checkouts; (2) move `~/Developer/mine/ai/ai_cli_workspace` to `ai_dotfiles` and the plan worktree to `ai_dotfiles_claude`, then `git worktree repair`; (3) rename the state folder `~/.local/state/ai-cli-workspace/` to `ai-dotfiles/` in the 4 scripts that name it (apply-settings, apply-mcp, install-skills, install-global-instructions) and move the folder so receipts still match; (4) update the name in README, AGENTS.md, how-it-works.md, two tests and the sync user-agent (ADRs keep the old name); (5) rerun `bash scripts/install.sh --replace-instructions --apply` to re-point the 4 instruction links and 3 skill links; (6) healthcheck and a runtime check per CLI. Claude starts a new per-folder history under the new path. |
+| Q35 (2026-10-18) | Decided (user: "1"); done after the user merged PR #7 | Rename the repo to `ai-dotfiles` (keeps Plan A Q8) right after PR #7 merges, in one step: (1) `gh repo rename ai-dotfiles` (old URLs redirect) and update `origin` in both checkouts; (2) move `~/Developer/mine/ai/ai_cli_workspace` to `ai_dotfiles` and the plan worktree to `ai_dotfiles_claude`, then `git worktree repair`; (3) rename the state folder `~/.local/state/ai-cli-workspace/` to `ai-dotfiles/` in the 4 scripts that name it (apply-settings, apply-mcp, install-skills, install-global-instructions) and move the folder so receipts still match; (4) update the name in README, AGENTS.md, how-it-works.md, two tests and the sync user-agent (ADRs keep the old name); (5) rerun `bash scripts/install.sh --replace-instructions --apply` to re-point the 4 instruction links and 3 skill links; (6) healthcheck and a runtime check per CLI. Claude starts a new per-folder history under the new path. |
 
-Next steps for the user: review and merge PR #7, then run the "Sync upstream docs" workflow manually and review its first pull request.
-Optional later items: Claude's per-project memory folders are still keyed by the old checkout paths; MCP and engineering
-docs (Q23d) are deferred; the rename to `ai-dotfiles` (Plan A Q8) is still open.
+Done 2026-10-18: the user squash-merged PR #7 (`c7f2faf`); its last commit (MCP for Pi and Antigravity) had arrived after the merge, so it is re-applied on branch `chore/rename-ai-dotfiles` together with the rename: GitHub `jasonsie/ai-dotfiles`, checkouts `~/Developer/mine/ai/ai_dotfiles` and `ai_dotfiles_claude` (worktree repaired), state folder `~/.local/state/ai-dotfiles/`, links re-pointed by `install.sh --replace-instructions --apply`; 57 tests pass, healthcheck healthy. PR #8 (https://github.com/jasonsie/ai-dotfiles/pull/8).
+
+Next steps for the user: merge PR #8; after it, run the "Sync upstream docs" workflow once and review its first pull request. Optional: the name `ai-cli-workspace` still appears in zkfy (`AGENTS.md`, ADR-0003) and in the CS vault's `AGENTS.md`; engineering docs stay deferred (Q23d).
 
 ## Layout
 
