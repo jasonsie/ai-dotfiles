@@ -52,7 +52,7 @@ jobs:
           markdownlint-cli2 \
             "**/*.md" \
             "#node_modules" \
-            "#docs/blog-archive" \
+            "#upstream" \
             --config .markdownlint.json 2>&1 || echo "WARN: markdown lint found issues (non-blocking)"
         continue-on-error: true
 

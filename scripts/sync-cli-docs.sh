@@ -1,45 +1,48 @@
 #!/usr/bin/env bash
 #
-# sync-cli-docs.sh — mirror Claude Code, Codex, Gemini, and Antigravity CLI docs into docs/.
+# sync-cli-docs.sh — mirror the Claude Code, Codex, Pi, and Antigravity docs into upstream/docs/.
 #
-# All four expose clean markdown fetchable with plain curl:
-#   - Claude: every page has a `.md` twin; index at code.claude.com/docs/llms.txt
-#   - Codex:  append `.md` to any page URL; pages discoverable via developers.openai.com/llms.txt
-#   - Gemini: raw markdown in its GitHub repo; tree via the Git Trees API, then raw fetch.
-#   - AGY:    SPA, but content lives in static `/assets/docs/cli/<slug>.md` assets;
-#             slugs discovered from the hashed JS bundle's nav manifest (best-effort).
+# Each source publishes plain Markdown that curl can fetch:
+#   - Claude:      index code.claude.com/docs/llms.txt; pages are listed as `.md` URLs.
+#   - Codex:       index learn.chatgpt.com/docs/llms.txt ("# Codex"); /docs/ pages are listed as
+#                  `.md` URLs, a few with a `?surface=` variant that is kept as its own file.
+#   - Antigravity: index antigravity.google/llms.txt; every /docs/<page> has a `.md` twin.
+#   - Pi:          docs.json on the `stable` branch of earendil-works/pi lists the pages.
 #
-# Output: docs/claude/, docs/codex/upstream/, docs/gemini/upstream/, and docs/agy/,
-# one .md per page, faithful upstream content
-# prefixed with a static `> Source:` header (no timestamp, so unchanged docs do not
-# produce diffs). "Last synced" is recorded by the git commit, not in the files.
-# Each source directory gets an auto-generated INDEX.md. Directories are rebuilt
-# each run so pages removed upstream are removed locally too.
+# Output: upstream/docs/<tool>/, one .md per page with a static `> Source:` header (no
+# timestamp, so unchanged pages produce no diff) and a MIRROR-INDEX.md (a name no upstream
+# page uses: on macOS's case-insensitive disk, INDEX.md and a page index.md are one file). Each directory is
+# rebuilt per run, so pages removed upstream disappear here too. A source whose index
+# lists, or whose fetches return, fewer pages than its floor fails closed: the previous
+# copy stays and the script exits non-zero, so a moved index can never wipe a mirror.
 #
-# Usage: bash scripts/sync-cli-docs.sh
+# Usage: bash scripts/sync-cli-docs.sh [claude] [codex] [pi] [antigravity]   (default: all)
 set -euo pipefail
 
 USER_AGENT="ai-cli-workspace-docs-sync/1.0 (+https://github.com)"
+MIRROR="upstream/docs"
 
 CLAUDE_LLMS="https://code.claude.com/docs/llms.txt"
+CLAUDE_URLS='https://code\.claude\.com/docs/en/[A-Za-z0-9._/-]+\.md'
 CLAUDE_PREFIX="https://code.claude.com/docs/en/"
 
-CODEX_LLMS="https://developers.openai.com/llms.txt"
-CODEX_PREFIX="https://developers.openai.com/codex"
+CODEX_LLMS="https://learn.chatgpt.com/docs/llms.txt"
+CODEX_URLS='https://learn\.chatgpt\.com/docs/[A-Za-z0-9._/-]+\.md(\?surface=[a-z]+)?'
+CODEX_PREFIX="https://learn.chatgpt.com/docs/"
 
-# Antigravity (AGY) is an Angular SPA with no static HTML, but its content lives
-# in static markdown assets the SPA fetches client-side. We discover the CLI doc
-# slugs from the hashed JS bundle's embedded nav manifest, then fetch each asset
-# directly — no browser needed. See docs/inventory/crawler-tech-research-2026-06-07.md.
-AGY_BASE="https://antigravity.google"
-AGY_DISCOVERY="https://antigravity.google/docs/get-started"
-AGY_ASSET_PREFIX="https://antigravity.google/assets/docs/cli/"
-AGY_PAGE_PREFIX="https://antigravity.google/docs/"
+AGY_LLMS="https://antigravity.google/llms.txt"
+AGY_URLS='https://antigravity\.google/docs/[A-Za-z0-9._/-]+'
+AGY_PREFIX="https://antigravity.google/docs/"
+
+PI_DOCS="https://raw.githubusercontent.com/earendil-works/pi/stable/packages/coding-agent/docs"
+PI_PAGES="https://github.com/earendil-works/pi/blob/stable/packages/coding-agent/docs"
 
 # Resolve repo root relative to this script so it works from any CWD.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$REPO_ROOT" || exit 1
+mkdir -p "$MIRROR"
+trap 'rm -rf "$MIRROR"/*.tmp' EXIT   # never leave a half-built stage behind
 
 EXIT_CODE=0
 
@@ -51,13 +54,20 @@ fetch() {
 
 # write_page <fetch_url> <source_url> <dest_path>
 # Writes the static Source header followed by the fetched body. Returns non-zero
-# (without writing) if the fetch fails, so the caller can count it as a miss.
+# (without writing) if the fetch fails or returns an HTML page instead of
+# Markdown, so the caller can count it as a miss.
 write_page() {
   local fetch_url="$1" source_url="$2" dest="$3" body
   if ! body="$(fetch "$fetch_url")"; then
     echo "  WARN: failed to fetch $fetch_url" >&2
     return 1
   fi
+  case "$body" in
+    '<!DOCTYPE'* | '<!doctype'* | '<html'*)
+      echo "  WARN: $fetch_url returned HTML, not Markdown; skipping" >&2
+      return 1
+      ;;
+  esac
   mkdir -p "$(dirname "$dest")"
   {
     printf '> Source: %s\n' "$source_url"
@@ -89,398 +99,116 @@ write_index() {
     for p in "$@"; do
       printf -- '- [%s](%s)\n' "$p" "$p"
     done
-  } > "$dir/INDEX.md"
+  } > "$dir/MIRROR-INDEX.md"
 }
 
-sync_claude() {
-  local dir="docs/claude" stage="docs/claude.tmp"
-  local urls=() pages=() url rel dest ok=0 fail=0
+# finish <tool> <title> <ok> <fail> <min> <rel_page>...
+# Replaces upstream/docs/<tool>/ with the staged copy when at least <min> pages
+# arrived; otherwise discards the stage and keeps the previous copy.
+finish() {
+  local tool="$1" title="$2" ok="$3" fail="$4" min="$5"
+  shift 5
+  local dir="$MIRROR/$tool" stage="$MIRROR/$tool.tmp" clash
+  clash="$(printf '%s\n' "$@" | tr '[:upper:]' '[:lower:]' | sort | uniq -d)"
+  [ -z "$clash" ] || echo "[$tool] WARN: pages differ only in case; one overwrote the other on a case-insensitive disk: $clash" >&2
+  if [ "$ok" -lt "$min" ]; then
+    echo "[$tool] ERROR: only $ok pages fetched (< $min, $fail failed); keeping the previous $dir" >&2
+    rm -rf "$stage"
+    return 1
+  fi
+  write_index "$stage" "$title" "$@"
+  rm -rf "$dir"
+  mv "$stage" "$dir"
+  echo "[$tool] done: ok=$ok fail=$fail -> $dir"
+}
 
-  echo "[claude] discovering pages from $CLAUDE_LLMS"
-  read_lines urls < <(fetch "$CLAUDE_LLMS" \
-    | grep -oE 'https://code\.claude\.com/docs/en/[A-Za-z0-9._/-]+\.md' \
-    | sort -u)
+# sync_index <tool> <title> <index_url> <url_regex> <prefix> <min_pages>
+# For an llms.txt-style index: every listed URL is fetched as Markdown (as listed when
+# it already ends in .md, otherwise with .md appended) and saved under its path below
+# <prefix>. A `?surface=<s>` variant is saved as <page>.surface-<s>.md.
+sync_index() {
+  local tool="$1" title="$2" index="$3" regex="$4" prefix="$5" min="$6"
+  local stage="$MIRROR/$tool.tmp" urls=() pages=() url md rel source ok=0 fail=0
 
-  if [ "${#urls[@]}" -eq 0 ]; then
-    echo "[claude] ERROR: no pages discovered" >&2
+  echo "[$tool] discovering pages from $index"
+  read_lines urls < <(fetch "$index" | grep -oE "$regex" | sort -u || true)
+  if [ "${#urls[@]}" -lt "$min" ]; then
+    echo "[$tool] ERROR: the index lists ${#urls[@]} pages (< $min); keeping the previous $MIRROR/$tool" >&2
     return 1
   fi
 
   rm -rf "$stage"
   mkdir -p "$stage"
   for url in "${urls[@]}"; do
-    rel="${url#"$CLAUDE_PREFIX"}"
-    rel="${rel%.md}"
-    dest="$stage/${rel}.md"
-    if write_page "$url" "https://code.claude.com/docs/en/${rel}" "$dest"; then
-      pages+=("${rel}.md")
-      ok=$((ok + 1))
-    else
-      fail=$((fail + 1))
-    fi
-  done
-
-  if [ "$ok" -eq 0 ]; then
-    echo "[claude] ERROR: every page failed; keeping previous docs/claude" >&2
-    rm -rf "$stage"
-    return 1
-  fi
-
-  write_index "$stage" "Claude Code" "${pages[@]}"
-  rm -rf "$dir"
-  mv "$stage" "$dir"
-  echo "[claude] done: ok=$ok fail=$fail -> $dir"
-}
-
-sync_codex() {
-  # Mirror lands in docs/codex/upstream/ (ADR-0004): the hand-written
-  # docs/codex/CAPABILITIES.md is a sibling, so the destructive rm -rf/mv below
-  # must target only upstream/ — never the parent dir that holds the catalog.
-  local dir="docs/codex/upstream" stage="docs/codex/upstream.tmp"
-  local urls=() pages=() url rel dest ok=0 fail=0
-
-  echo "[codex] discovering pages from $CODEX_LLMS"
-  read_lines urls < <(fetch "$CODEX_LLMS" \
-    | grep -oE 'https://developers\.openai\.com/codex(/[A-Za-z0-9._/-]+)?' \
-    | sed -E 's#[)/]+$##' \
-    | sort -u)
-
-  if [ "${#urls[@]}" -eq 0 ]; then
-    echo "[codex] ERROR: no pages discovered" >&2
-    return 1
-  fi
-
-  rm -rf "$stage"
-  mkdir -p "$stage"
-  for url in "${urls[@]}"; do
-    url="${url%.md}"                # normalize if llms.txt ever lists .md URLs
-    rel="${url#"$CODEX_PREFIX"}"
-    rel="${rel#/}"
-    [ -z "$rel" ] && rel="overview"
-    dest="$stage/${rel}.md"
-    if write_page "${url}.md" "$url" "$dest"; then
-      pages+=("${rel}.md")
-      ok=$((ok + 1))
-    else
-      fail=$((fail + 1))
-    fi
-  done
-
-  if [ "$ok" -eq 0 ]; then
-    echo "[codex] ERROR: every page failed; keeping previous docs/codex/upstream" >&2
-    rm -rf "$stage"
-    return 1
-  fi
-
-  write_index "$stage" "Codex CLI" "${pages[@]}"
-  rm -rf "$dir"
-  mv "$stage" "$dir"
-  echo "[codex] done: ok=$ok fail=$fail -> $dir"
-}
-
-GEMINI_TREES_API="https://api.github.com/repos/google-gemini/gemini-cli/git/trees/main?recursive=1"
-GEMINI_RAW_PREFIX="https://raw.githubusercontent.com/google-gemini/gemini-cli/main/docs/"
-GEMINI_PAGE_PREFIX="https://github.com/google-gemini/gemini-cli/blob/main/docs/"
-
-# Snapshot 2026-07-31: 94 docs/**/*.md paths discovered from the GitHub Git Trees
-# API. Used only as a fallback when the Trees API yields nothing (rate limit,
-# outage, or a repo-layout change). To regenerate this list:
-#   curl --compressed -A "$USER_AGENT" \
-#     "https://api.github.com/repos/google-gemini/gemini-cli/git/trees/main?recursive=1" \
-#     | grep -oE '"path":"docs/[A-Za-z0-9._/-]+\.md"' \
-#     | sed -E 's/"path":"docs\/(.*)"/\1/' | sort
-GEMINI_FALLBACK_PATHS=(
-  admin/enterprise-controls.md
-  changelogs/index.md
-  changelogs/latest.md
-  changelogs/preview.md
-  cli/acp-mode.md
-  cli/auto-memory.md
-  cli/checkpointing.md
-  cli/cli-reference.md
-  cli/creating-skills.md
-  cli/custom-commands.md
-  cli/enterprise.md
-  cli/gemini-ignore.md
-  cli/gemini-md.md
-  cli/generation-settings.md
-  cli/git-worktrees.md
-  cli/headless.md
-  cli/model-routing.md
-  cli/model-steering.md
-  cli/model.md
-  cli/notifications.md
-  cli/plan-mode.md
-  cli/rewind.md
-  cli/sandbox.md
-  cli/session-management.md
-  cli/settings.md
-  cli/skills-best-practices.md
-  cli/skills.md
-  cli/system-prompt.md
-  cli/telemetry.md
-  cli/themes.md
-  cli/token-caching.md
-  cli/trusted-folders.md
-  cli/tutorials/automation.md
-  cli/tutorials/file-management.md
-  cli/tutorials/mcp-setup.md
-  cli/tutorials/memory-management.md
-  cli/tutorials/plan-mode-steering.md
-  cli/tutorials/session-management.md
-  cli/tutorials/shell-commands.md
-  cli/tutorials/skills-getting-started.md
-  cli/tutorials/task-planning.md
-  cli/tutorials/web-tools.md
-  cli/using-agent-skills.md
-  CONTRIBUTING.md
-  core/gemma-setup.md
-  core/index.md
-  core/local-model-routing.md
-  core/remote-agents.md
-  core/subagents.md
-  examples/proxy-script.md
-  extensions/best-practices.md
-  extensions/index.md
-  extensions/reference.md
-  extensions/releasing.md
-  extensions/writing-extensions.md
-  get-started/gemini-3.md
-  get-started/index.md
-  hooks/best-practices.md
-  hooks/index.md
-  hooks/reference.md
-  hooks/writing-hooks.md
-  ide-integration/ide-companion-spec.md
-  ide-integration/index.md
-  index.md
-  integration-tests.md
-  issue-and-pr-automation.md
-  local-development.md
-  npm.md
-  reference/commands.md
-  reference/configuration.md
-  reference/keyboard-shortcuts.md
-  reference/memport.md
-  reference/policy-engine.md
-  reference/tools.md
-  release-confidence.md
-  releases.md
-  resources/faq.md
-  resources/quota-and-pricing.md
-  resources/tos-privacy.md
-  resources/troubleshooting.md
-  resources/uninstall.md
-  tools/activate-skill.md
-  tools/ask-user.md
-  tools/file-system.md
-  tools/internal-docs.md
-  tools/mcp-resources.md
-  tools/mcp-server.md
-  tools/memory.md
-  tools/planning.md
-  tools/shell.md
-  tools/todos.md
-  tools/tracker.md
-  tools/web-fetch.md
-  tools/web-search.md
-)
-
-# Gemini CLI docs are clean markdown in its GitHub repo. Discover the docs/**/*.md
-# tree via the Git Trees API (recursive), then raw-fetch each — no browser, no
-# .md-twin trick. Mirror lands in docs/gemini/upstream/ (ADR-0004) so the
-# rm -rf/mv can never touch the hand-written docs/gemini/CAPABILITIES.md sibling.
-sync_gemini() {
-  local dir="docs/gemini/upstream" stage="docs/gemini/upstream.tmp"
-  local paths=() pages=() rel dest ok=0 fail=0 src
-
-  echo "[gemini] discovering docs from $GEMINI_TREES_API"
-  read_lines paths < <(fetch "$GEMINI_TREES_API" \
-    | grep -oE '"path":"docs/[A-Za-z0-9._/-]+\.md"' \
-    | sed -E 's#"path":"docs/(.*)"#\1#' \
-    | sort -u)
-
-  if [ "${#paths[@]}" -eq 0 ]; then
-    echo "[gemini] WARN: Trees API found no paths; using hardcoded fallback list" >&2
-    paths=("${GEMINI_FALLBACK_PATHS[@]}")
-    src="fallback list"
-  else
-    src="Git Trees API"
-  fi
-  echo "[gemini] discovery source: $src (${#paths[@]} paths)"
-
-  # Sanity floor: if discovery+fallback still gives an implausibly small set,
-  # fail closed and leave the existing docs/gemini/upstream untouched.
-  if [ "${#paths[@]}" -lt 80 ]; then
-    echo "[gemini] ERROR: only ${#paths[@]} paths (< 80); refusing to touch docs/gemini/upstream" >&2
-    return 1
-  fi
-
-  rm -rf "$stage"
-  mkdir -p "$stage"
-  for rel in "${paths[@]}"; do
-    dest="$stage/${rel}"
-    if write_page "${GEMINI_RAW_PREFIX}${rel}" "${GEMINI_PAGE_PREFIX}${rel}" "$dest"; then
+    case "$url" in
+      *.md | *.md\?surface=*) md="$url" ;;
+      *) md="$url.md" ;;
+    esac
+    rel="${md#"$prefix"}"
+    source="${md/.md\?/?}"
+    source="${source%.md}"
+    case "$rel" in
+      *.md\?surface=*) rel="${rel%%.md\?surface=*}.surface-${rel##*\?surface=}.md" ;;
+    esac
+    if write_page "$md" "$source" "$stage/$rel"; then
       pages+=("$rel")
       ok=$((ok + 1))
     else
       fail=$((fail + 1))
     fi
   done
-
-  if [ "$ok" -eq 0 ]; then
-    echo "[gemini] ERROR: every page failed; keeping previous docs/gemini/upstream" >&2
-    rm -rf "$stage"
-    return 1
-  fi
-
-  write_index "$stage" "Gemini CLI" "${pages[@]}"
-  rm -rf "$dir"
-  mv "$stage" "$dir"
-  echo "[gemini] done: ok=$ok fail=$fail -> $dir"
+  finish "$tool" "$title" "$ok" "$fail" "$min" ${pages[@]+"${pages[@]}"}
 }
 
-# Snapshot 2026-06-07: 21 CLI doc slugs discovered from the JS-bundle nav manifest.
-# Used only as a fallback when bundle discovery yields nothing (e.g. the hashed
-# bundle filename or the manifest shape changes). To regenerate this list:
-#   curl --compressed -A "$USER_AGENT" https://antigravity.google/docs/get-started \
-#     | grep -oE 'main-[A-Za-z0-9]+\.js' | head -1   # -> the bundle filename
-#   curl --compressed -A "$USER_AGENT" "https://antigravity.google/<bundle>" \
-#     | grep -oE 'path:"cli",slug:"[^"]+"' \
-#     | sed -E 's/.*slug:"([^"]+)"/\1/' | sort -u
-AGY_FALLBACK_SLUGS=(
-  cli-artifacts cli-best-practices cli-conversations cli-credits cli-features
-  cli-getting-started cli-install cli-overview cli-permissions cli-plugins
-  cli-prompting cli-reference cli-sandbox cli-settings cli-statusline
-  cli-subagents cli-title cli-troubleshooting cli-tutorial cli-using
-  gcli-migration
-)
+# Pi's docs live in its GitHub repository; docs.json's `navigation` lists the pages.
+sync_pi() {
+  local stage="$MIRROR/pi.tmp" paths=() pages=() rel ok=0 fail=0 min=30
 
-# write_agy_page <fetch_url> <source_url> <dest_path>
-# Like write_page, but the AGY assets carry multi-line YAML frontmatter and an
-# embedded H1, so this writer strips the frontmatter block, promotes the
-# frontmatter `title:` to an H1 only when the body lacks its own, and writes the
-# same two-line Source header. Returns non-zero (without writing) on fetch
-# failure so the caller can count it as a miss.
-write_agy_page() {
-  local fetch_url="$1" source_url="$2" dest="$3" raw body title firstline titlefile
-  if ! raw="$(fetch "$fetch_url")"; then
-    echo "  WARN: failed to fetch $fetch_url" >&2
-    return 1
-  fi
-  # Guard against a 200-served SPA/HTML shell (e.g. a renamed slug whose asset
-  # URL the CDN falls through to index.html): reject anything that looks like
-  # HTML rather than the expected markdown, so we never commit a page of chrome.
-  case "$raw" in
-    '<!DOCTYPE'* | '<!doctype'* | '<html'* | *'<app-root'*)
-      echo "  WARN: $fetch_url returned HTML, not markdown; skipping" >&2
-      return 1
-      ;;
-  esac
-  # Strip the leading `---`..`---` frontmatter block and capture `title:`.
-  # BSD-portable awk (no GNU extensions): runs on stock macOS /bin/bash 3.2.
-  # Leading blank lines of the body are dropped so the H1 check sees real content.
-  titlefile="$(mktemp)"
-  body="$(printf '%s\n' "$raw" | awk '
-    BEGIN { in_fm = 0; started = 0 }
-    NR == 1 && $0 == "---" { in_fm = 1; next }
-    in_fm && $0 == "---"   { in_fm = 0; next }
-    in_fm {
-      if ($0 ~ /^title:[[:space:]]*/) {
-        t = $0
-        sub(/^title:[[:space:]]*/, "", t)
-        sub(/^["\047]/, "", t); sub(/["\047]$/, "", t)   # strip matching quotes
-        title = t
-      }
-      next
-    }
-    {
-      if (!started) {
-        if ($0 ~ /^[[:space:]]*$/) next
-        started = 1
-      }
-      print
-    }
-    END { print "@@TITLE@@" title > "/dev/stderr" }
-  ' 2>"$titlefile")"
-  title="$(sed -n 's/^@@TITLE@@//p' "$titlefile")"
-  rm -f "$titlefile"            # inline cleanup; a RETURN trap would fire in other
-                                # functions' scopes where titlefile is unbound (set -u)
-
-  firstline="${body%%$'\n'*}"   # pure expansion: no subshell, no SIGPIPE under pipefail
-  mkdir -p "$(dirname "$dest")"
-  {
-    printf '> Source: %s\n' "$source_url"
-    printf '> Mirror maintained by .github/workflows/sync-cli-docs.yml — do not edit by hand.\n\n'
-    # Promote the frontmatter title only if the body has no top-level heading,
-    # avoiding a duplicate H1.
-    case "$firstline" in
-      "# "*) ;;
-      *) [ -n "$title" ] && printf '# %s\n\n' "$title" ;;
-    esac
-    printf '%s\n' "$body"
-  } > "$dest"
-}
-
-sync_agy() {
-  local dir="docs/agy" stage="docs/agy.tmp"
-  local slugs=() pages=() bundle slug rel dest ok=0 fail=0 src
-
-  echo "[agy] discovering CLI slugs from $AGY_DISCOVERY"
-  bundle="$(fetch "$AGY_DISCOVERY" | grep -oE 'main-[A-Za-z0-9]+\.js' | head -1 || true)"
-  if [ -n "$bundle" ]; then
-    read_lines slugs < <(fetch "$AGY_BASE/$bundle" \
-      | grep -oE 'path:"cli",slug:"[^"]+"' \
-      | sed -E 's/.*slug:"([^"]+)"/\1/' \
-      | sort -u)
-  fi
-
-  if [ "${#slugs[@]}" -eq 0 ]; then
-    echo "[agy] WARN: bundle discovery found no slugs; using hardcoded fallback list" >&2
-    slugs=("${AGY_FALLBACK_SLUGS[@]}")
-    src="fallback list"
-  else
-    src="bundle: $bundle"
-  fi
-  echo "[agy] discovery source: $src (${#slugs[@]} slugs)"
-
-  # Sanity floor: if discovery+fallback still gives an implausibly small set,
-  # fail closed and leave the existing docs/agy untouched.
-  if [ "${#slugs[@]}" -lt 15 ]; then
-    echo "[agy] ERROR: only ${#slugs[@]} slugs (< 15); refusing to touch docs/agy" >&2
+  echo "[pi] discovering pages from $PI_DOCS/docs.json"
+  read_lines paths < <(fetch "$PI_DOCS/docs.json" | python3 -c '
+import json, sys
+def walk(node):
+    if isinstance(node, dict):
+        path = node.get("path")
+        if isinstance(path, str) and path.endswith(".md") and "://" not in path and ".." not in path:
+            yield path
+        for value in node.values():
+            yield from walk(value)
+    elif isinstance(node, list):
+        for value in node:
+            yield from walk(value)
+print("\n".join(sorted(set(walk(json.load(sys.stdin)["navigation"])))))
+' || true)
+  if [ "${#paths[@]}" -lt "$min" ]; then
+    echo "[pi] ERROR: docs.json lists ${#paths[@]} pages (< $min); keeping the previous $MIRROR/pi" >&2
     return 1
   fi
 
   rm -rf "$stage"
   mkdir -p "$stage"
-  for slug in "${slugs[@]}"; do
-    rel="$slug"
-    dest="$stage/${rel}.md"
-    if write_agy_page "${AGY_ASSET_PREFIX}${slug}.md" "${AGY_PAGE_PREFIX}${slug}" "$dest"; then
-      pages+=("${rel}.md")
+  for rel in "${paths[@]}"; do
+    if write_page "$PI_DOCS/$rel" "$PI_PAGES/$rel" "$stage/$rel"; then
+      pages+=("$rel")
       ok=$((ok + 1))
     else
       fail=$((fail + 1))
     fi
   done
-
-  if [ "$ok" -eq 0 ]; then
-    echo "[agy] ERROR: every page failed; keeping previous docs/agy" >&2
-    rm -rf "$stage"
-    return 1
-  fi
-
-  write_index "$stage" "Antigravity CLI" "${pages[@]}"
-  rm -rf "$dir"
-  mv "$stage" "$dir"
-  echo "[agy] done: ok=$ok fail=$fail -> $dir"
+  finish pi "Pi" "$ok" "$fail" "$min" ${pages[@]+"${pages[@]}"}
 }
 
 main() {
-  sync_claude || EXIT_CODE=1
-  sync_codex || EXIT_CODE=1
-  sync_gemini || EXIT_CODE=1
-  sync_agy || echo "[agy] WARN: sync failed; kept previous docs/agy" >&2
+  local sources=("$@") source
+  [ "${#sources[@]}" -gt 0 ] || sources=(claude codex pi antigravity)
+  for source in "${sources[@]}"; do
+    case "$source" in
+      claude) sync_index claude "Claude Code" "$CLAUDE_LLMS" "$CLAUDE_URLS" "$CLAUDE_PREFIX" 150 || EXIT_CODE=1 ;;
+      codex) sync_index codex "Codex" "$CODEX_LLMS" "$CODEX_URLS" "$CODEX_PREFIX" 120 || EXIT_CODE=1 ;;
+      pi) sync_pi || EXIT_CODE=1 ;;
+      antigravity) sync_index antigravity "Antigravity" "$AGY_LLMS" "$AGY_URLS" "$AGY_PREFIX" 60 || EXIT_CODE=1 ;;
+      *) echo "Unknown source: $source (claude, codex, pi, antigravity)" >&2; EXIT_CODE=1 ;;
+    esac
+  done
   exit "$EXIT_CODE"
 }
 
