@@ -280,27 +280,25 @@ Q31 progress: item 1 done on the feature branch: `c3f3236` (fixes a test that `a
 
 Item 3 done after the user approved the preview: zkfy commit `89455cf` renames `CLAUDE.md` to `AGENTS.md` and keeps `CLAUDE.md` as a symlink to it (the user's uncommitted +4/-2 edit stays uncommitted; their other six modified files are untouched). `codex debug prompt-input` in zkfy now includes the maintainer notes.
 
-Handoff (2026-10-16, session stopped at the usage limit). Uncommitted in the original checkout (branch
-`feat/empty-global-instructions-query-skill`), not linked or applied:
-- Item 2, awaiting the user's review of the draft: `skills/grilling/SKILL.md` (adapted from mattpocock/skills
-  `49dd158`, MIT: one question per message, numbered combinable options, simpler re-explanation, decisions recorded
-  in the task file), `skills/grilling/LICENSE`, `skills/skills.lock`, `scripts/install-skills.py` (+ 6 tests;
-  links into `~/.claude/skills`, `~/.agents/skills`, `~/.gemini/config/skills`), `install.sh` step 5, healthcheck
-  "skills" section (fails until linked), maintainer-table row in `AGENTS.md`. 50 tests pass. On approval:
-  `python3 scripts/install-skills.py --apply`, commit, verify each CLI lists `grilling`.
-- Item 4, started: `scripts/report-upstream.py` (+ 5 tests; PR summary with pages per tool, changes touching this
-  setup, picked-skill drift, new skills in ECC / anthropics / mattpocock collections; smoke-tested read-only).
-  Findings for `sync-cli-docs.sh`: Codex index is `https://learn.chatgpt.com/docs/llms.txt` (titled "# Codex"):
-  mirror all 192 `.md` URLs as listed (3 carry `?surface=`; encode it in the file name), floor 120. Pi:
-  `raw.githubusercontent.com/earendil-works/pi/stable/packages/coding-agent/docs/docs.json` → `navigation` items'
-  `path` (about 40 pages; skip `redirects`), follow the `stable` branch. Antigravity discovery is silently broken:
-  the get-started page no longer references `main-*.js`, so the sync has used its 21-slug fallback since June; find
-  the new bundle and the non-CLI harness pages. Still to do: mirrors under `upstream/docs/<tool>/`, floors for every
-  source, drop Gemini, the workflow opening a PR (needs the repo setting "Allow GitHub Actions to create pull
-  requests", currently off: ask the user), and a preview before deleting `docs/gemini/` and the old mirror folders.
-- Item 5 not started (cleanup preview data gathered: 12 research docs + `docs/INDEX.md`, `template/`, `docs/gemini/`).
+2026-10-17: the user moved both checkouts and zkfy to `~/Developer/mine/ai/` (`ai_cli_workspace`,
+`ai_cli_workspace_claude`, `zkfy`) and re-pointed the four instruction links. The zkfy binding still named the old path,
+so the launcher and the three `query` links dangled; re-bound with `install-vault-knowledge.py --zkfy <new path>`
+(receipt-checked; a re-run shows 0 changes). Claude's per-project memory folders are keyed by the old paths (not moved).
 
-Current step: the user reviews the `grilling` draft (item 2); then continue item 4 from the findings above.
+Item 2 done after the user said "keep on" to the draft: commit `f84163f` adds `skills/grilling` (+ LICENSE, `skills.lock`)
+and `scripts/install-skills.py` (install.sh step 5, healthcheck "skills" section). Linked into `~/.claude/skills`,
+`~/.agents/skills` and `~/.gemini/config/skills`; Claude, Codex (`codex debug prompt-input`), Antigravity and Pi
+(`-p`) all list `grilling` and `query`. 55 tests pass; the healthcheck is healthy.
+
+Item 4 findings and remaining work (uncommitted: `scripts/report-upstream.py` + tests): Codex index is
+`https://learn.chatgpt.com/docs/llms.txt` (titled "# Codex"): mirror all 192 `.md` URLs as listed (3 carry
+`?surface=`), floor 120. Pi: `docs.json` on the `stable` branch, `navigation` items' `path` (about 40 pages; skip
+`redirects`). Antigravity discovery is silently broken (no `main-*.js` on the get-started page; the sync uses its
+21-slug fallback). Still to do: mirrors under `upstream/docs/<tool>/`, floors for every source, drop Gemini, the
+workflow opening a PR (needs the repo setting "Allow GitHub Actions to create pull requests", currently off: ask), and
+a preview before deleting `docs/gemini/` and the old mirror folders. Item 5 not started.
+
+Current step: Q31 item 4.
 
 ## Layout
 
