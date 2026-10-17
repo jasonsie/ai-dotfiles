@@ -314,6 +314,8 @@ folders, so the removals were kept) and opened PR #7 (https://github.com/jasonsi
 
 | Q33 (2026-10-18) | Decided (user: "all rm", after a preview); done | Claude memory folders left under pre-move paths: removed the 3 notes of the old ai-cli-workspace key (stale; its 23 session transcripts kept), and the old zkfy and `…/ai/workspace` keys (memory only; the user chose not to keep zkfy's 3 still-true rules). The user also turned on "Allow GitHub Actions to create and approve pull requests" (verified). |
 
+| Q34 (2026-10-18) | Decided (user: "3"); done | Keep context7 (0 calls in 60 days in Claude and Codex) and also register it in Pi (`pi mcp add`) and Antigravity (merge of `~/.gemini/config/mcp_config.json`, which has no `mcp add`). Commit `c5dde02`, pushed to PR #7. Verified: Pi `mcp list` shows it connected with 2 tools; Antigravity reports it available; the healthcheck checks all four. |
+
 Next steps for the user: review and merge PR #7, then run the "Sync upstream docs" workflow manually and review its first pull request.
 Optional later items: Claude's per-project memory folders are still keyed by the old checkout paths; MCP and engineering
 docs (Q23d) are deferred; the rename to `ai-dotfiles` (Plan A Q8) is still open.
