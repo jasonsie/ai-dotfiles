@@ -1,4 +1,4 @@
-# ai-cli-workspace — maintainer notes
+# ai-dotfiles — maintainer notes
 
 This repo is the single source for the owner's **global** AI CLI setup: Claude Code,
 Codex CLI, Pi, and Antigravity. The mechanism is in [docs/how-it-works.md](docs/how-it-works.md);
@@ -10,7 +10,7 @@ decisions are in [docs/adr/](docs/adr/) (ADR-0005 and ADR-0006). `CLAUDE.md` lin
 |---|---|---|
 | `tools/instructions/AGENTS.md` | Global rules for every CLI, live through links | `scripts/install-global-instructions.py` |
 | `tools/settings/managed.json` | Per-CLI `enforce` and `default` keys | `scripts/apply-settings.py` |
-| `tools/mcp/servers.json` | Shared MCP servers (Claude Code, Codex) | `scripts/apply-mcp.py` |
+| `tools/mcp/servers.json` | Shared MCP servers for all four CLIs | `scripts/apply-mcp.py` |
 | `skills/` | Shared skills; `skills.lock` pins adapted upstream skills | `scripts/install-skills.py` |
 | zkfy checkout (`ZKFY_DIR`) | `query` skill and `vault-knowledge` launcher | `scripts/install-vault-knowledge.py` |
 | `upstream/` | Machine-written docs mirrors and skill catalogs | `scripts/sync-cli-docs.sh`, `scripts/report-upstream.py` (weekly workflow) |

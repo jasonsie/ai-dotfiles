@@ -11,7 +11,7 @@ live state back. Decisions: [ADR-0005](adr/0005-global-config-single-source.md),
 YOU EDIT                          APPLIED BY (bash scripts/install.sh --apply)    LANDS IN
 tools/instructions/AGENTS.md  ─►  install-global-instructions.py (symlinks)  ─►  each CLI's global instruction file
 tools/settings/managed.json   ─►  apply-settings.py (merges listed keys)     ─►  settings.json / config.toml
-tools/mcp/servers.json        ─►  apply-mcp.py (native `mcp add`)            ─►  Claude Code, Codex
+tools/mcp/servers.json        ─►  apply-mcp.py (native `mcp add`, or a merge) ─►  Claude Code, Codex, Pi, Antigravity
 zkfy checkout (ZKFY_DIR)      ─►  install-vault-knowledge.py (links)         ─►  query skill, vault-knowledge launcher
 skills/<name>/                ─►  install-skills.py (links)                  ─►  every CLI's skill folder
                                   scripts/healthcheck.sh checks the live state
@@ -30,7 +30,7 @@ limits a run. Each step is idempotent: a second run reports 0 changes.
 | Project instructions | `CLAUDE.md`; `AGENTS.md` when no `CLAUDE.md` exists | `AGENTS.md` | `AGENTS.md`, else `CLAUDE.md` | `AGENTS.md`, `GEMINI.md` |
 | User skills | `~/.claude/skills` | `~/.agents/skills` | `~/.agents/skills`, `~/.pi/agent/skills` | `~/.gemini/config/skills` |
 | Settings file | `~/.claude/settings.json` | `~/.codex/config.toml` | `~/.pi/agent/settings.json` | `~/.gemini/antigravity-cli/settings.json` |
-| MCP registered here | yes | yes | not yet (Pi has MCP) | not yet |
+| MCP servers | `~/.claude.json` via `claude mcp add` | `config.toml` via `codex mcp add` | `~/.pi/agent/mcp.json` via `pi mcp add` | `~/.gemini/config/mcp_config.json`, merged (no `mcp add`) |
 
 Checked at runtime on 2026-10-16 and 2026-10-17: every CLI loads the global file and a
 project `AGENTS.md`, and lists the `grilling` and `query` skills. Codex can be checked
@@ -88,9 +88,10 @@ and healthcheck report it as a "local choice kept".
 
 | Step | Record | Rollback |
 |---|---|---|
-| Instructions | `~/.local/state/ai-cli-workspace/global-instructions/backup-*/manifest.json` | Remove the link, copy the backup back with `cp -Pp` |
-| Settings | `~/.local/state/ai-cli-workspace/settings/backup-*` | Copy the backed-up file back |
-| Skills | `~/.local/state/ai-cli-workspace/skills.json` (links this repo created) | Delete a skill folder and rerun with `--apply` |
+| Instructions | `~/.local/state/ai-dotfiles/global-instructions/backup-*/manifest.json` | Remove the link, copy the backup back with `cp -Pp` |
+| Settings | `~/.local/state/ai-dotfiles/settings/backup-*` | Copy the backed-up file back |
+| MCP (Antigravity's file) | `~/.local/state/ai-dotfiles/mcp/backup-*` | Copy the backed-up file back |
+| Skills | `~/.local/state/ai-dotfiles/skills.json` (links this repo created) | Delete a skill folder and rerun with `--apply` |
 | Vault tooling | `~/.local/state/zkfy/integration.json` | `python3 scripts/install-vault-knowledge.py --uninstall --apply` |
 
 ## Glossary

@@ -37,9 +37,17 @@ if [ -z "$PENDING" ]; then pass "no pending changes"; else fail "pending: $(prin
 # Model choices made in a CLI itself are kept on purpose; report them, never fail.
 printf '%s\n' "$DRY" | sed -n 's/^Local choice kept: /  info  local choice kept: /p'
 
-echo "-- mcp (native list)"
+echo "-- mcp (native list; Antigravity has none, so its config file is read)"
 for name in $("$PYTHON" -c 'import json,sys; print(" ".join(s["name"] for s in json.load(open(sys.argv[1]))["servers"]))' "$ROOT/tools/mcp/servers.json"); do
-  for cli in claude codex; do
+  agy_config=~/.gemini/config/mcp_config.json
+  if [ ! -f "$agy_config" ]; then
+    skip "agy not set up"
+  elif "$PYTHON" -c 'import json,sys; t=open(sys.argv[1]).read(); sys.exit(sys.argv[2] not in (json.loads(t) if t.strip() else {}).get("mcpServers", {}))' "$agy_config" "$name"; then
+    pass "agy: $name (in mcp_config.json)"
+  else
+    fail "agy: $name not in $agy_config"
+  fi
+  for cli in claude codex pi; do
     if ! command -v "$cli" >/dev/null 2>&1; then skip "$cli not on PATH"; continue; fi
     # A server disabled for the current folder is still configured; count it as present.
     line="$("$cli" mcp list 2>&1 | grep -m1 "$name" || true)"

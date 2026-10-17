@@ -31,13 +31,14 @@ Gemini CLI, and Pi. By October 2026 the evidence had moved:
 | Q22 | Skills reach every CLI by symlinks from one source: `~/.claude/skills` (Claude), `~/.agents/skills` (Codex and Pi), `~/.gemini/config/skills` (Antigravity CLI and IDE). |
 | Q23a | Task memory exists only for repository work, in `docs/plans/<task>.md` (or where the repository says). |
 | Q23c | Project memory lives in the project's `AGENTS.md`; a `CLAUDE.md` links to it or imports it. |
-| Q23d | Engineering docs and further MCP work are deferred. |
+| Q23d, Q34 | Engineering docs are deferred. The shared MCP server (context7) is registered in all four CLIs: through `mcp add` for Claude Code, Codex and Pi, and by merging `~/.gemini/config/mcp_config.json` for Antigravity, which has no such command. |
 | Q24 | `managed.json` version 2: `enforce` keys (safety) are put back on every install; `default` keys (model choices) are written only while a CLI has none. |
 | Q25 | The weekly pull request flags doc changes that touch this setup, using a deterministic script. |
 | Q26, Q27 | Antigravity is supported, and its terminal sandbox is enforced. |
 | Q28 | No end-to-end portability test beyond the installers' unit tests. |
 | Q29 | `install.sh` previews by default; `--apply` writes. |
 | Q30 | Leftovers (the other AI's plan copy, unused folders) were removed after a preview. |
+| Q35 | The repository is renamed `ai-dotfiles` (Plan A Q8), because it now covers the Antigravity IDE as well as CLIs: GitHub `jasonsie/ai-dotfiles`, state folder `~/.local/state/ai-dotfiles/`. Earlier ADRs keep the old name as history. |
 
 ## Consequences
 

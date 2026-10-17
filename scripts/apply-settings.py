@@ -191,7 +191,7 @@ def current(path):
 
 
 def apply(home, changes):
-    root = home / '.local/state/ai-cli-workspace/settings'
+    root = home / '.local/state/ai-dotfiles/settings'
     root.mkdir(parents=True, exist_ok=True, mode=0o700)
     backup = Path(tempfile.mkdtemp(prefix='backup-', dir=root))
     for path, before, _ in changes:

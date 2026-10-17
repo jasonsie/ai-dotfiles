@@ -110,7 +110,7 @@ def install(
         print(f"{'Applied' if apply else 'Dry-run'}: {len(changes)} changes")
         return len(changes)
 
-    backup_root = home / ".local/state/ai-cli-workspace/global-instructions"
+    backup_root = home / ".local/state/ai-dotfiles/global-instructions"
     backup_root.mkdir(parents=True, exist_ok=True, mode=0o700)
     backup = Path(tempfile.mkdtemp(prefix="backup-", dir=backup_root))
     records = []
