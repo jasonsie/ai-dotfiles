@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "skills": {
+    "grilling": {
+      "repo": "mattpocock/skills",
+      "path": "skills/productivity/grilling/SKILL.md",
+      "commit": "49dd158d1076134a641b33efb035946536778336",
+      "license": "MIT",
+      "local_edits": "one question per message instead of a round; numbered options that can be combined, recommendation first; simpler re-explanation when a question is unclear; each decision recorded in the task file"
+    }
+  }
+}

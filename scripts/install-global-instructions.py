@@ -17,7 +17,7 @@ import tempfile
 WORKSPACE = Path(__file__).resolve().parents[1]
 ENTRIES = {
     "claude": (".claude", "CLAUDE.md"),
-    "gemini": (".gemini", "GEMINI.md"),
+    "agy": (".gemini", "GEMINI.md"),  # Antigravity reads Gemini CLI's global file
     "codex": (".codex", "AGENTS.md"),
     "pi": (".pi/agent", "AGENTS.md"),
 }
@@ -62,8 +62,8 @@ def install(
 ):
     home, workspace = home.expanduser().resolve(), workspace.resolve()
     source = workspace / "tools/instructions/AGENTS.md"
-    if not source.is_file() or not source.read_text().strip():
-        raise ValueError(f"Missing or empty shared instructions: {source}")
+    if not source.is_file():  # an empty file is valid: no shared instructions
+        raise ValueError(f"Missing shared instructions: {source}")
     if source.stat().st_size >= 32 * 1024:
         raise ValueError(
             "Shared instructions must stay below Codex's 32 KiB default limit"

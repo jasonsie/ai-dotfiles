@@ -18,7 +18,7 @@ class AdapterTest(unittest.TestCase):
         self.home, self.vault, self.zkfy = [self.root / x for x in ("home", "vault", "zkfy")]
         self.home.mkdir()
         for p in (self.vault / "docs/knowledge/scope.json", self.zkfy / "scripts/knowledge.py",
-                  self.zkfy / "scripts/knowledge-launcher.py", self.zkfy / "skills/vault-query/SKILL.md"):
+                  self.zkfy / "scripts/knowledge-launcher.py", self.zkfy / "skills/query/SKILL.md"):
             p.parent.mkdir(parents=True, exist_ok=True)
             p.write_text("fixture")
 
@@ -39,11 +39,11 @@ class AdapterTest(unittest.TestCase):
         agents.parent.mkdir(parents=True)
         agents.symlink_to(self.root / "shared-AGENTS.md")
         before = self.snapshot()
-        self.assertEqual(self.install(), 5)
+        self.assertEqual(self.install(), 6)
         self.assertEqual(before, self.snapshot())
         self.install(apply=True)
         self.assertEqual(self.install(), 0)
-        for link in (".claude/skills/vault-query", ".pi/agent/skills/vault-query", ".local/bin/vault-knowledge"):
+        for link in (".claude/skills/query", ".agents/skills/query", ".gemini/config/skills/query", ".local/bin/vault-knowledge"):
             self.assertTrue((self.home / link).is_symlink())
         self.assertTrue(agents.is_symlink())  # instruction entries are never touched
         self.install(apply=True, uninstall=True)
@@ -57,7 +57,7 @@ class AdapterTest(unittest.TestCase):
 
     def test_env_supplies_paths(self):
         with patch.dict(os.environ, {"ZKFY_VAULT": str(self.vault), "ZKFY_DIR": str(self.zkfy)}):
-            self.assertEqual(a.install(self.home, python="/usr/bin/python3"), 5)
+            self.assertEqual(a.install(self.home, python="/usr/bin/python3"), 6)
 
     def test_missing_paths_fail_clearly(self):
         with patch.dict(os.environ, {}, clear=False) as env:
@@ -67,8 +67,8 @@ class AdapterTest(unittest.TestCase):
                 a.install(self.home)
 
     def test_missing_zkfy_tooling_fails_before_any_write(self):
-        (self.zkfy / "skills/vault-query/SKILL.md").unlink()
-        with self.assertRaisesRegex(ValueError, "vault-query"):
+        (self.zkfy / "skills/query/SKILL.md").unlink()
+        with self.assertRaisesRegex(ValueError, "skills/query"):
             self.install(apply=True)
         self.assertFalse((self.home / a.BINDING).exists())
 
@@ -85,7 +85,7 @@ class AdapterTest(unittest.TestCase):
         self.assertEqual(legacy.read_text(), "now user-owned")
 
     def test_refuses_collisions_before_any_write(self):
-        path = self.home / ".claude/skills/vault-query"
+        path = self.home / ".claude/skills/query"
         path.parent.mkdir(parents=True)
         path.symlink_to(self.root, target_is_directory=True)
         with self.assertRaises(ValueError):
@@ -98,7 +98,7 @@ class AdapterTest(unittest.TestCase):
         def failing(path, value):
             nonlocal failed
             original(path, value)
-            if path.name == "vault-query" and not failed:
+            if path.name == "query" and not failed:
                 failed = True
                 raise OSError("injected installation failure")
 
@@ -106,7 +106,7 @@ class AdapterTest(unittest.TestCase):
             self.install(apply=True)
         self.assertTrue(failed)
         self.assertFalse((self.home / a.BINDING).exists())
-        self.assertFalse((self.home / ".claude/skills/vault-query").exists())
+        self.assertFalse((self.home / ".claude/skills/query").exists())
 
 
 if __name__ == "__main__":

@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-"""Bind the zkfy vault tooling for Claude and Pi; dry-run unless --apply.
+"""Bind the zkfy vault tooling for Claude, Codex, Pi and Antigravity; dry-run unless --apply.
 
-Installs exactly four artifacts: the launcher binding (~/.config/zkfy/knowledge.json),
-the `vault-knowledge` launcher link, and the `vault-query` skill link for Claude and Pi.
-Retrieval guidance itself lives in tools/instructions/AGENTS.md; instruction files are
-never touched here. A receipt records prior state so --uninstall restores it exactly.
+Installs exactly five artifacts: the launcher binding (~/.config/zkfy/knowledge.json),
+the `vault-knowledge` launcher link, and three `query` skill links: ~/.claude/skills
+for Claude, ~/.agents/skills, which Codex and Pi both read, and ~/.gemini/config/skills,
+Antigravity's machine-wide root shared by its CLI and IDE.
+Retrieval guidance lives in the skill itself; instruction files are never touched
+here. A receipt records prior state so --uninstall restores it exactly.
 
 Paths come from --vault/--zkfy, then ZKFY_VAULT/ZKFY_DIR, then the existing binding.
 """
@@ -50,14 +52,11 @@ def restore(path, desired):
         os.replace(f.name, path)
 
 
-def pi_root(home):
-    if home == Path.home() and os.environ.get("PI_CODING_AGENT_DIR"):
-        return Path(os.environ["PI_CODING_AGENT_DIR"]).expanduser()
-    return home / ".pi/agent"
-
-
 def skill_links(home):
-    return {"claude": home / ".claude/skills/vault-query", "pi": pi_root(home) / "skills/vault-query"}
+    # Claude reads only ~/.claude/skills; Codex and Pi both read ~/.agents/skills;
+    # Antigravity (CLI and IDE) reads neither, only ~/.gemini/config/skills.
+    return {"claude": home / ".claude/skills/query", "agents": home / ".agents/skills/query",
+            "agy": home / ".gemini/config/skills/query"}
 
 
 def resolve_sources(home, vault, zkfy):
@@ -77,7 +76,7 @@ def resolve_sources(home, vault, zkfy):
 def desired_state(home, vault, zkfy, targets, python):
     if not (vault / "docs/knowledge/scope.json").is_file():
         raise ValueError("Vault scope must exist before installation")
-    for name in ("scripts/knowledge.py", "scripts/knowledge-launcher.py", "skills/vault-query/SKILL.md"):
+    for name in ("scripts/knowledge.py", "scripts/knowledge-launcher.py", "skills/query/SKILL.md"):
         if not (zkfy / name).is_file():
             raise ValueError(f"Missing shared tooling in {zkfy}: {name}")
     binding = json.dumps({"version": 1, "vault": str(vault), "tool": str(zkfy / "scripts/knowledge.py"),
@@ -88,11 +87,11 @@ def desired_state(home, vault, zkfy, targets, python):
     }
     links = skill_links(home)
     for target in targets:
-        desired[links[target]] = {"kind": "link", "target": str(zkfy / "skills/vault-query")}
+        desired[links[target]] = {"kind": "link", "target": str(zkfy / "skills/query")}
     return desired
 
 
-def install(home, vault=None, zkfy=None, targets=("claude", "pi"), apply=False, uninstall=False, python=sys.executable):
+def install(home, vault=None, zkfy=None, targets=("claude", "agents", "agy"), apply=False, uninstall=False, python=sys.executable):
     home = home.expanduser().resolve()
     receipt_path = home / RECEIPT
     old = json.loads(receipt_path.read_text()) if receipt_path.exists() else {"version": 1, "files": {}}
@@ -149,11 +148,11 @@ def main():
     p.add_argument("--home", type=Path, default=Path.home())
     p.add_argument("--vault", type=Path)
     p.add_argument("--zkfy", type=Path)
-    p.add_argument("--target", choices=("pi", "claude", "both"), default="both")
+    p.add_argument("--target", choices=("claude", "agents", "agy", "all"), default="all")
     p.add_argument("--apply", action="store_true")
     p.add_argument("--uninstall", action="store_true")
     args = p.parse_args()
-    targets = ("claude", "pi") if args.target == "both" else (args.target,)
+    targets = ("claude", "agents", "agy") if args.target == "all" else (args.target,)
     try:
         install(args.home, args.vault, args.zkfy, targets, args.apply, args.uninstall)
     except (OSError, ValueError, KeyError) as e:

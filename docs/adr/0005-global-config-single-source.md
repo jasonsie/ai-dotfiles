@@ -3,6 +3,8 @@
 Status: **Accepted and executed** 2026-10-05. Manifest approved by the user; backup at
 `~/.local/state/ai-cli-workspace/backup-20261005-144219/` (includes `workspace-wip.patch`).
 Supersedes: [0001](0001-claude-header-scaffold-source-file.md), [0002](0002-multi-cli-parity-target.md) (full 1:1 parity), [0003](0003-portable-library-framing.md).
+Amended by: [0006](0006-redesign-round-2.md) (Gemini CLI dropped, Antigravity added, global
+instructions limited to rules that apply everywhere, shared skills, reviewed upstream updates).
 
 ## Context
 

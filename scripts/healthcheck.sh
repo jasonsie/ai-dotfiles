@@ -6,6 +6,7 @@
 #   - install.sh --dry-run reports zero pending changes
 #   - shared MCP servers are listed by each CLI's own `mcp list`
 #   - vault launcher resolves (when bound)
+#   - each skill in skills/ is linked into every CLI's skill folder
 #   - repo sources contain no machine-specific paths; unit tests pass
 
 set -uo pipefail
@@ -33,12 +34,14 @@ echo "-- pending changes (install.sh --dry-run)"
 DRY="$(bash "$ROOT/scripts/install.sh" --dry-run 2>&1)" || fail "install.sh --dry-run exited non-zero"
 PENDING="$(printf '%s\n' "$DRY" | grep -E '(^|: )[1-9][0-9]* changes' || true)"
 if [ -z "$PENDING" ]; then pass "no pending changes"; else fail "pending: $(printf '%s' "$PENDING" | tr '\n' ';')"; fi
+# Model choices made in a CLI itself are kept on purpose; report them, never fail.
+printf '%s\n' "$DRY" | sed -n 's/^Local choice kept: /  info  local choice kept: /p'
 
 echo "-- mcp (native list)"
 for name in $("$PYTHON" -c 'import json,sys; print(" ".join(s["name"] for s in json.load(open(sys.argv[1]))["servers"]))' "$ROOT/tools/mcp/servers.json"); do
-  for cli in claude codex gemini; do
+  for cli in claude codex; do
     if ! command -v "$cli" >/dev/null 2>&1; then skip "$cli not on PATH"; continue; fi
-    # gemini prints its list on stderr; it also disables MCP in untrusted folders by design.
+    # A server disabled for the current folder is still configured; count it as present.
     line="$("$cli" mcp list 2>&1 | grep -m1 "$name" || true)"
     case "$line" in
       "") fail "$cli: $name not listed" ;;
@@ -54,6 +57,15 @@ if [ -f ~/.config/zkfy/knowledge.json ]; then
 else
   skip "no zkfy binding on this machine"
 fi
+
+echo "-- skills"
+for skill in "$ROOT"/skills/*/SKILL.md; do
+  [ -e "$skill" ] || continue
+  name="$(basename "$(dirname "$skill")")"
+  for folder in ~/.claude/skills ~/.agents/skills ~/.gemini/config/skills; do
+    if [ "$folder/$name" -ef "$ROOT/skills/$name" ]; then pass "$folder/$name"; else fail "$folder/$name does not link to skills/$name"; fi
+  done
+done
 
 echo "-- portability"
 HITS="$(grep -rlIE --exclude=healthcheck.sh --exclude-dir=__pycache__ \

@@ -1,16 +1,18 @@
 #!/usr/bin/env bash
-# scripts/install.sh — apply the workspace's global CLI config on this Mac.
+# scripts/install.sh — preview or apply the workspace's global CLI config on this Mac.
 #
 # Usage:
-#   bash scripts/install.sh [--target=all|claude|codex|gemini|pi] [--dry-run]
+#   bash scripts/install.sh [--apply] [--target=all|claude|codex|pi|agy]
 #                           [--instructions-only] [--replace-instructions]
+#   Previews by default and writes nothing; --apply writes (--dry-run also previews).
 #
 # Steps (each is idempotent, dry-run aware, and backs up before writing):
 #   1. instructions  tools/instructions/AGENTS.md → each CLI's global entry (symlink)
 #   2. settings      tools/settings/managed.json  → merged into live settings (only those keys)
 #   3. mcp           tools/mcp/servers.json       → native `<cli> mcp add` when missing
-#   4. knowledge     zkfy vault launcher + vault-query skill (Claude, Pi); skipped if
+#   4. knowledge     zkfy vault launcher + query skill (Claude, Codex, Pi, AGY); skipped if
 #                    ZKFY_DIR/ZKFY_VAULT are unset and no binding exists yet
+#   5. skills        skills/<name>/                → linked into each CLI's skill folder
 #
 # Requires Python 3.11+ (macOS /usr/bin/python3 is older; use Homebrew/pyenv).
 # See docs/adr/0005-global-config-single-source.md.
@@ -20,15 +22,16 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 TARGET="all"
-DRY_RUN=0
+DRY_RUN=1
 INSTRUCTIONS_ONLY=0
 REPLACE_INSTRUCTIONS=0
 
-usage() { sed -n '2,17p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,18p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
 
 for arg in "$@"; do
   case "$arg" in
     --target=*) TARGET="${arg#--target=}" ;;
+    --apply) DRY_RUN=0 ;;
     --dry-run) DRY_RUN=1 ;;
     --instructions-only) INSTRUCTIONS_ONLY=1 ;;
     --replace-instructions) REPLACE_INSTRUCTIONS=1 ;;
@@ -38,7 +41,7 @@ for arg in "$@"; do
 done
 
 case "$TARGET" in
-  all|claude|codex|gemini|pi) ;;
+  all|claude|codex|pi|agy) ;;
   *) printf '[ERR] Invalid target: %s\n' "$TARGET" >&2; exit 1 ;;
 esac
 
@@ -66,8 +69,10 @@ echo "== mcp"
 
 echo "== knowledge"
 case "$TARGET" in
-  all) KNOWLEDGE_TARGET=both ;;
-  claude|pi) KNOWLEDGE_TARGET="$TARGET" ;;
+  all) KNOWLEDGE_TARGET=all ;;
+  claude) KNOWLEDGE_TARGET=claude ;;
+  codex|pi) KNOWLEDGE_TARGET=agents ;;
+  agy) KNOWLEDGE_TARGET=agy ;;
   *) KNOWLEDGE_TARGET="" ;;
 esac
 if [ -z "$KNOWLEDGE_TARGET" ]; then
@@ -78,4 +83,8 @@ else
   echo "knowledge: skipped (set ZKFY_DIR and ZKFY_VAULT to enable vault retrieval)"
 fi
 
-[ "$DRY_RUN" = "1" ] && echo "Dry run: nothing written." || echo "Done. Verify: bash scripts/healthcheck.sh"
+echo "== skills"
+# Same folders as the knowledge step: Codex and Pi share ~/.agents/skills.
+"$PYTHON" "$SCRIPT_DIR/install-skills.py" --target "$KNOWLEDGE_TARGET" ${APPLY[@]+"${APPLY[@]}"}
+
+[ "$DRY_RUN" = "1" ] && echo "Preview only: nothing written. Run again with --apply to write." || echo "Done. Verify: bash scripts/healthcheck.sh"

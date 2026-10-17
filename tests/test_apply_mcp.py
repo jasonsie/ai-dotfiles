@@ -9,7 +9,7 @@ spec = importlib.util.spec_from_file_location('mcp', ROOT / 'scripts/apply-mcp.p
 mcp = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(mcp)
 
-SERVER = {'name': 'docs', 'command': 'npx', 'args': ['-y', 'pkg'], 'targets': ['claude', 'codex', 'gemini']}
+SERVER = {'name': 'docs', 'command': 'npx', 'args': ['-y', 'pkg'], 'targets': ['claude', 'codex']}
 
 
 class ApplyMcpTest(unittest.TestCase):
@@ -32,13 +32,15 @@ class ApplyMcpTest(unittest.TestCase):
         (self.home / '.codex').mkdir()
         (self.home / '.codex/config.toml').write_text('[mcp_servers.other]\ncommand = "x"\n')
         commands = mcp.plan(self.home, mcp.CLIS, [SERVER], which=lambda _: True)
-        self.assertEqual([c[0] for c in commands], ['codex', 'gemini'])
-        self.assertEqual(commands[0], ['codex', 'mcp', 'add', 'docs', '--', 'npx', '-y', 'pkg'])
-        self.assertEqual(commands[1][:5], ['gemini', 'mcp', 'add', '-s', 'user'])
+        self.assertEqual(commands, [['codex', 'mcp', 'add', 'docs', '--', 'npx', '-y', 'pkg']])
+
+    def test_claude_registers_at_user_scope(self):
+        commands = mcp.plan(self.home, ('claude',), [SERVER], which=lambda _: True)
+        self.assertEqual(commands, [['claude', 'mcp', 'add', '-s', 'user', 'docs', '--', 'npx', '-y', 'pkg']])
 
     def test_targets_and_missing_cli_respected(self):
-        server = {**SERVER, 'targets': ['gemini']}
-        commands = mcp.plan(self.home, mcp.CLIS, [server], which=lambda cli: cli != 'gemini')
+        server = {**SERVER, 'targets': ['codex']}
+        commands = mcp.plan(self.home, mcp.CLIS, [server], which=lambda cli: cli != 'codex')
         self.assertEqual(commands, [])
 
 

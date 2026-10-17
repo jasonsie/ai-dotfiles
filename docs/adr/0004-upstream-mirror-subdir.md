@@ -1,5 +1,8 @@
 # Mirrored upstream docs live in `docs/<cli>/upstream/`, separate from hand-written catalogs
 
+> **Superseded** by [ADR-0006](0006-redesign-round-2.md) (2026-10-18): mirrors now live in
+> `upstream/docs/<tool>/`, and no hand-written catalogs sit beside them.
+
 ## Context
 
 `scripts/sync-cli-docs.sh` mirrors each CLI's upstream docs by rebuilding the whole

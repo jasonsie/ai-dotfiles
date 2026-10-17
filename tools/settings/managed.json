@@ -1,25 +1,35 @@
 {
-  "version": 1,
+  "version": 2,
   "claude": {
-    "model": "opus",
-    "effortLevel": "high",
-    "advisorModel": "opus",
-    "skipDangerousModePermissionPrompt": false,
-    "skipAutoPermissionPrompt": false
+    "enforce": {
+      "skipDangerousModePermissionPrompt": false,
+      "skipAutoPermissionPrompt": false
+    },
+    "default": {
+      "model": "opus",
+      "effortLevel": "high",
+      "advisorModel": "opus"
+    }
   },
   "codex": {
-    "model": "gpt-6-astra",
-    "model_reasoning_effort": "high",
-    "approval_policy": "on-request",
-    "sandbox_mode": "workspace-write"
-  },
-  "gemini": {
-    "model.name": "gemini-2.5-pro",
-    "tools.sandbox": true,
-    "general.defaultApprovalMode": "default"
+    "enforce": {
+      "approval_policy": "on-request",
+      "sandbox_mode": "workspace-write"
+    },
+    "default": {
+      "model": "gpt-6-astra",
+      "model_reasoning_effort": "high"
+    }
   },
   "pi": {
-    "defaultProvider": "openai-codex",
-    "defaultModel": "gpt-6-astra"
+    "default": {
+      "defaultProvider": "openai-codex",
+      "defaultModel": "gpt-6-astra"
+    }
+  },
+  "agy": {
+    "enforce": {
+      "enableTerminalSandbox": true
+    }
   }
 }

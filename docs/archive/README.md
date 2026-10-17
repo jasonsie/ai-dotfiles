@@ -1,15 +1,18 @@
 # Archive
 
-這裡存放已被取代或僅供歷史參考的文件。
+Superseded documents kept for history. The current design is in
+[how-it-works.md](../how-it-works.md) and the ADRs.
 
-| 檔案 | 取代文件 | 說明 |
-|------|---------|------|
-| karpathy-optimization-report.md | karpathy-claude-code-insights-2026-04-18.md | 舊版 Karpathy 研究報告 |
-| stream-timeout-investigation.md | timeout-guide.md | 已整合進主指南 |
-| timeout-settings-impact-analysis.md | timeout-guide.md | 已整合進主指南 |
-| session7-followup-report.md | — | Session 7 歷史記錄 |
-| perf-report-044b5cd-vs-a9ffc1d.md | — | 效能比較歷史報告 |
-| workspace-performance-report.md | — | Workspace 效能歷史報告 |
-| HOOKS.md, hook-lifecycle.md | — | 已退役的 workspace hooks（ADR-0005） |
-| agents-port-decisions.md | — | 已退役的 agents 移植決策（ADR-0005） |
-| human-onboard/, inventory/ | README.md, AGENTS.md | 舊專案規則產生器的導覽與盤點（ADR-0005） |
+| File | Replaced by | Notes |
+|------|-------------|-------|
+| CHANGELOG.md | git history and ADRs | Change log of the retired Claude-only workspace; stopped 2026-06-07 (archived 2026-10-18, ADR-0006) |
+| codex-CAPABILITIES.md | how-it-works.md | Codex parity catalog for the retired full-parity goal (archived 2026-10-18, ADR-0006) |
+| karpathy-optimization-report.md | — | Older Karpathy research report |
+| stream-timeout-investigation.md | — | Merged into the timeout guide, which was removed on 2026-10-18 (see git history) |
+| timeout-settings-impact-analysis.md | — | Same as above |
+| session7-followup-report.md | — | Session 7 record |
+| perf-report-044b5cd-vs-a9ffc1d.md | — | Performance comparison |
+| workspace-performance-report.md | — | Workspace performance report |
+| HOOKS.md, hook-lifecycle.md | — | Retired workspace hooks (ADR-0005) |
+| agents-port-decisions.md | — | Retired agents port decisions (ADR-0005) |
+| human-onboard/, inventory/ | README.md, AGENTS.md | Guides to the retired per-project rule generator (ADR-0005) |
