@@ -1,24 +1,25 @@
 # AI CLI Workspace
 
-> 全域 AI CLI 設定的單一來源（Claude Code、Codex CLI、Gemini CLI、Pi）。
-> 共用行為、保留各 CLI 原生差異；僅支援 macOS。決策見 [ADR-0005](docs/adr/0005-global-config-single-source.md)。
-
-The single source for **global** AI CLI configuration on the owner's Macs. Each CLI
-gets the same instructions, the same must-match settings keys, the same MCP servers
-(where supported), and read-only access to the CS knowledge vault. Native differences
-are documented, not emulated. Forked from
+The single source for my global AI coding setup on macOS: Claude Code, Codex CLI, Pi, and
+Antigravity (CLI and IDE). Each CLI gets the same shared rules and skills through its own
+native folders and keeps its native differences; missing features are documented, not
+emulated. Decisions: [ADR-0005](docs/adr/0005-global-config-single-source.md) and
+[ADR-0006](docs/adr/0006-redesign-round-2.md). Forked from
 [zeuikli/claude-code-workspace](https://github.com/zeuikli/claude-code-workspace).
 
 ## What it manages
 
-| Source | Claude Code | Codex CLI | Gemini CLI | Pi |
-|---|---|---|---|---|
-| `tools/instructions/AGENTS.md` (symlink) | `~/.claude/CLAUDE.md` | `~/.codex/AGENTS.md` | `~/.gemini/GEMINI.md` | `~/.pi/agent/AGENTS.md` |
-| `tools/settings/managed.json` (key merge) | `settings.json` | `config.toml` | `settings.json` | `settings.json` |
-| `tools/mcp/servers.json` (native `mcp add`) | ✓ | ✓ | ✓ (disabled in untrusted folders by Gemini) | — no MCP |
-| zkfy vault tooling | `query` skill (`~/.claude/skills`) | `query` skill (`~/.agents/skills`) | `query` skill (`~/.agents/skills`) | `query` skill (`~/.agents/skills`) |
+| Source | What it holds | Lands in |
+|---|---|---|
+| `tools/instructions/AGENTS.md` | Rules for every project in every CLI (today: task memory) | Linked as `~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, `~/.gemini/GEMINI.md` (read by Antigravity), `~/.pi/agent/AGENTS.md` |
+| `tools/settings/managed.json` | `enforce`: safety settings, put back on every install. `default`: model choices, set only while a CLI has none | Each CLI's settings file, merged (never linked) |
+| `tools/mcp/servers.json` | Shared MCP servers | `claude mcp add`, `codex mcp add` |
+| `skills/<name>/` | Shared skills (`grilling`) | `~/.claude/skills`, `~/.agents/skills` (Codex and Pi), `~/.gemini/config/skills` (Antigravity) |
+| zkfy checkout | The read-only `query` vault skill and its `vault-knowledge` launcher | The same three skill folders and `~/.local/bin` |
+| `upstream/` | A weekly mirror of each CLI's official docs and the watched skill catalogs | Read on demand; never installed |
 
-Not managed: credentials, sessions, plugin choices, local approvals/trust, per-project rules.
+Not managed: credentials, sessions, plugin choices, local approvals and trust, and
+per-project rules (each project keeps its own `AGENTS.md`).
 
 ## Set up a Mac
 
@@ -27,10 +28,14 @@ Requires Python 3.11+ (stock `/usr/bin/python3` is too old: `brew install python
 ```bash
 git clone <this repo> && git clone https://github.com/jasonsie/zkfy.git
 export ZKFY_DIR=/path/to/zkfy ZKFY_VAULT=/path/to/vault   # optional: vault retrieval
-bash scripts/install.sh                # preview (writes nothing)
-bash scripts/install.sh --apply        # apply (backs up first)
-bash scripts/healthcheck.sh            # verify live state
+bash scripts/install.sh            # preview: writes nothing
+bash scripts/install.sh --apply    # apply (backs up first)
+bash scripts/healthcheck.sh        # verify live state
 ```
+
+`--target=claude|codex|pi|agy` limits a run; `--instructions-only` links the instructions
+only. Existing instruction files the installer does not recognize are refused until you
+review them (`--replace-instructions`). Backups go to `~/.local/state/ai-cli-workspace/`.
 
 Claude plugins are a per-machine choice, not managed here. The current set:
 
@@ -41,20 +46,23 @@ for p in zkfy@zkfy-marketplace pyright-lsp@claude-plugins-official typescript-ls
 done
 ```
 
-`--target=claude|codex|gemini|pi` limits the run; `--instructions-only` links instructions only.
-Unknown existing instruction files are refused until reviewed (`--replace-instructions`);
-see [global instructions](docs/global-instructions.md). Backups go to
-`~/.local/state/ai-cli-workspace/`.
+## Everyday changes
 
-## Change something
+- **A rule for every project:** edit `tools/instructions/AGENTS.md`; it is live at once
+  through the links. Keep only rules that apply in every repository and every CLI; anything
+  narrower belongs in a project's `AGENTS.md` or in a skill.
+- **A setting:** add it to `tools/settings/managed.json` under `enforce` (always put back)
+  or `default` (first run only), then run `bash scripts/install.sh --apply`.
+- **A skill:** add `skills/<name>/SKILL.md`, then run `bash scripts/install.sh --apply`.
+  For a skill adapted from another repository, record its source, commit, and license in
+  `skills/skills.lock` and keep its LICENSE file in the skill folder.
+- **The weekly upstream pull request:** every Monday a GitHub Action refreshes `upstream/`
+  and opens or refreshes a pull request from the `upstream-sync` branch. Read its "Changes
+  that touch this setup" and "Skills" sections, then merge or close it.
+- **Anything machine-specific:** change it in the CLI itself; the installer leaves it alone.
 
-- Instructions: edit `tools/instructions/AGENTS.md` (live immediately via the symlinks).
-- A setting that must match on every Mac: add it to `tools/settings/managed.json`, rerun install.
-- A shared MCP server: add it to `tools/mcp/servers.json` (no secrets), rerun install.
-- Anything machine-specific: change it in the CLI itself; the installer leaves it alone.
-
-Maintainer notes: [`AGENTS.md`](AGENTS.md). Upstream CLI docs are mirrored under
-`docs/<cli>/upstream/` by `scripts/sync-cli-docs.sh`.
+How it all fits together: [docs/how-it-works.md](docs/how-it-works.md). Maintainer notes
+for AI tools: [AGENTS.md](AGENTS.md).
 
 ## License
 
