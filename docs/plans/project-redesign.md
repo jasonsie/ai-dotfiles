@@ -290,15 +290,24 @@ and `scripts/install-skills.py` (install.sh step 5, healthcheck "skills" section
 `~/.agents/skills` and `~/.gemini/config/skills`; Claude, Codex (`codex debug prompt-input`), Antigravity and Pi
 (`-p`) all list `grilling` and `query`. 55 tests pass; the healthcheck is healthy.
 
-Item 4 findings and remaining work (uncommitted: `scripts/report-upstream.py` + tests): Codex index is
-`https://learn.chatgpt.com/docs/llms.txt` (titled "# Codex"): mirror all 192 `.md` URLs as listed (3 carry
-`?surface=`), floor 120. Pi: `docs.json` on the `stable` branch, `navigation` items' `path` (about 40 pages; skip
-`redirects`). Antigravity discovery is silently broken (no `main-*.js` on the get-started page; the sync uses its
-21-slug fallback). Still to do: mirrors under `upstream/docs/<tool>/`, floors for every source, drop Gemini, the
-workflow opening a PR (needs the repo setting "Allow GitHub Actions to create pull requests", currently off: ask), and
-a preview before deleting `docs/gemini/` and the old mirror folders. Item 5 not started.
+Item 4 done (commit `a4c5adf`): `sync-cli-docs.sh` reads one index per source into `upstream/docs/<tool>/`
+(Claude 227 pages, Codex 188, Pi 41, Antigravity 85; the rebuilt Antigravity site had 404ed every old asset URL since
+June), with page floors; the generated index is `MIRROR-INDEX.md` because `INDEX.md` and a page `index.md` are one file
+on macOS. The weekly workflow commits to `upstream-sync` and opens or refreshes a PR described by
+`report-upstream.py`; `upstream/catalogs.json` holds the first skill-catalog snapshot. Old mirror folders and Gemini's
+mirror removed after the user approved a preview. The repo setting "Allow GitHub Actions to create and approve pull
+requests" is still off: the auto-mode classifier refused to let the agent grant it, so the user must turn it on.
 
-Current step: Q31 item 4.
+Item 5 done (commit `229e2dc`): new README, AGENTS.md, `docs/how-it-works.md`, ADR-0006 (ADR-0004 superseded, ADR-0005
+amended); `template/`, 12 research notes, `docs/INDEX.md`, CONTEXT.md, `tools/README.md`, `docs/global-instructions.md`,
+`docs/pi/CAPABILITIES.md` and the root GEMINI.md link removed after the approved preview; CHANGELOG.md and the Codex
+catalog archived. 55 tests pass; the healthcheck is healthy.
+
+Not pushed: the feature branch (13 commits ahead of `origin/main`, 1 behind: the 2026-10-12 sync commit, which only
+touches removed mirror paths), zkfy `main` (`f4caaf2`, `89455cf`), and this plan branch. The old workflow on `main`
+runs again on Monday 01:00 UTC and pushes straight to `main`.
+
+Current question: Q32, publishing (push and PR).
 
 ## Layout
 
