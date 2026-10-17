@@ -5,7 +5,7 @@
       "name": "context7",
       "command": "npx",
       "args": ["-y", "@upstash/context7-mcp"],
-      "targets": ["claude", "codex"],
+      "targets": ["claude", "codex", "pi", "agy"],
       "description": "Library documentation lookup"
     }
   ]

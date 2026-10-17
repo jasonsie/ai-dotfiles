@@ -13,7 +13,7 @@ emulated. Decisions: [ADR-0005](docs/adr/0005-global-config-single-source.md) an
 |---|---|---|
 | `tools/instructions/AGENTS.md` | Rules for every project in every CLI (today: task memory) | Linked as `~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, `~/.gemini/GEMINI.md` (read by Antigravity), `~/.pi/agent/AGENTS.md` |
 | `tools/settings/managed.json` | `enforce`: safety settings, put back on every install. `default`: model choices, set only while a CLI has none | Each CLI's settings file, merged (never linked) |
-| `tools/mcp/servers.json` | Shared MCP servers | `claude mcp add`, `codex mcp add` |
+| `tools/mcp/servers.json` | Shared MCP servers (today: context7, library docs) | `claude`, `codex` and `pi mcp add`; merged into `~/.gemini/config/mcp_config.json` for Antigravity |
 | `skills/<name>/` | Shared skills (`grilling`) | `~/.claude/skills`, `~/.agents/skills` (Codex and Pi), `~/.gemini/config/skills` (Antigravity) |
 | zkfy checkout | The read-only `query` vault skill and its `vault-knowledge` launcher | The same three skill folders and `~/.local/bin` |
 | `upstream/` | A weekly mirror of each CLI's official docs and the watched skill catalogs | Read on demand; never installed |
