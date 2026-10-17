@@ -12,6 +12,7 @@
 #   3. mcp           tools/mcp/servers.json       → native `<cli> mcp add` when missing
 #   4. knowledge     zkfy vault launcher + query skill (Claude, Codex, Pi, AGY); skipped if
 #                    ZKFY_DIR/ZKFY_VAULT are unset and no binding exists yet
+#   5. skills        skills/<name>/                → linked into each CLI's skill folder
 #
 # Requires Python 3.11+ (macOS /usr/bin/python3 is older; use Homebrew/pyenv).
 # See docs/adr/0005-global-config-single-source.md.
@@ -81,5 +82,9 @@ elif [ -n "${ZKFY_DIR:-}" ] || [ -f "${HOME}/.config/zkfy/knowledge.json" ]; the
 else
   echo "knowledge: skipped (set ZKFY_DIR and ZKFY_VAULT to enable vault retrieval)"
 fi
+
+echo "== skills"
+# Same folders as the knowledge step: Codex and Pi share ~/.agents/skills.
+"$PYTHON" "$SCRIPT_DIR/install-skills.py" --target "$KNOWLEDGE_TARGET" ${APPLY[@]+"${APPLY[@]}"}
 
 [ "$DRY_RUN" = "1" ] && echo "Preview only: nothing written. Run again with --apply to write." || echo "Done. Verify: bash scripts/healthcheck.sh"

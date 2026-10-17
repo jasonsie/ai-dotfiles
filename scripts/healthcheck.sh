@@ -6,6 +6,7 @@
 #   - install.sh --dry-run reports zero pending changes
 #   - shared MCP servers are listed by each CLI's own `mcp list`
 #   - vault launcher resolves (when bound)
+#   - each skill in skills/ is linked into every CLI's skill folder
 #   - repo sources contain no machine-specific paths; unit tests pass
 
 set -uo pipefail
@@ -56,6 +57,15 @@ if [ -f ~/.config/zkfy/knowledge.json ]; then
 else
   skip "no zkfy binding on this machine"
 fi
+
+echo "-- skills"
+for skill in "$ROOT"/skills/*/SKILL.md; do
+  [ -e "$skill" ] || continue
+  name="$(basename "$(dirname "$skill")")"
+  for folder in ~/.claude/skills ~/.agents/skills ~/.gemini/config/skills; do
+    if [ "$folder/$name" -ef "$ROOT/skills/$name" ]; then pass "$folder/$name"; else fail "$folder/$name does not link to skills/$name"; fi
+  done
+done
 
 echo "-- portability"
 HITS="$(grep -rlIE --exclude=healthcheck.sh --exclude-dir=__pycache__ \

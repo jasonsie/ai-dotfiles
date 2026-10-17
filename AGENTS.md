@@ -13,8 +13,9 @@ are symlinks to this file.
 | `tools/settings/managed.json` | `scripts/apply-settings.py` | only those keys, merged into live settings |
 | `tools/mcp/servers.json` | `scripts/apply-mcp.py` | native `claude mcp add` and `codex mcp add` (Pi and Antigravity: not registered yet) |
 | zkfy checkout (`ZKFY_DIR`) | `scripts/install-vault-knowledge.py` | `vault-knowledge` launcher + `query` skill (Claude via `~/.claude/skills`; Codex and Pi via `~/.agents/skills`; Antigravity via `~/.gemini/config/skills`) |
+| `skills/<name>/` (+ `skills/skills.lock` for adapted upstream skills) | `scripts/install-skills.py` | linked into the same three skill folders |
 
-`scripts/install.sh` runs all four in order; `scripts/healthcheck.sh` verifies live state.
+`scripts/install.sh` runs all five in order; `scripts/healthcheck.sh` verifies live state.
 
 ## Rules for changes
 
