@@ -1,8 +1,8 @@
 # Project redesign — requirements and plan
 
-Status: **active**. Round 2 decisions are recorded through Q31 (2026-10-16);
+Status: **active** (waiting on the user: merge PR #7). Round 2 decisions are recorded through Q32 (2026-10-18);
 Q1–Q16 stand unless round 2 says otherwise. Updated: 2026-10-16. Next step:
-build the remaining decided work (Q31); see "Round 2".
+the user merges PR #7; see "Next steps for the user" in "Round 2".
 
 ## Resume in any AI CLI
 
@@ -307,7 +307,15 @@ Not pushed: the feature branch (13 commits ahead of `origin/main`, 1 behind: the
 touches removed mirror paths), zkfy `main` (`f4caaf2`, `89455cf`), and this plan branch. The old workflow on `main`
 runs again on Monday 01:00 UTC and pushes straight to `main`.
 
-Current question: Q32, publishing (push and PR).
+| Q32 (2026-10-18) | Decided (user: "1"); done | Published after a scan of all outgoing commits for secrets and personal paths
+found nothing. The feature branch merged `origin/main` (commit `14ffb79`; the 2026-10-12 sync only touched replaced mirror
+folders, so the removals were kept) and opened PR #7 (https://github.com/jasonsie/ai-cli-workspace/pull/7). zkfy `main`
+(public) pushed `f4caaf2` and `89455cf`; the user's seven uncommitted zkfy files stay local. This plan branch pushed. |
+
+Next steps for the user: turn on "Allow GitHub Actions to create and approve pull requests" (the agent was not allowed to
+grant it), review and merge PR #7, then run the "Sync upstream docs" workflow manually and review its first pull request.
+Optional later items: Claude's per-project memory folders are still keyed by the old checkout paths; MCP and engineering
+docs (Q23d) are deferred; the rename to `ai-dotfiles` (Plan A Q8) is still open.
 
 ## Layout
 
