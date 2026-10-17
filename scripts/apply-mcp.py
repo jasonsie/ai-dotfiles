@@ -98,7 +98,7 @@ def plan(home, targets, servers, which=shutil.which):
 
 def write_files(home, files):
     """Back up, then write each merged file atomically; restore them all if one fails."""
-    root = home / '.local/state/ai-cli-workspace/mcp'
+    root = home / '.local/state/ai-dotfiles/mcp'
     root.mkdir(parents=True, exist_ok=True, mode=0o700)
     backup = Path(tempfile.mkdtemp(prefix='backup-', dir=root))
     done = []

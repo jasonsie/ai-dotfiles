@@ -88,10 +88,10 @@ and healthcheck report it as a "local choice kept".
 
 | Step | Record | Rollback |
 |---|---|---|
-| Instructions | `~/.local/state/ai-cli-workspace/global-instructions/backup-*/manifest.json` | Remove the link, copy the backup back with `cp -Pp` |
-| Settings | `~/.local/state/ai-cli-workspace/settings/backup-*` | Copy the backed-up file back |
-| MCP (Antigravity's file) | `~/.local/state/ai-cli-workspace/mcp/backup-*` | Copy the backed-up file back |
-| Skills | `~/.local/state/ai-cli-workspace/skills.json` (links this repo created) | Delete a skill folder and rerun with `--apply` |
+| Instructions | `~/.local/state/ai-dotfiles/global-instructions/backup-*/manifest.json` | Remove the link, copy the backup back with `cp -Pp` |
+| Settings | `~/.local/state/ai-dotfiles/settings/backup-*` | Copy the backed-up file back |
+| MCP (Antigravity's file) | `~/.local/state/ai-dotfiles/mcp/backup-*` | Copy the backed-up file back |
+| Skills | `~/.local/state/ai-dotfiles/skills.json` (links this repo created) | Delete a skill folder and rerun with `--apply` |
 | Vault tooling | `~/.local/state/zkfy/integration.json` | `python3 scripts/install-vault-knowledge.py --uninstall --apply` |
 
 ## Glossary

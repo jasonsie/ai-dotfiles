@@ -1,4 +1,4 @@
-# ai-cli-workspace — maintainer notes
+# ai-dotfiles — maintainer notes
 
 This repo is the single source for the owner's **global** AI CLI setup: Claude Code,
 Codex CLI, Pi, and Antigravity. The mechanism is in [docs/how-it-works.md](docs/how-it-works.md);

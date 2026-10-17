@@ -22,7 +22,7 @@ ROOTS = {
     'agents': '.agents/skills',
     'agy': '.gemini/config/skills',
 }
-RECEIPT = '.local/state/ai-cli-workspace/skills.json'
+RECEIPT = '.local/state/ai-dotfiles/skills.json'
 
 
 def repo_skills(source):

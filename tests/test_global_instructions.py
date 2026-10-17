@@ -51,7 +51,7 @@ class GlobalInstructionsTest(unittest.TestCase):
 
     def backups(self):
         return list(
-            self.home.glob(".local/state/ai-cli-workspace/global-instructions/backup-*")
+            self.home.glob(".local/state/ai-dotfiles/global-instructions/backup-*")
         )
 
     def test_dry_run_writes_nothing(self):

@@ -1,4 +1,4 @@
-# AI CLI Workspace
+# AI Dotfiles
 
 The single source for my global AI coding setup on macOS: Claude Code, Codex CLI, Pi, and
 Antigravity (CLI and IDE). Each CLI gets the same shared rules and skills through its own
@@ -35,7 +35,7 @@ bash scripts/healthcheck.sh        # verify live state
 
 `--target=claude|codex|pi|agy` limits a run; `--instructions-only` links the instructions
 only. Existing instruction files the installer does not recognize are refused until you
-review them (`--replace-instructions`). Backups go to `~/.local/state/ai-cli-workspace/`.
+review them (`--replace-instructions`). Backups go to `~/.local/state/ai-dotfiles/`.
 
 Claude plugins are a per-machine choice, not managed here. The current set:
 

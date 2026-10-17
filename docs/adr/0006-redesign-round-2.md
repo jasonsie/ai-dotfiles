@@ -38,6 +38,7 @@ Gemini CLI, and Pi. By October 2026 the evidence had moved:
 | Q28 | No end-to-end portability test beyond the installers' unit tests. |
 | Q29 | `install.sh` previews by default; `--apply` writes. |
 | Q30 | Leftovers (the other AI's plan copy, unused folders) were removed after a preview. |
+| Q35 | The repository is renamed `ai-dotfiles` (Plan A Q8), because it now covers the Antigravity IDE as well as CLIs: GitHub `jasonsie/ai-dotfiles`, state folder `~/.local/state/ai-dotfiles/`. Earlier ADRs keep the old name as history. |
 
 ## Consequences
 

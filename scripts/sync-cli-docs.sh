@@ -19,7 +19,7 @@
 # Usage: bash scripts/sync-cli-docs.sh [claude] [codex] [pi] [antigravity]   (default: all)
 set -euo pipefail
 
-USER_AGENT="ai-cli-workspace-docs-sync/1.0 (+https://github.com)"
+USER_AGENT="ai-dotfiles-docs-sync/1.0 (+https://github.com)"
 MIRROR="upstream/docs"
 
 CLAUDE_LLMS="https://code.claude.com/docs/llms.txt"
