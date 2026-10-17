@@ -312,8 +312,9 @@ found nothing. The feature branch merged `origin/main` (commit `14ffb79`; the 20
 folders, so the removals were kept) and opened PR #7 (https://github.com/jasonsie/ai-cli-workspace/pull/7). zkfy `main`
 (public) pushed `f4caaf2` and `89455cf`; the user's seven uncommitted zkfy files stay local. This plan branch pushed. |
 
-Next steps for the user: turn on "Allow GitHub Actions to create and approve pull requests" (the agent was not allowed to
-grant it), review and merge PR #7, then run the "Sync upstream docs" workflow manually and review its first pull request.
+| Q33 (2026-10-18) | Decided (user: "all rm", after a preview); done | Claude memory folders left under pre-move paths: removed the 3 notes of the old ai-cli-workspace key (stale; its 23 session transcripts kept), and the old zkfy and `…/ai/workspace` keys (memory only; the user chose not to keep zkfy's 3 still-true rules). The user also turned on "Allow GitHub Actions to create and approve pull requests" (verified). |
+
+Next steps for the user: review and merge PR #7, then run the "Sync upstream docs" workflow manually and review its first pull request.
 Optional later items: Claude's per-project memory folders are still keyed by the old checkout paths; MCP and engineering
 docs (Q23d) are deferred; the rename to `ai-dotfiles` (Plan A Q8) is still open.
 
