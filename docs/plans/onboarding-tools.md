@@ -208,7 +208,11 @@ Grilling done (2026-10-21). Execute in this order:
      generated maps were updated directly and listed.
    Temporary links removed; `unittest` 76 OK after the final edits.
 8. Open the PR from `feat/onboard`.
-9. After merge: run `bash scripts/install.sh --apply` (or the skills step) from the main
-   checkout, then `bash scripts/healthcheck.sh`; mark this file `done`.
-10. Trial branches `onboard-trial` in `forks/ai/dotfiles` and `forks/ai/superpowers`
-    hold uncommitted `docs/CODEMAPS/`; the user decides to keep or delete them.
+9. After merge, in the main checkout (now on `feat/learn` with uncommitted work):
+   commit or finish the learn work and bring in `main` (both branches edit
+   `docs/how-it-works.md`, so expect a small conflict there); then run only the skills
+   step, `python3 scripts/install-skills.py --apply`, then `bash scripts/healthcheck.sh`;
+   then `git worktree remove ../ai_dotfiles-onboard`; mark this file `done`.
+10. Trial leftovers: both forks are on `onboard-trial` (from `main`) with nothing
+    committed; untracked `docs/` (dotfiles) and `docs/CODEMAPS/` (superpowers, including
+    a planted test `backend.md`). The user keeps or removes them.
