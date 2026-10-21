@@ -28,13 +28,21 @@ Requires Python 3.11+ (stock `/usr/bin/python3` is too old: `brew install python
 ```bash
 git clone <this repo> && git clone https://github.com/jasonsie/zkfy.git
 export ZKFY_DIR=/path/to/zkfy ZKFY_VAULT=/path/to/vault   # optional: vault retrieval
-bash scripts/install.sh            # preview: writes nothing
-bash scripts/install.sh --apply    # apply (backs up first)
-bash scripts/healthcheck.sh        # verify live state
+bash scripts/install.sh            # install (backs up first); --dry-run previews
+ai-dotfiles check                  # verify live state; works from any folder now
 ```
 
-`--target=claude|codex|pi|agy` limits a run; `--instructions-only` links the instructions
-only. Existing instruction files the installer does not recognize are refused until you
+The first run links `ai-dotfiles` into `~/.local/bin`:
+
+```bash
+ai-dotfiles [install]    # apply the setup
+ai-dotfiles update       # pull this repo (clean tree on main), then install
+ai-dotfiles uninstall    # remove what points into this repo; settings keys and MCP servers stay
+ai-dotfiles check        # healthcheck
+```
+
+`--dry-run` previews any of them; `--target=claude|codex|pi|agy` limits a run;
+`--instructions-only` links the instructions only. Existing instruction files the installer does not recognize are refused until you
 review them (`--replace-instructions`). Backups go to `~/.local/state/ai-dotfiles/`.
 
 Claude plugins are a per-machine choice, not managed here. The current set:
@@ -52,8 +60,8 @@ done
   through the links. Keep only rules that apply in every repository and every CLI; anything
   narrower belongs in a project's `AGENTS.md` or in a skill.
 - **A setting:** add it to `tools/settings/managed.json` under `enforce` (always put back)
-  or `default` (first run only), then run `bash scripts/install.sh --apply`.
-- **A skill:** add `skills/<name>/SKILL.md`, then run `bash scripts/install.sh --apply`.
+  or `default` (first run only), then run `ai-dotfiles`.
+- **A skill:** add `skills/<name>/SKILL.md`, then run `ai-dotfiles`.
   For a skill adapted from another repository, record its source, commit, and license in
   `skills/skills.lock` and keep its LICENSE file in the skill folder.
 - **The weekly upstream pull request:** every Monday a GitHub Action refreshes `upstream/`

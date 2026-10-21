@@ -43,6 +43,15 @@ class GlobalInstructionsTest(unittest.TestCase):
                 **kwargs,
             )
 
+    def uninstall(self, targets=None, **kwargs):
+        with redirect_stdout(io.StringIO()):
+            return adapter.uninstall(
+                self.home,
+                targets or tuple(adapter.ENTRIES),
+                workspace=self.workspace,
+                **kwargs,
+            )
+
     def seed(self, target, content):
         path = self.paths[target]
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -227,15 +236,12 @@ class GlobalInstructionsTest(unittest.TestCase):
             "--instructions-only",
             "--target=agy",
         ]
-        for preview in ([], ["--dry-run"]):  # previewing is the default
-            result = subprocess.run(
-                command + preview, env=env, capture_output=True, text=True
-            )
-            self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertEqual(list(self.home.iterdir()), [])
-        live = subprocess.run(
-            command + ["--apply"], env=env, capture_output=True, text=True
+        preview = subprocess.run(
+            command + ["--dry-run"], env=env, capture_output=True, text=True
         )
+        self.assertEqual(preview.returncode, 0, preview.stderr)
+        self.assertEqual(list(self.home.iterdir()), [])
+        live = subprocess.run(command, env=env, capture_output=True, text=True)  # writes by default
         self.assertEqual(live.returncode, 0, live.stderr)
         self.assertTrue(self.paths["agy"].is_symlink())
         self.assertFalse(self.paths["claude"].exists())
@@ -255,6 +261,105 @@ class GlobalInstructionsTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("knowledge: skipped", result.stdout)
         self.assertEqual(list(self.home.iterdir()), [])
+
+    def test_uninstall_restores_original_file(self):
+        path = self.seed("codex", "My rules\n")
+        path.chmod(0o600)
+        before = adapter.snapshot(path)
+        self.install(("codex",), apply=True, replace_existing=True)
+        self.assertEqual(self.uninstall(("codex",), apply=True), 1)
+        self.assertEqual(adapter.snapshot(path), before)
+        self.assertEqual(self.uninstall(apply=True), 0)  # nothing of ours left
+
+    def test_uninstall_earliest_manifest_wins_across_cycles(self):
+        path = self.seed("codex", "First original\n")
+        self.install(("codex",), apply=True, replace_existing=True)
+        self.uninstall(("codex",), apply=True)
+        path.write_text("Second original\n")
+        self.install(("codex",), apply=True, replace_existing=True)
+        self.assertEqual(len(self.backups()), 3)
+        # mtimes in creation order are not guaranteed to differ; set them
+        install1, uninstall1, install2 = sorted(
+            self.backups(), key=lambda b: (b / "manifest.json").stat().st_mtime_ns
+        )
+        for i, b in enumerate((install1, uninstall1, install2)):
+            os.utime(b / "manifest.json", (1000 + i, 1000 + i))
+        self.uninstall(("codex",), apply=True)
+        self.assertEqual(path.read_text(), "First original\n")
+
+    def test_uninstall_from_absent_leaves_path_absent(self):
+        self.install(apply=True)
+        self.assertEqual(self.uninstall(apply=True), len(adapter.ENTRIES))
+        for path in self.paths.values():
+            self.assertFalse(path.is_symlink() or path.exists())
+        self.assertEqual(self.uninstall(apply=True), 0)
+
+    def test_uninstall_leaves_foreign_entries(self):
+        foreign = self.seed("codex", "Mine\n")
+        elsewhere = self.root / "elsewhere.md"
+        elsewhere.write_text("x")
+        self.paths["agy"].parent.mkdir(parents=True)
+        self.paths["agy"].symlink_to(elsewhere)
+        self.assertEqual(self.uninstall(apply=True), 0)
+        self.assertEqual(foreign.read_text(), "Mine\n")
+        self.assertEqual(self.paths["agy"].resolve(), elsewhere)
+        self.assertEqual(self.backups(), [])
+
+    def test_uninstall_dry_run_writes_nothing(self):
+        path = self.seed("codex", "Mine\n")
+        self.install(("codex",), apply=True, replace_existing=True)
+        before = (self.backups(), os.readlink(path))
+        self.assertEqual(self.uninstall(("codex",)), 1)
+        self.assertEqual((self.backups(), os.readlink(path)), before)
+        self.assertEqual(len(self.backups()), 1)
+
+    def test_uninstall_skips_original_that_was_our_own_old_link(self):
+        path = self.seed("codex", "Real original\n")
+        self.install(("codex",), apply=True, replace_existing=True)
+        # an older install from a moved checkout, recorded earliest
+        old = self.home / ".local/state/ai-dotfiles/global-instructions/backup-old"
+        old.mkdir()
+        (old / "codex").symlink_to("/old/checkout/tools/instructions/AGENTS.md")
+        (old / "manifest.json").write_text(
+            json.dumps(
+                [{"target": str(path), "original_kind": "link", "backup": "codex"}]
+            )
+        )
+        os.utime(old / "manifest.json", (1, 1))
+        for b in self.backups():
+            if b != old:
+                os.utime(b / "manifest.json", (2, 2))
+        self.uninstall(("codex",), apply=True)
+        self.assertEqual(path.read_text(), "Real original\n")
+
+    def test_uninstall_skips_stale_originals(self):
+        live = self.root / "live.md"
+        live.write_text("x")
+        self.seed("claude", f"@{self.root}/gone/CLAUDE.md\n")  # import of a file now gone
+        self.seed("agy", "")
+        self.seed("codex", f"@{live}\n")  # a live import is the user's own: restored
+        self.install(("claude", "agy", "codex"), apply=True, replace_existing=True)
+        self.uninstall(("claude", "agy", "codex"), apply=True)
+        self.assertFalse(self.paths["claude"].exists())
+        self.assertFalse(self.paths["agy"].exists())
+        self.assertEqual(self.paths["codex"].read_text(), f"@{live}\n")
+
+    def test_uninstall_failure_rolls_back(self):
+        self.install(apply=True)
+        links = {p: os.readlink(p) for p in self.paths.values()}
+        original = adapter.restore_entry
+        calls = []
+
+        def failing(path, saved):
+            calls.append(path)
+            if len(calls) == 2:
+                raise OSError("injected")
+            original(path, saved)
+
+        with patch.object(adapter, "restore_entry", failing):
+            with self.assertRaisesRegex(OSError, "injected"):
+                self.uninstall(apply=True)
+        self.assertEqual(links, {p: os.readlink(p) for p in self.paths.values()})
 
 
 if __name__ == "__main__":

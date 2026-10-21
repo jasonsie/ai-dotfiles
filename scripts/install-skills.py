@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""Link this repository's skills into each CLI's skill folder; dry-run unless --apply.
+"""Link this repository's skills into each CLI's skill folder; writes unless --dry-run.
 
 Every folder under skills/ that has a SKILL.md is linked by name into
 ~/.claude/skills (Claude Code), ~/.agents/skills (read by Codex and Pi), and
 ~/.gemini/config/skills (Antigravity CLI and IDE). An existing entry this script
 did not create is refused. A link it created for a skill that has since left
 skills/ is removed; a link the user changed is left alone. A receipt records
-what it owns, and a failed run restores every link it changed.
+what it owns, and a failed run restores every link it changed. --uninstall removes
+every link it owns in the selected folders.
 """
 import argparse
 import json
@@ -26,7 +27,7 @@ RECEIPT = '.local/state/ai-dotfiles/skills.json'
 
 
 def repo_skills(source):
-    if not source.is_dir():
+    if source is None or not source.is_dir():
         return []
     return sorted(p.name for p in source.iterdir() if (p / 'SKILL.md').is_file())
 
@@ -94,10 +95,11 @@ def run(home, changes, links):
         raise
 
 
-def install(home, targets, source=SOURCE, apply=False):
+def install(home, targets, source=SOURCE, apply=False, uninstall=False):
     receipt = home / RECEIPT
     owned = json.loads(receipt.read_text())['links'] if receipt.is_file() else {}
-    changes, links = plan(home, targets, source, owned)
+    # Uninstall is an install of no skills: every owned link in the selected folders goes.
+    changes, links = plan(home, targets, None if uninstall else source, owned)
     for path, _, after in changes:
         if after[0] == 'link':
             print(f'{"Link" if apply else "Would link"}: {path} -> {after[1]}')
@@ -115,11 +117,13 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--home', type=Path, default=Path.home())
     parser.add_argument('--target', choices=('all', *ROOTS), default='all')
-    parser.add_argument('--apply', action='store_true')
+    parser.add_argument('--dry-run', action='store_true', help='preview only; write nothing')
+    parser.add_argument('--uninstall', action='store_true')
     args = parser.parse_args()
+    write = not args.dry_run
     targets = tuple(ROOTS) if args.target == 'all' else (args.target,)
     try:
-        count = install(args.home.expanduser().resolve(), targets, SOURCE, args.apply)
+        count = install(args.home.expanduser().resolve(), targets, SOURCE, write, args.uninstall)
     except (OSError, ValueError, KeyError) as e:
         print(f'skills: {e}', file=sys.stderr)
         return 1

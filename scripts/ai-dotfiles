@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# ai-dotfiles — run this repo's installer from any folder (linked into ~/.local/bin).
+#
+# Usage:
+#   ai-dotfiles [install] [flags]   apply the setup (scripts/install.sh)
+#   ai-dotfiles update [flags]      pull this repo, then install (install.sh --update)
+#   ai-dotfiles uninstall [flags]   remove what points into this repo (scripts/uninstall.sh)
+#   ai-dotfiles check               verify live state (scripts/healthcheck.sh)
+#   Flags pass through, e.g. --dry-run, --target=claude; see each script's --help.
+
+set -euo pipefail
+
+# Follow the ~/.local/bin link back into the checkout.
+SELF="${BASH_SOURCE[0]}"
+while [ -L "$SELF" ]; do
+  DIR="$(cd "$(dirname "$SELF")" && pwd)"
+  SELF="$(readlink "$SELF")"
+  case "$SELF" in /*) ;; *) SELF="$DIR/$SELF" ;; esac
+done
+SCRIPTS="$(cd "$(dirname "$SELF")" && pwd)"
+
+usage() { sed -n '2,9p' "$SELF" | sed 's/^# \{0,1\}//'; }
+
+COMMAND="${1:-install}"
+case "$COMMAND" in
+  -h|--help|help) usage; exit 0 ;;
+  -*) COMMAND=install ;;  # flags only: install
+  *) shift ;;
+esac
+
+case "$COMMAND" in
+  install) exec bash "$SCRIPTS/install.sh" "$@" ;;
+  update) exec bash "$SCRIPTS/install.sh" --update "$@" ;;
+  uninstall) exec bash "$SCRIPTS/uninstall.sh" "$@" ;;
+  check) exec bash "$SCRIPTS/healthcheck.sh" "$@" ;;
+  *) printf '[ERR] Unknown command: %s\n' "$COMMAND" >&2; usage >&2; exit 1 ;;
+esac
