@@ -1,6 +1,7 @@
 import importlib.util
 from pathlib import Path
 import unittest
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('report', ROOT / 'scripts/report-upstream.py')
@@ -57,6 +58,33 @@ class ReportUpstreamTest(unittest.TestCase):
     def test_managed_keys_come_from_both_groups(self):
         keys = report.managed_keys({'version': 2, 'codex': {'enforce': {'sandbox_mode': 'x'}, 'default': {'model': 'm'}}})
         self.assertEqual(keys, ['model', 'sandbox_mode'])
+
+    def skills_report(self, path, texts):
+        lock = {'skills': {'demo': {'repo': 'o/r', 'path': path, 'commit': 'abcdef1234'}}}
+        fake = lambda repo, p, ref=None: texts[p][0 if ref else 1]
+        with mock.patch.object(report, 'upstream_text', fake):
+            return '\n'.join(report.section_skills(lock, {}))
+
+    def test_skills_string_path_unchanged(self):
+        out = self.skills_report('a.md', {'a.md': ('x\n', 'x\n')})
+        self.assertIn('unchanged upstream', out)
+        self.assertNotIn('<details>', out)
+
+    def test_skills_string_path_changed(self):
+        out = self.skills_report('a.md', {'a.md': ('x\n', 'y\n')})
+        self.assertIn('**changed upstream** (`a.md`)', out)
+        self.assertIn('-x', out)
+        self.assertIn('+y', out)
+
+    def test_skills_list_path_all_unchanged(self):
+        out = self.skills_report(['a.md', 'b.md'], {'a.md': ('x', 'x'), 'b.md': ('y', 'y')})
+        self.assertIn('unchanged upstream', out)
+
+    def test_skills_list_path_one_changed(self):
+        out = self.skills_report(['a.md', 'b.md'], {'a.md': ('x', 'x'), 'b.md': ('y\n', 'z\n')})
+        self.assertIn('(`b.md`)', out)
+        self.assertNotIn('`a.md`', out)
+        self.assertEqual(out.count('<details>'), 1)
 
 
 if __name__ == '__main__':

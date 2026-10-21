@@ -7,8 +7,9 @@ staged (`git add upstream`). Prints Markdown for the review pull request:
 1. Pages added, removed, and changed per tool.
 2. Changes that touch this setup: changed lines naming something this repo relies
    on (managed setting keys, instruction files, skill folders, MCP registration).
-3. Picked skills (skills/skills.lock) whose upstream file changed since the pinned
-   commit, with the diff, and skills new in the watched skill collections.
+3. Picked skills (skills/skills.lock; `path` is one file or a list) whose upstream files
+   changed since the pinned commit, with a diff per changed file, and skills new in the
+   watched skill collections.
 
 --update-catalogs rewrites upstream/catalogs.json (the skill names last seen in each
 watched collection) instead of printing the report. Network calls use `gh api`.
@@ -118,18 +119,25 @@ def section_setup(files, keys):
     return hits[:LIMIT] + more
 
 
+def path_diff(path, pinned, latest):
+    diff = ''.join(difflib.unified_diff(pinned.splitlines(True), latest.splitlines(True), 'pinned', 'upstream'))
+    return ['', f'<details><summary>Upstream diff: <code>{path}</code></summary>', '', '```diff', diff.rstrip(), '```', '', '</details>']
+
+
 def section_skills(lock, added):
     lines = []
     for name, entry in sorted(lock['skills'].items()):
-        pinned, latest = (upstream_text(entry['repo'], entry['path'], ref)
-                          for ref in (entry['commit'], None))
+        paths = [entry['path']] if isinstance(entry['path'], str) else entry['path']
+        texts = {path: tuple(upstream_text(entry['repo'], path, ref) for ref in (entry['commit'], None)) for path in paths}
+        changed = [path for path, (pinned, latest) in texts.items() if pinned != latest]
         where = f'`{name}` ({entry["repo"]}, pinned {entry["commit"][:7]})'
-        if pinned == latest:
+        if not changed:
             lines.append(f'- {where}: unchanged upstream.')
             continue
-        diff = ''.join(difflib.unified_diff(pinned.splitlines(True), latest.splitlines(True), 'pinned', 'upstream'))
-        lines += [f'- {where}: **changed upstream**; review it against the local copy.', '',
-                  '<details><summary>Upstream diff</summary>', '', '```diff', diff.rstrip(), '```', '', '</details>']
+        names = ', '.join(f'`{path}`' for path in changed)
+        lines.append(f'- {where}: **changed upstream** ({names}); review against the local copy.')
+        for path in changed:
+            lines += path_diff(path, *texts[path])
     for repo, names in sorted(added.items()):
         lines.append(f'- New in {repo}: ' + ', '.join(f'`{n}`' for n in names))
     return lines or ['No picked skills.']
