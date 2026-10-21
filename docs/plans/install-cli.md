@@ -80,7 +80,27 @@ onto `origin/main` (`fd8142c`); local `main` fast-forwarded; `feat/install-cli` 
   `AGENTS.md`, tests for skills, hooks, instructions.
 - Hooks and instructions uninstall modes written by Sonnet subagents, reviewed here.
 
+- Uninstall also skips stale instruction originals (empty, or only an `@` import of a
+  file now gone), as install already treats them; found on this Mac's Oct 5 backups.
+
+## Checks run
+
+- 2026-10-21: `python3 -m unittest discover -s tests` 124 OK (also in a fresh clone);
+  shellcheck clean except the SC2016 info in `sync-cli-docs.sh`, already on `main`.
+- `install.sh --dry-run` on this Mac: 0 changes in every step except 18 skill links (the
+  6 onboarding skills merged on `main` via #15, × 3 folders) + receipt, and the command link.
+- `uninstall.sh --dry-run` on this Mac: removes hooks, skill links, vault binding,
+  instruction links; lists context7 and the managed keys; restores Pi's `AGENTS.md` from
+  `backup-ytkvfaf4/pi` (Oct 5).
+
+## Open
+
+- Pi's Oct 5 original is only a `zkfy-knowledge` marked block (old vault guidance pointing
+  at the launcher the same uninstall removes). User to choose: treat it as stale, or restore.
+
 ## Next step
 
-Run the Verify block; real-Mac `install.sh` must report 0 changes except the new command
-link; commit on `feat/install-cli`.
+1. User decides the Pi question above.
+2. User runs `bash scripts/install.sh` (first real run; links `ai-dotfiles`), then
+   `ai-dotfiles check`.
+3. Push both branches; PR `feat/learn` first, then `feat/install-cli` on top.

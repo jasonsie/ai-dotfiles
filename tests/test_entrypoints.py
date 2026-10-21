@@ -80,10 +80,11 @@ class EntrypointsTest(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn('pulls main only', result.stderr)
         subprocess.run(['git', '-C', str(clone), 'switch', '-q', '-C', 'main'], check=True)
+        (clone / 'stray.txt').write_text('uncommitted\n')
         result = subprocess.run(['bash', str(target), '--update', '--dry-run'], env=self.env,
                                 capture_output=True, text=True)
         self.assertEqual(result.returncode, 1)
-        self.assertIn('clean tree', result.stderr)  # install.sh itself was modified
+        self.assertIn('clean tree', result.stderr)
 
     def test_update_fast_forwards_then_installs_from_the_pulled_copy(self):
         git = lambda repo, *a: subprocess.run(['git', '-C', str(repo), *a], check=True, capture_output=True)  # noqa: E731
@@ -93,7 +94,7 @@ class EntrypointsTest(unittest.TestCase):
         shutil.rmtree(upstream / 'scripts')
         shutil.copytree(ROOT / 'scripts', upstream / 'scripts', ignore=shutil.ignore_patterns('__pycache__'))
         git(upstream, 'add', '-A')
-        git(upstream, '-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'working copy')
+        git(upstream, '-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '--allow-empty', '-m', 'working copy')
         work = Path(self.temp.name).resolve() / 'work'
         subprocess.run(['git', 'clone', '-q', str(upstream), str(work)], check=True)
         (upstream / 'NEW.txt').write_text('new\n')
