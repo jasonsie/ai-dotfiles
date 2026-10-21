@@ -14,6 +14,7 @@ tools/settings/managed.json   ─►  apply-settings.py (merges listed keys)    
 tools/mcp/servers.json        ─►  apply-mcp.py (native `mcp add`, or a merge) ─►  Claude Code, Codex, Pi, Antigravity
 zkfy checkout (ZKFY_DIR)      ─►  install-vault-knowledge.py (links)         ─►  query skill, vault-knowledge launcher
 skills/<name>/                ─►  install-skills.py (links)                  ─►  every CLI's skill folder
+skills/learn/hooks/           ─►  install-hooks.py (merges one entry/event)  ─►  each CLI's hook file; Pi extension link
                                   scripts/healthcheck.sh checks the live state
 
 WEEKLY  GitHub Action ─► sync-cli-docs.sh + report-upstream.py ─► upstream/ on branch upstream-sync ─► review PR
@@ -70,6 +71,28 @@ and healthcheck report it as a "local choice kept".
 - **Knowledge:** the CS vault, read through the `query` skill (read-only). Saving to the
   vault needs an explicit request.
 - **Claude's auto memory** stays on as a per-machine, Claude-only scratchpad.
+
+## Self-improvement loop
+
+The setup learns from its own sessions without extra cost:
+
+```text
+hook marks a moment ─► session's model decides ─► learn skill ─► docs/lessons.md ─► repeat? promote
+(prompt cue, or a plan     (is this a lesson?)      (proposes the    (one row per        into a skill or
+ turned `done`)                                      smallest fix)     pattern)            an AGENTS.md
+```
+
+- **Hooks** (`skills/learn/hooks/learn_hook.py`) fire at two moments only: the user's
+  prompt holds a phrase from `skills/learn/keywords.txt`, or a `docs/plans/*.md` file
+  changed to `Status: done` during the session. They add a short note or continue the
+  turn once; the session's own model decides whether to run `learn`.
+- **Native per CLI:** Claude Code and Codex `UserPromptSubmit` and `Stop`; Antigravity
+  `PreInvocation` (it reads the prompt from the transcript) and `Stop`; Pi has no hooks,
+  so `pi-learn.ts` is an extension. Codex runs a new hook only after approval in `/hooks`.
+- **Loop safety:** per-session state in `~/.local/state/ai-dotfiles/learn/`: at most one
+  ask per plan and three per session, never during the hook's own continuation.
+- **Nothing is written without approval;** a skill or global change needs the same cue
+  seen twice. Decisions: [docs/plans/self-improvement.md](plans/self-improvement.md).
 
 ## Upstream updates
 

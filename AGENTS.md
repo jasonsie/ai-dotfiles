@@ -12,11 +12,12 @@ decisions are in [docs/adr/](docs/adr/) (ADR-0005 and ADR-0006). `CLAUDE.md` lin
 | `tools/settings/managed.json` | Per-CLI `enforce` and `default` keys | `scripts/apply-settings.py` |
 | `tools/mcp/servers.json` | Shared MCP servers for all four CLIs | `scripts/apply-mcp.py` |
 | `skills/` | Shared skills; `skills.lock` pins adapted upstream skills | `scripts/install-skills.py` |
+| `skills/learn/hooks/` | Self-improvement hooks for the `learn` skill; lessons in `docs/lessons.md` | `scripts/install-hooks.py` |
 | zkfy checkout (`ZKFY_DIR`) | `query` skill and `vault-knowledge` launcher | `scripts/install-vault-knowledge.py` |
 | `upstream/` | Machine-written docs mirrors and skill catalogs | `scripts/sync-cli-docs.sh`, `scripts/report-upstream.py` (weekly workflow) |
 | `docs/plans/` | Task files for work that spans sessions | — |
 
-`scripts/install.sh` runs the five install steps; `scripts/healthcheck.sh` verifies live state.
+`scripts/install.sh` runs the six install steps; `scripts/healthcheck.sh` verifies live state.
 
 ## Rules for changes
 

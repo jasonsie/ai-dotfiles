@@ -7,6 +7,7 @@
 #   - shared MCP servers are listed by each CLI's own `mcp list`
 #   - vault launcher resolves (when bound)
 #   - each skill in skills/ is linked into every CLI's skill folder
+#   - the learn hooks are in each CLI's hook file (Pi: extension link)
 #   - repo sources contain no machine-specific paths; unit tests pass
 
 set -uo pipefail
@@ -74,6 +75,26 @@ for skill in "$ROOT"/skills/*/SKILL.md; do
     if [ "$folder/$name" -ef "$ROOT/skills/$name" ]; then pass "$folder/$name"; else fail "$folder/$name does not link to skills/$name"; fi
   done
 done
+
+echo "-- hooks (learn)"
+for pair in claude:"$HOME/.claude/settings.json" codex:"$HOME/.codex/hooks.json" agy:"$HOME/.gemini/config/hooks.json"; do
+  cli="${pair%%:*}"; file="${pair#*:}"
+  if [ ! -d "$(dirname "$file")" ]; then
+    skip "$cli not set up"
+  elif [ -f "$file" ] && grep -qF "$ROOT/skills/learn/hooks/learn_hook.py" "$file"; then
+    pass "$cli: $file"
+  else
+    fail "$cli: no learn hook pointing at this checkout in $file"
+  fi
+done
+PI_DIR="${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}"
+if [ ! -d "$PI_DIR" ]; then
+  skip "pi not set up"
+elif [ "$PI_DIR/extensions/ai-dotfiles-learn.ts" -ef "$ROOT/skills/learn/hooks/pi-learn.ts" ]; then
+  pass "pi: $PI_DIR/extensions/ai-dotfiles-learn.ts"
+else
+  fail "pi: $PI_DIR/extensions/ai-dotfiles-learn.ts does not link to skills/learn/hooks/pi-learn.ts"
+fi
 
 echo "-- portability"
 HITS="$(grep -rlIE --exclude=healthcheck.sh --exclude-dir=__pycache__ \
