@@ -143,7 +143,7 @@ how well the mechanism runs without this plan.
 
 ## Done and changed files
 
-Branch `feat/learn` (from `main`), not committed.
+Branch `feat/learn`, committed 2026-10-21 and rebased onto `origin/main` (`fd8142c`); not pushed.
 
 - New: `skills/learn/` (`SKILL.md`, `keywords.txt`, `hooks/learn_hook.py`,
   `hooks/pi-learn.ts`), `scripts/install-hooks.py`, `tests/test_install_hooks.py`,
@@ -190,5 +190,5 @@ Branch `feat/learn` (from `main`), not committed.
 1. The user approves the two Codex hooks once with `/hooks`, then runs both smoke tests
    in Codex (a prompt with "remember this"; a plan flipped to `done`). If Codex fails,
    document it here as unsupported (decision 22).
-2. The user reviews and commits branch `feat/learn`.
+2. The user reviews, pushes, and opens the PR for `feat/learn` (merges before `feat/install-cli`).
 3. Mark this plan `done`; the mechanism then runs on its own.
