@@ -54,6 +54,134 @@
       "commit": "07c5b305cf2d95d584a0d0398c390e839fec5954",
       "license": "MIT",
       "local_edits": "plans in docs/plans/<task>.md with task-file fields; CLI-neutral (no Claude Code requirement, no model names, no memory/MEMORY.md); review by a strongest-model sub-agent where the CLI has one, else in-session; examples/ not copied"
+    },
+    "diagnose": {
+      "repo": "mattpocock/skills",
+      "path": [
+        "skills/engineering/diagnose/SKILL.md",
+        "skills/engineering/diagnose/scripts/hitl-loop.template.sh"
+      ],
+      "commit": "b843cb5ea74b1fe5e58a0fc23cddef9e66076fb8",
+      "license": "MIT",
+      "local_edits": "slash-command mention made a skill name"
+    },
+    "grill-with-docs": {
+      "repo": "mattpocock/skills",
+      "path": [
+        "skills/engineering/grill-with-docs/ADR-FORMAT.md",
+        "skills/engineering/grill-with-docs/CONTEXT-FORMAT.md",
+        "skills/engineering/grill-with-docs/SKILL.md"
+      ],
+      "commit": "b843cb5ea74b1fe5e58a0fc23cddef9e66076fb8",
+      "license": "MIT",
+      "local_edits": "none beyond the attribution line"
+    },
+    "improve-codebase-architecture": {
+      "repo": "mattpocock/skills",
+      "path": [
+        "skills/engineering/improve-codebase-architecture/DEEPENING.md",
+        "skills/engineering/improve-codebase-architecture/INTERFACE-DESIGN.md",
+        "skills/engineering/improve-codebase-architecture/LANGUAGE.md",
+        "skills/engineering/improve-codebase-architecture/SKILL.md"
+      ],
+      "commit": "b843cb5ea74b1fe5e58a0fc23cddef9e66076fb8",
+      "license": "MIT",
+      "local_edits": "Explore via a read-only sub-agent where the CLI has one; INTERFACE-DESIGN spawns sub-agents only where the CLI has them, else writes the designs in sequence; slash-command mention made a skill name"
+    },
+    "setup-agent-skills": {
+      "repo": "mattpocock/skills",
+      "path": [
+        "skills/engineering/setup-matt-pocock-skills/SKILL.md",
+        "skills/engineering/setup-matt-pocock-skills/domain.md",
+        "skills/engineering/setup-matt-pocock-skills/issue-tracker-github.md",
+        "skills/engineering/setup-matt-pocock-skills/issue-tracker-gitlab.md",
+        "skills/engineering/setup-matt-pocock-skills/issue-tracker-local.md",
+        "skills/engineering/setup-matt-pocock-skills/triage-labels.md"
+      ],
+      "commit": "b843cb5ea74b1fe5e58a0fc23cddef9e66076fb8",
+      "license": "MIT",
+      "local_edits": "renamed from setup-matt-pocock-skills; edits AGENTS.md first, else CLAUDE.md, else creates AGENTS.md; dropped qa mention; triage-labels column renamed; agents/openai.yaml makes it explicit-only in Codex"
+    },
+    "tdd": {
+      "repo": "mattpocock/skills",
+      "path": [
+        "skills/engineering/tdd/SKILL.md",
+        "skills/engineering/tdd/deep-modules.md",
+        "skills/engineering/tdd/interface-design.md",
+        "skills/engineering/tdd/mocking.md",
+        "skills/engineering/tdd/refactoring.md",
+        "skills/engineering/tdd/tests.md"
+      ],
+      "commit": "b843cb5ea74b1fe5e58a0fc23cddef9e66076fb8",
+      "license": "MIT",
+      "local_edits": "none beyond the attribution line"
+    },
+    "to-issues": {
+      "repo": "mattpocock/skills",
+      "path": "skills/engineering/to-issues/SKILL.md",
+      "commit": "b843cb5ea74b1fe5e58a0fc23cddef9e66076fb8",
+      "license": "MIT",
+      "local_edits": "setup skill renamed to setup-agent-skills"
+    },
+    "to-prd": {
+      "repo": "mattpocock/skills",
+      "path": "skills/engineering/to-prd/SKILL.md",
+      "commit": "b843cb5ea74b1fe5e58a0fc23cddef9e66076fb8",
+      "license": "MIT",
+      "local_edits": "setup skill renamed to setup-agent-skills"
+    },
+    "triage": {
+      "repo": "mattpocock/skills",
+      "path": [
+        "skills/engineering/triage/AGENT-BRIEF.md",
+        "skills/engineering/triage/OUT-OF-SCOPE.md",
+        "skills/engineering/triage/SKILL.md"
+      ],
+      "commit": "b843cb5ea74b1fe5e58a0fc23cddef9e66076fb8",
+      "license": "MIT",
+      "local_edits": "setup skill renamed to setup-agent-skills; slash-command mentions made skill names"
+    },
+    "zoom-out": {
+      "repo": "mattpocock/skills",
+      "path": "skills/engineering/zoom-out/SKILL.md",
+      "commit": "b843cb5ea74b1fe5e58a0fc23cddef9e66076fb8",
+      "license": "MIT",
+      "local_edits": "agents/openai.yaml makes it explicit-only in Codex"
+    },
+    "caveman": {
+      "repo": "mattpocock/skills",
+      "path": "skills/productivity/caveman/SKILL.md",
+      "commit": "b843cb5ea74b1fe5e58a0fc23cddef9e66076fb8",
+      "license": "MIT",
+      "local_edits": "description on one line; slash-command mention made a skill name"
+    },
+    "write-a-skill": {
+      "repo": "mattpocock/skills",
+      "path": "skills/productivity/write-a-skill/SKILL.md",
+      "commit": "b843cb5ea74b1fe5e58a0fc23cddef9e66076fb8",
+      "license": "MIT",
+      "local_edits": "none beyond the attribution line"
+    },
+    "migrate-to-shoehorn": {
+      "repo": "mattpocock/skills",
+      "path": "skills/misc/migrate-to-shoehorn/SKILL.md",
+      "commit": "b843cb5ea74b1fe5e58a0fc23cddef9e66076fb8",
+      "license": "MIT",
+      "local_edits": "none beyond the attribution line"
+    },
+    "setup-pre-commit": {
+      "repo": "mattpocock/skills",
+      "path": "skills/misc/setup-pre-commit/SKILL.md",
+      "commit": "b843cb5ea74b1fe5e58a0fc23cddef9e66076fb8",
+      "license": "MIT",
+      "local_edits": "none beyond the attribution line"
+    },
+    "edit-article": {
+      "repo": "mattpocock/skills",
+      "path": "skills/personal/edit-article/SKILL.md",
+      "commit": "b843cb5ea74b1fe5e58a0fc23cddef9e66076fb8",
+      "license": "MIT",
+      "local_edits": "none beyond the attribution line"
     }
   }
 }

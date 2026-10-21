@@ -86,6 +86,31 @@ class ReportUpstreamTest(unittest.TestCase):
         self.assertNotIn('`a.md`', out)
         self.assertEqual(out.count('<details>'), 1)
 
+    def test_skills_path_removed_upstream(self):
+        out = self.skills_report(['a.md', 'b.md', 'c.md'],
+                                 {'a.md': ('x', 'x'), 'b.md': ('y\n', 'z\n'), 'c.md': ('w', None)})
+        self.assertIn('**changed upstream** (`b.md`); **removed upstream** (`c.md`)', out)
+        self.assertEqual(out.count('<details>'), 1)
+
+    def test_skills_long_diff_is_capped(self):
+        pinned = ''.join(f'{i}\n' for i in range(100))
+        out = self.skills_report('a.md', {'a.md': (pinned, pinned.replace('\n', ' x\n'))})
+        self.assertIn('more lines; compare upstream', out)
+        self.assertIn('-0\n', out)
+        self.assertNotIn('+99 x', out)
+
+    def test_skills_path_missing_at_pin_fails(self):
+        with self.assertRaises(ValueError):
+            self.skills_report('a.md', {'a.md': (None, 'x')})
+
+    def test_upstream_text_404_is_none_other_errors_raise(self):
+        error = report.subprocess.CalledProcessError
+        with mock.patch.object(report, 'gh_json', side_effect=error(1, 'gh', stderr='gh: Not Found (HTTP 404)')):
+            self.assertIsNone(report.upstream_text('o/r', 'a.md'))
+        with mock.patch.object(report, 'gh_json', side_effect=error(1, 'gh', stderr='gh: Bad credentials (HTTP 401)')):
+            with self.assertRaises(error):
+                report.upstream_text('o/r', 'a.md')
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -32,6 +32,7 @@ limits a run. Each step is idempotent: a second run reports 0 changes.
 | User skills | `~/.claude/skills` | `~/.agents/skills` | `~/.agents/skills`, `~/.pi/agent/skills` | `~/.gemini/config/skills` |
 | Settings file | `~/.claude/settings.json` | `~/.codex/config.toml` | `~/.pi/agent/settings.json` | `~/.gemini/antigravity-cli/settings.json` |
 | MCP servers | `~/.claude.json` via `claude mcp add` | `config.toml` via `codex mcp add` | `~/.pi/agent/mcp.json` via `pi mcp add` | `~/.gemini/config/mcp_config.json`, merged (no `mcp add`) |
+| Explicit-only skill | `disable-model-invocation: true` | `agents/openai.yaml`: `policy.allow_implicit_invocation: false` | `disable-model-invocation: true` | none documented; may load implicitly |
 
 Checked at runtime on 2026-10-16 and 2026-10-17: every CLI loads the global file and a
 project `AGENTS.md`, and lists the `grilling` and `query` skills. Codex can be checked
@@ -106,7 +107,8 @@ hook marks a moment ─► session's model decides ─► learn skill ─► doc
 - A skill adapted from another repository is pinned in `skills/skills.lock` (repository,
   path, commit, license, local edits; `path` may be a list of files). When the report
   shows it changed upstream, compare the upstream diff with the local copy, adopt what
-  you want, and update the pinned commit.
+  you want, and update the pinned commit. A pinned file deleted upstream is reported as
+  removed (often renamed: compare with the collection's new skills); the local copy stays.
 
 ## Backups and rollback
 
