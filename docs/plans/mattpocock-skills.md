@@ -70,7 +70,7 @@ Ports done by hand, not sub-agents: copies plus ~15 targeted edits.
 ## Next step
 
 1. ~~Report fix + test.~~ ~~Port the 14 skills.~~ ~~Lock entries, checks.~~ Done.
-2. Commit on `feat/mattpocock-skills`; open the PR when the user asks.
+2. ~~Commit, PR.~~ Done: d4df649, PR #19.
 3. After merge, in the main checkout: `python3 scripts/install-skills.py --apply`,
    `bash scripts/healthcheck.sh`; check one new skill loads per CLI (e.g. Codex
    `codex debug prompt-input "hi"` lists `tdd`, and does not list `zoom-out` implicitly);
