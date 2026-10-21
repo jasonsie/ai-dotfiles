@@ -81,8 +81,9 @@ and healthcheck report it as a "local choice kept".
   folders, MCP); picked skills that changed upstream since their pinned commit; and skills
   new in the watched collections (`upstream/catalogs.json`).
 - A skill adapted from another repository is pinned in `skills/skills.lock` (repository,
-  path, commit, license, local edits). When the report shows it changed upstream, compare
-  the upstream diff with the local copy, adopt what you want, and update the pinned commit.
+  path, commit, license, local edits; `path` may be a list of files). When the report
+  shows it changed upstream, compare the upstream diff with the local copy, adopt what
+  you want, and update the pinned commit.
 
 ## Backups and rollback
 
