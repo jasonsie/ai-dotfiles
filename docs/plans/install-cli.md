@@ -1,6 +1,6 @@
 # One-run install, update, uninstall, global command
 
-Status: active (grilling: aligning decisions before any code change)
+Status: done (2026-10-21). Merged to `main` as #20 (#18 had merged into `feat/learn`); `ai-dotfiles check` healthy.
 
 ## Goal
 
