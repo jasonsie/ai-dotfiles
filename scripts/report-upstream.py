@@ -33,6 +33,7 @@ FIXED_TERMS = ('AGENTS.md', 'AGENTS.override.md', 'CLAUDE.md', 'GEMINI.md', 'SKI
                '.agents/skills', '.claude/skills', '.gemini/config', '.pi/agent',
                'mcpServers', 'mcp_servers', 'mcp add', 'mcp.json', 'symlink')
 LIMIT = 40
+DIFF_LINES = 20  # per pinned file; a PR body must stay under 65,536 characters
 
 
 def git(*args):
@@ -88,8 +89,14 @@ def new_skills(before, after):
 
 
 def upstream_text(repo, path, ref=None):
+    """The file's text at ref (default branch if None); None if it does not exist there."""
     query = f'?ref={ref}' if ref else ''
-    return base64.b64decode(gh_json(f'repos/{repo}/contents/{path}{query}')['content']).decode()
+    try:
+        return base64.b64decode(gh_json(f'repos/{repo}/contents/{path}{query}')['content']).decode()
+    except subprocess.CalledProcessError as e:
+        if 'HTTP 404' in (e.stderr or ''):
+            return None
+        raise
 
 
 def collection_skills(repo):
@@ -120,8 +127,9 @@ def section_setup(files, keys):
 
 
 def path_diff(path, pinned, latest):
-    diff = ''.join(difflib.unified_diff(pinned.splitlines(True), latest.splitlines(True), 'pinned', 'upstream'))
-    return ['', f'<details><summary>Upstream diff: <code>{path}</code></summary>', '', '```diff', diff.rstrip(), '```', '', '</details>']
+    diff = ''.join(difflib.unified_diff(pinned.splitlines(True), latest.splitlines(True), 'pinned', 'upstream')).rstrip().splitlines()
+    more = [f'… {len(diff) - DIFF_LINES} more lines; compare upstream'] if len(diff) > DIFF_LINES else []
+    return ['', f'<details><summary>Upstream diff: <code>{path}</code></summary>', '', '```diff', *diff[:DIFF_LINES], *more, '```', '', '</details>']
 
 
 def section_skills(lock, added):
@@ -129,13 +137,18 @@ def section_skills(lock, added):
     for name, entry in sorted(lock['skills'].items()):
         paths = [entry['path']] if isinstance(entry['path'], str) else entry['path']
         texts = {path: tuple(upstream_text(entry['repo'], path, ref) for ref in (entry['commit'], None)) for path in paths}
-        changed = [path for path, (pinned, latest) in texts.items() if pinned != latest]
+        missing = [path for path, (pinned, _) in texts.items() if pinned is None]
+        if missing:
+            raise ValueError(f'{name}: not at the pinned commit: {", ".join(missing)}')
+        removed = [path for path, (_, latest) in texts.items() if latest is None]
+        changed = [path for path, (pinned, latest) in texts.items() if latest is not None and pinned != latest]
         where = f'`{name}` ({entry["repo"]}, pinned {entry["commit"][:7]})'
-        if not changed:
+        if not changed and not removed:
             lines.append(f'- {where}: unchanged upstream.')
             continue
-        names = ', '.join(f'`{path}`' for path in changed)
-        lines.append(f'- {where}: **changed upstream** ({names}); review against the local copy.')
+        notes = [f'**{label} upstream** (' + ', '.join(f'`{path}`' for path in paths) + ')'
+                 for label, paths in (('changed', changed), ('removed', removed)) if paths]
+        lines.append(f'- {where}: {"; ".join(notes)}; review against the local copy.')
         for path in changed:
             lines += path_diff(path, *texts[path])
     for repo, names in sorted(added.items()):
