@@ -4,13 +4,14 @@
 Only instruction entry files are changed, never settings, credentials, or hooks.
 Unknown existing instructions require --replace-existing and are backed up.
 --uninstall removes our links and restores the earliest backed-up original (skipping
-empty files and `@` imports of files now gone).
+empty files, tool-written blocks only, and `@` imports of files now gone).
 """
 
 import argparse
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import stat
 import sys
@@ -58,9 +59,13 @@ def entry_path(home, target, config_dirs):
     return Path(config_dirs.get(target, home / directory)).expanduser().absolute() / filename
 
 
+TOOL_BLOCK = re.compile(r"<!-- ([\w-]+):start -->.*?<!-- \1:end -->", re.S)
+
+
 def stale(saved):
-    """An original not worth restoring: empty, or only an `@` import of a file now gone."""
-    text = saved.read_text(errors="replace").strip()
+    """An original not worth restoring: empty, only tool-written `<!-- x:start/end -->`
+    blocks (e.g. an old zkfy block), or only an `@` import of a file now gone."""
+    text = TOOL_BLOCK.sub("", saved.read_text(errors="replace")).strip()
     if not text:
         return True
     return "\n" not in text and text.startswith("@") and not Path(text[1:]).expanduser().exists()

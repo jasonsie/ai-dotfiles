@@ -338,11 +338,20 @@ class GlobalInstructionsTest(unittest.TestCase):
         self.seed("claude", f"@{self.root}/gone/CLAUDE.md\n")  # import of a file now gone
         self.seed("agy", "")
         self.seed("codex", f"@{live}\n")  # a live import is the user's own: restored
-        self.install(("claude", "agy", "codex"), apply=True, replace_existing=True)
-        self.uninstall(("claude", "agy", "codex"), apply=True)
+        self.seed("pi", "\n<!-- zkfy-knowledge:start -->\n# Old\n<!-- zkfy-knowledge:end -->\n")
+        self.install(apply=True, replace_existing=True)
+        self.uninstall(apply=True)
         self.assertFalse(self.paths["claude"].exists())
         self.assertFalse(self.paths["agy"].exists())
+        self.assertFalse(self.paths["pi"].exists())
         self.assertEqual(self.paths["codex"].read_text(), f"@{live}\n")
+
+    def test_uninstall_restores_user_text_around_a_tool_block(self):
+        text = "My rule\n<!-- zkfy-knowledge:start -->\nx\n<!-- zkfy-knowledge:end -->\n"
+        path = self.seed("pi", text)
+        self.install(("pi",), apply=True, replace_existing=True)
+        self.uninstall(("pi",), apply=True)
+        self.assertEqual(path.read_text(), text)
 
     def test_uninstall_failure_rolls_back(self):
         self.install(apply=True)
