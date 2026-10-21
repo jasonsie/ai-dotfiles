@@ -96,6 +96,6 @@ onto `origin/main` (`fd8142c`); local `main` fast-forwarded; `feat/install-cli` 
 
 ## Next step
 
-1. User runs `bash scripts/install.sh` (first real run; links `ai-dotfiles`), then
-   `ai-dotfiles check`.
-2. Push both branches; PR `feat/learn` first, then `feat/install-cli` on top.
+Done on 2026-10-21: first real `install.sh` run (one run; `ai-dotfiles` linked);
+`ai-dotfiles check` from `/tmp` → healthy. PRs: #17 (`feat/learn`) then #18 (this branch).
+Remaining: the user merges #17, then #18; mark this plan `done` after the merge.
