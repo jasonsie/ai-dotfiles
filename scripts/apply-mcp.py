@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Register shared MCP servers in each CLI; dry-run unless --apply.
+"""Register shared MCP servers in each CLI; writes unless --dry-run.
 
 Presence is read from each CLI's user-scope config. Claude Code, Codex and Pi get a
 missing server through their own `mcp add`, so this never hand-edits their files.
 Antigravity has no such command, so its ~/.gemini/config/mcp_config.json is merged:
 only missing servers are added, everything else is kept, and the file is backed up
 first. Existing entries with the same name are left alone (report only).
+--uninstall only lists the shared servers left in place.
 """
 import argparse
 import json
@@ -48,6 +49,12 @@ def configured(home, cli):
     except FileNotFoundError:
         return set()
     raise ValueError(cli)
+
+
+def leftovers(home, targets, servers):
+    """(cli, name) of shared servers present: uninstall leaves them; they do not depend on this repo."""
+    names = {server['name'] for server in servers}
+    return [(cli, name) for cli in targets for name in sorted(configured(home, cli) & names)]
 
 
 def add_command(cli, server):
@@ -128,20 +135,27 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--home', type=Path, default=Path.home())
     parser.add_argument('--target', choices=('all', *CLIS), default='all')
-    parser.add_argument('--apply', action='store_true')
+    parser.add_argument('--dry-run', action='store_true', help='preview only; write nothing')
+    parser.add_argument('--uninstall', action='store_true', help='report the shared servers left in place')
     args = parser.parse_args()
+    write = not args.dry_run
     home = args.home.expanduser()
     targets = CLIS if args.target == 'all' else (args.target,)
     try:
         servers = json.loads(SERVERS.read_text())['servers']
+        if args.uninstall:
+            for cli, name in leftovers(home, targets, servers):
+                print(f'Left in place: {cli} MCP server {name}')
+            print('mcp: 0 changes (servers stay; remove them by hand if unwanted)')
+            return 0
         commands, files = plan(home, targets, servers)
         for command in commands:
-            print(('Run: ' if args.apply else 'Would run: ') + ' '.join(command))
-            if args.apply:
+            print(('Run: ' if write else 'Would run: ') + ' '.join(command))
+            if write:
                 subprocess.run(command, check=True, stdout=subprocess.DEVNULL)
         for path, _, _ in files:
-            print(f'{"Update" if args.apply else "Would update"}: {path}')
-        if args.apply and files:
+            print(f'{"Update" if write else "Would update"}: {path}')
+        if write and files:
             print(f'Backup: {write_files(home, files)}')
     except (OSError, ValueError, KeyError, tomllib.TOMLDecodeError, subprocess.CalledProcessError) as e:
         print(f'mcp: {e}', file=sys.stderr)

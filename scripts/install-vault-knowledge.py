@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bind the zkfy vault tooling for Claude, Codex, Pi and Antigravity; dry-run unless --apply.
+"""Bind the zkfy vault tooling for Claude, Codex, Pi and Antigravity; writes unless --dry-run.
 
 Installs exactly five artifacts: the launcher binding (~/.config/zkfy/knowledge.json),
 the `vault-knowledge` launcher link, and three `query` skill links: ~/.claude/skills
@@ -149,12 +149,13 @@ def main():
     p.add_argument("--vault", type=Path)
     p.add_argument("--zkfy", type=Path)
     p.add_argument("--target", choices=("claude", "agents", "agy", "all"), default="all")
-    p.add_argument("--apply", action="store_true")
+    p.add_argument("--dry-run", action="store_true", help="preview only; write nothing")
     p.add_argument("--uninstall", action="store_true")
     args = p.parse_args()
+    write = not args.dry_run
     targets = ("claude", "agents", "agy") if args.target == "all" else (args.target,)
     try:
-        install(args.home, args.vault, args.zkfy, targets, args.apply, args.uninstall)
+        install(args.home, args.vault, args.zkfy, targets, write, args.uninstall)
     except (OSError, ValueError, KeyError) as e:
         print(f"knowledge: {e}", file=sys.stderr)
         return 1
