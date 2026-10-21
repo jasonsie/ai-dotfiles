@@ -29,9 +29,9 @@ class InstallHooksTest(unittest.TestCase):
     def tearDown(self):
         self.temp.cleanup()
 
-    def install(self, targets=hooks.TARGETS, apply=False):
+    def install(self, targets=hooks.TARGETS, apply=False, uninstall=False):
         with redirect_stdout(io.StringIO()):
-            return hooks.install(self.home, targets, apply, self.hook, self.pi)
+            return hooks.install(self.home, targets, apply, self.hook, self.pi, uninstall)
 
     def read(self, cli):
         return json.loads((self.home / hooks.FILES[cli]).read_text())
@@ -116,6 +116,71 @@ class InstallHooksTest(unittest.TestCase):
         self.assertEqual((self.home / hooks.FILES['claude']).read_text(), '{"model": "opus"}\n')
         self.assertFalse((self.home / hooks.FILES['codex']).exists())
         self.assertFalse((self.home / '.pi/agent' / hooks.PI_LINK).is_symlink())
+
+    def seed(self):
+        seeds = {
+            'claude': {'model': 'opus', 'hooks': {'Stop': [THEIRS], 'PreToolUse': [THEIRS]}},
+            'codex': {'hooks': {'UserPromptSubmit': [THEIRS]}},
+            'agy': {'lint': {'Stop': [THEIRS['hooks'][0]]}},
+        }
+        for cli, data in seeds.items():
+            (self.home / hooks.FILES[cli]).write_text(json.dumps(data))
+        return seeds
+
+    def test_uninstall_restores_each_file(self):
+        seeds = self.seed()
+        self.install(apply=True)
+        self.assertNotEqual(self.read('claude'), seeds['claude'])
+        self.assertEqual(self.install(apply=True, uninstall=True), 4)
+        for cli, data in seeds.items():
+            self.assertEqual(self.read(cli), data)
+        self.assertFalse((self.home / '.pi/agent' / hooks.PI_LINK).is_symlink())
+
+    def test_uninstall_drops_emptied_events_and_hooks_key(self):
+        self.install(('claude', 'agy'), apply=True)
+        self.assertEqual(self.install(('claude', 'agy'), apply=True, uninstall=True), 2)
+        self.assertEqual(self.read('claude'), {})
+        self.assertEqual(self.read('agy'), {})
+
+    def test_uninstall_keeps_foreign_handler_in_our_group(self):
+        self.install(('claude',), apply=True)
+        data = self.read('claude')
+        data['hooks']['Stop'][0]['hooks'].append(THEIRS['hooks'][0])
+        (self.home / hooks.FILES['claude']).write_text(json.dumps(data))
+        self.install(('claude',), apply=True, uninstall=True)
+        self.assertEqual(self.read('claude'), {'hooks': {'Stop': [THEIRS]}})
+
+    def test_uninstall_is_idempotent(self):
+        self.seed()
+        self.install(apply=True)
+        self.install(apply=True, uninstall=True)
+        self.assertEqual(self.install(apply=True, uninstall=True), 0)
+        self.assertEqual(self.install(uninstall=True), 0)
+
+    def test_uninstall_dry_run_writes_nothing(self):
+        self.seed()
+        self.install(apply=True)
+        before = {cli: (self.home / hooks.FILES[cli]).read_bytes() for cli in hooks.FILES}
+        self.assertEqual(self.install(uninstall=True), 4)
+        for cli, data in before.items():
+            self.assertEqual((self.home / hooks.FILES[cli]).read_bytes(), data)
+        self.assertEqual(os.readlink(self.home / '.pi/agent' / hooks.PI_LINK), str(self.pi))
+
+    def test_uninstall_refuses_what_it_did_not_create(self):
+        (self.home / hooks.FILES['agy']).write_text(json.dumps({'ai-dotfiles-learn-stop': {'Stop': [THEIRS['hooks'][0]]}}))
+        with self.assertRaisesRegex(ValueError, 'refusing'):
+            self.install(('agy',), apply=True, uninstall=True)
+        (self.home / '.pi/agent/extensions').mkdir()
+        link = self.home / '.pi/agent' / hooks.PI_LINK
+        link.write_text('// mine')
+        with self.assertRaisesRegex(ValueError, 'refusing'):
+            self.install(('pi',), apply=True, uninstall=True)
+        self.assertEqual(link.read_text(), '// mine')
+
+    def test_uninstall_with_nothing_installed_or_no_cli(self):
+        self.assertEqual(self.install(apply=True, uninstall=True), 0)
+        (self.home / '.codex').rmdir()
+        self.assertEqual(self.install(uninstall=True), 0)
 
 
 if __name__ == '__main__':

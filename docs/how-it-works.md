@@ -3,25 +3,34 @@
 This repository is the single source of the owner's global AI CLI setup. You edit
 sources here; scripts apply them to each CLI's native folders; a healthcheck reads the
 live state back. Decisions: [ADR-0005](adr/0005-global-config-single-source.md),
-[ADR-0006](adr/0006-redesign-round-2.md).
+[ADR-0006](adr/0006-redesign-round-2.md), [ADR-0007](adr/0007-one-run-install.md).
 
 ## The flow
 
 ```text
-YOU EDIT                          APPLIED BY (bash scripts/install.sh --apply)    LANDS IN
+YOU EDIT                          APPLIED BY (ai-dotfiles = scripts/install.sh)   LANDS IN
 tools/instructions/AGENTS.md  ─►  install-global-instructions.py (symlinks)  ─►  each CLI's global instruction file
 tools/settings/managed.json   ─►  apply-settings.py (merges listed keys)     ─►  settings.json / config.toml
 tools/mcp/servers.json        ─►  apply-mcp.py (native `mcp add`, or a merge) ─►  Claude Code, Codex, Pi, Antigravity
 zkfy checkout (ZKFY_DIR)      ─►  install-vault-knowledge.py (links)         ─►  query skill, vault-knowledge launcher
 skills/<name>/                ─►  install-skills.py (links)                  ─►  every CLI's skill folder
 skills/learn/hooks/           ─►  install-hooks.py (merges one entry/event)  ─►  each CLI's hook file; Pi extension link
+scripts/ai-dotfiles           ─►  install-command.py (link)                 ─►  ~/.local/bin/ai-dotfiles
                                   scripts/healthcheck.sh checks the live state
 
 WEEKLY  GitHub Action ─► sync-cli-docs.sh + report-upstream.py ─► upstream/ on branch upstream-sync ─► review PR
 ```
 
-`install.sh` previews by default and writes only with `--apply`; `--target=claude|codex|pi|agy`
-limits a run. Each step is idempotent: a second run reports 0 changes.
+`install.sh` writes by default; `--dry-run` previews; `--target=claude|codex|pi|agy` limits
+a run. Each step is idempotent: a second run reports 0 changes. `ai-dotfiles` (linked on the
+first run) wraps the entry points from any folder: `install`, `update` (fast-forward pull of
+`main` on a clean tree, then install), `uninstall`, `check`.
+
+`uninstall.sh` runs each step's `--uninstall` in reverse order and removes whatever points
+into this repo: instruction links (restoring the file from before the first install),
+skill links, learn hooks, the vault binding and the command link. Settings keys and MCP
+servers stay and are listed, because they hold no repo paths and could be the user's own.
+After it, deleting the repo breaks nothing.
 
 ## Where each CLI reads things
 
@@ -52,7 +61,7 @@ without a model call: `codex debug prompt-input "hi"` prints what it would send.
   shared file; `~/.gemini/config/AGENTS.md`, where Antigravity appends rules, is never linked.
 - **Portable across Macs.** No usernames, checkout paths, or Homebrew prefixes in `tools/`
   or `scripts/`; scripts resolve their own location. The healthcheck enforces this.
-- **Safe by default.** Preview unless told otherwise, idempotent, back up before writing,
+- **Safe by default.** `--dry-run` previews, idempotent, back up before writing,
   refuse to overwrite anything a script did not create, and roll back on failure.
 
 ## Settings: enforce and default
@@ -114,11 +123,14 @@ hook marks a moment ─► session's model decides ─► learn skill ─► doc
 
 | Step | Record | Rollback |
 |---|---|---|
-| Instructions | `~/.local/state/ai-dotfiles/global-instructions/backup-*/manifest.json` | Remove the link, copy the backup back with `cp -Pp` |
+| Instructions | `~/.local/state/ai-dotfiles/global-instructions/backup-*/manifest.json` | `python3 scripts/install-global-instructions.py --uninstall` (restores the earliest backup) |
+| Hooks | `~/.local/state/ai-dotfiles/settings/backup-*`; entries found by their command | `python3 scripts/install-hooks.py --uninstall` |
 | Settings | `~/.local/state/ai-dotfiles/settings/backup-*` | Copy the backed-up file back |
 | MCP (Antigravity's file) | `~/.local/state/ai-dotfiles/mcp/backup-*` | Copy the backed-up file back |
-| Skills | `~/.local/state/ai-dotfiles/skills.json` (links this repo created) | Delete a skill folder and rerun with `--apply` |
-| Vault tooling | `~/.local/state/zkfy/integration.json` | `python3 scripts/install-vault-knowledge.py --uninstall --apply` |
+| Skills | `~/.local/state/ai-dotfiles/skills.json` (links this repo created) | `python3 scripts/install-skills.py --uninstall` |
+| Vault tooling | `~/.local/state/zkfy/integration.json` | `python3 scripts/install-vault-knowledge.py --uninstall` |
+| Command | `~/.local/state/ai-dotfiles/command.json` | `python3 scripts/install-command.py --uninstall` |
+| Everything | the records above | `ai-dotfiles uninstall` |
 
 ## Glossary
 

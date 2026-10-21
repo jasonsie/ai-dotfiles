@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""Merge workspace-managed keys into each CLI's live settings; dry-run unless --apply.
+"""Merge workspace-managed keys into each CLI's live settings; writes unless --dry-run.
 
 tools/settings/managed.json lists, per CLI, `enforce` keys (safety settings, put
 back on every run) and `default` keys (model choices, written only while the CLI
 has no value of its own, so a later pick made in the CLI stays). Every other key,
 credential, and runtime value is preserved. Settings files are never symlinked
 because each CLI writes back to them. Backs up privately before writing and
-rolls back on failure. Requires Python 3.11+ for tomllib.
+rolls back on failure. --uninstall only lists the managed keys left in place.
+Requires Python 3.11+ for tomllib.
 """
 import argparse
 import copy
@@ -167,6 +168,23 @@ def plan(home, targets, managed):
     return changes
 
 
+def leftovers(home, targets, managed):
+    """(path, managed keys present): uninstall leaves them; they do not depend on this repo."""
+    found = []
+    for cli in targets:
+        spec = managed.get(cli) or {}
+        path = settings_path(home, cli)
+        if not spec or not path.is_file():
+            continue
+        text = path.read_text()
+        current = tomllib.loads(text) if cli == 'codex' else (json.loads(text) if text.strip() else {})
+        keys = [key for key in (*spec.get('enforce', {}), *spec.get('default', {}))
+                if get_dotted(current, key) is not MISSING]
+        if keys:
+            found.append((path, keys))
+    return found
+
+
 def local_choices(home, targets, managed):
     """(cli, key, this machine's value, managed default) wherever the CLI kept its own choice."""
     kept = []
@@ -225,18 +243,25 @@ def main():
     parser.add_argument('--home', type=Path, default=Path.home())
     parser.add_argument('--target', choices=('all', *FILES), default='all')
     parser.add_argument('--managed', type=Path, default=MANAGED)
-    parser.add_argument('--apply', action='store_true')
+    parser.add_argument('--dry-run', action='store_true', help='preview only; write nothing')
+    parser.add_argument('--uninstall', action='store_true', help='report the managed keys left in place')
     args = parser.parse_args()
+    write = not args.dry_run
     home = args.home.expanduser().resolve()
     targets = tuple(FILES) if args.target == 'all' else (args.target,)
     try:
         managed = load_managed(args.managed)
+        if args.uninstall:
+            for path, keys in leftovers(home, targets, managed):
+                print(f'Left in place: {path}: {", ".join(keys)}')
+            print('settings: 0 changes (managed keys stay; remove them by hand if unwanted)')
+            return 0
         changes = plan(home, targets, managed)
         for cli, key, mine, default in local_choices(home, targets, managed):
             print(f'Local choice kept: {cli} {key} = {json.dumps(mine)} (default {json.dumps(default)})')
         for path, _, _ in changes:
-            print(f'{"Update" if args.apply else "Would update"}: {path}')
-        if args.apply and changes:
+            print(f'{"Update" if write else "Would update"}: {path}')
+        if write and changes:
             print(f'Backup: {apply(home, changes)}')
     except (OSError, ValueError, tomllib.TOMLDecodeError) as e:
         print(f'settings: {e}', file=sys.stderr)

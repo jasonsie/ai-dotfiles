@@ -8,6 +8,7 @@
 #   - vault launcher resolves (when bound)
 #   - each skill in skills/ is linked into every CLI's skill folder
 #   - the learn hooks are in each CLI's hook file (Pi: extension link)
+#   - ~/.local/bin/ai-dotfiles links to scripts/ai-dotfiles and is on PATH
 #   - repo sources contain no machine-specific paths; unit tests pass
 
 set -uo pipefail
@@ -95,6 +96,18 @@ elif [ "$PI_DIR/extensions/ai-dotfiles-learn.ts" -ef "$ROOT/skills/learn/hooks/p
 else
   fail "pi: $PI_DIR/extensions/ai-dotfiles-learn.ts does not link to skills/learn/hooks/pi-learn.ts"
 fi
+
+echo "-- command"
+COMMAND_LINK="$HOME/.local/bin/ai-dotfiles"
+if [ "$COMMAND_LINK" -ef "$ROOT/scripts/ai-dotfiles" ]; then
+  pass "$COMMAND_LINK"
+else
+  fail "$COMMAND_LINK does not link to scripts/ai-dotfiles (repo moved? rerun install.sh)"
+fi
+case ":$PATH:" in
+  *":$HOME/.local/bin:"*|*":$HOME/.local/bin/:"*) pass "$HOME/.local/bin on PATH" ;;
+  *) fail "$HOME/.local/bin is not on PATH; ai-dotfiles only runs by its full path" ;;
+esac
 
 echo "-- portability"
 HITS="$(grep -rlIE --exclude=healthcheck.sh --exclude-dir=__pycache__ \

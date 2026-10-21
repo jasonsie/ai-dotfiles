@@ -28,9 +28,9 @@ class InstallSkillsTest(unittest.TestCase):
     def tearDown(self):
         self.temp.cleanup()
 
-    def install(self, targets=tuple(skills.ROOTS), apply=False):
+    def install(self, targets=tuple(skills.ROOTS), apply=False, uninstall=False):
         with redirect_stdout(io.StringIO()):
-            return skills.install(self.home, targets, self.source, apply)
+            return skills.install(self.home, targets, self.source, apply, uninstall)
 
     def links(self):
         found = {}
@@ -84,6 +84,28 @@ class InstallSkillsTest(unittest.TestCase):
         self.install(('agy',), apply=True)
         self.assertEqual(len(self.links()), 4)
         self.assertEqual(self.install(('claude', 'agy')), 0)
+
+    def test_uninstall_removes_only_owned_links(self):
+        self.install(apply=True)
+        elsewhere = self.root / 'elsewhere'
+        elsewhere.mkdir()
+        mine = self.home / '.claude/skills/alpha'
+        mine.unlink()
+        mine.symlink_to(elsewhere, target_is_directory=True)
+        (self.home / '.agents/skills/user-skill').mkdir()
+        self.assertEqual(self.install(uninstall=True), 6)  # five links and the receipt
+        self.assertEqual(len(self.links()), 6)  # dry-run removed nothing
+        self.install(apply=True, uninstall=True)
+        self.assertEqual(self.links(), {'.claude/skills/alpha': str(elsewhere)})
+        self.assertTrue((self.home / '.agents/skills/user-skill').is_dir())
+        self.assertEqual(self.install(uninstall=True), 0)
+
+    def test_uninstall_target_selection_keeps_other_roots(self):
+        self.install(apply=True)
+        self.install(('claude',), apply=True, uninstall=True)
+        self.assertEqual(len(self.links()), 4)
+        self.assertNotIn('.claude/skills/alpha', self.links())
+        self.assertEqual(self.install(), 3)  # reinstall relinks claude and records them
 
     def test_failed_run_restores_links(self):
         original, calls = skills.set_state, 0
