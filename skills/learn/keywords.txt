@@ -1,0 +1,31 @@
+# Phrases that mark a possible learning moment in a user prompt.
+# One per line; case is ignored; English phrases match whole words only.
+# A false alarm costs one short model check, so prefer clear phrases.
+
+# Explicit learning requests
+learn from this
+remember this
+remember that
+note this for next time
+don't do that again
+do not do that again
+don't do this again
+stop doing that
+
+# Strong corrections
+you forgot
+not what i asked
+that's wrong again
+wrong again
+i told you
+i already told you
+
+# Chinese
+記住
+记住
+下次
+又錯了
+又错了
+不要再
+我說過
+我说过

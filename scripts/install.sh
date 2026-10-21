@@ -13,6 +13,7 @@
 #   4. knowledge     zkfy vault launcher + query skill (Claude, Codex, Pi, AGY); skipped if
 #                    ZKFY_DIR/ZKFY_VAULT are unset and no binding exists yet
 #   5. skills        skills/<name>/                → linked into each CLI's skill folder
+#   6. hooks         skills/learn/hooks/           → merged into each CLI's hook file (Pi: extension link)
 #
 # Requires Python 3.11+ (macOS /usr/bin/python3 is older; use Homebrew/pyenv).
 # See docs/adr/0005-global-config-single-source.md.
@@ -26,7 +27,7 @@ DRY_RUN=1
 INSTRUCTIONS_ONLY=0
 REPLACE_INSTRUCTIONS=0
 
-usage() { sed -n '2,18p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,19p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
 
 for arg in "$@"; do
   case "$arg" in
@@ -86,5 +87,8 @@ fi
 echo "== skills"
 # Same folders as the knowledge step: Codex and Pi share ~/.agents/skills.
 "$PYTHON" "$SCRIPT_DIR/install-skills.py" --target "$KNOWLEDGE_TARGET" ${APPLY[@]+"${APPLY[@]}"}
+
+echo "== hooks"
+"$PYTHON" "$SCRIPT_DIR/install-hooks.py" --target "$TARGET" ${APPLY[@]+"${APPLY[@]}"}
 
 [ "$DRY_RUN" = "1" ] && echo "Preview only: nothing written. Run again with --apply to write." || echo "Done. Verify: bash scripts/healthcheck.sh"
