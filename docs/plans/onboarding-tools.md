@@ -1,6 +1,6 @@
 # Onboarding tools from everything_claude_code (ECC)
 
-Status: active
+Status: done (2026-10-21). Merged as #15; skills installed, healthcheck healthy; worktree and branch removed. Left to the user: the `onboard-trial` branches in `forks/ai/dotfiles` and `forks/ai/superpowers` (step 10).
 
 ## Goal
 

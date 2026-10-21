@@ -1,6 +1,6 @@
 # Self-improvement inside ai-dotfiles ($0)
 
-Status: active
+Status: done (2026-10-21). Merged as #17; hooks installed for all four CLIs, healthcheck ok. The Codex `/hooks` approval and smoke tests (next step 1) were not recorded here.
 
 ## Goal
 

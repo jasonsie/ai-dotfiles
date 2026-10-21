@@ -1,6 +1,6 @@
 # Skills from reference/skill (mattpocock/skills snapshot)
 
-Status: active
+Status: done (2026-10-21). Merged as #19; skills installed, healthcheck healthy; Codex lists `tdd`, not `zoom-out`; worktree and branch removed.
 
 ## Goal
 
