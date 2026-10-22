@@ -302,6 +302,17 @@
       "commit": "5beb35b040e3de97e54fa9e386d7e42d15c295c2",
       "license": "MIT",
       "local_edits": "none beyond the attribution line"
+    },
+    "which-skill": {
+      "repo": "mattpocock/skills",
+      "path": [
+        "skills/engineering/ask-matt/PHASE-BOUNDARIES.md",
+        "skills/engineering/ask-matt/SKILL.md",
+        "skills/engineering/ask-matt/agents/openai.yaml"
+      ],
+      "commit": "5beb35b040e3de97e54fa9e386d7e42d15c295c2",
+      "license": "MIT",
+      "local_edits": "rewritten as which-skill: routes every skill this repo installs (local names, an onboard on-ramp, a repository-setup group); grilling asks one question at a time; PHASE-BOUNDARIES.md made CLI-neutral, with each CLI's commands from its docs; a unit test keeps the routes in step with skills/"
     }
   }
 }
