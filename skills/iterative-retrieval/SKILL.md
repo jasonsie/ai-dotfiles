@@ -4,51 +4,50 @@ description: Find the files behind a question or task by searching in cycles, sc
 ---
 
 Find the files that matter for a question or task. You cannot know the right
-search terms at the start, so search in short cycles and learn the codebase's
-own words as you go. Use your CLI's own search and read tools.
+search terms up front, so search in short cycles and learn the codebase's own
+words. Use your CLI's search and read tools.
 
 ## The loop
 
-Dispatch, evaluate, refine, loop. Run at most 3 cycles, then proceed.
+Dispatch, evaluate, refine, repeat. At most 3 cycles, then proceed.
 
 ### 1. Dispatch
 
-Run a broad first search.
+Run a broad search.
 
-1. Pick the likely folders and file types for the task.
-2. Pick a few keywords from the task. Add synonyms.
-3. Search for the keywords and list matching files with your search tool.
+1. Pick likely folders and file types.
+2. Pick keywords from the task, plus synonyms.
+3. Search them and list matching files.
 4. Skip tests, build output, and vendored code unless the task is about them.
 
 ### 2. Evaluate
 
-Read the top candidates, at least their headers, exports, and the matching
-lines. For each file, write down three things:
+Read the top candidates: headers, exports, matching lines. For each file write:
 
-- **Relevance**, from 0 to 1.
-- **Reason**, in one line.
-- **Missing context**: what you still need to know after reading it.
+- **Relevance**, 0 to 1.
+- **Reason**, one line.
+- **Missing context**: what you still need after reading it.
 
-Relevance bands:
+Bands:
 
 - **0.8-1.0 high**: directly implements the target behavior.
 - **0.5-0.7 medium**: related patterns or types.
-- **0.2-0.4 low**: only loosely related.
-- **0-0.2 none**: not relevant. Drop it.
+- **0.2-0.4 low**: loosely related.
+- **below 0.2 none**: drop it.
 
 ### 3. Refine
 
-1. Add the words the codebase actually uses, taken from the high-scoring files.
-2. Add new folders or file patterns those files point to.
-3. Drop paths you scored below 0.2.
-4. Aim the next search at the gaps you listed.
+1. Add the words the codebase uses, taken from high-scoring files.
+2. Add folders or file patterns those files point to.
+3. Drop paths scored below 0.2.
+4. Aim the next search at the listed gaps.
 
 ### 4. Loop
 
-Repeat from step 1 with the refined search. Stop when either is true:
+Repeat from step 1. Stop when either holds:
 
-- You have at least 3 files scoring 0.7 or more, and no critical gaps.
-- You have run 3 cycles. Use the best files you have and say what is still missing.
+- At least 3 files score 0.7 or more, and no critical gaps.
+- 3 cycles are done. Use the best files and say what is still missing.
 
 Three strong files beat ten weak ones.
 
@@ -97,17 +96,10 @@ Result: throttle.ts, middleware/index.ts, router-setup.ts
 
 ## Handing work to a sub-agent
 
-Only if your CLI can start a sub-agent. Pass it the files you found, each with
-the reason it matters (for example: "`throttle.ts` - existing limiter to
-reuse"). Include any gaps you could not close. Do not pass the whole search
-history. If your CLI has no sub-agent, keep the list and reasons in your own
-notes and carry on.
-
-## Tips
-
-- Start broad. The first cycle usually shows the project's naming.
-- Write the gaps down; they drive the next search.
-- Exclude confidently. A file under 0.2 will not become relevant.
+Only if your CLI can start one. Pass the files found, each with why it matters
+(for example "`throttle.ts` - existing limiter to reuse"), plus any unclosed
+gaps. Not the whole search history. Without sub-agents, keep the list in your
+own notes.
 
 Adapted from `iterative-retrieval` in affaan-m/everything-claude-code (MIT License;
 see LICENSE here).
