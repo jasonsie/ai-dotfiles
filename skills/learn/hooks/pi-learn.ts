@@ -1,6 +1,6 @@
 // Pi extension for the `learn` skill: Pi has no hooks, so this file plays the part of the
 // prompt and end-of-turn hooks and hands each event to learn_hook.py next to it.
-// Linked into ~/.pi/agent/extensions/ by scripts/install-hooks.py. Errors are swallowed so
+// Linked into ~/.pi/agent/extensions/ by scripts/install/skills.py. Errors are swallowed so
 // the extension never blocks a session.
 import { spawnSync } from "node:child_process";
 import { realpathSync } from "node:fs";

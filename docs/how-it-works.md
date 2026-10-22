@@ -2,29 +2,69 @@
 
 This repository is the single source of the owner's global AI CLI setup. You edit
 sources here; scripts apply them to each CLI's native folders; a healthcheck reads the
-live state back. Decisions: [ADR-0005](adr/0005-global-config-single-source.md),
-[ADR-0006](adr/0006-redesign-round-2.md), [ADR-0007](adr/0007-one-run-install.md).
+live state back. Earlier decision records (ADRs and finished plans) are in git history:
+`git show 3507344:docs/adr/`.
+
+## Layout
+
+```text
+config/              the sources the installers apply
+  ai-clis.json         which CLIs are on, and where each one reads things
+  global-agents.md     the rules every CLI loads in every project
+  cli-settings.json    per-CLI `enforce` and `default` settings keys
+  mcp-servers.json     MCP servers shared by the CLIs
+skills/              shared skills; skills.lock pins adapted ones; learn/ holds its hooks
+scripts/             ai-dotfiles, install.sh, uninstall.sh, healthcheck.sh (entry points)
+  install/             installer.py (shared by every step) and one file per step
+  upstream/            the weekly docs sync and its pull request report
+  tests/               unit tests for all of the above
+docs/
+  how-it-works.md      this file
+  upstream/            machine-written mirror of each CLI's docs, and the skill catalogs
+```
 
 ## The flow
 
 ```text
-YOU EDIT                          APPLIED BY (ai-dotfiles = scripts/install.sh)   LANDS IN
-tools/instructions/AGENTS.md  ─►  install-global-instructions.py (symlinks)  ─►  each CLI's global instruction file
-tools/settings/managed.json   ─►  apply-settings.py (merges listed keys)     ─►  settings.json / config.toml
-tools/mcp/servers.json        ─►  apply-mcp.py (native `mcp add`, or a merge) ─►  Claude Code, Codex, Pi, Antigravity
-zkfy checkout (ZKFY_DIR)      ─►  install-vault-knowledge.py (links)         ─►  query skill, vault-knowledge launcher
-skills/<name>/                ─►  install-skills.py (links)                  ─►  every CLI's skill folder
-skills/learn/hooks/           ─►  install-hooks.py (merges one entry/event)  ─►  each CLI's hook file; Pi extension link
-scripts/ai-dotfiles           ─►  install-command.py (link)                 ─►  ~/.local/bin/ai-dotfiles
+YOU EDIT                          APPLIED BY scripts/install/ (ai-dotfiles = install.sh)   LANDS IN
+config/ai-clis.json           ─►  every step: which CLIs, and their paths  ─►  (the CLIs switched on)
+config/global-agents.md       ─►  instructions.py (symlinks)               ─►  each CLI's global instruction file
+config/cli-settings.json      ─►  settings.py (merges listed keys)         ─►  settings.json / config.toml
+config/mcp-servers.json       ─►  mcp.py (native `mcp add`, or a merge)    ─►  Claude Code, Codex, Pi, Antigravity
+zkfy checkout (ZKFY_DIR)      ─►  knowledge.py (file, link)                ─►  vault binding, vault-knowledge launcher
+skills/<name>/, zkfy's query  ─►  skills.py (links)                        ─►  every CLI's skill folder
+scripts/ai-dotfiles, pi-learn ─►  skills.py (links)                        ─►  ~/.local/bin; Pi's extension folder
+skills/learn/hooks/           ─►  hooks.py (merges one entry/event)        ─►  each CLI's hook file
+                                  installer.py: reads ai-clis.json; the safe writes every step shares
                                   scripts/healthcheck.sh checks the live state
 
-WEEKLY  GitHub Action ─► sync-cli-docs.sh + report-upstream.py ─► upstream/ on branch upstream-sync ─► review PR
+WEEKLY  GitHub Action ─► scripts/upstream/ ─► docs/upstream/ on branch upstream-sync ─► review PR
 ```
 
-`install.sh` writes by default; `--dry-run` previews; `--target=claude|codex|pi|agy` limits
-a run. Each step is idempotent: a second run reports 0 changes. `ai-dotfiles` (linked on the
-first run) wraps the entry points from any folder: `install`, `update` (fast-forward pull of
-`main` on a clean tree, then install), `uninstall`, `check`.
+`install.sh` writes by default; `--dry-run` previews; `--target=<cli>` limits a run to one
+CLI listed in `config/ai-clis.json`. Each step is idempotent: a second run reports 0
+changes. `ai-dotfiles` (linked on the first run) wraps the entry points from any folder:
+`install`, `update` (fast-forward pull of `main` on a clean tree, then install),
+`uninstall`, `check`.
+
+## Which CLIs: config/ai-clis.json
+
+Each entry names a CLI, switches it `on` or off, and says where it reads its global
+instructions, settings, MCP servers, skills and, where it has them, hooks (`hooks`) or
+extensions (`extensions`, Pi). Paths start with `~/`. The file is checked strictly: a
+missing or unknown key, an `on` that is not `true` or `false`, or a CLI the steps have no
+code for stops the run.
+
+- **The file is the desired state.** A run installs for each CLI switched on and takes out
+  of each CLI switched off what this repo put there: the instruction link (the original
+  comes back), skill links, hook entries, Pi's extension. Settings keys and MCP servers
+  stay, as with any uninstall. A CLI switched off gets no folders created.
+- **A shared folder stays while any CLI that is on reads it** (`~/.agents/skills`, for
+  Codex and Pi).
+- **`--target` only narrows a run** to one CLI; `all` means every CLI in the file, on or
+  off. `uninstall` removes for every selected CLI whatever its switch.
+- **How each CLI's files are edited stays in code:** Codex settings are TOML, each CLI has
+  its own `mcp add`, hook events differ, and Pi takes an extension.
 
 `uninstall.sh` runs each step's `--uninstall` in reverse order and removes whatever points
 into this repo: instruction links (restoring the file from before the first install),
@@ -41,8 +81,13 @@ After it, deleting the repo breaks nothing.
 | User skills | `~/.claude/skills` | `~/.agents/skills` | `~/.agents/skills`, `~/.pi/agent/skills` | `~/.gemini/config/skills` |
 | Settings file | `~/.claude/settings.json` | `~/.codex/config.toml` | `~/.pi/agent/settings.json` | `~/.gemini/antigravity-cli/settings.json` |
 | MCP servers | `~/.claude.json` via `claude mcp add` | `config.toml` via `codex mcp add` | `~/.pi/agent/mcp.json` via `pi mcp add` | `~/.gemini/config/mcp_config.json`, merged (no `mcp add`) |
-| MCP server guidance | server instructions | server instructions | only the `description` in `servers.json` | not documented |
+| MCP server guidance | server instructions | server instructions | only the `description` in `mcp-servers.json` | not documented |
 | Explicit-only skill | `disable-model-invocation: true` | `agents/openai.yaml`: `policy.allow_implicit_invocation: false` | `disable-model-invocation: true` | none documented; may load implicitly |
+
+The installers read the paths in the first five rows from `config/ai-clis.json`. To move
+a CLI's folder, edit its paths there; `CLAUDE_CONFIG_DIR`, `CODEX_HOME` and
+`PI_CODING_AGENT_DIR` are never read for paths, and a run warns when one is set and
+disagrees with the file.
 
 Checked at runtime on 2026-10-16 and 2026-10-17: every CLI loads the global file and a
 project `AGENTS.md`, and lists the `grilling` and `query` skills. Codex can be checked
@@ -55,28 +100,32 @@ without a model call: `codex debug prompt-input "hi"` prints what it would send.
 - **Link what is read-only; merge what a CLI writes.** Instruction files and skills are
   symlinks to one source. Settings files are never linked, because each CLI writes its
   own state into them; only listed keys are merged.
-- **Global only what applies everywhere.** The global `AGENTS.md` is loaded into every
-  session of every project, so it holds only rules true in every repository and every
-  CLI. Everything else lives in a project's `AGENTS.md` or in a skill, which loads on demand.
+- **Global only what applies everywhere.** The global agents file
+  (`config/global-agents.md`) is loaded into every session of every project, so it holds
+  only rules true in every repository and every CLI. Everything else lives in a project's
+  `AGENTS.md` or in a skill, which loads on demand.
 - **Never write through a link.** A CLI's memory or rule-saving feature must not edit the
   shared file; `~/.gemini/config/AGENTS.md`, where Antigravity appends rules, is never linked.
-- **Portable across Macs.** No usernames, checkout paths, or Homebrew prefixes in `tools/`
+- **Portable across Macs.** No usernames, checkout paths, or Homebrew prefixes in `config/`
   or `scripts/`; scripts resolve their own location. The healthcheck enforces this.
 - **Safe by default.** `--dry-run` previews, idempotent, back up before writing,
-  refuse to overwrite anything a script did not create, and roll back on failure.
+  refuse to overwrite anything a script did not create, and roll back on failure. Every
+  step writes through `apply()` in `scripts/install/installer.py`, so these rules live in
+  one place.
 
 ## Settings: enforce and default
 
-`tools/settings/managed.json` (version 2) lists, per CLI, an `enforce` group and a
-`default` group. `enforce` holds safety settings (approval policy, sandbox, permission
-prompts) and is put back on every install. `default` holds model choices and is written
-only while a CLI has no value; a model you pick in a CLI's own menu stays, and the preview
-and healthcheck report it as a "local choice kept".
+`config/cli-settings.json` (version 2) lists, per CLI, an `enforce` group and a `default`
+group. `enforce` holds safety settings (approval policy, sandbox, permission prompts) and
+is put back on every install. `default` holds model choices and is written only while a
+CLI has no value; a model you pick in a CLI's own menu stays, and the preview and
+healthcheck report it as a "local choice kept".
 
 ## Memory
 
 - **Task memory:** a task that spans sessions keeps its state in `docs/plans/<task>.md`
-  in its repository (the global rule), so another session or CLI can continue it.
+  in its repository (the global rule), so another session or CLI can continue it. In this
+  repository a task file is deleted once its work is merged.
 - **Project memory:** the project's `AGENTS.md`, read natively by every CLI. When a
   project also has a `CLAUDE.md`, it links to `AGENTS.md` or imports it with `@AGENTS.md`.
 - **Knowledge:** the CS vault, read through the `query` skill (read-only). Saving to the
@@ -88,9 +137,9 @@ and healthcheck report it as a "local choice kept".
 The setup learns from its own sessions without extra cost:
 
 ```text
-hook marks a moment ─► session's model decides ─► learn skill ─► docs/lessons.md ─► repeat? promote
-(prompt cue, or a plan     (is this a lesson?)      (proposes the    (one row per        into a skill or
- turned `done`)                                      smallest fix)     pattern)            an AGENTS.md
+hook marks a moment ─► session's model decides ─► learn skill ─► lessons.md ─► repeat? promote
+(prompt cue, or a plan     (is this a lesson?)      (proposes the    (one row per    into a skill or
+ turned `done`)                                      smallest fix)     pattern)        an AGENTS.md
 ```
 
 - **Hooks** (`skills/learn/hooks/learn_hook.py`) fire at two moments only: the user's
@@ -102,18 +151,18 @@ hook marks a moment ─► session's model decides ─► learn skill ─► doc
   so `pi-learn.ts` is an extension. Codex runs a new hook only after approval in `/hooks`.
 - **Loop safety:** per-session state in `~/.local/state/ai-dotfiles/learn/`: at most one
   ask per plan and three per session, never during the hook's own continuation.
-- **Nothing is written without approval;** a skill or global change needs the same cue
-  seen twice. Decisions: [docs/plans/self-improvement.md](plans/self-improvement.md).
+- **The log** is `skills/learn/lessons.md`, created with the first lesson. Nothing is
+  written without approval; a skill or global change needs the same cue seen twice.
 
 ## Upstream updates
 
-- `scripts/sync-cli-docs.sh` mirrors each CLI's official docs into `upstream/docs/<tool>/`
-  (claude, codex, pi, antigravity). Each source has a page floor; below it, the previous
-  copy is kept and the run fails, so a moved index cannot wipe a mirror.
-- `scripts/report-upstream.py` writes the pull request description: pages changed per
-  tool; changes that touch this setup (managed setting keys, instruction files, skill
+- `scripts/upstream/sync-cli-docs.sh` mirrors each CLI's official docs into
+  `docs/upstream/<tool>/` (claude, codex, pi, antigravity). Each source has a page floor;
+  below it, the previous copy is kept and the run fails, so a moved index cannot wipe a mirror.
+- `scripts/upstream/report-upstream.py` writes the pull request description: pages changed
+  per tool; changes that touch this setup (managed setting keys, instruction files, skill
   folders, MCP); picked skills that changed upstream since their pinned commit; and skills
-  new in the watched collections (`upstream/catalogs.json`).
+  new in the watched collections (`docs/upstream/catalogs.json`).
 - A skill adapted from another repository is pinned in `skills/skills.lock` (repository,
   path, commit, license, local edits; `path` may be a list of files). When the report
   shows it changed upstream, compare the upstream diff with the local copy, adopt what
@@ -124,23 +173,25 @@ hook marks a moment ─► session's model decides ─► learn skill ─► doc
 
 | Step | Record | Rollback |
 |---|---|---|
-| Instructions | `~/.local/state/ai-dotfiles/global-instructions/backup-*/manifest.json` | `python3 scripts/install-global-instructions.py --uninstall` (restores the earliest backup) |
-| Hooks | `~/.local/state/ai-dotfiles/settings/backup-*`; entries found by their command | `python3 scripts/install-hooks.py --uninstall` |
+| Instructions | `~/.local/state/ai-dotfiles/global-instructions/backup-*/manifest.json` | `python3 scripts/install/instructions.py --uninstall` (restores the earliest backup) |
+| Hooks | `~/.local/state/ai-dotfiles/settings/backup-*`; entries found by their command | `python3 scripts/install/hooks.py --uninstall` |
 | Settings | `~/.local/state/ai-dotfiles/settings/backup-*` | Copy the backed-up file back |
 | MCP (Antigravity's file) | `~/.local/state/ai-dotfiles/mcp/backup-*` | Copy the backed-up file back |
-| Skills | `~/.local/state/ai-dotfiles/skills.json` (links this repo created) | `python3 scripts/install-skills.py --uninstall` |
-| Vault tooling | `~/.local/state/zkfy/integration.json` | `python3 scripts/install-vault-knowledge.py --uninstall` |
-| Command | `~/.local/state/ai-dotfiles/command.json` | `python3 scripts/install-command.py --uninstall` |
+| Skills, command, Pi extension | `~/.local/state/ai-dotfiles/skills.json` (links this repo created) | `python3 scripts/install/skills.py --uninstall` |
+| Vault tooling | `~/.local/state/zkfy/integration.json` | `python3 scripts/install/knowledge.py --uninstall` |
 | Everything | the records above | `ai-dotfiles uninstall` |
 
 ## Glossary
 
-- **Source:** a file under `tools/` or `skills/` (or the zkfy checkout) that an installer
+- **Source:** a file under `config/` or `skills/` (or the zkfy checkout) that an installer
   applies. Edit the source, never the destination.
-- **Managed key:** a settings key in `managed.json`, either `enforce` or `default`; every
-  other key belongs to the CLI or to you.
-- **Local choice:** a `default` key whose live value differs from `managed.json`; kept on purpose.
-- **Mirror:** a machine-written copy of upstream docs under `upstream/`; never edit it by hand.
+- **Switch:** a CLI's `on` value in `ai-clis.json`; on means set up, off means taken out.
+- **Managed key:** a settings key in `cli-settings.json`, either `enforce` or `default`;
+  every other key belongs to the CLI or to you.
+- **Local choice:** a `default` key whose live value differs from `cli-settings.json`; kept
+  on purpose.
+- **Mirror:** a machine-written copy of upstream docs under `docs/upstream/`; never edit it
+  by hand.
 - **Floor:** the minimum number of pages a source must yield before its mirror is replaced.
 - **Receipt:** a record of what a script created, so it never touches anything else.
 - **Emitted vs verified:** writing a config is not proof that it works. Verified means the

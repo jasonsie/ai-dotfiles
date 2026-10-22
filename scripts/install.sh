@@ -2,24 +2,25 @@
 # scripts/install.sh — apply the workspace's global CLI config on this Mac.
 #
 # Usage:
-#   bash scripts/install.sh [--dry-run] [--update] [--target=all|claude|codex|pi|agy]
+#   bash scripts/install.sh [--dry-run] [--update] [--target=all|<cli>]
 #                           [--instructions-only] [--replace-instructions]
 #   Writes by default; --dry-run previews and writes nothing. --update first pulls this
-#   repo (fast-forward only; clean tree on main), then installs. After the first run,
-#   `ai-dotfiles` runs this from any folder.
+#   repo (fast-forward only; clean tree on main), then installs. config/ai-clis.json says
+#   which CLIs are on: a run sets those up and takes this repo's links and hooks out of the
+#   ones switched off; --target=<cli> limits a run to one CLI listed there.
 #
 # Steps (each is idempotent, dry-run aware, and backs up before writing):
-#   1. instructions  tools/instructions/AGENTS.md → each CLI's global entry (symlink)
-#   2. settings      tools/settings/managed.json  → merged into live settings (only those keys)
-#   3. mcp           tools/mcp/servers.json       → native `<cli> mcp add` when missing
-#   4. knowledge     zkfy vault launcher + query skill (Claude, Codex, Pi, AGY); skipped if
-#                    ZKFY_DIR/ZKFY_VAULT are unset and no binding exists yet
-#   5. skills        skills/<name>/                → linked into each CLI's skill folder
-#   6. hooks         skills/learn/hooks/           → merged into each CLI's hook file (Pi: extension link)
-#   7. command       scripts/ai-dotfiles           → ~/.local/bin/ai-dotfiles (link)
+#   1. instructions  config/global-agents.md       → each CLI's global entry (symlink)
+#   2. settings      config/cli-settings.json      → merged into live settings (only those keys)
+#   3. mcp           config/mcp-servers.json       → native `<cli> mcp add` when missing
+#   4. knowledge     zkfy vault binding and launcher; skipped if ZKFY_DIR/ZKFY_VAULT are
+#                    unset and no binding exists yet
+#   5. skills        skills/<name>/, zkfy's query → each CLI's skill folder (links); also
+#                    scripts/ai-dotfiles → ~/.local/bin, and Pi's learn extension
+#   6. hooks         skills/learn/hooks/           → merged into each CLI's hook file
 #
 # Requires Python 3.11+ (macOS /usr/bin/python3 is older; use Homebrew/pyenv).
-# Undo with scripts/uninstall.sh. See docs/adr/0005-global-config-single-source.md.
+# Steps live in scripts/install/. Undo with scripts/uninstall.sh. See docs/how-it-works.md.
 
 set -euo pipefail
 
@@ -33,7 +34,7 @@ INSTRUCTIONS_ONLY=0
 REPLACE_INSTRUCTIONS=0
 PASS=()
 
-usage() { sed -n '2,22p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,23p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
 
 for arg in "$@"; do
   case "$arg" in
@@ -47,11 +48,6 @@ for arg in "$@"; do
   esac
   PASS+=("$arg")
 done
-
-case "$TARGET" in
-  all|claude|codex|pi|agy) ;;
-  *) printf '[ERR] Invalid target: %s\n' "$TARGET" >&2; exit 1 ;;
-esac
 
 if [ "$UPDATE" = "1" ]; then
   echo "== update"
@@ -87,6 +83,8 @@ if ! "$PYTHON" -c 'import sys; sys.exit(sys.version_info < (3, 11))' 2>/dev/null
     "$("$PYTHON" --version 2>&1 || echo none)" >&2
   exit 1
 fi
+# Check config/ai-clis.json (and warn when a CLI folder override disagrees with it).
+"$PYTHON" "$SCRIPT_DIR/install/installer.py"
 
 DRY=()
 [ "$DRY_RUN" = "1" ] && DRY=(--dry-run)
@@ -94,39 +92,26 @@ DRY=()
 echo "== instructions"
 INSTRUCTION_ARGS=(--target "$TARGET" ${DRY[@]+"${DRY[@]}"})
 [ "$REPLACE_INSTRUCTIONS" = "1" ] && INSTRUCTION_ARGS+=(--replace-existing)
-"$PYTHON" "$SCRIPT_DIR/install-global-instructions.py" "${INSTRUCTION_ARGS[@]}"
+"$PYTHON" "$SCRIPT_DIR/install/instructions.py" "${INSTRUCTION_ARGS[@]}"
 [ "$INSTRUCTIONS_ONLY" = "1" ] && exit 0
 
 echo "== settings"
-"$PYTHON" "$SCRIPT_DIR/apply-settings.py" --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
+"$PYTHON" "$SCRIPT_DIR/install/settings.py" --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
 
 echo "== mcp"
-"$PYTHON" "$SCRIPT_DIR/apply-mcp.py" --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
+"$PYTHON" "$SCRIPT_DIR/install/mcp.py" --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
 
 echo "== knowledge"
-case "$TARGET" in
-  all) KNOWLEDGE_TARGET=all ;;
-  claude) KNOWLEDGE_TARGET=claude ;;
-  codex|pi) KNOWLEDGE_TARGET=agents ;;
-  agy) KNOWLEDGE_TARGET=agy ;;
-  *) KNOWLEDGE_TARGET="" ;;
-esac
-if [ -z "$KNOWLEDGE_TARGET" ]; then
-  echo "knowledge: not used by $TARGET"
-elif [ -n "${ZKFY_DIR:-}" ] || [ -f "${HOME}/.config/zkfy/knowledge.json" ]; then
-  "$PYTHON" "$SCRIPT_DIR/install-vault-knowledge.py" --target "$KNOWLEDGE_TARGET" ${DRY[@]+"${DRY[@]}"}
+if [ -n "${ZKFY_DIR:-}" ] || [ -f "${HOME}/.config/zkfy/knowledge.json" ]; then
+  "$PYTHON" "$SCRIPT_DIR/install/knowledge.py" ${DRY[@]+"${DRY[@]}"}
 else
   echo "knowledge: skipped (set ZKFY_DIR and ZKFY_VAULT to enable vault retrieval)"
 fi
 
 echo "== skills"
-# Same folders as the knowledge step: Codex and Pi share ~/.agents/skills.
-"$PYTHON" "$SCRIPT_DIR/install-skills.py" --target "$KNOWLEDGE_TARGET" ${DRY[@]+"${DRY[@]}"}
+"$PYTHON" "$SCRIPT_DIR/install/skills.py" --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
 
 echo "== hooks"
-"$PYTHON" "$SCRIPT_DIR/install-hooks.py" --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
-
-echo "== command"
-"$PYTHON" "$SCRIPT_DIR/install-command.py" ${DRY[@]+"${DRY[@]}"}
+"$PYTHON" "$SCRIPT_DIR/install/hooks.py" --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
 
 [ "$DRY_RUN" = "1" ] && echo "Preview only: nothing written. Run again without --dry-run to write." || echo "Done. Verify: ai-dotfiles check"

@@ -9,10 +9,11 @@ context, so do not go looking for transcripts.
 
 ## 1. Find the lesson log
 
-The log lives in the ai-dotfiles repository, which owns this skill. Resolve the real
-path of this skill's folder (for example `realpath` on the folder this file is in);
-the repository is two levels up, and the log is `docs/lessons.md` there. Read it in
-full before deciding anything: a cue that is already listed is a repeat.
+The log is `lessons.md` in this skill's own folder; resolve its real path (for example
+`realpath` on the folder this file is in), which lies in the ai-dotfiles repository. If
+it does not exist yet, there are no earlier lessons; create it with the header from Log
+format when you log the first one. Read it in full before deciding anything: a cue that
+is already listed is a repeat.
 
 ## 2. Look at this session
 
@@ -26,7 +27,7 @@ Name, in one line each:
   1. nothing (a one-off slip, or already covered by an existing rule that was ignored once);
   2. the project's `AGENTS.md` (a rule for this repository only);
   3. a skill in ai-dotfiles, new or edited (helper scripts go inside the skill folder);
-  4. the global `tools/instructions/AGENTS.md` (only for a rule true in every repository
+  4. the global `config/global-agents.md` (only for a rule true in every repository
      and every CLI; keep it short, with no `@` imports or HTML comments);
   5. a hook, plugin, or subagent file, only when text in a skill or `AGENTS.md` was
      already ignored again. Use the CLI's native place, label which CLI it works in, and
@@ -44,7 +45,7 @@ Name, in one line each:
 Show the user the log row and the exact change (file and text). Write nothing until
 they approve. After approval:
 
-- Update `docs/lessons.md`: add a row, or add today's date and project to `Seen` on the
+- Update `lessons.md`: add a row, or add today's date and project to `Seen` on the
   matching row, and set the status.
 - Make ai-dotfiles changes on a branch, not on `main`; commit only when the user asks.
 - Where possible, retry the step that failed with the fix in place, and report whether
@@ -52,7 +53,7 @@ they approve. After approval:
 
 ## Log format
 
-One table row per pattern in `docs/lessons.md`:
+`lessons.md` starts with a `# Lessons` heading and holds one table row per pattern:
 
 | Cue | Lesson | Seen | Fix | Status |
 |---|---|---|---|---|

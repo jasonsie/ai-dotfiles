@@ -39,8 +39,8 @@ jobs:
       - name: Refresh mirrors and skill catalogs
         run: |
           status=0
-          bash scripts/sync-cli-docs.sh || status=$?
-          python scripts/report-upstream.py --update-catalogs || status=1
+          bash scripts/upstream/sync-cli-docs.sh || status=$?
+          python scripts/upstream/report-upstream.py --update-catalogs || status=1
           echo "SYNC_STATUS=$status" >> "$GITHUB_ENV"
 
       # Changes never land on main directly: they go to one review branch whose pull
@@ -48,11 +48,11 @@ jobs:
       # what touches this setup.
       - name: Open or update the review pull request
         run: |
-          git add upstream
+          git add docs/upstream
           if git diff --cached --quiet; then
             echo "No upstream changes."
           else
-            python scripts/report-upstream.py > "$RUNNER_TEMP/report.md"
+            python scripts/upstream/report-upstream.py > "$RUNNER_TEMP/report.md"
             if [ "$SYNC_STATUS" != "0" ]; then
               printf '\n> A source failed or fell below its page floor, so its previous copy was kept. See the workflow log.\n' >> "$RUNNER_TEMP/report.md"
             fi

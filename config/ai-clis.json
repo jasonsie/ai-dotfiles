@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "clis": {
+    "claude": {
+      "name": "Claude Code",
+      "on": true,
+      "instructions": "~/.claude/CLAUDE.md",
+      "settings": "~/.claude/settings.json",
+      "mcp": "~/.claude.json",
+      "skills": "~/.claude/skills",
+      "hooks": "~/.claude/settings.json"
+    },
+    "codex": {
+      "name": "Codex CLI",
+      "on": true,
+      "instructions": "~/.codex/AGENTS.md",
+      "settings": "~/.codex/config.toml",
+      "mcp": "~/.codex/config.toml",
+      "skills": "~/.agents/skills",
+      "hooks": "~/.codex/hooks.json"
+    },
+    "pi": {
+      "name": "Pi",
+      "on": true,
+      "instructions": "~/.pi/agent/AGENTS.md",
+      "settings": "~/.pi/agent/settings.json",
+      "mcp": "~/.pi/agent/mcp.json",
+      "skills": "~/.agents/skills",
+      "extensions": "~/.pi/agent/extensions"
+    },
+    "agy": {
+      "name": "Antigravity",
+      "on": true,
+      "instructions": "~/.gemini/GEMINI.md",
+      "settings": "~/.gemini/antigravity-cli/settings.json",
+      "mcp": "~/.gemini/config/mcp_config.json",
+      "skills": "~/.gemini/config/skills",
+      "hooks": "~/.gemini/config/hooks.json"
+    }
+  }
+}
