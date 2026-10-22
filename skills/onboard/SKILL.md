@@ -12,9 +12,13 @@ facts ──▶ read key files ──▶ risks ──▶ report ══ stop and 
 facts.py                     architect  .agents/onboarding.md
 ```
 
+**ROOT** is the path the user names, resolved through symlinks; else the current repo.
+Map only ROOT, and read every path below (`.agents/onboarding.md`, `AGENTS.md`, cited
+files) relative to it.
+
 ## 1. Collect facts
 
-Run `python3 <this skill folder>/facts.py [ROOT]` (Python 3.11+; writes nothing). It
+Run `python3 <this skill folder>/facts.py ROOT` (Python 3.11+; writes nothing). It
 prints Markdown facts: languages, manifests, entry points, tree, docs, report status. If
 it fails, say so and list files with your own tools.
 
