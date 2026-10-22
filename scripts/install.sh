@@ -6,7 +6,7 @@
 #                           [--instructions-only] [--replace-instructions]
 #   Writes by default; --dry-run previews and writes nothing. --update first pulls this
 #   repo (fast-forward only; clean tree on main), then installs. config/ai-clis.json says
-#   which CLIs are on: a run sets those up and takes this repo's links and hooks out of the
+#   which CLIs are on: a run sets those up and takes this repo's links out of the
 #   ones switched off; --target=<cli> limits a run to one CLI listed there.
 #
 # Steps (each is idempotent, dry-run aware, and backs up before writing):
@@ -16,8 +16,7 @@
 #   4. knowledge     zkfy vault binding and launcher; skipped if ZKFY_DIR/ZKFY_VAULT are
 #                    unset and no binding exists yet
 #   5. skills        skills/<name>/, zkfy's query → each CLI's skill folder (links); also
-#                    scripts/ai-dotfiles → ~/.local/bin, and Pi's learn extension
-#   6. hooks         skills/learn/hooks/           → merged into each CLI's hook file
+#                    scripts/ai-dotfiles → ~/.local/bin
 #
 # Requires Python 3.11+ (macOS /usr/bin/python3 is older; use Homebrew/pyenv).
 # Steps live in scripts/install/. Undo with scripts/uninstall.sh. See docs/how-it-works.md.
@@ -34,7 +33,7 @@ INSTRUCTIONS_ONLY=0
 REPLACE_INSTRUCTIONS=0
 PASS=()
 
-usage() { sed -n '2,23p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,22p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
 
 for arg in "$@"; do
   case "$arg" in
@@ -110,8 +109,5 @@ fi
 
 echo "== skills"
 "$PYTHON" "$SCRIPT_DIR/install/skills.py" --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
-
-echo "== hooks"
-"$PYTHON" "$SCRIPT_DIR/install/hooks.py" --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
 
 [ "$DRY_RUN" = "1" ] && echo "Preview only: nothing written. Run again without --dry-run to write." || echo "Done. Verify: ai-dotfiles check"

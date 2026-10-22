@@ -13,7 +13,7 @@ config/              the sources the installers apply
   global-agents.md     the rules every CLI loads in every project
   cli-settings.json    per-CLI `enforce` and `default` settings keys
   mcp-servers.json     MCP servers shared by the CLIs
-skills/              shared skills; skills.lock pins adapted ones; learn/ holds its hooks
+skills/              shared skills; skills.lock pins adapted ones
 scripts/             ai-dotfiles, install.sh, uninstall.sh, healthcheck.sh (entry points)
   install/             installer.py (shared by every step) and one file per step
   upstream/            the weekly docs sync and its pull request report
@@ -33,8 +33,7 @@ config/cli-settings.json      ─►  settings.py (merges listed keys)         �
 config/mcp-servers.json       ─►  mcp.py (native `mcp add`, or a merge)    ─►  Claude Code, Codex, Pi, Antigravity
 zkfy checkout (ZKFY_DIR)      ─►  knowledge.py (file, link)                ─►  vault binding, vault-knowledge launcher
 skills/<name>/, zkfy's query  ─►  skills.py (links)                        ─►  every CLI's skill folder
-scripts/ai-dotfiles, pi-learn ─►  skills.py (links)                        ─►  ~/.local/bin; Pi's extension folder
-skills/learn/hooks/           ─►  hooks.py (merges one entry/event)        ─►  each CLI's hook file
+scripts/ai-dotfiles           ─►  skills.py (link)                         ─►  ~/.local/bin
                                   installer.py: reads ai-clis.json; the safe writes every step shares
                                   scripts/healthcheck.sh checks the live state
 
@@ -50,25 +49,24 @@ changes. `ai-dotfiles` (linked on the first run) wraps the entry points from any
 ## Which CLIs: config/ai-clis.json
 
 Each entry names a CLI, switches it `on` or off, and says where it reads its global
-instructions, settings, MCP servers, skills and, where it has them, hooks (`hooks`) or
-extensions (`extensions`, Pi). Paths start with `~/`. The file is checked strictly: a
+instructions, settings, MCP servers and skills. Paths start with `~/`. The file is checked strictly: a
 missing or unknown key, an `on` that is not `true` or `false`, or a CLI the steps have no
 code for stops the run.
 
 - **The file is the desired state.** A run installs for each CLI switched on and takes out
   of each CLI switched off what this repo put there: the instruction link (the original
-  comes back), skill links, hook entries, Pi's extension. Settings keys and MCP servers
-  stay, as with any uninstall. A CLI switched off gets no folders created.
+  comes back) and skill links. Settings keys and MCP servers stay, as with any uninstall.
+  A CLI switched off gets no folders created.
 - **A shared folder stays while any CLI that is on reads it** (`~/.agents/skills`, for
   Codex and Pi).
 - **`--target` only narrows a run** to one CLI; `all` means every CLI in the file, on or
   off. `uninstall` removes for every selected CLI whatever its switch.
-- **How each CLI's files are edited stays in code:** Codex settings are TOML, each CLI has
-  its own `mcp add`, hook events differ, and Pi takes an extension.
+- **How each CLI's files are edited stays in code:** Codex settings are TOML, and each CLI
+  has its own `mcp add`.
 
 `uninstall.sh` runs each step's `--uninstall` in reverse order and removes whatever points
 into this repo: instruction links (restoring the file from before the first install),
-skill links, learn hooks, the vault binding and the command link. Settings keys and MCP
+skill links, the vault binding and the command link. Settings keys and MCP
 servers stay and are listed, because they hold no repo paths and could be the user's own.
 After it, deleting the repo breaks nothing.
 
@@ -132,28 +130,6 @@ healthcheck report it as a "local choice kept".
   vault needs an explicit request.
 - **Claude's auto memory** stays on as a per-machine, Claude-only scratchpad.
 
-## Self-improvement loop
-
-The setup learns from its own sessions without extra cost:
-
-```text
-hook marks a moment ─► session's model decides ─► learn skill ─► lessons.md ─► repeat? promote
-(prompt cue, or a plan     (is this a lesson?)      (proposes the    (one row per    into a skill or
- turned `done`)                                      smallest fix)     pattern)        an AGENTS.md
-```
-
-- **Hooks** (`skills/learn/hooks/learn_hook.py`) fire at two moments only: the user's
-  prompt holds a phrase from `skills/learn/keywords.txt`, or a `docs/plans/*.md` file
-  changed to `Status: done` during the session. They add a short note or continue the
-  turn once; the session's own model decides whether to run `learn`.
-- **Native per CLI:** Claude Code and Codex `UserPromptSubmit` and `Stop`; Antigravity
-  `PreInvocation` (it reads the prompt from the transcript) and `Stop`; Pi has no hooks,
-  so `pi-learn.ts` is an extension. Codex runs a new hook only after approval in `/hooks`.
-- **Loop safety:** per-session state in `~/.local/state/ai-dotfiles/learn/`: at most one
-  ask per plan and three per session, never during the hook's own continuation.
-- **The log** is `skills/learn/lessons.md`, created with the first lesson. Nothing is
-  written without approval; a skill or global change needs the same cue seen twice.
-
 ## Upstream updates
 
 - `scripts/upstream/sync-cli-docs.sh` mirrors each CLI's official docs into
@@ -174,10 +150,9 @@ hook marks a moment ─► session's model decides ─► learn skill ─► les
 | Step | Record | Rollback |
 |---|---|---|
 | Instructions | `~/.local/state/ai-dotfiles/global-instructions/backup-*/manifest.json` | `python3 scripts/install/instructions.py --uninstall` (restores the earliest backup) |
-| Hooks | `~/.local/state/ai-dotfiles/settings/backup-*`; entries found by their command | `python3 scripts/install/hooks.py --uninstall` |
 | Settings | `~/.local/state/ai-dotfiles/settings/backup-*` | Copy the backed-up file back |
 | MCP (Antigravity's file) | `~/.local/state/ai-dotfiles/mcp/backup-*` | Copy the backed-up file back |
-| Skills, command, Pi extension | `~/.local/state/ai-dotfiles/skills.json` (links this repo created) | `python3 scripts/install/skills.py --uninstall` |
+| Skills, command | `~/.local/state/ai-dotfiles/skills.json` (links this repo created) | `python3 scripts/install/skills.py --uninstall` |
 | Vault tooling | `~/.local/state/zkfy/integration.json` | `python3 scripts/install/knowledge.py --uninstall` |
 | Everything | the records above | `ai-dotfiles uninstall` |
 

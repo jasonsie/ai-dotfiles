@@ -58,7 +58,7 @@ done
 ## Everyday changes
 
 - **A CLI on or off:** set its `on` in `config/ai-clis.json`, then run `ai-dotfiles`. Off
-  takes out this repo's links and hooks for it; on sets it up again.
+  takes out this repo's links for it; on sets it up again.
 - **A rule for every project:** edit `config/global-agents.md`; it is live at once
   through the links. Keep only rules that apply in every repository and every CLI; anything
   narrower belongs in a project's `AGENTS.md` or in a skill.

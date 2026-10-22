@@ -8,9 +8,8 @@
 #
 # Steps, in reverse install order (each removes only what its installer created,
 # backs up before writing, and rolls back on failure):
-#   6. hooks         learn hook entries
-#   5. skills        links in the receipt: skills, Pi's learn extension, and the
-#                    ai-dotfiles command (--target=all only)
+#   5. skills        links in the receipt: skills, and the ai-dotfiles command
+#                    (that one with --target=all only)
 #   4. knowledge     zkfy vault binding (--target=all only; receipt restores prior state)
 #   3. mcp           left in place, listed: servers do not depend on this repo
 #   2. settings      left in place, listed: managed keys hold no repo paths
@@ -25,7 +24,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TARGET="all"
 DRY_RUN=0
 
-usage() { sed -n '2,19p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,18p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
 
 for arg in "$@"; do
   case "$arg" in
@@ -46,9 +45,6 @@ fi
 
 DRY=()
 [ "$DRY_RUN" = "1" ] && DRY=(--dry-run)
-
-echo "== hooks"
-"$PYTHON" "$SCRIPT_DIR/install/hooks.py" --uninstall --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
 
 echo "== skills"
 "$PYTHON" "$SCRIPT_DIR/install/skills.py" --uninstall --target "$TARGET" ${DRY[@]+"${DRY[@]}"}

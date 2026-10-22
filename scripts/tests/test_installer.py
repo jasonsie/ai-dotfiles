@@ -132,7 +132,6 @@ class InstallerTest(unittest.TestCase):
         self.assertTrue(all(entry['on'] for entry in entries.values()))
         self.assertEqual(entries['codex']['skills'], entries['pi']['skills'])  # Codex and Pi share one
         self.assertEqual(installer.path(self.home, 'claude', 'skills'), self.home / '.claude/skills')
-        self.assertIsNone(installer.path(self.home, 'pi', 'hooks'))  # Pi takes an extension instead
 
     def registry(self, change):
         """Point installer at a copy of the repo's registry, edited by change(data)."""

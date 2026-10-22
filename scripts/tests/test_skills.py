@@ -26,7 +26,6 @@ class InstallSkillsTest(unittest.TestCase):
             (self.repo / 'skills' / name / 'SKILL.md').write_text(f'---\nname: {name}\n---\n')
         (self.repo / 'skills/notes').mkdir()  # no SKILL.md, so not a skill
         self.command = self.home / skills.COMMAND
-        self.extension = self.home / where('pi', 'extensions') / skills.PI_EXTENSION
 
     def tearDown(self):
         self.temp.cleanup()
@@ -41,7 +40,7 @@ class InstallSkillsTest(unittest.TestCase):
     def links(self):
         """{path below home: target} of every link in the folders this step writes."""
         found = {}
-        for folder in (*ROOTS, '.local/bin', where('pi', 'extensions')):
+        for folder in (*ROOTS, '.local/bin'):
             if (self.home / folder).is_dir():
                 found.update({str(p.relative_to(self.home)): os.readlink(p)
                               for p in (self.home / folder).iterdir() if p.is_symlink()})
@@ -181,27 +180,10 @@ class InstallSkillsTest(unittest.TestCase):
         self.assertEqual(self.install(('claude',), apply=True, repo=moved), 4)  # alpha, beta, command, receipt
         self.assertEqual(os.readlink(self.command), str(moved / 'scripts/ai-dotfiles'))
 
-    def test_pi_extension_follows_pi(self):
-        self.install(('pi',), apply=True)
-        self.assertFalse(self.extension.is_symlink())  # Pi is not set up here yet
-        (self.home / '.pi/agent').mkdir(parents=True)
-        self.install(('claude',), apply=True)
-        self.assertFalse(self.extension.is_symlink())
-        self.install(('pi',), apply=True)
-        self.assertEqual(os.readlink(self.extension), str(self.repo / 'skills/learn/hooks/pi-learn.ts'))
-        self.install(('claude',), apply=True, uninstall=True)
-        self.assertTrue(self.extension.is_symlink())
-        self.install(('pi',), apply=True, uninstall=True)
-        self.assertFalse(self.extension.is_symlink())
-        self.extension.write_text('// mine')
-        with self.assertRaisesRegex(ValueError, 'refusing'):
-            self.install(('pi',))
-
     def folder(self, root):
         return sorted(path for path in self.skill_links() if path.startswith(root))
 
     def test_a_cli_switched_off_loses_its_links_but_a_shared_folder_stays(self):
-        (self.home / '.pi/agent').mkdir(parents=True)
         self.install(apply=True)
         with patch.object(installer, 'REGISTRY', registry(self.root, agy=False, codex=False)):
             self.install(apply=True)
@@ -210,7 +192,6 @@ class InstallSkillsTest(unittest.TestCase):
             self.assertEqual(self.install(), 0)
         with patch.object(installer, 'REGISTRY', registry(self.root, pi=False)):
             self.install(apply=True)
-            self.assertFalse(self.extension.is_symlink())
             self.assertEqual(len(self.folder('.agents/')), 2)  # Codex, on again, reads it
             self.install(('codex',), apply=True, uninstall=True)
             self.assertEqual(self.folder('.agents/'), [])  # no CLI that is on reads it now
