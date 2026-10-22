@@ -90,7 +90,7 @@ write. If no one can answer (a non-interactive run), write nothing.
 
 ## 5. Report in chat, then stop
 
-Print exactly this, in order:
+Print exactly this, in order, starting with the file's first line:
 
 1. The file's text, unchanged: same headings, words, and order. If nothing was written,
    the text you would have written.
