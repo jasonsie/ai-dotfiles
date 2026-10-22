@@ -17,36 +17,7 @@
       ],
       "commit": "0be6455fca4cab1ba1aac600c68184f9256c283d",
       "license": "MIT",
-      "local_edits": "command, agent and script merged into the onboard skill; generator rewritten in Python as a read-only facts script; one GFM report at .agents/onboarding.md: numbered index, named parts (no numbers), ASCII flow graphs per entry point with a legend citing the line that makes the link, a section per part; chat prints the file unchanged, then risks; generated header and no overwrite of a hand-written report"
-    },
-    "architect": {
-      "repo": "affaan-m/everything-claude-code",
-      "path": "agents/architect.md",
-      "commit": "0be6455fca4cab1ba1aac600c68184f9256c283d",
-      "license": "MIT",
-      "local_edits": "agent rewritten as a CLI-neutral skill; reads the onboarding report first; debt-and-red-flags-only mode when called by onboard; findings name their source file; ADR only for a decision, in the repo's own ADR folder; generic pattern lists, SaaS example and fixed ADR template dropped"
-    },
-    "iterative-retrieval": {
-      "repo": "affaan-m/everything-claude-code",
-      "path": "skills/iterative-retrieval/SKILL.md",
-      "commit": "0be6455fca4cab1ba1aac600c68184f9256c283d",
-      "license": "MIT",
-      "local_edits": "a search loop the agent runs itself; JS pseudo-code replaced by plain steps; sub-agent hand-off only where the CLI has one; Related section dropped"
-    },
-    "blueprint": {
-      "repo": "antbotlab/blueprint",
-      "path": [
-        "SKILL.md",
-        "references/anti-patterns.md",
-        "references/plan-template-light.md",
-        "references/plan-template.md",
-        "references/review-checklist.md",
-        "workflows/plan-mutation.md",
-        "workflows/resumption.md"
-      ],
-      "commit": "07c5b305cf2d95d584a0d0398c390e839fec5954",
-      "license": "MIT",
-      "local_edits": "plans in docs/plans/<task>.md with task-file fields; CLI-neutral (no Claude Code requirement, no model names, no memory/MEMORY.md); review by a strongest-model sub-agent where the CLI has one, else in-session; examples/ not copied"
+      "local_edits": "command, agent and script merged into the onboard skill; generator rewritten in Python as a read-only facts script; one GFM report at .agents/onboarding.md: numbered index, named parts (no numbers), ASCII flow graphs per entry point with a legend citing the line that makes the link, a section per part; chat prints the file unchanged; no risks (architect dropped); generated header and no overwrite of a hand-written report"
     },
     "spec-review": {
       "repo": "mattpocock/skills",

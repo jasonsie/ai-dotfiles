@@ -8,8 +8,8 @@ repo's parts, **flow graphs** of how they work together, and a **section** per p
 tied by the same part names.
 
 ```
-facts ──▶ read key files ──▶ risks ──▶ report ══ stop and ask ══▶ deep dive or task
-facts.py                     architect  .agents/onboarding.md
+facts ──▶ read key files ──▶ report ══ stop and ask ══▶ deep dive or task
+facts.py                     .agents/onboarding.md
 ```
 
 **ROOT** is the path the user names, resolved through symlinks; else the current repo.
@@ -29,13 +29,7 @@ files in each large or central folder, and the README, `AGENTS.md`, and ADRs (hi
 check them against the code). Note the `file:line` of what you see. Judge by content,
 not folder names: `hooks/` may hold git hooks, not React hooks.
 
-## 3. Find risks
-
-Follow the `architect` skill in its *Called by `onboard`* mode: it returns technical
-debt and red flags, each with a `file:line`. If `architect` is not installed, say so and
-find them yourself.
-
-## 4. Write the report
+## 3. Write the report
 
 Split the repo into **parts**: a file, folder, or `file:line-range` with one job (an
 entry point, a module, a config tree, the test suite). At most 12; above that, group
@@ -105,35 +99,29 @@ Standalone: <parts in no flow, or "none">
   not where a path or constant is defined.
 - Things outside the repo (a database, an API, `~/.config`) appear in parentheses,
   with no section.
-- No risks in the file: it may be public, and risks go stale.
 
 If `.agents/onboarding.md` starts with the generated header, rewrite it. If it exists
 without the header, it is not yours: never edit, rename, or delete it; ask where to
 write. If no one can answer (a non-interactive run), write nothing.
 
-## 5. Report in chat, then stop
+## 4. Report in chat, then stop
 
 Print exactly this, in order, starting with the file's first line:
 
 1. The file's text, unchanged: same headings, words, and order. If nothing was written,
    the text you would have written.
-2. `Risks:` one line per finding from step 3, keyed by part name, with its `file:line`. Only
-   parts that have any.
-3. `Across parts:` at most 3 risks spanning several parts or none, each naming its parts
-   and files.
-4. One line: the file's path, or why nothing was written; on a rewrite, what changed
+2. One line: the file's path, or why nothing was written; on a rewrite, what changed
    since the last version.
-5. **"Name a part to dive in, or name a task."**
+3. **"Name a part to dive in, or name a task."**
 
-Omit 2 or 3 when empty. Add nothing else: no preamble, no restating, no grading the run
-against plans or task files. Wait for the answer; do not invent a task.
+Add nothing else: no preamble, no restating, no grading the run against plans or task
+files. Wait for the answer; do not invent a task.
 
-## 6. Deep dive or task
+## 5. Deep dive or task
 
-- **A part:** read its files in depth; show how data or control moves
-  through it, with `file:line`; list its risks with evidence; draw a small graph of it
-  and its direct neighbours if that helps. Chat only; change no file. End by asking what
-  to work on.
+- **A part:** read its files in depth; show how data or control moves through it, with
+  `file:line`; draw a small graph of it and its direct neighbours if that helps. Chat
+  only; change no file. End by asking what to work on.
 - **A task:** start from the parts it touches and their Key files.
 
 ## Rules
