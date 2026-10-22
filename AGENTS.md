@@ -33,6 +33,8 @@ mirror.
 - CLI lists and paths live only in `config/ai-clis.json`; scripts keep only how each CLI's
   files are edited.
 - Never edit `docs/upstream/` by hand; the weekly sync rebuilds it.
+- A newer upstream version of a pinned skill replaces ours: remove it, add theirs, re-apply
+  its `local_edits` from `skills/skills.lock`, and update `which-skill` (a test checks it).
 - Keep `config/` and `scripts/` free of machine paths (`/Users/<name>`, `/opt/homebrew`);
   the healthcheck enforces this.
 - No credentials in this repo. Per-project rules belong to each project, not here.

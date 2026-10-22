@@ -137,9 +137,10 @@ healthcheck report it as a "local choice kept".
   new in the watched collections (`docs/upstream/catalogs.json`).
 - A skill adapted from another repository is pinned in `skills/skills.lock` (repository,
   path, commit, license, local edits; `path` may be a list of files). When the report
-  shows it changed upstream, compare the upstream diff with the local copy, adopt what
-  you want, and update the pinned commit. A pinned file deleted upstream is reported as
-  removed (often renamed: compare with the collection's new skills); the local copy stays.
+  shows it changed upstream, remove the local copy, add the upstream version, re-apply the
+  local edits, and update the pinned commit and `which-skill`. A pinned file deleted
+  upstream is reported as removed: follow a rename to the new name; with no successor,
+  delete the local copy.
 
 ## Backups and rollback
 
