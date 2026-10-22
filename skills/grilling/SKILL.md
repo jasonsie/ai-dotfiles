@@ -32,8 +32,7 @@ remains a decision. When an answer or new evidence changes the tree, rework the
 remaining questions instead of asking the old ones.
 
 After each answer, record the decision and its reason where the task's state
-lives (for example `docs/plans/<task>.md` in the repository), so another session
-or CLI can resume the interview.
+lives, so another session or CLI can resume the interview.
 
 ## Finish
 

@@ -120,9 +120,8 @@ healthcheck report it as a "local choice kept".
 
 ## Memory
 
-- **Task memory:** a task that spans sessions keeps its state in `docs/plans/<task>.md`
-  in its repository (the global rule), so another session or CLI can continue it. In this
-  repository a task file is deleted once its work is merged.
+- **Across sessions:** the `handoff` skill writes the session's state to a temporary file
+  that another session or CLI picks up; nothing in a repository tracks tasks.
 - **Project memory:** the project's `AGENTS.md`, read natively by every CLI. When a
   project also has a `CLAUDE.md`, it links to `AGENTS.md` or imports it with `@AGENTS.md`.
 - **Claude's auto memory** stays on as a per-machine, Claude-only scratchpad.

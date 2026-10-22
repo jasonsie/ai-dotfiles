@@ -21,7 +21,7 @@ Codex CLI, Pi, and Antigravity. The mechanism and layout are in
 
 `scripts/install.sh` runs the four install steps, `scripts/uninstall.sh` reverses them;
 `scripts/healthcheck.sh` verifies live state. `docs/` holds only `how-it-works.md` and the
-mirror; a task file in `docs/plans/` is deleted once its work is merged.
+mirror.
 
 ## Rules for changes
 
