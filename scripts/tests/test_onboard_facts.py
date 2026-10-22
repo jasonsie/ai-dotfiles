@@ -84,7 +84,8 @@ demo = "demo.cli:main"
             self.assertIn('vitest ^1.0.0', out)
             self.assertIn('`lib/index.js` — package.json "main"', out)
             self.assertIn('`bin/web.js` — package.json bin "web"', out)
-            self.assertIn('scripts.start', out)
+            self.assertIn('- scripts: start', out)
+            self.assertNotIn('scripts.start', out)
             self.assertIn('`src/app.tsx` — named app.*', out)
             self.assertIn('TypeScript (TSX)', out)
 
@@ -159,6 +160,86 @@ tempfile = "3"
             self.assertIn('`flake.nix` — Nix flake outputs', out)
             self.assertIn('`bootstrap.sh` — executable top-level script', out)
             self.assertNotIn('`notes.sh`', out)
+
+    def test_executable_scripts_one_level_down(self):
+        with tempfile.TemporaryDirectory() as d:
+            write(d, 'scripts/run.sh', '#!/bin/sh\n', mode=0o755)
+            write(d, 'scripts/tool', '#!/bin/sh\n', mode=0o755)
+            write(d, 'scripts/notes.sh', '#!/bin/sh\n', mode=0o644)
+            write(d, 'scripts/deep/x.sh', '#!/bin/sh\n', mode=0o755)
+            write(d, 'tests/check.sh', '#!/bin/sh\n', mode=0o755)
+            write(d, 'spec/check.py', 'x\n', mode=0o755)
+            write(d, 'top.sh', '#!/bin/sh\n', mode=0o755)
+            out = self.run_facts(d)
+            self.assertIn('`scripts/run.sh` — executable script in scripts/', out)
+            self.assertIn('`scripts/tool` — executable script in scripts/', out)
+            self.assertIn('`top.sh` — executable top-level script', out)
+            self.assertNotIn('`scripts/notes.sh`', out)
+            self.assertNotIn('`scripts/deep/x.sh`', out)
+            self.assertNotIn('`tests/check.sh`', out)
+            self.assertNotIn('`spec/check.py`', out)
+
+    def test_package_json_targets_missing_from_repo_are_flagged(self):
+        with tempfile.TemporaryDirectory() as d:
+            write(d, 'package.json', '''{"name": "w", "main": "dist/index.js",
+ "module": "./lib/mod.js", "bin": {"w": "bin/w.js", "x": "./dist/x.js"}}''')
+            write(d, 'lib/mod.js', 'x\n')
+            write(d, 'bin/w.js', 'x\n')
+            out = self.run_facts(d)
+            self.assertIn('`dist/index.js` — package.json "main" (not in repo; built output?)', out)
+            self.assertIn('`dist/x.js` — package.json bin "x" (not in repo; built output?)', out)
+            self.assertIn('`lib/mod.js` — package.json "module"\n', out)
+            self.assertIn('`bin/w.js` — package.json bin "w"\n', out)
+
+    def test_cargo_bin_missing_from_repo_is_flagged(self):
+        with tempfile.TemporaryDirectory() as d:
+            write(d, 'Cargo.toml', '''[package]
+name = "c"
+[[bin]]
+name = "gone"
+path = "src/bin/gone.rs"
+[[bin]]
+name = "here"
+path = "src/bin/here.rs"
+''')
+            write(d, 'src/bin/here.rs', 'fn main() {}\n')
+            out = self.run_facts(d)
+            self.assertIn('`src/bin/gone.rs` — Cargo.toml [[bin]] "gone" (not in repo; built output?)', out)
+            self.assertIn('`src/bin/here.rs` — Cargo.toml [[bin]] "here"\n', out)
+
+    def test_package_json_scripts_are_a_note_not_entry_points(self):
+        with tempfile.TemporaryDirectory() as d:
+            names = [f's{i}' for i in range(10)]
+            write(d, 'package.json', '{"name": "w", "scripts": {%s}}' %
+                  ', '.join(f'"{n}": "echo {n}"' for n in names))
+            out = self.run_facts(d)
+            self.assertIn('- scripts: s0, s1, s2, s3, s4, s5, s6, s7, … +2 more', out)
+            self.assertNotIn('scripts.s0', out)
+            self.assertNotIn('echo s0', out)
+            self.assertIn('## Entry points\n\n(none found)', out)
+
+    def test_tree_never_drops_top_level_folders(self):
+        with tempfile.TemporaryDirectory() as d:
+            for i in range(80):
+                write(d, f'a/sub{i:02}/f.txt', 'x\n')
+            write(d, 'z/f.txt', 'x\n')
+            out = self.run_facts(d)
+            tree = out.split('## Tree')[1].split('## Docs')[0]
+            self.assertIn('- a/ (80)', tree)
+            self.assertIn('- z/ (1)', tree)
+            self.assertIn('(depth 2-3 left out: too many folders)', tree)
+            self.assertNotIn('a/sub00', tree)
+
+    def test_tree_says_which_depth_was_left_out(self):
+        with tempfile.TemporaryDirectory() as d:
+            for i in range(80):
+                write(d, f'a/b/c{i:02}/f.txt', 'x\n')
+            write(d, 'z/f.txt', 'x\n')
+            tree = self.run_facts(d).split('## Tree')[1].split('## Docs')[0]
+            self.assertIn('(depth 3 left out: too many folders)', tree)
+            self.assertIn('- a/b/ (80)', tree)
+            self.assertIn('- z/ (1)', tree)
+            self.assertNotIn('c00', tree)
 
     def test_empty_directory(self):
         with tempfile.TemporaryDirectory() as d:
@@ -259,6 +340,17 @@ tempfile = "3"
             self.assertIn('`README.md`', out)
             self.assertIn('`AGENTS.md`', out)
             self.assertNotIn('maps yet', out)
+
+    def test_nested_codemaps_count_as_old_output(self):
+        with tempfile.TemporaryDirectory() as d:
+            write(d, 'docs/CODEMAPS/INDEX.md', '# Index\n')
+            write(d, 'docs/CODEMAPS/backend/api.md', '# Api\n')
+            write(d, 'docs/CODEMAPS/diagram.png', 'x\n')
+            write(d, 'docs/guide.md', '# g\n')
+            docs = self.run_facts(d).split('## Docs')[1]
+            self.assertIn('- `docs/CODEMAPS/` (3 files): old codemap output; ignored', docs)
+            self.assertIn('`docs/` (1 files):', docs)
+            self.assertNotIn('backend/api.md', docs)
 
     def test_only_old_codemaps_still_prints_line(self):
         with tempfile.TemporaryDirectory() as d:

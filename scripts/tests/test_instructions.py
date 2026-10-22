@@ -180,13 +180,11 @@ class GlobalInstructionsTest(unittest.TestCase):
 
     def test_full_install_dry_run_writes_nothing(self):
         env = {**os.environ, "HOME": str(self.home), "PATH": "/usr/bin:/bin", "PYTHON": sys.executable}
-        for key in ("ZKFY_DIR", "ZKFY_VAULT"):
-            env.pop(key, None)
         result = subprocess.run(
             ["bash", str(ROOT / "scripts/install.sh"), "--dry-run"], env=env, capture_output=True, text=True
         )
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("knowledge: skipped", result.stdout)
+        self.assertIn("Preview only", result.stdout)
         self.assertEqual(list(self.home.iterdir()), [])
 
     def test_uninstall_restores_original_file(self):

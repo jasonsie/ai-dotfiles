@@ -6,7 +6,7 @@
       "path": "skills/productivity/grilling/SKILL.md",
       "commit": "49dd158d1076134a641b33efb035946536778336",
       "license": "MIT",
-      "local_edits": "one question per message instead of a round; numbered options that can be combined, recommendation first; simpler re-explanation when a question is unclear; each decision recorded in the task file"
+      "local_edits": "one question per message instead of a round; numbered options that can be combined, recommendation first; simpler re-explanation when a question is unclear; each decision recorded where the task's state lives"
     },
     "onboard": {
       "repo": "affaan-m/everything-claude-code",
@@ -17,164 +17,302 @@
       ],
       "commit": "0be6455fca4cab1ba1aac600c68184f9256c283d",
       "license": "MIT",
-      "local_edits": "command, agent and script merged into the onboard skill; generator rewritten in Python as a read-only facts script; one report at .agents/onboarding.md: numbered index, ASCII relationship graph with a source file per edge, a section per part; risks in chat only; generated header and no overwrite of a hand-written report"
+      "local_edits": "command, agent and script merged into the onboard skill; generator rewritten in Python as a read-only facts script; one GFM report at .agents/onboarding.md: numbered index, named parts (no numbers), ASCII flow graphs per entry point with a legend citing the line that makes the link, a section per part; chat prints the file unchanged; no risks (architect dropped); generated header and no overwrite of a hand-written report"
     },
-    "architect": {
-      "repo": "affaan-m/everything-claude-code",
-      "path": "agents/architect.md",
-      "commit": "0be6455fca4cab1ba1aac600c68184f9256c283d",
-      "license": "MIT",
-      "local_edits": "agent rewritten as a CLI-neutral skill; reads the onboarding report first; risks-only mode when called by onboard; findings name their source file; ADR only for a decision, in the repo's own ADR folder; generic pattern lists, SaaS example and fixed ADR template dropped"
-    },
-    "iterative-retrieval": {
-      "repo": "affaan-m/everything-claude-code",
-      "path": "skills/iterative-retrieval/SKILL.md",
-      "commit": "0be6455fca4cab1ba1aac600c68184f9256c283d",
-      "license": "MIT",
-      "local_edits": "a search loop the agent runs itself; JS pseudo-code replaced by plain steps; sub-agent hand-off only where the CLI has one; Related section dropped"
-    },
-    "blueprint": {
-      "repo": "antbotlab/blueprint",
-      "path": [
-        "SKILL.md",
-        "references/anti-patterns.md",
-        "references/plan-template-light.md",
-        "references/plan-template.md",
-        "references/review-checklist.md",
-        "workflows/plan-mutation.md",
-        "workflows/resumption.md"
-      ],
-      "commit": "07c5b305cf2d95d584a0d0398c390e839fec5954",
-      "license": "MIT",
-      "local_edits": "plans in docs/plans/<task>.md with task-file fields; CLI-neutral (no Claude Code requirement, no model names, no memory/MEMORY.md); review by a strongest-model sub-agent where the CLI has one, else in-session; examples/ not copied"
-    },
-    "diagnose": {
+    "spec-review": {
       "repo": "mattpocock/skills",
       "path": [
-        "skills/engineering/diagnose/SKILL.md",
-        "skills/engineering/diagnose/scripts/hitl-loop.template.sh"
+        "skills/engineering/code-review/SKILL.md",
+        "skills/engineering/code-review/agents/openai.yaml"
       ],
-      "commit": "b843cb5ea74b1fe5e58a0fc23cddef9e66076fb8",
+      "commit": "5beb35b040e3de97e54fa9e386d7e42d15c295c2",
       "license": "MIT",
-      "local_edits": "slash-command mention made a skill name"
+      "local_edits": "renamed from code-review (Claude Code bundles a /code-review); setup pointer names setup-agent-skills; the two axes run in turn where the CLI has no sub-agents"
+    },
+    "codebase-design": {
+      "repo": "mattpocock/skills",
+      "path": [
+        "skills/engineering/codebase-design/DEEPENING.md",
+        "skills/engineering/codebase-design/DESIGN-IT-TWICE.md",
+        "skills/engineering/codebase-design/SKILL.md",
+        "skills/engineering/codebase-design/agents/openai.yaml"
+      ],
+      "commit": "5beb35b040e3de97e54fa9e386d7e42d15c295c2",
+      "license": "MIT",
+      "local_edits": "design-it-twice draws the designs in turn where the CLI has no sub-agents"
+    },
+    "diagnosing-bugs": {
+      "repo": "mattpocock/skills",
+      "path": [
+        "skills/engineering/diagnosing-bugs/SKILL.md",
+        "skills/engineering/diagnosing-bugs/agents/openai.yaml",
+        "skills/engineering/diagnosing-bugs/scripts/hitl-loop.template.sh"
+      ],
+      "commit": "5beb35b040e3de97e54fa9e386d7e42d15c295c2",
+      "license": "MIT",
+      "local_edits": "none beyond the attribution line"
+    },
+    "domain-modeling": {
+      "repo": "mattpocock/skills",
+      "path": [
+        "skills/engineering/domain-modeling/ADR-FORMAT.md",
+        "skills/engineering/domain-modeling/GLOSSARY-FORMAT.md",
+        "skills/engineering/domain-modeling/SKILL.md",
+        "skills/engineering/domain-modeling/agents/openai.yaml"
+      ],
+      "commit": "5beb35b040e3de97e54fa9e386d7e42d15c295c2",
+      "license": "MIT",
+      "local_edits": "none beyond the attribution line"
     },
     "grill-with-docs": {
       "repo": "mattpocock/skills",
       "path": [
-        "skills/engineering/grill-with-docs/ADR-FORMAT.md",
-        "skills/engineering/grill-with-docs/CONTEXT-FORMAT.md",
-        "skills/engineering/grill-with-docs/SKILL.md"
+        "skills/engineering/grill-with-docs/SKILL.md",
+        "skills/engineering/grill-with-docs/agents/openai.yaml"
       ],
-      "commit": "b843cb5ea74b1fe5e58a0fc23cddef9e66076fb8",
+      "commit": "5beb35b040e3de97e54fa9e386d7e42d15c295c2",
       "license": "MIT",
-      "local_edits": "none beyond the attribution line"
+      "local_edits": "Skill-tool call reworded to load the skill on every CLI"
+    },
+    "implement": {
+      "repo": "mattpocock/skills",
+      "path": [
+        "skills/engineering/implement/SKILL.md",
+        "skills/engineering/implement/agents/openai.yaml"
+      ],
+      "commit": "5beb35b040e3de97e54fa9e386d7e42d15c295c2",
+      "license": "MIT",
+      "local_edits": "Skill-tool calls reworded to load the skill on every CLI; review step uses spec-review"
+    },
+    "implement-spec": {
+      "repo": "mattpocock/skills",
+      "path": [
+        "skills/engineering/implement-spec/SKILL.md",
+        "skills/engineering/implement-spec/agents/openai.yaml"
+      ],
+      "commit": "5beb35b040e3de97e54fa9e386d7e42d15c295c2",
+      "license": "MIT",
+      "local_edits": "setup pointer names setup-agent-skills; Skill-tool calls reworded; review step uses spec-review; one ticket at a time where the CLI has no sub-agents; slashes dropped from skill names in the description"
     },
     "improve-codebase-architecture": {
       "repo": "mattpocock/skills",
       "path": [
-        "skills/engineering/improve-codebase-architecture/DEEPENING.md",
-        "skills/engineering/improve-codebase-architecture/INTERFACE-DESIGN.md",
-        "skills/engineering/improve-codebase-architecture/LANGUAGE.md",
-        "skills/engineering/improve-codebase-architecture/SKILL.md"
+        "skills/engineering/improve-codebase-architecture/HTML-REPORT.md",
+        "skills/engineering/improve-codebase-architecture/SKILL.md",
+        "skills/engineering/improve-codebase-architecture/agents/openai.yaml"
       ],
-      "commit": "b843cb5ea74b1fe5e58a0fc23cddef9e66076fb8",
+      "commit": "5beb35b040e3de97e54fa9e386d7e42d15c295c2",
       "license": "MIT",
-      "local_edits": "Explore via a read-only sub-agent where the CLI has one; INTERFACE-DESIGN spawns sub-agents only where the CLI has them, else writes the designs in sequence; slash-command mention made a skill name"
+      "local_edits": "Skill-tool calls reworded; slash mention made a skill name; explores in-session where the CLI has no sub-agents"
+    },
+    "pr": {
+      "repo": "mattpocock/skills",
+      "path": [
+        "skills/engineering/pr/CREDITS.md",
+        "skills/engineering/pr/SKILL.md",
+        "skills/engineering/pr/agents/openai.yaml"
+      ],
+      "commit": "5beb35b040e3de97e54fa9e386d7e42d15c295c2",
+      "license": "MIT",
+      "local_edits": "none beyond the attribution line (CREDITS.md and the show-me credit in the frontmatter kept)"
+    },
+    "prototype": {
+      "repo": "mattpocock/skills",
+      "path": [
+        "skills/engineering/prototype/LOGIC.md",
+        "skills/engineering/prototype/SKILL.md",
+        "skills/engineering/prototype/UI.md",
+        "skills/engineering/prototype/agents/openai.yaml"
+      ],
+      "commit": "5beb35b040e3de97e54fa9e386d7e42d15c295c2",
+      "license": "MIT",
+      "local_edits": "none beyond the attribution line"
+    },
+    "research": {
+      "repo": "mattpocock/skills",
+      "path": [
+        "skills/engineering/research/SKILL.md",
+        "skills/engineering/research/agents/openai.yaml"
+      ],
+      "commit": "5beb35b040e3de97e54fa9e386d7e42d15c295c2",
+      "license": "MIT",
+      "local_edits": "researches in-session where the CLI has no background agents"
+    },
+    "retro": {
+      "repo": "mattpocock/skills",
+      "path": [
+        "skills/engineering/retro/SKILL.md",
+        "skills/engineering/retro/agents/openai.yaml"
+      ],
+      "commit": "5beb35b040e3de97e54fa9e386d7e42d15c295c2",
+      "license": "MIT",
+      "local_edits": "Skill-tool call reworded to load the skill on every CLI"
     },
     "setup-agent-skills": {
       "repo": "mattpocock/skills",
       "path": [
         "skills/engineering/setup-matt-pocock-skills/SKILL.md",
+        "skills/engineering/setup-matt-pocock-skills/agents/openai.yaml",
         "skills/engineering/setup-matt-pocock-skills/domain.md",
         "skills/engineering/setup-matt-pocock-skills/issue-tracker-github.md",
         "skills/engineering/setup-matt-pocock-skills/issue-tracker-gitlab.md",
         "skills/engineering/setup-matt-pocock-skills/issue-tracker-local.md",
         "skills/engineering/setup-matt-pocock-skills/triage-labels.md"
       ],
-      "commit": "b843cb5ea74b1fe5e58a0fc23cddef9e66076fb8",
+      "commit": "5beb35b040e3de97e54fa9e386d7e42d15c295c2",
       "license": "MIT",
-      "local_edits": "renamed from setup-matt-pocock-skills; edits AGENTS.md first, else CLAUDE.md, else creates AGENTS.md; dropped qa mention; triage-labels column renamed; agents/openai.yaml makes it explicit-only in Codex"
+      "local_edits": "renamed from setup-matt-pocock-skills; edits AGENTS.md first, else CLAUDE.md, else creates AGENTS.md; triage-labels column renamed; slash mentions made skill names"
     },
     "tdd": {
       "repo": "mattpocock/skills",
       "path": [
         "skills/engineering/tdd/SKILL.md",
-        "skills/engineering/tdd/deep-modules.md",
-        "skills/engineering/tdd/interface-design.md",
+        "skills/engineering/tdd/agents/openai.yaml",
         "skills/engineering/tdd/mocking.md",
-        "skills/engineering/tdd/refactoring.md",
         "skills/engineering/tdd/tests.md"
       ],
-      "commit": "b843cb5ea74b1fe5e58a0fc23cddef9e66076fb8",
+      "commit": "5beb35b040e3de97e54fa9e386d7e42d15c295c2",
       "license": "MIT",
-      "local_edits": "none beyond the attribution line"
+      "local_edits": "Skill-tool call reworded; the review stage points at spec-review"
     },
-    "to-issues": {
+    "to-spec": {
       "repo": "mattpocock/skills",
-      "path": "skills/engineering/to-issues/SKILL.md",
-      "commit": "b843cb5ea74b1fe5e58a0fc23cddef9e66076fb8",
+      "path": [
+        "skills/engineering/to-spec/SKILL.md",
+        "skills/engineering/to-spec/agents/openai.yaml"
+      ],
+      "commit": "5beb35b040e3de97e54fa9e386d7e42d15c295c2",
       "license": "MIT",
-      "local_edits": "setup skill renamed to setup-agent-skills"
+      "local_edits": "setup pointer names setup-agent-skills"
     },
-    "to-prd": {
+    "to-tickets": {
       "repo": "mattpocock/skills",
-      "path": "skills/engineering/to-prd/SKILL.md",
-      "commit": "b843cb5ea74b1fe5e58a0fc23cddef9e66076fb8",
+      "path": [
+        "skills/engineering/to-tickets/SKILL.md",
+        "skills/engineering/to-tickets/agents/openai.yaml"
+      ],
+      "commit": "5beb35b040e3de97e54fa9e386d7e42d15c295c2",
       "license": "MIT",
-      "local_edits": "setup skill renamed to setup-agent-skills"
+      "local_edits": "setup pointers name setup-agent-skills"
     },
     "triage": {
       "repo": "mattpocock/skills",
       "path": [
         "skills/engineering/triage/AGENT-BRIEF.md",
         "skills/engineering/triage/OUT-OF-SCOPE.md",
-        "skills/engineering/triage/SKILL.md"
+        "skills/engineering/triage/SKILL.md",
+        "skills/engineering/triage/agents/openai.yaml"
       ],
-      "commit": "b843cb5ea74b1fe5e58a0fc23cddef9e66076fb8",
+      "commit": "5beb35b040e3de97e54fa9e386d7e42d15c295c2",
       "license": "MIT",
-      "local_edits": "setup skill renamed to setup-agent-skills; slash-command mentions made skill names"
+      "local_edits": "setup pointer names setup-agent-skills; Skill-tool call reworded; grills one question at a time, like the local grilling; slash mentions made skill names"
     },
-    "zoom-out": {
+    "wayfinder": {
       "repo": "mattpocock/skills",
-      "path": "skills/engineering/zoom-out/SKILL.md",
-      "commit": "b843cb5ea74b1fe5e58a0fc23cddef9e66076fb8",
+      "path": [
+        "skills/engineering/wayfinder/SKILL.md",
+        "skills/engineering/wayfinder/agents/openai.yaml"
+      ],
+      "commit": "5beb35b040e3de97e54fa9e386d7e42d15c295c2",
       "license": "MIT",
-      "local_edits": "agents/openai.yaml makes it explicit-only in Codex"
+      "local_edits": "setup pointer and Skill-tool calls reworded; research tickets resolved in-session where the CLI has no sub-agents"
     },
-    "caveman": {
+    "wizard": {
       "repo": "mattpocock/skills",
-      "path": "skills/productivity/caveman/SKILL.md",
-      "commit": "b843cb5ea74b1fe5e58a0fc23cddef9e66076fb8",
+      "path": [
+        "skills/engineering/wizard/SKILL.md",
+        "skills/engineering/wizard/agents/openai.yaml",
+        "skills/engineering/wizard/template.sh"
+      ],
+      "commit": "5beb35b040e3de97e54fa9e386d7e42d15c295c2",
       "license": "MIT",
-      "local_edits": "description on one line; slash-command mention made a skill name"
+      "local_edits": "template.sh header names the wizard skill without a slash"
     },
-    "write-a-skill": {
+    "handoff": {
       "repo": "mattpocock/skills",
-      "path": "skills/productivity/write-a-skill/SKILL.md",
-      "commit": "b843cb5ea74b1fe5e58a0fc23cddef9e66076fb8",
+      "path": [
+        "skills/productivity/handoff/SKILL.md",
+        "skills/productivity/handoff/agents/openai.yaml"
+      ],
+      "commit": "5beb35b040e3de97e54fa9e386d7e42d15c295c2",
+      "license": "MIT",
+      "local_edits": "Skill-tool mention reworded"
+    },
+    "teach": {
+      "repo": "mattpocock/skills",
+      "path": [
+        "skills/productivity/teach/GLOSSARY-FORMAT.md",
+        "skills/productivity/teach/LEARNING-RECORD-FORMAT.md",
+        "skills/productivity/teach/MISSION-FORMAT.md",
+        "skills/productivity/teach/RESOURCES-FORMAT.md",
+        "skills/productivity/teach/SKILL.md",
+        "skills/productivity/teach/agents/openai.yaml"
+      ],
+      "commit": "5beb35b040e3de97e54fa9e386d7e42d15c295c2",
+      "license": "MIT",
+      "local_edits": "slash mention made a skill name"
+    },
+    "to-questionnaire": {
+      "repo": "mattpocock/skills",
+      "path": [
+        "skills/productivity/to-questionnaire/SKILL.md",
+        "skills/productivity/to-questionnaire/agents/openai.yaml"
+      ],
+      "commit": "5beb35b040e3de97e54fa9e386d7e42d15c295c2",
+      "license": "MIT",
+      "local_edits": "none beyond the attribution line"
+    },
+    "wait-what": {
+      "repo": "mattpocock/skills",
+      "path": [
+        "skills/productivity/wait-what/SKILL.md",
+        "skills/productivity/wait-what/agents/openai.yaml"
+      ],
+      "commit": "5beb35b040e3de97e54fa9e386d7e42d15c295c2",
+      "license": "MIT",
+      "local_edits": "none beyond the attribution line"
+    },
+    "writing-for-agents": {
+      "repo": "mattpocock/skills",
+      "path": [
+        "skills/productivity/writing-for-agents/SKILL-MECHANICS.md",
+        "skills/productivity/writing-for-agents/SKILL.md",
+        "skills/productivity/writing-for-agents/agents/openai.yaml"
+      ],
+      "commit": "5beb35b040e3de97e54fa9e386d7e42d15c295c2",
       "license": "MIT",
       "local_edits": "none beyond the attribution line"
     },
     "migrate-to-shoehorn": {
       "repo": "mattpocock/skills",
-      "path": "skills/misc/migrate-to-shoehorn/SKILL.md",
-      "commit": "b843cb5ea74b1fe5e58a0fc23cddef9e66076fb8",
+      "path": [
+        "skills/misc/migrate-to-shoehorn/SKILL.md",
+        "skills/misc/migrate-to-shoehorn/agents/openai.yaml"
+      ],
+      "commit": "5beb35b040e3de97e54fa9e386d7e42d15c295c2",
       "license": "MIT",
       "local_edits": "none beyond the attribution line"
     },
     "setup-pre-commit": {
       "repo": "mattpocock/skills",
-      "path": "skills/misc/setup-pre-commit/SKILL.md",
-      "commit": "b843cb5ea74b1fe5e58a0fc23cddef9e66076fb8",
+      "path": [
+        "skills/misc/setup-pre-commit/SKILL.md",
+        "skills/misc/setup-pre-commit/agents/openai.yaml"
+      ],
+      "commit": "5beb35b040e3de97e54fa9e386d7e42d15c295c2",
       "license": "MIT",
       "local_edits": "none beyond the attribution line"
     },
-    "edit-article": {
+    "which-skill": {
       "repo": "mattpocock/skills",
-      "path": "skills/personal/edit-article/SKILL.md",
-      "commit": "b843cb5ea74b1fe5e58a0fc23cddef9e66076fb8",
+      "path": [
+        "skills/engineering/ask-matt/PHASE-BOUNDARIES.md",
+        "skills/engineering/ask-matt/SKILL.md",
+        "skills/engineering/ask-matt/agents/openai.yaml"
+      ],
+      "commit": "5beb35b040e3de97e54fa9e386d7e42d15c295c2",
       "license": "MIT",
-      "local_edits": "none beyond the attribution line"
+      "local_edits": "rewritten as which-skill: routes every skill this repo installs (local names, an onboard on-ramp, a repository-setup group); grilling asks one question at a time; PHASE-BOUNDARIES.md made CLI-neutral, with each CLI's commands from its docs; a unit test keeps the routes in step with skills/"
     }
   }
 }

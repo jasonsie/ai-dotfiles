@@ -1,14 +1,11 @@
 #!/usr/bin/env python3
-"""Link skills, the ai-dotfiles command, and Pi's learn extension; writes unless --dry-run.
+"""Link skills and the ai-dotfiles command; writes unless --dry-run.
 
-Every folder under skills/ that has a SKILL.md, plus zkfy's `query` skill when this machine
-has a zkfy checkout (ZKFY_DIR, or the one the vault binding names), is linked by name into
-the skill folder of each CLI that config/ai-clis.json switches on. A folder several CLIs
+Every folder under skills/ that has a SKILL.md is linked by name into the skill folder of each CLI that config/ai-clis.json switches on. A folder several CLIs
 read (~/.agents/skills, for Codex and Pi) stays linked while any of them is on; a folder
 only switched-off CLIs read loses its links. scripts/ai-dotfiles is linked as
 ~/.local/bin/ai-dotfiles, so the command works from any folder; shell files are never
-edited, and a hint is printed when that folder is not on PATH. Pi has no hooks, so while
-it is on and set up it gets skills/learn/hooks/pi-learn.ts in its extensions folder.
+edited, and a hint is printed when that folder is not on PATH.
 
 An existing entry this script did not create is refused, unless it already is the wanted
 link. A link it created that is no longer wanted is removed; a link the user changed is
@@ -28,19 +25,11 @@ WORKSPACE = Path(__file__).resolve().parents[2]
 RECEIPT = installer.STATE + '/skills.json'
 COMMAND = '.local/bin/ai-dotfiles'
 COMMAND_RECEIPT = installer.STATE + '/command.json'  # left by install-command.py, which this replaced
-PI_EXTENSION = 'ai-dotfiles-learn.ts'
 
 
-def skills(source, zkfy=None):
-    """{name: folder} of every skill to link: this repo's, and zkfy's `query` when given."""
-    found = {p.name: p for p in sorted(source.iterdir()) if (p / 'SKILL.md').is_file()} if source.is_dir() else {}
-    if zkfy is not None:
-        if 'query' in found:
-            raise ValueError("skills/query would hide zkfy's query skill")
-        if not (zkfy / 'skills/query/SKILL.md').is_file():
-            raise ValueError(f'Missing the query skill in {zkfy}')
-        found['query'] = zkfy / 'skills/query'
-    return found
+def skills(source):
+    """{name: folder} of every skill in this repo."""
+    return {p.name: p for p in sorted(source.iterdir()) if (p / 'SKILL.md').is_file()} if source.is_dir() else {}
 
 
 def owns_command(selected, uninstall):
@@ -48,7 +37,7 @@ def owns_command(selected, uninstall):
     return not uninstall or set(selected) == set(installer.clis())
 
 
-def plan(home, selected, workspace, zkfy, owned, uninstall=False):
+def plan(home, selected, workspace, owned, uninstall=False):
     """Link changes for the selected CLIs, and the receipt's next list of owned links."""
     entries = installer.clis()
     roots = {installer.path(home, cli, 'skills') for cli in selected}
@@ -59,19 +48,13 @@ def plan(home, selected, workspace, zkfy, owned, uninstall=False):
     managed_roots = link_roots | (roots - keep)
     command = str(home / COMMAND)
     others = {command} if owns_command(selected, uninstall) else set()
-    extensions = installer.path(home, 'pi', 'extensions') if 'pi' in selected else None
-    extension = str(extensions / PI_EXTENSION) if extensions else None
-    if extension:
-        others.add(extension)
     chosen = lambda path: Path(path).parent in managed_roots or path in others  # noqa: E731
     desired = {}
     if link_roots:
-        found = skills(workspace / 'skills', zkfy)
+        found = skills(workspace / 'skills')
         desired = {str(root / name): str(folder) for root in sorted(link_roots) for name, folder in found.items()}
     if not uninstall:
         desired[command] = str(workspace / 'scripts/ai-dotfiles')
-        if extension and entries['pi']['on'] and Path(extension).parent.parent.is_dir():
-            desired[extension] = str(workspace / 'skills/learn/hooks/pi-learn.ts')
     changes = []
     for path, target in desired.items():
         current = installer.state(Path(path))
@@ -88,10 +71,10 @@ def plan(home, selected, workspace, zkfy, owned, uninstall=False):
     return changes, links
 
 
-def install(home, selected, workspace=WORKSPACE, zkfy=None, apply=False, uninstall=False, path_env=None):
+def install(home, selected, workspace=WORKSPACE, apply=False, uninstall=False, path_env=None):
     receipt = home / RECEIPT
     owned = json.loads(receipt.read_text())['links'] if receipt.is_file() else {}
-    changes, links = plan(home, selected, workspace, zkfy, owned, uninstall)
+    changes, links = plan(home, selected, workspace, owned, uninstall)
     if links != owned:
         changes.append((receipt, installer.state(receipt), installer.receipt({'version': 1, 'links': links})))
     old = home / COMMAND_RECEIPT
@@ -110,8 +93,7 @@ def install(home, selected, workspace=WORKSPACE, zkfy=None, apply=False, uninsta
 def main():
     args = installer.parser(__doc__).parse_args()
     return installer.finish('skills', lambda: install(
-        args.home, installer.scope(args.target), zkfy=None if args.uninstall else installer.zkfy_dir(args.home),
-        apply=not args.dry_run, uninstall=args.uninstall))
+        args.home, installer.scope(args.target), apply=not args.dry_run, uninstall=args.uninstall))
 
 
 if __name__ == '__main__':

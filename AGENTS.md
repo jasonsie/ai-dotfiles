@@ -14,16 +14,14 @@ Codex CLI, Pi, and Antigravity. The mechanism and layout are in
 | `config/cli-settings.json` | Per-CLI `enforce` and `default` keys | `scripts/install/settings.py` |
 | `config/mcp-servers.json` | Shared MCP servers | `scripts/install/mcp.py` |
 | `skills/` | Shared skills; `skills.lock` pins adapted upstream skills | `scripts/install/skills.py` |
-| `skills/learn/` | Self-improvement: the `learn` skill, its hooks, its `lessons.md` log | `scripts/install/hooks.py` (Pi's extension: `skills.py`) |
 | `scripts/ai-dotfiles` | Global command: `install`, `update`, `uninstall`, `check` | `scripts/install/skills.py` |
-| zkfy checkout (`ZKFY_DIR`) | Vault binding and `vault-knowledge` launcher; its `query` skill | `scripts/install/knowledge.py`; `skills.py` |
 | `scripts/install/installer.py` | What every step shares: reading `ai-clis.json`, safe writes | — |
 | `docs/upstream/` | Machine-written docs mirrors and skill catalogs | `scripts/upstream/` (weekly workflow) |
 | `scripts/tests/` | Unit tests for the scripts and the skills' helpers | — |
 
-`scripts/install.sh` runs the six install steps, `scripts/uninstall.sh` reverses them;
+`scripts/install.sh` runs the four install steps, `scripts/uninstall.sh` reverses them;
 `scripts/healthcheck.sh` verifies live state. `docs/` holds only `how-it-works.md` and the
-mirror; a task file in `docs/plans/` is deleted once its work is merged.
+mirror.
 
 ## Rules for changes
 
@@ -35,6 +33,8 @@ mirror; a task file in `docs/plans/` is deleted once its work is merged.
 - CLI lists and paths live only in `config/ai-clis.json`; scripts keep only how each CLI's
   files are edited.
 - Never edit `docs/upstream/` by hand; the weekly sync rebuilds it.
+- A newer upstream version of a pinned skill replaces ours: remove it, add theirs, re-apply
+  its `local_edits` from `skills/skills.lock`, and update `which-skill` (a test checks it).
 - Keep `config/` and `scripts/` free of machine paths (`/Users/<name>`, `/opt/homebrew`);
   the healthcheck enforces this.
 - No credentials in this repo. Per-project rules belong to each project, not here.

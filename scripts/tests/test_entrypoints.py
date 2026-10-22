@@ -18,10 +18,8 @@ class EntrypointsTest(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.home = Path(self.temp.name).resolve() / 'home'
         self.home.mkdir()
-        # No CLI on PATH, so the MCP step adds nothing; no vault, so knowledge is skipped.
+        # No CLI on PATH, so the MCP step adds nothing.
         self.env = {**os.environ, 'HOME': str(self.home), 'PATH': '/usr/bin:/bin', 'PYTHON': sys.executable}
-        for key in ('ZKFY_DIR', 'ZKFY_VAULT'):
-            self.env.pop(key, None)
 
     def run_script(self, *args, script='scripts/install.sh'):
         result = subprocess.run(['bash', str(ROOT / script), *args], env=self.env, capture_output=True, text=True)

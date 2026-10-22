@@ -132,7 +132,6 @@ class InstallerTest(unittest.TestCase):
         self.assertTrue(all(entry['on'] for entry in entries.values()))
         self.assertEqual(entries['codex']['skills'], entries['pi']['skills'])  # Codex and Pi share one
         self.assertEqual(installer.path(self.home, 'claude', 'skills'), self.home / '.claude/skills')
-        self.assertIsNone(installer.path(self.home, 'pi', 'hooks'))  # Pi takes an extension instead
 
     def registry(self, change):
         """Point installer at a copy of the repo's registry, edited by change(data)."""
@@ -169,14 +168,6 @@ class InstallerTest(unittest.TestCase):
             warnings = installer.check(self.home)
         self.assertEqual(len(warnings), 1)
         self.assertIn('CODEX_HOME', warnings[0])
-
-    def test_zkfy_dir_from_env_then_binding(self):
-        with patch.dict(os.environ, {'ZKFY_DIR': ''}):
-            self.assertIsNone(installer.zkfy_dir(self.home))
-            self.file(installer.ZKFY_BINDING, json.dumps({'tool': '/opt/zkfy/scripts/knowledge.py'}))
-            self.assertEqual(installer.zkfy_dir(self.home), Path('/opt/zkfy'))
-        with patch.dict(os.environ, {'ZKFY_DIR': str(self.home)}):
-            self.assertEqual(installer.zkfy_dir(self.home), self.home)
 
     def test_finish_reports_changes_or_the_error(self):
         out, err = io.StringIO(), io.StringIO()

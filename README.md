@@ -15,7 +15,6 @@ emulated. How it works: [docs/how-it-works.md](docs/how-it-works.md). Forked fro
 | `config/cli-settings.json` | `enforce`: safety settings, put back on every install. `default`: model choices, set only while a CLI has none | Each CLI's settings file, merged (never linked) |
 | `config/mcp-servers.json` | Shared MCP servers (today: context7, library docs) | `claude`, `codex` and `pi mcp add`; merged into `~/.gemini/config/mcp_config.json` for Antigravity |
 | `skills/<name>/` | Shared skills; adapted ones are pinned in `skills/skills.lock` | `~/.claude/skills`, `~/.agents/skills` (Codex and Pi), `~/.gemini/config/skills` (Antigravity) |
-| zkfy checkout | The read-only `query` vault skill and its `vault-knowledge` launcher | The same three skill folders and `~/.local/bin` |
 | `docs/upstream/` | A weekly mirror of each CLI's official docs and the watched skill catalogs | Read on demand; never installed |
 
 Not managed: credentials, sessions, plugin choices, local approvals and trust, and
@@ -26,8 +25,7 @@ per-project rules (each project keeps its own `AGENTS.md`).
 Requires Python 3.11+ (stock `/usr/bin/python3` is too old: `brew install python`).
 
 ```bash
-git clone <this repo> && git clone https://github.com/jasonsie/zkfy.git
-export ZKFY_DIR=/path/to/zkfy ZKFY_VAULT=/path/to/vault   # optional: vault retrieval
+git clone <this repo>
 bash scripts/install.sh            # install (backs up first); --dry-run previews
 ai-dotfiles check                  # verify live state; works from any folder now
 ```
@@ -58,7 +56,7 @@ done
 ## Everyday changes
 
 - **A CLI on or off:** set its `on` in `config/ai-clis.json`, then run `ai-dotfiles`. Off
-  takes out this repo's links and hooks for it; on sets it up again.
+  takes out this repo's links for it; on sets it up again.
 - **A rule for every project:** edit `config/global-agents.md`; it is live at once
   through the links. Keep only rules that apply in every repository and every CLI; anything
   narrower belongs in a project's `AGENTS.md` or in a skill.

@@ -8,10 +8,8 @@
 #
 # Steps, in reverse install order (each removes only what its installer created,
 # backs up before writing, and rolls back on failure):
-#   6. hooks         learn hook entries
-#   5. skills        links in the receipt: skills, Pi's learn extension, and the
-#                    ai-dotfiles command (--target=all only)
-#   4. knowledge     zkfy vault binding (--target=all only; receipt restores prior state)
+#   4. skills        links in the receipt: skills, and the ai-dotfiles command
+#                    (that one with --target=all only)
 #   3. mcp           left in place, listed: servers do not depend on this repo
 #   2. settings      left in place, listed: managed keys hold no repo paths
 #   1. instructions  links removed; the file from before the first install is restored
@@ -25,7 +23,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TARGET="all"
 DRY_RUN=0
 
-usage() { sed -n '2,19p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,17p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
 
 for arg in "$@"; do
   case "$arg" in
@@ -47,20 +45,8 @@ fi
 DRY=()
 [ "$DRY_RUN" = "1" ] && DRY=(--dry-run)
 
-echo "== hooks"
-"$PYTHON" "$SCRIPT_DIR/install/hooks.py" --uninstall --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
-
 echo "== skills"
 "$PYTHON" "$SCRIPT_DIR/install/skills.py" --uninstall --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
-
-echo "== knowledge"
-if [ "$TARGET" != "all" ]; then
-  echo "knowledge: kept (one binding for every CLI; removed with --target=all)"
-elif [ -f "${HOME}/.local/state/zkfy/integration.json" ]; then
-  "$PYTHON" "$SCRIPT_DIR/install/knowledge.py" --uninstall ${DRY[@]+"${DRY[@]}"}
-else
-  echo "knowledge: nothing installed"
-fi
 
 echo "== mcp"
 "$PYTHON" "$SCRIPT_DIR/install/mcp.py" --uninstall --target "$TARGET"
