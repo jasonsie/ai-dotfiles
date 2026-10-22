@@ -78,6 +78,13 @@ and one `<pre>`; chat ends with the path line and the question.
   but one preamble line before it. Fixed: step 5 now says to start with the file's
   first line.
 
+- Gap the user caught: both runs started inside the target, so `/onboard <path>` from
+  another repo was untested, and the skill never tied ROOT to a named path. Fixed
+  (`85a9b97`); re-run from `ai_dotfiles` as `/onboard .../reference/dotfiles`: report on
+  dotfiles, written to `forks/ai/dotfiles/.agents/onboarding.md` (rewrite, change
+  listed), chat identical to the file and starting with its header, `ai_dotfiles`
+  report untouched.
+
 ## Next step
 
 Open the PR. Left to the user: a Codex run, a repo over 12 parts (`firecrawl`), a
