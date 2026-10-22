@@ -28,7 +28,6 @@ REQUIRED = ('instructions', 'settings', 'mcp', 'skills')
 SUPPORTED = ('claude', 'codex', 'pi', 'agy')  # the CLIs whose formats the steps know
 OVERRIDES = {'claude': 'CLAUDE_CONFIG_DIR', 'codex': 'CODEX_HOME', 'pi': 'PI_CODING_AGENT_DIR'}
 STATE = '.local/state/ai-dotfiles'  # receipts and backups
-ZKFY_BINDING = '.config/zkfy/knowledge.json'  # written by the knowledge step, read by zkfy
 
 
 def clis():
@@ -173,16 +172,6 @@ def show(changes, write):
         else:
             verb, what = 'update' if before[0] == 'file' else 'write', path
         print(f'{verb.capitalize()}: {what}' if write else f'Would {verb}: {what}')
-
-
-def zkfy_dir(home):
-    """The zkfy checkout: ZKFY_DIR, else the one this machine's vault binding names."""
-    if os.environ.get('ZKFY_DIR'):
-        return Path(os.environ['ZKFY_DIR']).expanduser().resolve()
-    binding = home / ZKFY_BINDING
-    if binding.is_file():
-        return Path(json.loads(binding.read_text())['tool']).parents[1]
-    return None
 
 
 def parser(doc, cli_target=True):

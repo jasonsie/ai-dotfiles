@@ -13,9 +13,7 @@
 #   1. instructions  config/global-agents.md       → each CLI's global entry (symlink)
 #   2. settings      config/cli-settings.json      → merged into live settings (only those keys)
 #   3. mcp           config/mcp-servers.json       → native `<cli> mcp add` when missing
-#   4. knowledge     zkfy vault binding and launcher; skipped if ZKFY_DIR/ZKFY_VAULT are
-#                    unset and no binding exists yet
-#   5. skills        skills/<name>/, zkfy's query → each CLI's skill folder (links); also
+#   4. skills        skills/<name>/                → each CLI's skill folder (links); also
 #                    scripts/ai-dotfiles → ~/.local/bin
 #
 # Requires Python 3.11+ (macOS /usr/bin/python3 is older; use Homebrew/pyenv).
@@ -33,7 +31,7 @@ INSTRUCTIONS_ONLY=0
 REPLACE_INSTRUCTIONS=0
 PASS=()
 
-usage() { sed -n '2,22p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,20p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
 
 for arg in "$@"; do
   case "$arg" in
@@ -99,13 +97,6 @@ echo "== settings"
 
 echo "== mcp"
 "$PYTHON" "$SCRIPT_DIR/install/mcp.py" --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
-
-echo "== knowledge"
-if [ -n "${ZKFY_DIR:-}" ] || [ -f "${HOME}/.config/zkfy/knowledge.json" ]; then
-  "$PYTHON" "$SCRIPT_DIR/install/knowledge.py" ${DRY[@]+"${DRY[@]}"}
-else
-  echo "knowledge: skipped (set ZKFY_DIR and ZKFY_VAULT to enable vault retrieval)"
-fi
 
 echo "== skills"
 "$PYTHON" "$SCRIPT_DIR/install/skills.py" --target "$TARGET" ${DRY[@]+"${DRY[@]}"}

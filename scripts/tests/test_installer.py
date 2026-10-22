@@ -169,14 +169,6 @@ class InstallerTest(unittest.TestCase):
         self.assertEqual(len(warnings), 1)
         self.assertIn('CODEX_HOME', warnings[0])
 
-    def test_zkfy_dir_from_env_then_binding(self):
-        with patch.dict(os.environ, {'ZKFY_DIR': ''}):
-            self.assertIsNone(installer.zkfy_dir(self.home))
-            self.file(installer.ZKFY_BINDING, json.dumps({'tool': '/opt/zkfy/scripts/knowledge.py'}))
-            self.assertEqual(installer.zkfy_dir(self.home), Path('/opt/zkfy'))
-        with patch.dict(os.environ, {'ZKFY_DIR': str(self.home)}):
-            self.assertEqual(installer.zkfy_dir(self.home), self.home)
-
     def test_finish_reports_changes_or_the_error(self):
         out, err = io.StringIO(), io.StringIO()
         with redirect_stdout(out), redirect_stderr(err):

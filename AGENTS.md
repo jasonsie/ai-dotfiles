@@ -15,12 +15,11 @@ Codex CLI, Pi, and Antigravity. The mechanism and layout are in
 | `config/mcp-servers.json` | Shared MCP servers | `scripts/install/mcp.py` |
 | `skills/` | Shared skills; `skills.lock` pins adapted upstream skills | `scripts/install/skills.py` |
 | `scripts/ai-dotfiles` | Global command: `install`, `update`, `uninstall`, `check` | `scripts/install/skills.py` |
-| zkfy checkout (`ZKFY_DIR`) | Vault binding and `vault-knowledge` launcher; its `query` skill | `scripts/install/knowledge.py`; `skills.py` |
 | `scripts/install/installer.py` | What every step shares: reading `ai-clis.json`, safe writes | — |
 | `docs/upstream/` | Machine-written docs mirrors and skill catalogs | `scripts/upstream/` (weekly workflow) |
 | `scripts/tests/` | Unit tests for the scripts and the skills' helpers | — |
 
-`scripts/install.sh` runs the five install steps, `scripts/uninstall.sh` reverses them;
+`scripts/install.sh` runs the four install steps, `scripts/uninstall.sh` reverses them;
 `scripts/healthcheck.sh` verifies live state. `docs/` holds only `how-it-works.md` and the
 mirror; a task file in `docs/plans/` is deleted once its work is merged.
 

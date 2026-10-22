@@ -31,8 +31,7 @@ config/ai-clis.json           ─►  every step: which CLIs, and their paths  �
 config/global-agents.md       ─►  instructions.py (symlinks)               ─►  each CLI's global instruction file
 config/cli-settings.json      ─►  settings.py (merges listed keys)         ─►  settings.json / config.toml
 config/mcp-servers.json       ─►  mcp.py (native `mcp add`, or a merge)    ─►  Claude Code, Codex, Pi, Antigravity
-zkfy checkout (ZKFY_DIR)      ─►  knowledge.py (file, link)                ─►  vault binding, vault-knowledge launcher
-skills/<name>/, zkfy's query  ─►  skills.py (links)                        ─►  every CLI's skill folder
+skills/<name>/                ─►  skills.py (links)                        ─►  every CLI's skill folder
 scripts/ai-dotfiles           ─►  skills.py (link)                         ─►  ~/.local/bin
                                   installer.py: reads ai-clis.json; the safe writes every step shares
                                   scripts/healthcheck.sh checks the live state
@@ -66,7 +65,7 @@ code for stops the run.
 
 `uninstall.sh` runs each step's `--uninstall` in reverse order and removes whatever points
 into this repo: instruction links (restoring the file from before the first install),
-skill links, the vault binding and the command link. Settings keys and MCP
+skill links and the command link. Settings keys and MCP
 servers stay and are listed, because they hold no repo paths and could be the user's own.
 After it, deleting the repo breaks nothing.
 
@@ -88,7 +87,7 @@ a CLI's folder, edit its paths there; `CLAUDE_CONFIG_DIR`, `CODEX_HOME` and
 disagrees with the file.
 
 Checked at runtime on 2026-10-16 and 2026-10-17: every CLI loads the global file and a
-project `AGENTS.md`, and lists the `grilling` and `query` skills. Codex can be checked
+project `AGENTS.md`, and lists the `grilling` skill. Codex can be checked
 without a model call: `codex debug prompt-input "hi"` prints what it would send.
 
 ## Principles
@@ -126,8 +125,6 @@ healthcheck report it as a "local choice kept".
   repository a task file is deleted once its work is merged.
 - **Project memory:** the project's `AGENTS.md`, read natively by every CLI. When a
   project also has a `CLAUDE.md`, it links to `AGENTS.md` or imports it with `@AGENTS.md`.
-- **Knowledge:** the CS vault, read through the `query` skill (read-only). Saving to the
-  vault needs an explicit request.
 - **Claude's auto memory** stays on as a per-machine, Claude-only scratchpad.
 
 ## Upstream updates
@@ -153,13 +150,12 @@ healthcheck report it as a "local choice kept".
 | Settings | `~/.local/state/ai-dotfiles/settings/backup-*` | Copy the backed-up file back |
 | MCP (Antigravity's file) | `~/.local/state/ai-dotfiles/mcp/backup-*` | Copy the backed-up file back |
 | Skills, command | `~/.local/state/ai-dotfiles/skills.json` (links this repo created) | `python3 scripts/install/skills.py --uninstall` |
-| Vault tooling | `~/.local/state/zkfy/integration.json` | `python3 scripts/install/knowledge.py --uninstall` |
 | Everything | the records above | `ai-dotfiles uninstall` |
 
 ## Glossary
 
-- **Source:** a file under `config/` or `skills/` (or the zkfy checkout) that an installer
-  applies. Edit the source, never the destination.
+- **Source:** a file under `config/` or `skills/` that an installer applies. Edit the
+  source, never the destination.
 - **Switch:** a CLI's `on` value in `ai-clis.json`; on means set up, off means taken out.
 - **Managed key:** a settings key in `cli-settings.json`, either `enforce` or `default`;
   every other key belongs to the CLI or to you.

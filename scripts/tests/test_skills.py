@@ -30,10 +30,10 @@ class InstallSkillsTest(unittest.TestCase):
     def tearDown(self):
         self.temp.cleanup()
 
-    def install(self, clis=CLIS, apply=False, uninstall=False, zkfy=None, repo=None, path_env=''):
+    def install(self, clis=CLIS, apply=False, uninstall=False, repo=None, path_env=''):
         out = io.StringIO()
         with redirect_stdout(out):
-            count = skills.install(self.home, clis, repo or self.repo, zkfy, apply, uninstall, path_env)
+            count = skills.install(self.home, clis, repo or self.repo, apply, uninstall, path_env)
         self.output = out.getvalue()
         return count
 
@@ -48,12 +48,6 @@ class InstallSkillsTest(unittest.TestCase):
 
     def skill_links(self):
         return {path: target for path, target in self.links().items() if '/skills/' in path}
-
-    def zkfy(self):
-        zkfy = self.root / 'zkfy'
-        (zkfy / 'skills/query').mkdir(parents=True, exist_ok=True)
-        (zkfy / 'skills/query/SKILL.md').write_text('---\nname: query\n---\n')
-        return zkfy
 
     def test_repo_skills_are_valid(self):
         names = skills.skills(skills.WORKSPACE / 'skills')
@@ -133,41 +127,34 @@ class InstallSkillsTest(unittest.TestCase):
         self.install(apply=True, uninstall=True)
         self.assertEqual(self.links(), {})
 
-    def test_zkfy_query_is_linked_with_the_others(self):
-        zkfy = self.root / 'zkfy'
-        (zkfy / 'skills/query').mkdir(parents=True)
-        with self.assertRaisesRegex(ValueError, 'query skill'):
-            self.install(zkfy=zkfy)
-        zkfy = self.zkfy()
-        (zkfy / 'skills/other').mkdir()  # zkfy's other skills are not shared
-        (zkfy / 'skills/other/SKILL.md').write_text('---\nname: other\n---\n')
-        self.install(apply=True, zkfy=zkfy)
-        for root in ROOTS:
-            self.assertEqual(os.readlink(self.home / root / 'query'), str(zkfy / 'skills/query'))
-            self.assertFalse((self.home / root / 'other').exists())
-        (self.repo / 'skills/query').mkdir()
-        (self.repo / 'skills/query/SKILL.md').write_text('---\nname: query\n---\n')
-        with self.assertRaisesRegex(ValueError, 'hide'):
-            self.install(zkfy=zkfy)
-
-    def test_matching_links_are_adopted_and_the_old_command_receipt_goes(self):
-        # As the knowledge step and install-command.py left them before this step linked them.
-        zkfy = self.zkfy()
-        query = self.home / '.claude/skills/query'
-        query.parent.mkdir(parents=True)
-        query.symlink_to(zkfy / 'skills/query')
+    def test_a_matching_command_link_is_adopted_and_the_old_receipt_goes(self):
+        # As install-command.py left them before this step linked the command.
         self.command.parent.mkdir(parents=True)
         self.command.symlink_to(self.repo / 'scripts/ai-dotfiles')
         old = self.home / skills.COMMAND_RECEIPT
         old.parent.mkdir(parents=True)
         old.write_text(json.dumps({'version': 1, 'link': str(self.command), 'target': os.readlink(self.command)}))
-        self.assertEqual(self.install(('claude',), apply=True, zkfy=zkfy), 4)  # alpha, beta, both receipts
+        self.assertEqual(self.install(('claude',), apply=True), 4)  # alpha, beta, both receipts
         owned = json.loads((self.home / skills.RECEIPT).read_text())['links']
-        self.assertEqual(owned[str(query)], str(zkfy / 'skills/query'))
         self.assertEqual(owned[str(self.command)], str(self.repo / 'scripts/ai-dotfiles'))
         self.assertFalse(old.exists())
         self.install(apply=True, uninstall=True)
         self.assertEqual(self.links(), {})
+
+    def test_an_owned_link_to_a_skill_from_outside_the_repo_goes(self):
+        # zkfy's query was linked by this step until the knowledge step was dropped.
+        self.install(apply=True)
+        outside = self.root / 'zkfy/skills/query'
+        outside.mkdir(parents=True)
+        query = self.home / '.claude/skills/query'
+        query.symlink_to(outside, target_is_directory=True)
+        receipt = self.home / skills.RECEIPT
+        data = json.loads(receipt.read_text())
+        data['links'][str(query)] = str(outside)
+        receipt.write_text(json.dumps(data))
+        self.assertEqual(self.install(apply=True), 2)  # the link and the receipt
+        self.assertFalse(query.is_symlink())
+        self.assertEqual(self.install(), 0)
 
     def test_command_path_hint_and_moved_repo(self):
         self.install()

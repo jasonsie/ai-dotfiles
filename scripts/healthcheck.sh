@@ -2,8 +2,8 @@
 # scripts/healthcheck.sh — verify this Mac matches the workspace (read-only).
 #
 # Checks live state through each CLI where possible, not generated files:
-#   - install.sh --dry-run reports zero pending changes: every instruction, skill,
-#     vault and command link is in place, and every managed setting is applied
+#   - install.sh --dry-run reports zero pending changes: every instruction, skill
+#     and command link is in place, and every managed setting is applied
 #   - shared MCP servers are listed by each CLI's own `mcp list`
 #   - ~/.local/bin is on PATH, so `ai-dotfiles` runs from any folder
 #   - repo sources contain no machine-specific paths; unit tests pass
