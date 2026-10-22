@@ -1,0 +1,3 @@
+{
+  "extraPaths": ["scripts/install", "scripts/tests"]
+}

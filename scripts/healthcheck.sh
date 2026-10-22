@@ -2,13 +2,10 @@
 # scripts/healthcheck.sh — verify this Mac matches the workspace (read-only).
 #
 # Checks live state through each CLI where possible, not generated files:
-#   - global instruction entries link to tools/instructions/AGENTS.md
-#   - install.sh --dry-run reports zero pending changes
+#   - install.sh --dry-run reports zero pending changes: every instruction, skill, hook,
+#     vault and command link is in place, and every managed setting is applied
 #   - shared MCP servers are listed by each CLI's own `mcp list`
-#   - vault launcher resolves (when bound)
-#   - each skill in skills/ is linked into every CLI's skill folder
-#   - the learn hooks are in each CLI's hook file (Pi: extension link)
-#   - ~/.local/bin/ai-dotfiles links to scripts/ai-dotfiles and is on PATH
+#   - ~/.local/bin is on PATH, so `ai-dotfiles` runs from any folder
 #   - repo sources contain no machine-specific paths; unit tests pass
 
 set -uo pipefail
@@ -19,107 +16,68 @@ FAILS=0
 pass() { printf '  ok    %s\n' "$1"; }
 fail() { printf '  FAIL  %s\n' "$1"; FAILS=$((FAILS + 1)); }
 skip() { printf '  skip  %s\n' "$1"; }
-
-echo "-- instructions"
-SOURCE="$ROOT/tools/instructions/AGENTS.md"
-for entry in ~/.claude/CLAUDE.md ~/.codex/AGENTS.md ~/.gemini/GEMINI.md "${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/AGENTS.md"; do
-  if [ ! -d "$(dirname "$entry")" ]; then
-    skip "$entry (CLI not set up)"
-  elif [ "$(cd "$(dirname "$entry")" && "$PYTHON" -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$entry")" = "$SOURCE" ]; then
-    pass "$entry"
-  else
-    fail "$entry does not link to $SOURCE"
-  fi
-done
+detail() { sed 's/^/          /'; }
 
 echo "-- pending changes (install.sh --dry-run)"
-DRY="$(bash "$ROOT/scripts/install.sh" --dry-run 2>&1)" || fail "install.sh --dry-run exited non-zero"
-PENDING="$(printf '%s\n' "$DRY" | grep -E '(^|: )[1-9][0-9]* changes' || true)"
-if [ -z "$PENDING" ]; then pass "no pending changes"; else fail "pending: $(printf '%s' "$PENDING" | tr '\n' ';')"; fi
+if DRY="$(bash "$ROOT/scripts/install.sh" --dry-run 2>&1)"; then
+  if printf '%s\n' "$DRY" | grep -qE '(^|: )[1-9][0-9]* changes'; then
+    fail "pending changes (apply them: ai-dotfiles):"
+    printf '%s\n' "$DRY" | grep -E '^Would ' | detail
+  else
+    pass "no pending changes"
+  fi
+else
+  fail "install.sh --dry-run failed:"
+  printf '%s\n' "$DRY" | tail -n 3 | detail
+fi
 # Model choices made in a CLI itself are kept on purpose; report them, never fail.
 printf '%s\n' "$DRY" | sed -n 's/^Local choice kept: /  info  local choice kept: /p'
+printf '%s\n' "$DRY" | sed -n 's/^Warning: /  info  /p'
 
-echo "-- mcp (native list; Antigravity has none, so its config file is read)"
-for name in $("$PYTHON" -c 'import json,sys; print(" ".join(s["name"] for s in json.load(open(sys.argv[1]))["servers"]))' "$ROOT/tools/mcp/servers.json"); do
-  agy_config=~/.gemini/config/mcp_config.json
-  if [ ! -f "$agy_config" ]; then
-    skip "agy not set up"
-  elif "$PYTHON" -c 'import json,sys; t=open(sys.argv[1]).read(); sys.exit(sys.argv[2] not in (json.loads(t) if t.strip() else {}).get("mcpServers", {}))' "$agy_config" "$name"; then
-    pass "agy: $name (in mcp_config.json)"
-  else
-    fail "agy: $name not in $agy_config"
-  fi
-  for cli in claude codex pi; do
-    if ! command -v "$cli" >/dev/null 2>&1; then skip "$cli not on PATH"; continue; fi
-    # A server disabled for the current folder is still configured; count it as present.
-    line="$("$cli" mcp list 2>&1 | grep -m1 "$name" || true)"
-    case "$line" in
-      "") fail "$cli: $name not listed" ;;
-      *Disabled*) pass "$cli: $name (configured; disabled in this untrusted folder)" ;;
-      *) pass "$cli: $name" ;;
-    esac
+echo "-- mcp (each CLI switched on in config/ai-clis.json; Antigravity has no list, so its file is read)"
+SERVERS="$("$PYTHON" -c 'import json,sys; print(" ".join(s["name"] for s in json.load(open(sys.argv[1]))["servers"]))' "$ROOT/config/mcp-servers.json")"
+for entry in $("$PYTHON" -c 'import json,sys; c=json.load(open(sys.argv[1]))["clis"]; print(" ".join(k + "=" + v["mcp"] for k, v in c.items() if v["on"]))' "$ROOT/config/ai-clis.json"); do
+  cli="${entry%%=*}"; file="$HOME/${entry#*=\~/}"
+  for name in $SERVERS; do
+    if [ "$cli" = agy ]; then
+      if [ ! -f "$file" ]; then
+        skip "agy not set up"
+      elif "$PYTHON" -c 'import json,sys; t=open(sys.argv[1]).read(); sys.exit(sys.argv[2] not in (json.loads(t) if t.strip() else {}).get("mcpServers", {}))' "$file" "$name"; then
+        pass "agy: $name (in $(basename "$file"))"
+      else
+        fail "agy: $name not in $file"
+      fi
+    elif ! command -v "$cli" >/dev/null 2>&1; then
+      skip "$cli not on PATH"
+    else
+      # A server disabled for the current folder is still configured; count it as present.
+      line="$("$cli" mcp list 2>&1 | grep -m1 "$name" || true)"
+      case "$line" in
+        "") fail "$cli: $name not listed" ;;
+        *Disabled*) pass "$cli: $name (configured; disabled in this untrusted folder)" ;;
+        *) pass "$cli: $name" ;;
+      esac
+    fi
   done
 done
-
-echo "-- knowledge"
-if [ -f ~/.config/zkfy/knowledge.json ]; then
-  if [ -e ~/.local/bin/vault-knowledge ]; then pass "vault-knowledge launcher resolves"; else fail "vault-knowledge launcher missing or dangling"; fi
-else
-  skip "no zkfy binding on this machine"
-fi
-
-echo "-- skills"
-for skill in "$ROOT"/skills/*/SKILL.md; do
-  [ -e "$skill" ] || continue
-  name="$(basename "$(dirname "$skill")")"
-  for folder in ~/.claude/skills ~/.agents/skills ~/.gemini/config/skills; do
-    if [ "$folder/$name" -ef "$ROOT/skills/$name" ]; then pass "$folder/$name"; else fail "$folder/$name does not link to skills/$name"; fi
-  done
-done
-
-echo "-- hooks (learn)"
-for pair in claude:"$HOME/.claude/settings.json" codex:"$HOME/.codex/hooks.json" agy:"$HOME/.gemini/config/hooks.json"; do
-  cli="${pair%%:*}"; file="${pair#*:}"
-  if [ ! -d "$(dirname "$file")" ]; then
-    skip "$cli not set up"
-  elif [ -f "$file" ] && grep -qF "$ROOT/skills/learn/hooks/learn_hook.py" "$file"; then
-    pass "$cli: $file"
-  else
-    fail "$cli: no learn hook pointing at this checkout in $file"
-  fi
-done
-PI_DIR="${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}"
-if [ ! -d "$PI_DIR" ]; then
-  skip "pi not set up"
-elif [ "$PI_DIR/extensions/ai-dotfiles-learn.ts" -ef "$ROOT/skills/learn/hooks/pi-learn.ts" ]; then
-  pass "pi: $PI_DIR/extensions/ai-dotfiles-learn.ts"
-else
-  fail "pi: $PI_DIR/extensions/ai-dotfiles-learn.ts does not link to skills/learn/hooks/pi-learn.ts"
-fi
 
 echo "-- command"
-COMMAND_LINK="$HOME/.local/bin/ai-dotfiles"
-if [ "$COMMAND_LINK" -ef "$ROOT/scripts/ai-dotfiles" ]; then
-  pass "$COMMAND_LINK"
-else
-  fail "$COMMAND_LINK does not link to scripts/ai-dotfiles (repo moved? rerun install.sh)"
-fi
 case ":$PATH:" in
   *":$HOME/.local/bin:"*|*":$HOME/.local/bin/:"*) pass "$HOME/.local/bin on PATH" ;;
   *) fail "$HOME/.local/bin is not on PATH; ai-dotfiles only runs by its full path" ;;
 esac
 
 echo "-- portability"
-HITS="$(grep -rlIE --exclude=healthcheck.sh --exclude-dir=__pycache__ \
-  '/Users/[A-Za-z]|/opt/homebrew|/usr/local/Cellar' "$ROOT/tools" "$ROOT/scripts" 2>/dev/null || true)"
+HITS="$(grep -rlIE --exclude=healthcheck.sh --exclude-dir=__pycache__ --exclude-dir=tests \
+  '/Users/[A-Za-z]|/opt/homebrew|/usr/local/Cellar' "$ROOT/config" "$ROOT/scripts" 2>/dev/null || true)"
 if [ -n "$HITS" ]; then
   fail "machine-specific paths in: $(printf '%s' "$HITS" | tr '\n' ' ')"
 else
-  pass "no machine-specific paths in tools/ or scripts/"
+  pass "no machine-specific paths in config/ or scripts/"
 fi
 
 echo "-- tests"
-if (cd "$ROOT" && "$PYTHON" -m unittest discover -s tests >/dev/null 2>&1); then pass "unit tests"; else fail "unit tests (run: $PYTHON -m unittest discover -s tests)"; fi
+if (cd "$ROOT" && "$PYTHON" -m unittest discover -s scripts/tests >/dev/null 2>&1); then pass "unit tests"; else fail "unit tests (run: $PYTHON -m unittest discover -s scripts/tests)"; fi
 
 echo
 if [ "$FAILS" -eq 0 ]; then echo "healthy"; else echo "$FAILS check(s) failed"; fi
