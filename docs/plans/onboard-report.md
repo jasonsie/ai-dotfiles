@@ -117,5 +117,8 @@ Numbers are the order decided; later ones revise earlier ones where noted.
 
 ## Next step
 
-Unit tests, shellcheck, installer preview, healthcheck; Pi `context7` re-add; trials
-(see *Checks*); then PR.
+Merged without the remaining trials, by the user's choice (2026-10-22). Left to the
+user, by hand: Codex on `superpowers`, Claude Code on `firecrawl` (grouping above 12),
+a re-run (rewrite lists changes), a planted hand-written report, and a deep dive. Trial
+worktrees and the old `onboard-trial` branches are removed. Mark `done` after those
+trials pass.
