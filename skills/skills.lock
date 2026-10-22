@@ -17,14 +17,14 @@
       ],
       "commit": "0be6455fca4cab1ba1aac600c68184f9256c283d",
       "license": "MIT",
-      "local_edits": "command, agent and script merged into the onboard skill; generator rewritten in Python as a read-only facts script; one report at .agents/onboarding.md: numbered index, ASCII relationship graph with a source file per edge, a section per part; risks in chat only; generated header and no overwrite of a hand-written report"
+      "local_edits": "command, agent and script merged into the onboard skill; generator rewritten in Python as a read-only facts script; one GFM report at .agents/onboarding.md: numbered index, ASCII relationship graph with one target per arrow and a legend citing the line that makes the link, a section per part; chat prints the file unchanged, then risks; generated header and no overwrite of a hand-written report"
     },
     "architect": {
       "repo": "affaan-m/everything-claude-code",
       "path": "agents/architect.md",
       "commit": "0be6455fca4cab1ba1aac600c68184f9256c283d",
       "license": "MIT",
-      "local_edits": "agent rewritten as a CLI-neutral skill; reads the onboarding report first; risks-only mode when called by onboard; findings name their source file; ADR only for a decision, in the repo's own ADR folder; generic pattern lists, SaaS example and fixed ADR template dropped"
+      "local_edits": "agent rewritten as a CLI-neutral skill; reads the onboarding report first; debt-and-red-flags-only mode when called by onboard; findings name their source file; ADR only for a decision, in the repo's own ADR folder; generic pattern lists, SaaS example and fixed ADR template dropped"
     },
     "iterative-retrieval": {
       "repo": "affaan-m/everything-claude-code",
