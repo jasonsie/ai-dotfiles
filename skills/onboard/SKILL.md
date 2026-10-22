@@ -1,11 +1,11 @@
 ---
 name: onboard
-description: Get to know an unfamiliar repository. Writes one report that maps the codebase as an index of its parts, an ASCII graph of how they relate, and a section per part, then lets the user dive into any part or name a task. Use when the user says "onboard me", "onboard this repo", "help me understand this codebase", "map this codebase", "give me an overview of this repo", "how does this repo fit together", or opens a repository they have not worked in before.
+description: Get to know an unfamiliar repository. Writes one report that maps the codebase as an index of its parts, ASCII flow graphs of how they work together, and a section per part, then lets the user dive into any part or name a task. Use when the user says "onboard me", "onboard this repo", "help me understand this codebase", "map this codebase", "give me an overview of this repo", "how does this repo fit together", or opens a repository they have not worked in before.
 ---
 
 Write one report a reader takes in at a glance, then dives into: an **index** of the
-repo's parts, a **graph** of how they relate, and a **section** per part, tied by the
-same `[n]`.
+repo's parts, **flow graphs** of how they work together, and a **section** per part,
+tied by the same part names.
 
 ```
 facts ──▶ read key files ──▶ risks ──▶ report ══ stop and ask ══▶ deep dive or task
@@ -51,41 +51,60 @@ Write `.agents/onboarding.md` in this shape:
 
 ## 1. Index
 
-- [1] <Name> — `<key file>` — <one-line purpose>
-- [2] …
+- <Name> — `<key file>` — <one-line purpose>
+- …
 
 ## 2. Relationships
 
+### <Flow> — <how it starts, e.g. `./install.sh`>
+
 ```text
-[1] ──runs──▶ [2] ──imports──┬──▶ [3]
-                             └──▶ [4]
-[3] ──writes──▶ (Postgres)
-[5]
+CLI
+ ├─reads──▶ (config.toml)
+ └─calls──▶ Server
+             ├─writes─▶ (Postgres)
+             └─renders─▶ Templates, Static assets
 ```
 
-- [1] → [2] runs — `<file:line>`
-- [2] → [3] imports — `<file:line>`
-- [2] → [4] imports — `<file:line>`
-- [3] → (Postgres) writes — `<file:line>`
+- CLI → (config.toml) reads — `<file:line>`
+- CLI → Server calls — `<file:line>`
+- Server → (Postgres) writes — `<file:line>`
+- Server → Templates renders — `<file:line>`
+- Server → Static assets renders — `<file:line>`
+
+### <Next flow> — <how it starts>
+
+```text
+Tests ─runs─▶ Server ─▶ (as in <Flow>)
+```
+
+- Tests → Server runs — `<file:line>`
+
+Standalone: <parts in no flow, or "none">
 
 ## 3. Sections
 
-### [1] <Name>
+### <Name>
 
 - What: <at most two sentences>
 - Key files: `<path>` (<role>), …
 - Read first: `<path>`
 ````
 
-- The Index lists what exists; only the graph shows how parts relate.
-- Every `[n]` appears in the Index, the graph, and Sections. A part with no edges stands
-  alone on its own graph line.
-- Each arrow has one verb, one target, and one legend line. Draw a fan-out as a branch,
-  one legend line per target.
-- Draw only edges you saw. Cite the line where the link happens (the call, import, exec,
-  read, or write), not where a path or constant is defined.
-- Things outside the repo (a database, an API, `~/.config`) may appear unnumbered in
-  parentheses, with no section.
+- No numbers anywhere. Each part has one unique name, at most 3 words, used verbatim in
+  the Index, graphs, legends, and Sections.
+- The Index lists what exists; only the graphs show how parts relate.
+- Relationships is 2–5 flows, each starting at a real entry point (a command, script,
+  CI job, or hook) and titled with how it starts. Read top to bottom, a flow tells the
+  story. A tail already drawn is written `─▶ (as in <Flow>)`. Every part appears in
+  some flow or on the Standalone line.
+- Each arrow carries one verb. Leaf targets sharing a verb share one line, comma
+  separated; a target with onward arrows gets its own branch. Lines ≤80 columns.
+- Under each graph, one legend line per arrow and target, by name. Draw only edges you
+  saw. Cite the line where the link happens (the call, import, exec, read, or write),
+  not where a path or constant is defined.
+- Things outside the repo (a database, an API, `~/.config`) appear in parentheses,
+  with no section.
 - No risks in the file: it may be public, and risks go stale.
 
 If `.agents/onboarding.md` starts with the generated header, rewrite it. If it exists
@@ -98,20 +117,20 @@ Print exactly this, in order, starting with the file's first line:
 
 1. The file's text, unchanged: same headings, words, and order. If nothing was written,
    the text you would have written.
-2. `Risks:` one line per finding from step 3, keyed by `[n]`, with its `file:line`. Only
+2. `Risks:` one line per finding from step 3, keyed by part name, with its `file:line`. Only
    parts that have any.
 3. `Across parts:` at most 3 risks spanning several parts or none, each naming its parts
    and files.
 4. One line: the file's path, or why nothing was written; on a rewrite, what changed
    since the last version.
-5. **"Pick a number to dive in, or name a task."**
+5. **"Name a part to dive in, or name a task."**
 
 Omit 2 or 3 when empty. Add nothing else: no preamble, no restating, no grading the run
 against plans or task files. Wait for the answer; do not invent a task.
 
 ## 6. Deep dive or task
 
-- **A number:** read that part's files in depth; show how data or control moves
+- **A part:** read its files in depth; show how data or control moves
   through it, with `file:line`; list its risks with evidence; draw a small graph of it
   and its direct neighbours if that helps. Chat only; change no file. End by asking what
   to work on.

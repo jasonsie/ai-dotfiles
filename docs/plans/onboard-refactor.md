@@ -89,3 +89,13 @@ and one `<pre>`; chat ends with the path line and the question.
 
 Open the PR. Left to the user: a Codex run, a repo over 12 parts (`firecrawl`), a
 re-run (rewrite lists changes), a planted hand-written report, and a deep dive.
+
+## Relationships redesign (grilled with the user, 2026-10-22)
+
+Decided: flows by scenario (2–5, each from a real entry point, titled with how it
+starts; repeated tail `(as in <Flow>)`; Standalone line for the rest); no `[n]`
+anywhere, unique names ≤3 words, closing question "Name a part to dive in, or name a
+task."; legend by name under each flow; leaf fan-out as a comma list; lines ≤80 cols.
+Implemented in `skills/onboard/SKILL.md` and `skills.lock`. Not yet re-tested: run
+`claude -p "/onboard <abs path>/reference/dotfiles"` from `ai_dotfiles` and check the
+flows, names matching across parts, legends, and chat equals file.
