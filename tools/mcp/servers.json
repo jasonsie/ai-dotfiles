@@ -6,7 +6,7 @@
       "command": "npx",
       "args": ["-y", "@upstash/context7-mcp"],
       "targets": ["claude", "codex", "pi", "agy"],
-      "description": "Library documentation lookup"
+      "description": "Current library docs; use for any library or framework question, matching the version the repo pins; never put secrets in queries"
     }
   ]
 }
