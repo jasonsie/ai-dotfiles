@@ -24,6 +24,14 @@ MAX_LINES = 300
 MAX_READ = 2_000_000
 MAX_MANIFESTS = 15
 MAX_DEPS = 25
+MAX_NOTE_ITEMS = 10      # peer deps and workspace members shown in a manifest note
+MAX_SCRIPTS = 8          # package.json scripts listed as entry points
+MAX_ENTRIES = 40
+MAX_DOCS = 25
+MAX_LANGUAGES = 15
+MAX_TREE_ROWS = 70
+TREE_DEPTH = 3
+SNIFF_BYTES = 4096       # leading bytes checked for NUL to spot binary files
 
 LANGUAGES = {
     '.py': 'Python', '.pyi': 'Python', '.js': 'JavaScript', '.mjs': 'JavaScript',
@@ -45,6 +53,8 @@ CODE_EXTS = {
     '.lua', '.ex', '.exs', '.sh', '.bash', '.zsh', '.nix', '.vue', '.svelte',
 }
 ENTRY_STEMS = {'main', 'index', 'app', 'cli'}
+ROOT_ENTRY_NAMES = {'Makefile', 'Dockerfile', 'flake.nix', 'justfile'}
+SCRIPT_EXTS = {'', '.sh', '.py', '.js', '.rb'}
 DOC_NAMES = {'AGENTS.md', 'CLAUDE.md', 'GEMINI.md'}
 ADR_NAMES = {'adr', 'adrs', 'decisions', 'architecture-decisions'}
 REPORT_PATH = '.agents/onboarding.md'
@@ -93,12 +103,18 @@ def list_files(root):
 
 # ---------------------------------------------------------------- helpers
 
-def read_text(root, rel):
+def read_bytes(root, rel):
+    """Up to MAX_READ bytes of a file, or None when it cannot be read."""
     try:
         with open(root / rel, 'rb') as fh:
-            return fh.read(MAX_READ).decode('utf-8', 'replace')
+            return fh.read(MAX_READ)
     except OSError:
-        return ''
+        return None
+
+
+def read_text(root, rel):
+    data = read_bytes(root, rel)
+    return '' if data is None else data.decode('utf-8', 'replace')
 
 
 def depth(rel):
@@ -124,12 +140,8 @@ def language_of(rel):
 
 
 def count_lines(root, rel):
-    try:
-        with open(root / rel, 'rb') as fh:
-            data = fh.read(MAX_READ)
-    except OSError:
-        return 0
-    if b'\0' in data[:4096]:
+    data = read_bytes(root, rel)
+    if data is None or b'\0' in data[:SNIFF_BYTES]:
         return 0
     return data.count(b'\n') + (1 if data and not data.endswith(b'\n') else 0)
 
@@ -148,6 +160,11 @@ def pep508(spec):
         return spec.strip()
     rest = m.group(2).split(';')[0].strip()
     return f'{m.group(1)} {rest}'.strip()
+
+
+def dir_prefix(rel):
+    """Folder of `rel` with a trailing slash, or '' at the root."""
+    return rel.rsplit('/', 1)[0] + '/' if '/' in rel else ''
 
 
 def new_manifest(rel, kind):
@@ -169,10 +186,10 @@ def parse_package_json(rel, text):
             m[bucket] = [f'{k} {v}' for k, v in deps.items()]
     peers = data.get('peerDependencies')
     if isinstance(peers, dict):
-        m['notes'].append('peer: ' + clip([f'{k} {v}' for k, v in peers.items()], 10))
+        m['notes'].append('peer: ' + clip([f'{k} {v}' for k, v in peers.items()], MAX_NOTE_ITEMS))
     if data.get('workspaces'):
         m['notes'].append('workspaces: ' + json.dumps(data['workspaces'])[:120])
-    base = rel.rsplit('/', 1)[0] + '/' if '/' in rel else ''
+    base = dir_prefix(rel)
     for key in ('main', 'module'):
         if isinstance(data.get(key), str):
             m['entries'].append((base + data[key].removeprefix('./'), f'{rel} "{key}"'))
@@ -185,7 +202,7 @@ def parse_package_json(rel, text):
                 m['entries'].append((base + target.removeprefix('./'), f'{rel} bin "{cmd}"'))
     scripts = data.get('scripts')
     if isinstance(scripts, dict):
-        for key, cmd in list(scripts.items())[:8]:
+        for key, cmd in list(scripts.items())[:MAX_SCRIPTS]:
             m['entries'].append((f'{rel} scripts.{key}', f'`{str(cmd)[:60]}`'))
     return m
 
@@ -280,8 +297,8 @@ def parse_cargo(rel, text):
     m['dev'] = cargo_dep_list(data.get('dev-dependencies', {}))
     m['dev'] += cargo_dep_list(data.get('build-dependencies', {}))
     if data.get('workspace', {}).get('members'):
-        m['notes'].append('workspace members: ' + clip(data['workspace']['members'], 10))
-    base = rel.rsplit('/', 1)[0] + '/' if '/' in rel else ''
+        m['notes'].append('workspace members: ' + clip(data['workspace']['members'], MAX_NOTE_ITEMS))
+    base = dir_prefix(rel)
     for b in data.get('bin', []):
         if isinstance(b, dict):
             m['entries'].append((base + b.get('path', 'src/main.rs'),
@@ -324,25 +341,31 @@ def parse_flake(rel, text):
     return m
 
 
-def parse_manifest(rel, text):
+# Filename pattern -> parser; the first match wins.
+MANIFEST_PARSERS = [
+    (r'package\.json', parse_package_json),
+    (r'pyproject\.toml', parse_pyproject),
+    (r'requirements.*\.txt', parse_requirements),
+    (r'go\.mod', parse_go_mod),
+    (r'Cargo\.toml', parse_cargo),
+    (r'flake\.nix', parse_flake),
+]
+
+
+def manifest_parser(rel):
     name = name_of(rel)
-    if name == 'package.json':
-        return parse_package_json(rel, text)
-    if name == 'pyproject.toml':
-        return parse_pyproject(rel, text)
-    if re.fullmatch(r'requirements.*\.txt', name):
-        return parse_requirements(rel, text)
-    if name == 'go.mod':
-        return parse_go_mod(rel, text)
-    if name == 'Cargo.toml':
-        return parse_cargo(rel, text)
-    return parse_flake(rel, text)
+    for pattern, parser in MANIFEST_PARSERS:
+        if re.fullmatch(pattern, name):
+            return parser
+    return None
 
 
 def is_manifest(rel):
-    name = name_of(rel)
-    return (name in ('package.json', 'pyproject.toml', 'go.mod', 'Cargo.toml', 'flake.nix')
-            or re.fullmatch(r'requirements.*\.txt', name) is not None)
+    return manifest_parser(rel) is not None
+
+
+def parse_manifest(rel, text):
+    return (manifest_parser(rel) or parse_flake)(rel, text)
 
 
 def load_manifests(root, files):
@@ -374,10 +397,14 @@ def report_status(root):
 
 
 def section_header(root, files, in_git):
+    if in_git:
+        git = 'yes (tracked + untracked, ignored files left out)'
+    else:
+        git = 'no (walked the directory, skipped noise dirs)'
     return [
         f'# Repo facts: {root.name}', '',
         f'- files: {len(files)}',
-        f'- git: {"yes (tracked + untracked, ignored files left out)" if in_git else "no (walked the directory, skipped noise dirs)"}',
+        f'- git: {git}',
         f'- date: {datetime.date.today().isoformat()}',
         f'- report: `{REPORT_PATH}` — {report_status(root)}',
     ]
@@ -394,10 +421,10 @@ def section_languages(root, files):
         return out + ['(no files)']
     out += ['| language | files | lines |', '|---|---|---|']
     ranked = sorted(stats.items(), key=lambda kv: (-kv[1][0], kv[0]))
-    for lang, (count, lines) in ranked[:15]:
+    for lang, (count, lines) in ranked[:MAX_LANGUAGES]:
         out.append(f'| {lang} | {count} | {lines} |')
-    if len(ranked) > 15:
-        out.append(f'| … {len(ranked) - 15} more | | |')
+    if len(ranked) > MAX_LANGUAGES:
+        out.append(f'| … {len(ranked) - MAX_LANGUAGES} more | | |')
     return out
 
 
@@ -422,39 +449,43 @@ def section_manifests(manifests):
     return out
 
 
+def entry_reason(root, rel):
+    """Why `rel` counts as an entry point, or None when it does not."""
+    name = name_of(rel)
+    stem, ext = PurePosixPath(name).stem, PurePosixPath(name).suffix.lower()
+    d = depth(rel)
+    if name == '__main__.py' and d <= 3:
+        return 'Python package entry (__main__.py)'
+    if stem in ENTRY_STEMS and ext in CODE_EXTS and d <= 2:
+        return f'named {stem}.*'
+    if 'bin' in rel.split('/')[:-1] and d <= 3:
+        return 'file in bin/'
+    if d == 0 and name in ROOT_ENTRY_NAMES:
+        return {'flake.nix': 'Nix flake outputs'}.get(name, f'{name} at the root')
+    if d == 1 and name in ('Makefile', 'Dockerfile'):
+        return f'{name} in a subfolder'
+    if d == 0 and os.access(root / rel, os.X_OK) and ext in SCRIPT_EXTS:
+        return 'executable top-level script'
+    return None
+
+
 def section_entries(root, files, manifests):
     seen = {}
-
-    def add(path, reason):
-        seen.setdefault(path, reason)
-
     for m in manifests:
         for path, reason in m['entries']:
-            add(path, reason)
+            seen.setdefault(path, reason)
     for rel in files:
-        name = name_of(rel)
-        stem, ext = PurePosixPath(name).stem, PurePosixPath(name).suffix.lower()
-        d = depth(rel)
-        if name == '__main__.py' and d <= 3:
-            add(rel, 'Python package entry (__main__.py)')
-        elif stem in ENTRY_STEMS and ext in CODE_EXTS and d <= 2:
-            add(rel, f'named {stem}.*')
-        elif 'bin' in rel.split('/')[:-1] and d <= 3:
-            add(rel, 'file in bin/')
-        elif d == 0 and name in ('Makefile', 'Dockerfile', 'flake.nix', 'justfile'):
-            add(rel, {'flake.nix': 'Nix flake outputs'}.get(name, f'{name} at the root'))
-        elif d == 1 and name in ('Makefile', 'Dockerfile'):
-            add(rel, f'{name} in a subfolder')
-        elif d == 0 and os.access(root / rel, os.X_OK) and ext in ('', '.sh', '.py', '.js', '.rb'):
-            add(rel, 'executable top-level script')
+        reason = entry_reason(root, rel)
+        if reason:
+            seen.setdefault(rel, reason)
     out = ['## Entry points', '']
     if not seen:
         return out + ['(none found)']
     items = list(seen.items())
-    for path, reason in items[:40]:
+    for path, reason in items[:MAX_ENTRIES]:
         out.append(f'- `{path}` — {reason}')
-    if len(items) > 40:
-        out.append(f'- … {len(items) - 40} more')
+    if len(items) > MAX_ENTRIES:
+        out.append(f'- … {len(items) - MAX_ENTRIES} more')
     return out
 
 
@@ -462,23 +493,22 @@ def section_tree(files):
     counts = Counter()
     for rel in files:
         parts = rel.split('/')[:-1]
-        for i in range(1, min(len(parts), 3) + 1):
+        for i in range(1, min(len(parts), TREE_DEPTH) + 1):
             counts[tuple(parts[:i])] += 1
         # deeper files still count toward their depth-3 ancestor (done above)
     out = ['## Tree', '']
     if not counts:
         return out + ['(no subdirectories)']
     rows = sorted(counts.items())
-    limit = 70
-    if len(rows) > limit:
-        rows2 = [r for r in rows if len(r[0]) <= 2]
-        if len(rows2) <= limit:
-            rows = rows2
+    if len(rows) > MAX_TREE_ROWS:
+        shallow = [r for r in rows if len(r[0]) <= TREE_DEPTH - 1]
+        if len(shallow) <= MAX_TREE_ROWS:
+            rows = shallow
             out.append('(depth 3 left out: too many folders)')
-    for parts, n in rows[:limit]:
+    for parts, n in rows[:MAX_TREE_ROWS]:
         out.append(f'- {"/".join(parts)}/ ({n})')
-    if len(rows) > limit:
-        out.append(f'- … {len(rows) - limit} more folders')
+    if len(rows) > MAX_TREE_ROWS:
+        out.append(f'- … {len(rows) - MAX_TREE_ROWS} more folders')
     return out
 
 
@@ -507,10 +537,10 @@ def section_docs(root, files):
         out.append(f'- ADR folder: `{adr}/`')
     if docs:
         out.append(f'- `docs/` ({len(docs)} files):')
-        for rel in docs[:25]:
+        for rel in docs[:MAX_DOCS]:
             out.append(f'  - `{rel}`')
-        if len(docs) > 25:
-            out.append(f'  - … {len(docs) - 25} more')
+        if len(docs) > MAX_DOCS:
+            out.append(f'  - … {len(docs) - MAX_DOCS} more')
     if old_maps:
         out.append(f'- `docs/CODEMAPS/` ({old_maps} files): old codemap output; ignored')
     return out
@@ -535,7 +565,7 @@ def build(root):
             block = block[:-1]
         lines += block + ['']
     if len(lines) > MAX_LINES:
-        lines = lines[:MAX_LINES - 1] + ['(output cut at 300 lines)']
+        lines = lines[:MAX_LINES - 1] + [f'(output cut at {MAX_LINES} lines)']
     return '\n'.join(lines).rstrip() + '\n'
 
 
@@ -543,9 +573,10 @@ def main(argv):
     if len(argv) > 2 or (len(argv) == 2 and argv[1] in ('-h', '--help')):
         print(__doc__, file=sys.stderr)
         return 2
-    root = Path(argv[1] if len(argv) == 2 else '.').resolve()
+    arg = argv[1] if len(argv) == 2 else '.'
+    root = Path(arg).resolve()
     if not root.is_dir():
-        print(f'error: not a directory: {argv[1] if len(argv) == 2 else "."}', file=sys.stderr)
+        print(f'error: not a directory: {arg}', file=sys.stderr)
         return 2
     sys.stdout.write(build(root))
     return 0
