@@ -55,6 +55,8 @@ CODE_EXTS = {
 ENTRY_STEMS = {'main', 'index', 'app', 'cli'}
 ROOT_ENTRY_NAMES = {'Makefile', 'Dockerfile', 'flake.nix', 'justfile'}
 SCRIPT_EXTS = {'', '.sh', '.py', '.js', '.rb'}
+TEST_DIRS = {'test', 'tests', '__tests__', 'spec'}
+NOT_IN_REPO = ' (not in repo; built output?)'
 DOC_NAMES = {'AGENTS.md', 'CLAUDE.md', 'GEMINI.md'}
 ADR_NAMES = {'adr', 'adrs', 'decisions', 'architecture-decisions'}
 REPORT_PATH = '.agents/onboarding.md'
@@ -192,18 +194,17 @@ def parse_package_json(rel, text):
     base = dir_prefix(rel)
     for key in ('main', 'module'):
         if isinstance(data.get(key), str):
-            m['entries'].append((base + data[key].removeprefix('./'), f'{rel} "{key}"'))
+            m['entries'].append((base + data[key].removeprefix('./'), f'{rel} "{key}"', True))
     binv = data.get('bin')
     if isinstance(binv, str):
-        m['entries'].append((base + binv.removeprefix('./'), f'{rel} "bin"'))
+        m['entries'].append((base + binv.removeprefix('./'), f'{rel} "bin"', True))
     elif isinstance(binv, dict):
         for cmd, target in binv.items():
             if isinstance(target, str):
-                m['entries'].append((base + target.removeprefix('./'), f'{rel} bin "{cmd}"'))
+                m['entries'].append((base + target.removeprefix('./'), f'{rel} bin "{cmd}"', True))
     scripts = data.get('scripts')
-    if isinstance(scripts, dict):
-        for key, cmd in list(scripts.items())[:MAX_SCRIPTS]:
-            m['entries'].append((f'{rel} scripts.{key}', f'`{str(cmd)[:60]}`'))
+    if isinstance(scripts, dict) and scripts:
+        m['notes'].append('scripts: ' + clip([str(k) for k in scripts], MAX_SCRIPTS))
     return m
 
 
@@ -238,7 +239,7 @@ def parse_pyproject(rel, text):
     scripts = dict(project.get('scripts', {}))
     scripts.update(poetry.get('scripts', {}))
     for cmd, target in scripts.items():
-        m['entries'].append((f'{rel} script "{cmd}"', f'-> {target}'))
+        m['entries'].append((f'{rel} script "{cmd}"', f'-> {target}', False))
     return m
 
 
@@ -302,9 +303,9 @@ def parse_cargo(rel, text):
     for b in data.get('bin', []):
         if isinstance(b, dict):
             m['entries'].append((base + b.get('path', 'src/main.rs'),
-                                 f'{rel} [[bin]] "{b.get("name", "")}"'))
+                                 f'{rel} [[bin]] "{b.get("name", "")}"', True))
     if (data.get('lib') or {}).get('path'):
-        m['entries'].append((base + data['lib']['path'], f'{rel} [lib]'))
+        m['entries'].append((base + data['lib']['path'], f'{rel} [lib]', True))
     return m
 
 
@@ -464,15 +465,22 @@ def entry_reason(root, rel):
         return {'flake.nix': 'Nix flake outputs'}.get(name, f'{name} at the root')
     if d == 1 and name in ('Makefile', 'Dockerfile'):
         return f'{name} in a subfolder'
-    if d == 0 and os.access(root / rel, os.X_OK) and ext in SCRIPT_EXTS:
-        return 'executable top-level script'
+    if d <= 1 and ext in SCRIPT_EXTS and os.access(root / rel, os.X_OK):
+        if d == 0:
+            return 'executable top-level script'
+        folder = rel.split('/')[0]
+        if folder not in TEST_DIRS:
+            return f'executable script in {folder}/'
     return None
 
 
 def section_entries(root, files, manifests):
     seen = {}
+    known = set(files)
     for m in manifests:
-        for path, reason in m['entries']:
+        for path, reason, is_file in m['entries']:
+            if is_file and path not in known:
+                reason += NOT_IN_REPO
             seen.setdefault(path, reason)
     for rel in files:
         reason = entry_reason(root, rel)
@@ -500,11 +508,15 @@ def section_tree(files):
     if not counts:
         return out + ['(no subdirectories)']
     rows = sorted(counts.items())
-    if len(rows) > MAX_TREE_ROWS:
-        shallow = [r for r in rows if len(r[0]) <= TREE_DEPTH - 1]
-        if len(shallow) <= MAX_TREE_ROWS:
-            rows = shallow
-            out.append('(depth 3 left out: too many folders)')
+    # drop the deepest levels until the rows fit; top-level folders are never dropped
+    for keep in range(TREE_DEPTH, 0, -1):
+        shown = [r for r in rows if len(r[0]) <= keep]
+        if len(shown) <= MAX_TREE_ROWS or keep == 1:
+            break
+    if keep < TREE_DEPTH:
+        left = str(TREE_DEPTH) if keep == TREE_DEPTH - 1 else f'{keep + 1}-{TREE_DEPTH}'
+        rows = shown
+        out.append(f'(depth {left} left out: too many folders)')
     for parts, n in rows[:MAX_TREE_ROWS]:
         out.append(f'- {"/".join(parts)}/ ({n})')
     if len(rows) > MAX_TREE_ROWS:
@@ -524,7 +536,7 @@ def section_docs(root, files):
         for i, part in enumerate(parts[:-1]):
             if part.lower() in ADR_NAMES and i <= 3:
                 adr_dirs.add('/'.join(parts[:i + 1]))
-        if rel.startswith('docs/CODEMAPS/') and rel.endswith('.md') and d == 2:
+        if rel.startswith('docs/CODEMAPS/'):
             old_maps += 1
         elif rel.startswith('docs/'):
             docs.append(rel)
