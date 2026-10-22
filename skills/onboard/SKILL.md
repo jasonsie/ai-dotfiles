@@ -78,7 +78,8 @@ Read first: `<path>`
 - Every arrow carries a verb and has one legend line citing the `file:line` that shows
   it. Draw only edges you saw in a file. Things outside the repo (a database, an API,
   `~/.config`) may appear unnumbered in parentheses, with no section.
-- The set of `[n]` is the same in the Index, the graph, and Sections.
+- The set of `[n]` is the same in the Index, the graph, and Sections. A part with no
+  edges still appears in the graph, alone on its own line.
 - No risks in the file: it may be public, and risks go stale.
 
 ### The file
@@ -91,7 +92,7 @@ Read first: `<path>`
 
 ## 5. Report in chat, then stop
 
-Print the report with two additions:
+Print the whole report as written, legend and Key files included, with two additions:
 
 - under each section, `Risks:` from step 3 that belong to that part only
 - after the sections, `Across parts:` at most 3 risks that span several parts or none,

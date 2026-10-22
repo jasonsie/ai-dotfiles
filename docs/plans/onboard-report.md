@@ -101,6 +101,20 @@ Numbers are the order decided; later ones revise earlier ones where noted.
 - removed: `skills/codemap/`, `skills/documentation-lookup/`; live links removed by
   `install-skills.py` (7 changes)
 
+## Trial results
+
+- Checks (2026-10-22): `unittest` 134 OK; `shellcheck` only the known SC2016 info;
+  installer preview 0 changes; healthcheck healthy. Pi `context7` re-added with the
+  new description (backup of `~/.pi/agent/mcp.json` in the session scratchpad).
+- Claude Code, `dotfiles`, run 1: only `.agents/onboarding.md` written, headed, three
+  parts in order, 12 entries, cited lines spot-checked exact, no risks in the file;
+  chat had risks, "Across parts", and the closing question. Two drifts, fixed in
+  `onboard`: [12] had no edges and was left out of the graph (now: every part appears
+  in the graph); chat dropped Key files and the legend (now: print the whole report).
+  `facts.py` was not run (`claude -p` had no Bash approval); it listed files itself.
+- Codex, `superpowers`: not run (Codex usage limit until 16:08).
+- Claude Code, `firecrawl`: blocked by the permission classifier; needs the user.
+
 ## Next step
 
 Unit tests, shellcheck, installer preview, healthcheck; Pi `context7` re-add; trials
