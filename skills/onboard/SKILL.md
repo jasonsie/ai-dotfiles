@@ -1,108 +1,190 @@
 ---
 name: onboard
-description: Get to know an unfamiliar repository. Writes one report that maps the codebase as an index of its parts, ASCII flow graphs of how they work together, and a section per part, then lets the user dive into any part or name a task. Use when the user says "onboard me", "onboard this repo", "help me understand this codebase", "map this codebase", "give me an overview of this repo", "how does this repo fit together", or opens a repository they have not worked in before.
+description: Get to know an unfamiliar repository. Writes one report: its goal (what it does and how), its system design (tech stack, folder structure, a layer map of the whole app, workflow graphs of its flows), conventions, common tasks and where to look; a starter AGENTS.md when the repo has none; then lets the user dive into any folder, layer or workflow, or name a task. Use when the user says "onboard me", "onboard this repo", "help me understand this codebase", "map this codebase", "give me an overview of this repo", "how does this repo fit together", or opens a repository they have not worked in before.
 ---
 
-Write one report a reader takes in at a glance, then dives into: an **index** of the
-repo's parts, **flow graphs** of how they work together, and a **section** per part,
-tied by the same part names.
+Write one report a reader takes in at a glance: the repo's **goal** (what it does, how
+it does it), its **system design** (tech stack, folder structure, a **layer** map of the
+whole app, and **workflow** graphs of its flows), then conventions, common tasks and
+where to look.
 
 ```
 facts ──▶ read key files ──▶ report ══ stop and ask ══▶ deep dive or task
-facts.py                     .agents/onboarding.md
+facts.py                     docs/onboarding.md
+                             AGENTS.md (only when the repo has none)
 ```
 
 **ROOT** is the path the user names, resolved through symlinks; else the current repo.
-Map only ROOT, and read every path below (`.agents/onboarding.md`, `AGENTS.md`, cited
+Map only ROOT, and read every path below (`docs/onboarding.md`, `AGENTS.md`, cited
 files) relative to it.
 
 ## 1. Collect facts
 
-Run `python3 <this skill folder>/facts.py ROOT` (Python 3.11+; writes nothing). It
-prints Markdown facts: languages, manifests, entry points, tree, docs, report status. If
-it fails, say so and list files with your own tools.
+Reconnaissance without reading code. Run `python3 <this skill folder>/facts.py ROOT`
+(Python 3.11+; writes nothing). It prints Markdown facts: languages, manifests, tooling
+(version pins, package manager, frameworks, build, lint, tests, CI, containers, deploy,
+env files, data/API, hardware), git history, entry points, tree, docs, report status.
+If it fails, say so and list files with your own tools.
 
-## 2. Read the key files
+## 2. Map the architecture
 
-Facts say where to look; they are not the map. Read the entry points, manifests, a few
-files in each large or central folder, and the README, `AGENTS.md`, and ADRs (hints;
-check them against the code). Note the `file:line` of what you see. Judge by content,
-not folder names: `hooks/` may hold git hooks, not React hooks.
+Facts say where to look; they are not the map. Read the entry points, manifests, CI and
+tooling configs, a few files in each large or central folder, and the README,
+`AGENTS.md`, and ADRs (hints; check them against the code). Note the `file:line` of
+what you see. Judge by content, not folder names: `hooks/` may hold git hooks, not
+React hooks. Settle, in this order:
+
+- **Stack:** languages and version pins; frameworks and the libraries that shape the
+  code; databases and ORMs; build tools; CI/CD.
+- **Shape:** monolith, monorepo, microservices or serverless; frontend/backend split or
+  full-stack; API style (REST, GraphQL, gRPC, tRPC).
+- **Layers:** the whole app as the boundaries data crosses. Look for hardware|software,
+  browser|server (also client|daemon, CI|local machine), process|process, repo|outside
+  (a database, an API, `~/.config`) and, when all the code is one process,
+  folder|folder. Name each layer as the repo does, and note what sits in it.
+- **Flows:** one per entry point, as the concepts the data passes through. For a
+  request: where it enters (router, handler), is validated (middleware, schema), is
+  handled (service, model) and reaches storage (ORM, query). Tie each concept to the
+  file that embodies it.
+- **Conventions:** file, class and test naming; error handling; dependency injection
+  or direct imports; state management; async style; from the git facts, branch and
+  commit style and the merge method (skip when the history is shallow or absent).
 
 ## 3. Write the report
 
-Split the repo into **parts**: a file, folder, or `file:line-range` with one job (an
-entry point, a module, a config tree, the test suite). At most 12; above that, group
-related ones into one part and list its members, unnumbered, in its Key files.
-
-Write `.agents/onboarding.md` in this shape:
+Write `docs/onboarding.md` in this shape:
 
 ````markdown
 <!-- Generated by onboard: YYYY-MM-DD -->
 # <repo> — onboarding
 
-<One paragraph, 2–3 sentences: what the repo is for, how it runs, how it is tested.>
+## 1. Goal
 
-## 1. Index
+**What:** <What the repo does, for whom.>
 
-- <Name> — `<key file>` — <one-line purpose>
-- …
+**How:** <How it does it: the mechanism; how it runs, is built and is tested.>
 
-## 2. Relationships
+## 2. System design
 
-### <Flow> — <how it starts, e.g. `./install.sh`>
+**Shape:** <monolith, monorepo, microservices or serverless; frontend/backend split or full-stack; API style>
 
-```text
-CLI
- ├─reads──▶ (config.toml)
- └─calls──▶ Server
-             ├─writes─▶ (Postgres)
-             └─renders─▶ Templates, Static assets
-```
+### Tech stack
 
-- CLI → (config.toml) reads — `<file:line>`
-- CLI → Server calls — `<file:line>`
-- Server → (Postgres) writes — `<file:line>`
-- Server → Templates renders — `<file:line>`
-- Server → Static assets renders — `<file:line>`
+| Layer | Technology | Version | Where |
+|---|---|---|---|
+| Language | TypeScript | 5.4 | `package.json` |
+| Framework | Next.js | 14 | `package.json` |
+| Data | PostgreSQL via Prisma | 5 | `prisma/schema.prisma` |
+| Tests | Vitest, Playwright | — | `vitest.config.ts` |
+| CI | GitHub Actions | — | `.github/workflows/ci.yml` |
 
-### <Next flow> — <how it starts>
+### Folder structure
 
 ```text
-Tests ─runs─▶ Server ─▶ (as in <Flow>)
+<repo>/
+├── src/
+│   ├── client/        browser UI: pages and components
+│   │   └── main.tsx   ★ mounts the app
+│   ├── server/        HTTP API: router, handlers, services
+│   │   └── index.ts   ★ starts the server
+│   └── shared/        types and validation used by both sides
+├── prisma/            data model and migrations
+└── tests/             unit (Vitest) and end-to-end (Playwright)
 ```
 
-- Tests → Server runs — `<file:line>`
+### Layers
 
-Standalone: <parts in no flow, or "none">
+```text
+┌─ browser ────────────────────────────────────────────┐
+│ the user's browser                                   │
+│ src/client/    pages and components                  │
+└─────────────┬────────────────────────────────────────┘
+              │ HTTPS: JSON requests and responses
+┌─ server ────┴────────────────────────────────────────┐
+│ one Node process                                     │
+│ src/server/    router, handlers, services            │
+│ src/shared/    types and validation used by both     │
+└─────────────┬────────────────────────────────────────┘
+              │ SQL; Stripe API calls
+┌─ outside ───┴────────────────────────────────────────┐
+│ Postgres, Stripe                                     │
+└──────────────────────────────────────────────────────┘
+```
 
-## 3. Sections
+### Workflows
 
-### <Name>
+#### checkout — `POST /api/checkout`
 
-- What: <at most two sentences>
-- Key files: `<path>` (<role>), …
-- Read first: `<path>`
+```text
+cart page ──cart JSON──▶ API client ──▶ router ──▶ checkout service
+                                                       ├──▶ orders table
+                                                       └──▶ Stripe charge
+```
+
+- cart page (browser): collects the cart and submits it — `src/client/cart.tsx:88`
+- API client (browser): one HTTPS POST per submit — `src/client/api.ts:12`
+- router (server): validates the body against the shared schema — `src/server/router.ts:40`
+- checkout service (server): prices the order, charges, then inserts — `src/server/checkout.ts:71`
+- orders table (outside): one row per order, through Prisma — `prisma/schema.prisma:30`
+- Stripe charge (outside): the payment, by API key — `src/server/stripe.ts:9`
+
+#### <next> — <how it starts>
+
+…
+
+## 3. Conventions
+
+- Files: <file, class and test naming>
+- Code: <dependency injection or direct imports; state management; async style>
+- Errors: <style>
+- Git: <branch and commit style; merge method>, or "history too shallow to tell"
+
+## 4. Common tasks
+
+- Run: `<command>`
+- Test: `<command>`
+- Lint: `<command>`
+- Build: `<command>`
+
+## 5. Where to look
+
+| I want to… | Look at… |
+|---|---|
+| add an API endpoint | `src/server/router.ts` |
+| add a table | `prisma/schema.prisma` |
 ````
 
-- No numbers anywhere. Each part has one unique name, at most 3 words, used verbatim in
-  the Index, graphs, legends, and Sections.
-- The Index lists what exists; only the graphs show how parts relate.
-- Relationships is 2–5 flows, each starting at a real entry point (a command, script,
-  CI job, or hook) and titled with how it starts. Read top to bottom, a flow tells the
-  story. A tail already drawn is written `─▶ (as in <Flow>)`. Every part appears in
-  some flow or on the Standalone line.
-- Each arrow carries one verb. Leaf targets sharing a verb share one line, comma
-  separated; a target with onward arrows gets its own branch. Lines ≤80 columns.
-- Under each graph, one legend line per arrow and target, by name. Draw only edges you
-  saw. Cite the line where the link happens (the call, import, exec, read, or write),
-  not where a path or constant is defined.
-- Things outside the repo (a database, an API, `~/.config`) appear in parentheses,
-  with no section.
+- Goal answers what, then how.
+- Tech stack: one row per layer that shapes how code is written (language, framework,
+  data, build, tests, CI, deploy), from the facts' manifests and tooling; Where is the
+  config file that proves the row. Plain dependencies stay out.
+- Folder structure: top-level folders and key files, one short purpose each; one level
+  deeper only where a folder is central; ★ marks the file to read first.
+- Layers: the whole app in one map of 2–5 boxes, stacked in the order data most often
+  moves (two side by side only when neither sits above the other). A box holds the
+  layer's name, one line on what it is or where it runs, then its components, one per
+  line: the path or thing, then its role. The arrow between two boxes carries what
+  crosses; a crossing between boxes that are not adjacent is a note in the box.
+- Workflows: 1–4, each starting at a real entry point (a command, request, script, CI
+  job or hook) and titled with how it starts. The graph is one chain of concepts, left
+  to right, branching with `├──▶` and `└──▶`; an arrow may carry the data that moves, in
+  a word or two. Under the graph, one line per concept: concept (layer): what it does
+  in this flow — `file:line` where it lives. Draw only what you saw.
+- A concept is 1–3 words, named as the repo names it, spelled the same in the graph and
+  its line; a layer is one from the map, by name. Diagram lines ≤80 columns.
+- Conventions, Where to look: only what you observed; "could not tell" beats a guess.
+- Common tasks: the commands as the manifests, Makefile or CI run them, unchanged.
+- Length: taken in at a glance; when it grows, group folders and merge workflows.
 
-If `.agents/onboarding.md` starts with the generated header, rewrite it. If it exists
+If `docs/onboarding.md` starts with the generated header, rewrite it. If it exists
 without the header, it is not yours: never edit, rename, or delete it; ask where to
 write. If no one can answer (a non-interactive run), write nothing.
+
+### Starter instructions file
+
+If ROOT has neither `AGENTS.md` nor `CLAUDE.md`, also write `AGENTS.md` (under 60
+lines: tech stack, common tasks, folder structure, conventions, from the report). If
+either exists, leave it alone; step 4 lists what it lacks.
 
 ## 4. Report in chat, then stop
 
@@ -111,25 +193,27 @@ Print exactly this, in order, starting with the file's first line:
 1. The file's text, unchanged: same headings, words, and order. If nothing was written,
    the text you would have written.
 2. One line: the file's path, or why nothing was written; on a rewrite, what changed
-   since the last version.
-3. **"Name a part to dive in, or name a task."**
+   since the last version; the starter file's path when written.
+3. When `AGENTS.md` or `CLAUDE.md` existed: "Suggested for `AGENTS.md`:" and the lines
+   it lacks (commands, structure, conventions).
+4. **"Name a folder, layer or workflow to dive in, or name a task."**
 
 Add nothing else: no preamble, no restating, no grading the run against plans or task
 files. Wait for the answer; do not invent a task.
 
 ## 5. Deep dive or task
 
-- **A part:** read its files in depth; show how data or control moves through it, with
-  `file:line`; draw a small graph of it and its direct neighbours if that helps. Chat
-  only; change no file. End by asking what to work on.
-- **A task:** start from the parts it touches and their Key files.
+- **A folder, layer or workflow:** read its files in depth; show how data or control
+  moves through it, with `file:line`; draw a small graph of it and its neighbours if
+  that helps. Chat only; change no file. End by asking what to work on.
+- **A task:** start from the folders it touches and their ★ files.
 
 ## Rules
 
 - The repo's own `AGENTS.md` or `CLAUDE.md` overrides this skill.
-- Write only `.agents/onboarding.md`. Ignore old `docs/CODEMAPS/`: neither read nor
-  delete it.
+- Write only `docs/onboarding.md`, plus `AGENTS.md` when the repo has none.
+  Ignore old `docs/CODEMAPS/`: neither read nor delete it.
 - Do not run the project's tests, builds, or installs; say how it is tested.
 
-Parts adapted from the `update-codemaps` command and `doc-updater` agent in
-affaan-m/everything-claude-code (MIT License; see LICENSE here).
+Parts adapted from the `codebase-onboarding` skill, the `update-codemaps` command and
+the `doc-updater` agent in affaan-m/ECC (MIT License; see LICENSE here).
