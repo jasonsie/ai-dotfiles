@@ -87,6 +87,8 @@ has the reasoning and each CLI's commands.
   one-off migration) as an interactive bash script.
 - **`wait-what`**: the last message didn't land; the agent re-pitches it plainly.
 - **`teach`**: learn a concept over several sessions in a workspace folder.
+- **`house-style`**: learn the company's document format from a sample, once;
+  every CLI then writes documents in it.
 
 ## Repository setup
 
