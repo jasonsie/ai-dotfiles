@@ -91,6 +91,9 @@ has the reasoning and each CLI's commands.
 - **`teach`**: learn a concept over several sessions in a workspace folder.
 - **`house-style`**: learn the company's document format from a sample, once;
   every CLI then writes documents in it.
+- **`web-clipper`**: clip a web page into an Obsidian vault the way Obsidian Web
+  Clipper does, images, SVG and canvas graphs stored locally; a page it cannot fetch
+  headlessly is saved from your browser and passed back with `--html`.
 
 ## Repository setup
 
