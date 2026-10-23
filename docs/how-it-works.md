@@ -20,6 +20,7 @@ scripts/             ai-dotfiles, install.sh, uninstall.sh, healthcheck.sh (entr
   tests/               unit tests for all of the above
 docs/
   how-it-works.md      this file
+  onboarding.md        this repo's report from /onboard
   upstream/            machine-written mirror of each CLI's docs, and the skill catalogs
 ```
 

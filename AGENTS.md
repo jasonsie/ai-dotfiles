@@ -17,11 +17,12 @@ Codex CLI, Pi, and Antigravity. The mechanism and layout are in
 | `scripts/ai-dotfiles` | Global command: `install`, `update`, `uninstall`, `check` | `scripts/install/skills.py` |
 | `scripts/install/installer.py` | What every step shares: reading `ai-clis.json`, safe writes | — |
 | `docs/upstream/` | Machine-written docs mirrors and skill catalogs | `scripts/upstream/` (weekly workflow) |
+| `docs/onboarding.md` | This repo's onboarding report | `skills/onboard/` (`/onboard`) |
 | `scripts/tests/` | Unit tests for the scripts and the skills' helpers | — |
 
 `scripts/install.sh` runs the four install steps, `scripts/uninstall.sh` reverses them;
-`scripts/healthcheck.sh` verifies live state. `docs/` holds only `how-it-works.md` and the
-mirror.
+`scripts/healthcheck.sh` verifies live state. `docs/` holds `how-it-works.md`, the mirror, and
+`onboarding.md`, this repo's report from `/onboard`.
 
 ## Rules for changes
 
