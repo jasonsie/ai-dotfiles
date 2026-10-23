@@ -41,8 +41,10 @@ tickets build on the same thinking; each `implement` then starts fresh from its 
 
 ## On-ramps
 
-- **New to a repository** → **`onboard`** maps its parts and flows into
-  `.agents/onboarding.md`, then asks for a part to dive into or a task.
+- **New to a repository** → **`onboard`** writes `.agents/onboarding.md` (goal, tech
+  stack, folder structure, layers and workflow graphs, conventions, common tasks, where
+  to look) and a starter `AGENTS.md` when the repo has none, then asks for a folder,
+  layer or workflow to dive into, or a task.
 - **Bugs and requests piling up** → **`triage`** turns incoming issues into agent-ready
   briefs for `implement`. Only for issues you didn't write: `to-tickets` output is ready.
 - **Something's broken** → **`diagnosing-bugs`** builds a tight feedback loop first, then

@@ -3,6 +3,7 @@
 
 Usage: python3 facts.py [ROOT]      (ROOT defaults to the current directory)
 
+Prints languages, manifests, tooling, entry points, tree, docs and report status.
 Reads the repo and writes nothing. Standard library only, Python 3.11+.
 All paths in the output are relative to ROOT.
 """
@@ -45,12 +46,14 @@ LANGUAGES = {
     '.json': 'JSON', '.jsonc': 'JSON', '.yml': 'YAML', '.yaml': 'YAML',
     '.toml': 'TOML', '.html': 'HTML', '.css': 'CSS', '.scss': 'CSS',
     '.sql': 'SQL', '.vue': 'Vue', '.svelte': 'Svelte', '.tf': 'Terraform',
-    '.proto': 'Protobuf', '.txt': 'Text',
+    '.proto': 'Protobuf', '.txt': 'Text', '.graphql': 'GraphQL', '.prisma': 'Prisma',
+    '.ino': 'Arduino (C++)', '.v': 'Verilog', '.sv': 'SystemVerilog', '.vhd': 'VHDL',
+    '.vhdl': 'VHDL', '.dts': 'Device tree', '.dtsi': 'Device tree',
 }
 CODE_EXTS = {
     '.py', '.js', '.mjs', '.cjs', '.jsx', '.ts', '.mts', '.cts', '.tsx', '.go',
     '.rs', '.rb', '.java', '.kt', '.swift', '.c', '.cc', '.cpp', '.cs', '.php',
-    '.lua', '.ex', '.exs', '.sh', '.bash', '.zsh', '.nix', '.vue', '.svelte',
+    '.lua', '.ex', '.exs', '.sh', '.bash', '.zsh', '.nix', '.vue', '.svelte', '.ino',
 }
 ENTRY_STEMS = {'main', 'index', 'app', 'cli'}
 ROOT_ENTRY_NAMES = {'Makefile', 'Dockerfile', 'flake.nix', 'justfile'}
@@ -171,7 +174,8 @@ def dir_prefix(rel):
 
 def new_manifest(rel, kind):
     return {'path': rel, 'kind': kind, 'name': None, 'version': None,
-            'runtime': [], 'dev': [], 'notes': [], 'entries': []}
+            'runtime': [], 'dev': [], 'notes': [], 'entries': [],
+            'toolchain': [], 'package_manager': None, 'tools': []}
 
 
 # ---------------------------------------------------------------- manifests
@@ -191,6 +195,11 @@ def parse_package_json(rel, text):
         m['notes'].append('peer: ' + clip([f'{k} {v}' for k, v in peers.items()], MAX_NOTE_ITEMS))
     if data.get('workspaces'):
         m['notes'].append('workspaces: ' + json.dumps(data['workspaces'])[:120])
+    engines = data.get('engines')
+    if isinstance(engines, dict):
+        m['toolchain'] = [f'{k} {v}' for k, v in engines.items()]
+    if isinstance(data.get('packageManager'), str):
+        m['package_manager'] = data['packageManager']
     base = dir_prefix(rel)
     for key in ('main', 'module'):
         if isinstance(data.get(key), str):
@@ -227,6 +236,9 @@ def parse_pyproject(rel, text):
     m['version'] = project.get('version') or poetry.get('version')
     if project.get('requires-python'):
         m['notes'].append(f'requires-python: {project["requires-python"]}')
+        m['toolchain'].append(f'Python {project["requires-python"]}')
+    if isinstance(data.get('tool'), dict):
+        m['tools'] = sorted(data['tool'])
     m['runtime'] = [pep508(d) for d in project.get('dependencies', [])]
     m['runtime'] += poetry_dep_list(poetry.get('dependencies', {}))
     for group in project.get('optional-dependencies', {}).values():
@@ -260,6 +272,7 @@ def parse_go_mod(rel, text):
     go = re.search(r'^go\s+(\S+)', text, re.M)
     if go:
         m['notes'].append(f'go: {go.group(1)}')
+        m['toolchain'].append(f'Go {go.group(1)}')
     in_block = False
     for line in text.splitlines():
         line = line.split('//')[0].strip()
@@ -293,6 +306,8 @@ def parse_cargo(rel, text):
     data = tomllib.loads(text)
     pkg = data.get('package', {})
     m['name'], m['version'] = pkg.get('name'), pkg.get('version')
+    if pkg.get('rust-version'):
+        m['toolchain'].append(f'Rust {pkg["rust-version"]}')
     m['runtime'] = cargo_dep_list(data.get('dependencies', {}))
     m['runtime'] += cargo_dep_list(data.get('workspace', {}).get('dependencies', {}))
     m['dev'] = cargo_dep_list(data.get('dev-dependencies', {}))
@@ -450,6 +465,210 @@ def section_manifests(manifests):
     return out
 
 
+# ---------------------------------------------------------------- tooling
+
+MAX_TOOLING_ITEMS = 10
+MAX_ROOT_FILES = 20
+TOOLING_DEPTH = 2        # named config files deeper than this are left out
+MAX_PIN_LEN = 32         # longest first line read from a version-pin file
+
+RUNTIME_PINS = {         # root file -> language whose version its first line holds
+    '.nvmrc': 'Node', '.node-version': 'Node', '.python-version': 'Python',
+    '.ruby-version': 'Ruby', '.go-version': 'Go', '.java-version': 'Java',
+    '.terraform-version': 'Terraform',
+}
+RUNTIME_FILES = {'rust-toolchain', 'rust-toolchain.toml', 'runtime.txt', '.sdkmanrc'}
+LOCKFILES = {
+    'package-lock.json': 'npm', 'npm-shrinkwrap.json': 'npm', 'pnpm-lock.yaml': 'pnpm',
+    'yarn.lock': 'yarn', 'bun.lockb': 'bun', 'bun.lock': 'bun', 'deno.lock': 'deno',
+    'uv.lock': 'uv', 'poetry.lock': 'poetry', 'pdm.lock': 'pdm', 'Pipfile': 'pipenv',
+    'Pipfile.lock': 'pipenv', 'Cargo.lock': 'cargo', 'go.sum': 'go modules',
+    'Gemfile.lock': 'bundler', 'composer.lock': 'composer', 'mix.lock': 'mix',
+    'flake.lock': 'nix', 'pubspec.lock': 'pub', 'Package.resolved': 'swiftpm',
+    'packages.lock.json': 'nuget', 'gradle.lockfile': 'gradle', 'Podfile.lock': 'cocoapods',
+}
+PYPROJECT_TOOLS = {      # [tool.<name>] table -> tooling group
+    'ruff': 'lint/format', 'black': 'lint/format', 'isort': 'lint/format',
+    'flake8': 'lint/format', 'pylint': 'lint/format', 'mypy': 'lint/format',
+    'pyright': 'lint/format', 'yapf': 'lint/format', 'autopep8': 'lint/format',
+    'bandit': 'lint/format', 'codespell': 'lint/format', 'pytest': 'tests',
+    'coverage': 'tests', 'tox': 'tests', 'nox': 'tests', 'setuptools': 'build',
+    'setuptools_scm': 'build', 'hatch': 'build', 'flit': 'build', 'maturin': 'build',
+    'pdm': 'package manager', 'poetry': 'package manager', 'uv': 'package manager',
+    'pixi': 'package manager',
+}
+UP = r'(?P<up>(?:[^/]+/){0,%d})' % TOOLING_DEPTH
+# group -> (named file patterns, counted file-name patterns, folder names).
+# A named pattern matches a path at most TOOLING_DEPTH deep; one with a `dir` group
+# names that folder once. A counted pattern matches a file name at any depth and prints
+# as "N <label>". A folder name is matched against the path's leading components and
+# printed with the number of files under it.
+TOOLING = [
+    ('build', [
+        r'tsconfig[^/]*\.json', r'jsconfig\.json', r'\.babelrc(\.[^/]+)?', r'\.swcrc',
+        r'(vite|next|nuxt|svelte|astro|remix|webpack|rollup|esbuild|tsup|babel|tailwind'
+        r'|postcss|metro|capacitor)\.config\.[^/]+',
+        r'angular\.json', r'turbo\.json', r'nx\.json', r'lerna\.json', r'rush\.json',
+        r'pnpm-workspace\.yaml', r'deno\.jsonc?', r'bunfig\.toml', r'Makefile', r'justfile',
+        r'Taskfile\.ya?ml', r'CMakeLists\.txt', r'meson\.build', r'BUILD(\.bazel)?',
+        r'WORKSPACE(\.bazel)?', r'MODULE\.bazel', r'build\.gradle(\.kts)?',
+        r'settings\.gradle(\.kts)?', r'pom\.xml', r'build\.sbt', r'setup\.py', r'setup\.cfg',
+        r'MANIFEST\.in', r'Rakefile', r'Gemfile', r'[^/]+\.gemspec', r'mix\.exs',
+        r'rebar\.config', r'dune-project', r'[^/]+\.(csproj|fsproj|sln)', r'Package\.swift',
+        r'(?P<dir>[^/]+\.xcodeproj)/.+', r'Podfile', r'pubspec\.yaml', r'build\.zig',
+        r'composer\.json', r'[^/]+\.cabal', r'stack\.yaml',
+    ], [], []),
+    ('lint/format', [
+        r'\.eslintrc(\.[^/]+)?', r'eslint\.config\.[^/]+', r'\.prettierrc(\.[^/]+)?',
+        r'prettier\.config\.[^/]+', r'biome\.jsonc?', r'\.editorconfig', r'\.?ruff\.toml',
+        r'\.flake8', r'\.pylintrc', r'\.?mypy\.ini', r'pyrightconfig\.json',
+        r'\.golangci\.(ya?ml|toml|json)', r'\.?rustfmt\.toml', r'clippy\.toml',
+        r'\.rubocop\.yml', r'\.shellcheckrc', r'\.stylelintrc(\.[^/]+)?',
+        r'\.markdownlint(\.[^/]+)?', r'\.hadolint\.ya?ml', r'lefthook\.ya?ml',
+        r'\.pre-commit-config\.yaml', r'(?P<dir>\.husky)/.+', r'commitlint\.config\.[^/]+',
+        r'\.commitlintrc(\.[^/]+)?', r'\.swiftlint\.yml', r'\.clang-format', r'\.clang-tidy',
+        r'detekt\.yml', r'\.php-cs-fixer(\.dist)?\.php', r'phpstan\.neon(\.dist)?',
+        r'\.oxlintrc\.json', r'dprint\.json', r'\.yamllint(\.ya?ml)?', r'stylua\.toml',
+        r'\.luacheckrc',
+    ], [], []),
+    ('tests', [
+        r'jest\.config\.[^/]+', r'vitest\.(config|workspace)\.[^/]+',
+        r'playwright\.config\.[^/]+', r'cypress\.config\.[^/]+', r'cypress\.json',
+        r'karma\.conf\.[^/]+', r'\.mocharc(\.[^/]+)?', r'ava\.config\.[^/]+',
+        r'wdio\.conf\.[^/]+', r'pytest\.ini', r'tox\.ini', r'noxfile\.py', r'conftest\.py',
+        r'\.coveragerc', r'\.?codecov\.yml', r'\.nycrc(\.[^/]+)?', r'phpunit\.xml(\.dist)?',
+        r'\.rspec',
+    ], [
+        (r'test_[^/]+\.py', 'test_*.py'), (r'[^/]+_test\.py', '*_test.py'),
+        (r'[^/]+\.test\.[cm]?[jt]sx?', '*.test.{js,ts}'),
+        (r'[^/]+\.spec\.[cm]?[jt]sx?', '*.spec.{js,ts}'), (r'[^/]+_test\.go', '*_test.go'),
+        (r'[^/]+_spec\.rb', '*_spec.rb'), (r'[^/]+Tests?\.java', '*Test.java'),
+        (r'[^/]+Tests?\.swift', '*Tests.swift'), (r'[^/]+Tests?\.cs', '*Tests.cs'),
+        (r'[^/]+Test\.php', '*Test.php'), (r'[^/]+_test\.rs', '*_test.rs'),
+        (r'[^/]+_test\.dart', '*_test.dart'), (r'[^/]+\.bats', '*.bats'),
+    ], ['tests', 'test', '__tests__', 'spec', 'e2e', 'cypress']),
+    ('CI', [
+        r'\.github/workflows/[^/]+\.ya?ml', r'\.gitlab-ci\.yml', r'\.circleci/config\.yml',
+        r'Jenkinsfile', r'\.travis\.yml', r'azure-pipelines\.ya?ml', r'bitbucket-pipelines\.yml',
+        r'\.buildkite/[^/]+\.ya?ml', r'\.drone\.yml', r'\.woodpecker(/[^/]+)?\.ya?ml',
+        r'cloudbuild\.ya?ml', r'\.(gitea|forgejo)/workflows/[^/]+\.ya?ml',
+    ], [], []),
+    ('containers', [
+        r'Dockerfile(\.[^/]+)?', r'[^/]+\.[Dd]ockerfile', r'Containerfile', r'Earthfile',
+        r'(docker-)?compose(\.[^/]+)?\.ya?ml', r'(?P<dir>\.devcontainer)/.+',
+    ], [], []),
+    ('deploy', [
+        r'fly\.toml', r'vercel\.json', r'netlify\.toml', r'render\.yaml', r'Procfile',
+        r'serverless\.ya?ml', r'app\.yaml', r'wrangler\.(toml|jsonc?)', r'heroku\.yml',
+        r'skaffold\.ya?ml', r'Chart\.yaml', r'kustomization\.ya?ml', r'Pulumi\.ya?ml',
+        r'cdk\.json', r'samconfig\.toml', r'firebase\.json', r'amplify\.yml', r'ansible\.cfg',
+        r'Vagrantfile', r'Tiltfile', r'(?P<dir>\.ebextensions)/.+',
+    ], [(r'[^/]+\.tf', '*.tf')], ['terraform', 'k8s', 'kubernetes', 'helm', 'charts', 'ansible']),
+    ('data/API', [
+        r'(openapi|swagger|asyncapi)\.(ya?ml|json)', r'schema\.graphql', r'drizzle\.config\.[^/]+',
+        r'alembic\.ini', r'knexfile\.[^/]+', r'ormconfig\.[^/]+', r'typeorm\.config\.[^/]+',
+        r'schema\.rb', r'structure\.sql', r'dbt_project\.yml', r'supabase/config\.toml',
+    ], [
+        (r'[^/]+\.proto', '*.proto'), (r'[^/]+\.graphqls?', '*.graphql'),
+        (r'[^/]+\.prisma', '*.prisma'), (r'[^/]+\.sql', '*.sql'), (r'[^/]+\.avsc', '*.avsc'),
+        (r'[^/]+\.thrift', '*.thrift'), (r'[^/]+\.fbs', '*.fbs'), (r'[^/]+\.smithy', '*.smithy'),
+        (r'[^/]+\.dbml', '*.dbml'),
+    ], ['migrations', 'migrate', 'alembic', 'drizzle', 'prisma', 'seeds', 'seeders']),
+    ('hardware', [
+        r'platformio\.ini', r'sdkconfig(\.[^/]+)?', r'idf_component\.yml', r'west\.yml',
+        r'prj\.conf', r'Kconfig', r'openocd\.cfg', r'rules\.mk', r'memory\.x', r'Embed\.toml',
+    ], [
+        (r'[^/]+\.ino', '*.ino'), (r'[^/]+\.dtsi?', '*.dts'), (r'[^/]+\.ioc', '*.ioc'),
+        (r'[^/]+\.kicad_[a-z]+', '*.kicad_*'), (r'[^/]+\.s?v', '*.v'), (r'[^/]+\.vhdl?', '*.vhd'),
+        (r'[^/]+\.(xdc|ucf|qsf)', '*.xdc'), (r'[^/]+\.ld', '*.ld'), (r'[^/]+\.svd', '*.svd'),
+    ], ['firmware', 'hardware', 'pcb', 'hdl', 'rtl', 'boards', 'bsp']),
+]
+TOOLING_RULES = [
+    (group, [re.compile(UP + '(?:' + p + ')') for p in named],
+     [(re.compile(p), label) for p, label in counted], set(folders))
+    for group, named, counted, folders in TOOLING
+]
+GROUP_ORDER = ['runtime', 'package manager'] + [g for g, *_ in TOOLING]
+
+
+def first_line(root, rel):
+    line = read_text(root, rel).lstrip('﻿').split('\n', 1)[0].strip()
+    return line if 0 < len(line) <= MAX_PIN_LEN else ''
+
+
+def runtime_pins(root, rel):
+    """Versions a root-level pin file holds, as 'Language version (file)' strings."""
+    name = name_of(rel)
+    if name in RUNTIME_PINS:
+        line = first_line(root, rel)
+        return [f'{RUNTIME_PINS[name]} {line} ({name})'] if line else []
+    if name == '.tool-versions':
+        out = []
+        for line in read_text(root, rel).splitlines():
+            words = line.split('#')[0].split()
+            if len(words) >= 2:
+                out.append(f'{words[0]} {words[1]} ({name})')
+        return out[:MAX_TOOLING_ITEMS]
+    if name in RUNTIME_FILES:
+        return [name]
+    return []
+
+
+def section_tooling(root, files, manifests):
+    found = {g: [] for g in GROUP_ORDER}
+    counts = Counter()
+    folders = Counter()
+    managers = {}
+    for rel in files:
+        name, d = name_of(rel), depth(rel)
+        if d == 0:
+            found['runtime'] += runtime_pins(root, rel)
+        if d <= 1 and name in LOCKFILES:
+            managers.setdefault(LOCKFILES[name], rel)
+        parts = rel.split('/')[:-1]
+        matched = False
+        for group, named, counted, dirs in TOOLING_RULES:
+            if d <= TOOLING_DEPTH and not matched:
+                for pattern in named:
+                    m = pattern.fullmatch(rel)
+                    if m:
+                        shown = m.group('up') + m.group('dir') + '/' if m.groupdict().get('dir') else rel
+                        if shown not in found[group]:
+                            found[group].append(shown)
+                        matched = True
+                        break
+            for pattern, label in counted:
+                if pattern.fullmatch(name):
+                    counts[(group, label)] += 1
+                    break
+            for i, part in enumerate(parts[:TOOLING_DEPTH + 1]):
+                if part in dirs:
+                    folders[(group, '/'.join(parts[:i + 1]) + '/')] += 1
+                    break
+    for tool, rel in sorted(managers.items(), key=lambda kv: (depth(kv[1]), kv[1])):
+        found['package manager'].append(f'{tool} ({rel})')
+    for m in manifests:
+        found['runtime'] += [f'{t} ({m["path"]})' for t in m['toolchain']]
+        if m['package_manager']:
+            found['package manager'].append(f'{m["package_manager"]} ({m["path"]})')
+        for tool in m['tools']:
+            if tool in PYPROJECT_TOOLS:
+                found[PYPROJECT_TOOLS[tool]].append(f'{m["path"]} [tool.{tool}]')
+    out = ['## Tooling', '']
+    lines = []
+    labels = {group: [label for _, label in counted] for group, _, counted, _ in TOOLING_RULES}
+    for group in GROUP_ORDER:
+        items = list(found[group])
+        items += [f'{counts[(group, label)]} {label}' for label in labels.get(group, [])
+                  if counts[(group, label)]]
+        for (g, folder), n in sorted(folders.items()):
+            if g == group:
+                items.append(f'{folder} ({n})')
+        if items:
+            lines.append(f'- {group}: {clip(items, MAX_TOOLING_ITEMS)}')
+    return out + (lines or ['(none found)'])
+
+
 def entry_reason(root, rel):
     """Why `rel` counts as an entry point, or None when it does not."""
     name = name_of(rel)
@@ -505,6 +724,9 @@ def section_tree(files):
             counts[tuple(parts[:i])] += 1
         # deeper files still count toward their depth-3 ancestor (done above)
     out = ['## Tree', '']
+    root_files = [rel for rel in files if '/' not in rel]
+    if root_files:
+        out.append(f'- ./ ({len(root_files)} files): {clip(root_files, MAX_ROOT_FILES)}')
     if not counts:
         return out + ['(no subdirectories)']
     rows = sorted(counts.items())
@@ -567,6 +789,7 @@ def build(root):
         section_header(root, files, in_git),
         section_languages(root, files),
         section_manifests(manifests),
+        section_tooling(root, files, manifests),
         section_entries(root, files, manifests),
         section_tree(files),
         section_docs(root, files),

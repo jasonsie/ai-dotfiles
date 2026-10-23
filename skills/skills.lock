@@ -9,15 +9,16 @@
       "local_edits": "one question per message instead of a round; numbered options that can be combined, recommendation first; simpler re-explanation when a question is unclear; each decision recorded where the task's state lives"
     },
     "onboard": {
-      "repo": "affaan-m/everything-claude-code",
+      "repo": "affaan-m/ECC",
       "path": [
+        "skills/codebase-onboarding/SKILL.md",
         "commands/update-codemaps.md",
         "agents/doc-updater.md",
         "scripts/codemaps/generate.ts"
       ],
-      "commit": "0be6455fca4cab1ba1aac600c68184f9256c283d",
+      "commit": "db7f2a6fd5b013d56ec0ba0cfc547ba77baddbce",
       "license": "MIT",
-      "local_edits": "command, agent and script merged into the onboard skill; generator rewritten in Python as a read-only facts script; one GFM report at .agents/onboarding.md: numbered index, named parts (no numbers), ASCII flow graphs per entry point with a legend citing the line that makes the link, a section per part; chat prints the file unchanged; no risks (architect dropped); generated header and no overwrite of a hand-written report"
+      "local_edits": "skill, command, agent and script merged into the onboard skill (repo renamed upstream from everything-claude-code); generator rewritten in Python as a read-only facts script with a tooling section (runtime pins, package manager, build, lint, tests, CI, containers, deploy, data/API, hardware); one GFM report at .agents/onboarding.md: goal (what, how), system design (tech stack table, annotated folder tree with read-first marks, layers extracted from the repo, workflow graphs drawn in layer bands with a legend citing the line that makes the link), conventions, common tasks, where to look; starter AGENTS.md only when the repo has neither AGENTS.md nor CLAUDE.md, else suggestions in chat; chat prints the file unchanged; generated header and no overwrite of a hand-written report"
     },
     "spec-review": {
       "repo": "mattpocock/skills",
