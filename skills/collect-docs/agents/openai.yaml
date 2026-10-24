@@ -1,0 +1,5 @@
+interface:
+  display_name: "Collect Docs"
+  short_description: "Add a documentation source to the upstream mirror"
+policy:
+  allow_implicit_invocation: false

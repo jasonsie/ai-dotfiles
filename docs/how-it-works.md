@@ -13,6 +13,7 @@ config/              the sources the installers apply
   global-agents.md     the rules every CLI loads in every project
   cli-settings.json    per-CLI `enforce` and `default` settings keys
   mcp-servers.json     MCP servers shared by the CLIs
+  upstream-docs.json   the documentation sources mirrored into docs/upstream/
 skills/              shared skills; skills.lock pins adapted ones
 scripts/             ai-dotfiles, install.sh, uninstall.sh, healthcheck.sh (entry points)
   install/             installer.py (shared by every step) and one file per step
@@ -21,7 +22,7 @@ scripts/             ai-dotfiles, install.sh, uninstall.sh, healthcheck.sh (entr
 docs/
   how-it-works.md      this file
   onboarding.md        this repo's report from /onboard
-  upstream/            machine-written mirror of each CLI's docs, and the skill catalogs
+  upstream/            machine-written mirrors of upstream docs, their indexes, and the skill catalogs
 ```
 
 ## The flow
@@ -37,7 +38,7 @@ scripts/ai-dotfiles           ─►  skills.py (link)                         �
                                   installer.py: reads ai-clis.json; the safe writes every step shares
                                   scripts/healthcheck.sh checks the live state
 
-WEEKLY  GitHub Action ─► scripts/upstream/ ─► docs/upstream/ on branch upstream-sync ─► review PR
+WEEKLY  config/upstream-docs.json ─► scripts/upstream/sync-upstream.py ─► docs/upstream/ on branch upstream-sync ─► review PR
 ```
 
 `install.sh` writes by default; `--dry-run` previews; `--target=<cli>` limits a run to one
@@ -131,9 +132,17 @@ healthcheck report it as a "local choice kept".
 
 ## Upstream updates
 
-- `scripts/upstream/sync-cli-docs.sh` mirrors each CLI's official docs into
-  `docs/upstream/<tool>/` (claude, codex, pi, antigravity). Each source has a page floor;
-  below it, the previous copy is kept and the run fails, so a moved index cannot wipe a mirror.
+- `scripts/upstream/sync-upstream.py` mirrors every source in `config/upstream-docs.json`
+  into `docs/upstream/<source>/`: each CLI's official docs (claude, codex, pi, antigravity)
+  and GitHub-hosted style and docs-writing guides (google, facebook), the latter at
+  `<source>/<repo>/<path>`, HTML and reStructuredText converted by pandoc. Each source has a
+  floor (a GitHub source: every listed file, and each glob its own); below it, the previous
+  copy is kept and the run fails, so a moved index or a renamed file cannot wipe a mirror.
+  Every source gets `MIRROR-INDEX.md` (pages, their `when` labels, the source's notes) and
+  `MIRROR-INDEX.json` (titles, descriptions, heading outlines with line numbers, last
+  commits); `docs/upstream/INDEX.md` lists the sources.
+- Agents read the mirror through the `upstream-docs` skill: `find` a page, `outline` it,
+  `show` one section. `collect-docs` adds a source: survey, config entry, sync.
 - `scripts/upstream/report-upstream.py` writes the pull request description: pages changed
   per tool; changes that touch this setup (managed setting keys, instruction files, skill
   folders, MCP); picked skills that changed upstream since their pinned commit; and skills
@@ -165,7 +174,7 @@ healthcheck report it as a "local choice kept".
 - **Local choice:** a `default` key whose live value differs from `cli-settings.json`; kept
   on purpose.
 - **Mirror:** a machine-written copy of upstream docs under `docs/upstream/`; never edit it
-  by hand.
+  by hand. A **docs source** is one entry in `config/upstream-docs.json`, one folder there.
 - **Floor:** the minimum number of pages a source must yield before its mirror is replaced.
 - **Receipt:** a record of what a script created, so it never touches anything else.
 - **Emitted vs verified:** writing a config is not proof that it works. Verified means the

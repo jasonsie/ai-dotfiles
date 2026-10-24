@@ -1,0 +1,263 @@
+{
+  "version": 1,
+  "sources": {
+    "claude": {
+      "name": "Claude Code",
+      "description": "Official Claude Code docs: setup, settings, permissions, hooks, MCP, skills, subagents, plugins, the Agent SDK and the changelog.",
+      "kind": "llms",
+      "index": "https://code.claude.com/docs/llms.txt",
+      "urls": "https://code\\.claude\\.com/docs/en/[A-Za-z0-9._/-]+\\.md",
+      "prefix": "https://code.claude.com/docs/en/",
+      "floor": 150
+    },
+    "codex": {
+      "name": "Codex",
+      "description": "Official Codex docs (CLI, IDE extension, cloud): configuration, sandboxing, MCP, skills, automation and the condensed Codex manual.",
+      "kind": "llms",
+      "index": "https://learn.chatgpt.com/docs/llms.txt",
+      "urls": "https://learn\\.chatgpt\\.com/docs/[A-Za-z0-9._/-]+\\.md(\\?surface=[a-z]+)?",
+      "prefix": "https://learn.chatgpt.com/docs/",
+      "floor": 120
+    },
+    "pi": {
+      "name": "Pi",
+      "description": "Pi coding agent docs from the earendil-works/pi repository: usage, configuration, prompt templates, skills, extensions, slash commands, sessions.",
+      "kind": "docs-json",
+      "index": "https://raw.githubusercontent.com/earendil-works/pi/stable/packages/coding-agent/docs/docs.json",
+      "raw": "https://raw.githubusercontent.com/earendil-works/pi/stable/packages/coding-agent/docs",
+      "pages": "https://github.com/earendil-works/pi/blob/stable/packages/coding-agent/docs",
+      "floor": 30
+    },
+    "antigravity": {
+      "name": "Antigravity",
+      "description": "Antigravity CLI and IDE docs: agent settings, rules, skills, MCP, artifacts, browser use and the changelog.",
+      "kind": "llms",
+      "index": "https://antigravity.google/llms.txt",
+      "urls": "https://antigravity\\.google/docs/[A-Za-z0-9._/-]+",
+      "prefix": "https://antigravity.google/docs/",
+      "floor": 60
+    },
+    "google": {
+      "name": "Google style and docs guides",
+      "description": "Google's engineering style guides (19 languages plus Markdown docs), the Swift guide, the code review guide (eng-practices) and the OpenDocs documentation planning guides and templates.",
+      "kind": "github",
+      "owner": "google",
+      "repos": {
+        "styleguide": {
+          "ref": "gh-pages",
+          "license": "CC-BY-3.0",
+          "paths": [
+            {"path": "README.md", "when": "finding which Google style guide applies"},
+            {"path": "cppguide.html", "when": "writing C++"},
+            {"path": "csharpguide.md", "when": "writing C#"},
+            {"path": "go/*.md", "when": "writing Go: style guide, decisions, best practices", "floor": 4},
+            {"path": "haskellguide.md", "when": "writing Haskell"},
+            {"path": "htmlcssguide.md", "when": "writing HTML or CSS"},
+            {"path": "javaguide.html", "when": "writing Java"},
+            {"path": "jsguide.md", "when": "writing JavaScript"},
+            {"path": "jsoncguide.md", "when": "writing JSON with comments (JSONC)"},
+            {"path": "lispguide.md", "when": "writing Common Lisp: style"},
+            {"path": "lispprogrammingguide.md", "when": "writing Common Lisp: programming guide"},
+            {"path": "docguide/*.md", "when": "writing Markdown docs or READMEs", "floor": 5},
+            {"path": "objcguide.md", "when": "writing Objective-C"},
+            {"path": "pyguide.md", "when": "writing Python"},
+            {"path": "Rguide.md", "when": "writing R"},
+            {"path": "rustguide.md", "when": "writing Rust"},
+            {"path": "shellguide.md", "when": "writing shell scripts (bash)"},
+            {"path": "tsguide.html", "when": "writing TypeScript"},
+            {"path": "verilogguide.md", "when": "writing Verilog"},
+            {"path": "vimscriptguide.md", "when": "writing Vim script: style"},
+            {"path": "vimscriptfull.md", "when": "writing Vim script: full guide"},
+            {"path": "xmlguide.md", "when": "designing XML document formats"},
+            {"path": "pylintrc", "when": "configuring pylint for the Python guide"},
+            {"path": "eclipse-cpp-google-style.xml", "when": "configuring Eclipse CDT for the C++ guide"},
+            {"path": "google-c-style.el", "when": "configuring Emacs c-style for the C++ guide"},
+            {"path": "google_python_style.vim", "when": "configuring Vim indentation for the Python guide"}
+          ]
+        },
+        "swift": {
+          "ref": "gh-pages",
+          "license": "Apache-2.0",
+          "paths": [
+            {"path": "index.md", "when": "writing Swift"}
+          ]
+        },
+        "eng-practices": {
+          "ref": "master",
+          "license": "CC-BY-3.0",
+          "paths": [
+            {"path": "review/index.md", "when": "code review: overview of Google's practices"},
+            {"path": "review/emergencies.md", "when": "code review in an emergency"},
+            {"path": "review/reviewer/*.md", "when": "reviewing a PR or CL: standard, what to look for, speed, comments, pushback", "floor": 7},
+            {"path": "review/developer/*.md", "when": "authoring a PR or CL: description, small changes, replying to review comments", "floor": 4}
+          ]
+        },
+        "opendocs": {
+          "ref": "main",
+          "license": "CC-BY-4.0",
+          "paths": [
+            {"path": "docs_advisor/*.md", "when": "planning a documentation set or choosing document types", "floor": 6},
+            {"path": "service_docs/README.md", "when": "writing service docs or runbooks: overview"},
+            {"path": "service_docs/templates/*.md", "when": "writing service docs or runbooks: templates (build, operations, security, disaster recovery, common tasks)", "floor": 6},
+            {"path": "project_archetypes/*.md", "when": "shaping a documentation project (archetypes: audit, edit, factory, manual, migration, prototype, study, translation)", "floor": 14},
+            {"path": "audit/*.md", "when": "auditing existing documentation", "floor": 3},
+            {"path": "onboarding/*.md", "when": "writing onboarding documentation", "floor": 2},
+            {"path": "technical_writing/*.md", "when": "working with technical writers", "floor": 3}
+          ]
+        }
+      },
+      "notes": {
+        "Enforcers": [
+          "Java: javaguide → google/google-java-format",
+          "Python: pyguide + pylintrc → google/yapf (--style=google), google/pyink",
+          "TypeScript: tsguide → google/gts",
+          "JavaScript: jsguide → google/eslint-config-google (archived)",
+          "C++: cppguide → clang-format with BasedOnStyle: Google; cpplint lives in cpplint/cpplint",
+          "Go: go/ → gofmt (upstream Go)",
+          "Any language: google/keep-sorted, google/vim-codefmt"
+        ],
+        "Outside the org (link, do not quote)": [
+          "Developer documentation style guide: https://developers.google.com/style (no public source)",
+          "Technical Writing courses: https://developers.google.com/tech-writing (no public source)",
+          "Kotlin style guide: https://developer.android.com/kotlin/style-guide",
+          "Angular style guide: https://angular.dev (angular/angular); Effective Dart: https://dart.dev (dart-lang/site-www)",
+          "Docsy, the docs theme, moved to docsy/docsy"
+        ],
+        "Skipped": [
+          "season-of-docs: program management (budget, hiring, mentoring), not writing style",
+          "gts, eslint-config-google, eslint-closure, closure-linter: tooling; the rules they enforce are in styleguide",
+          "google-java-format, yapf, pyink, vim-codefmt, keep-sorted, yamlfmt, json5format, rfmt: formatters (see Enforcers)",
+          "GOS-conventions, pulito: tiny, archived, niche layout conventions",
+          "gerrit-linter, git-presubmit-linter, lintush, arc-proselint, arc-regex-line-length-linter: archived lint scripts",
+          "aside, skills_lint.dart: tooling with no style text; gsocguides, oss-vulnerability-guide, comprehensive-rust: guides, not style",
+          "styleguide: _includes/, _sass/, assets/, include/, 404.html, CODE_OF_CONDUCT.md; opendocs: sponsorship/, project_archetypes/images/ (13 MB), templates/README.md (empty)"
+        ]
+      }
+    },
+    "facebook": {
+      "name": "Facebook (Meta) style and docs guides",
+      "description": "Meta engineering conventions from github.com/facebook project repositories: C++, C, Rust and Thrift coding guidelines, design-system and CLI conventions, and docs-writing guides (flipper, folly, buck2, astryx, docusaurus).",
+      "kind": "github",
+      "owner": "facebook",
+      "repos": {
+        "folly": {
+          "ref": "main",
+          "license": "Apache-2.0",
+          "paths": [
+            {"path": "folly/CODING_GUIDELINES.md", "when": "writing C++ in a folly-style library: coding and documentation style"},
+            {"path": "folly/agents/write.md", "when": "writing prose, contributor notes and commit summaries (folly's writing rule package)"},
+            {"path": "folly/agents/write.loader.md", "when": "loading folly's writing rule package"},
+            {"path": "folly/agents/write/**/*.md", "exclude": ["**/CONTRIB.md", "**/*.contrib.md"], "when": "folly writing rules: author and review checklists for prose and commit summaries", "floor": 7}
+          ]
+        },
+        "hhvm": {
+          "ref": "master",
+          "license": "PHP-3.01",
+          "paths": [
+            {"path": "hphp/doc/coding-conventions.md", "when": "writing C++ in HHVM style: language features, formatting, comments"}
+          ]
+        },
+        "hermes": {
+          "ref": "static_h",
+          "license": "MIT",
+          "paths": [
+            {"path": "doc/CodingStandards.md", "when": "writing C++ in Hermes style"}
+          ]
+        },
+        "fbthrift": {
+          "ref": "main",
+          "license": "Apache-2.0",
+          "paths": [
+            {"path": "thrift/doc/best-practices/style-guide.md", "when": "naming in Thrift IDL files"}
+          ]
+        },
+        "sapling": {
+          "ref": "main",
+          "license": "GPL-2.0",
+          "paths": [
+            {"path": "eden/fs/docs/CodingCpp.md", "when": "writing C++ in EdenFS style"}
+          ]
+        },
+        "bpfilter": {
+          "ref": "main",
+          "license": "GPL-2.0",
+          "paths": [
+            {"path": "doc/developers/style.rst", "when": "writing C in bpfilter style (clang-format enforced)"}
+          ]
+        },
+        "buck2": {
+          "ref": "main",
+          "license": "Apache-2.0",
+          "paths": [
+            {"path": "docs/developers/basics.md", "when": "writing Rust in buck2: coding conventions, error message style"},
+            {"path": "CONTRIBUTING.md", "when": "contributing to buck2: formatting, coding style"},
+            {"path": "docs/developers/.llms/writing.md", "when": "writing comments, API docs, READMEs and LLM context files"}
+          ]
+        },
+        "docusaurus": {
+          "ref": "main",
+          "license": "MIT",
+          "paths": [
+            {"path": ".agents/skills/code-style/SKILL.md", "when": "structuring code as a tree so humans can review it (Docusaurus agent skill)"},
+            {"path": "CONTRIBUTING.md", "when": "contributing to Docusaurus: code conventions"},
+            {"path": "AGENTS.md", "when": "writing documentation, linting and formatting in Docusaurus (agent instructions)"}
+          ]
+        },
+        "fboss": {
+          "ref": "main",
+          "license": "BSD",
+          "paths": [
+            {"path": "fboss/skills/fboss-code-standards/SKILL.md", "when": "writing FBOSS code: standards and patterns (agent skill)"},
+            {"path": "fboss/skills/fboss-code-standards/references/*.md", "when": "FBOSS patterns: agent, contributing, general, platform config, SAI SDK, testing, Thrift/COW/FSDB", "floor": 7}
+          ]
+        },
+        "astryx": {
+          "ref": "main",
+          "license": "MIT",
+          "paths": [
+            {"path": "docs/contributing/api-conventions.md", "when": "designing a design-system API (Astryx conventions)"},
+            {"path": "docs/contributing/cli-conventions.md", "when": "designing a CLI (Astryx conventions)"},
+            {"path": ".claude/skills/writing-component-docs.md", "when": "writing component documentation (.doc.mjs files)"},
+            {"path": "docs/contributing/spec-writing.md", "when": "writing specification records"}
+          ]
+        },
+        "flipper": {
+          "ref": "main",
+          "license": "MIT",
+          "paths": [
+            {"path": "docs/internals/documentation-writing-guide.mdx", "when": "writing developer documentation: why, style, structure (archived repo, frozen)"}
+          ]
+        }
+      },
+      "notes": {
+        "Enforcers": [
+          "folly: folly/.clang-format",
+          "hhvm: hphp/.clang-format, hphp/hack/.ocamlformat",
+          "hermes: .clang-format, unsupported/hermes/rustfmt.toml",
+          "fbthrift: thrift/.clang-format",
+          "sapling: rustfmt.toml, eden/scm/.rustfmt.toml, eden/scm/.flake8, addons/prettier.config.cjs, website/.eslintrc.js",
+          "bpfilter: .clang-format, .clang-tidy",
+          "buck2: rustfmt.toml",
+          "docusaurus: eslint.config.ts, .stylelintrc.js",
+          "fboss: .clang-format, docs/.markdownlint.json",
+          "astryx: eslint.config.js, .prettierrc.json"
+        ],
+        "Outside the org": [
+          "Sibling orgs not surveyed: facebookincubator, facebookresearch, facebookexperimental, facebookarchive",
+          "Moved out: react, react-native, create-react-app, metro and yoga now live in the react org; jest is jestjs/jest",
+          "Meta's Python formatter stack: usort is here, ufmt (Black plus µsort) is omnilib/ufmt",
+          "Meta-internal only: the C++ wiki pages that sapling's CodingCpp.md defers to, and folly/agents/README.md's internal install path"
+        ],
+        "Skipped": [
+          "No dedicated style-guide repository exists; guides live inside project repositories, mostly one file each",
+          "litho docs/legacy-spec-api/coding-style.md: deprecated Java Spec API; pyrefly tensor-shapes style_guide.md: niche tensor-shape annotation style",
+          "Agent instruction files with a style section (hermes, rocksdb, igl, infer, bpfilter CLAUDE.md; infer, meta-wearables-dat-android, meta-wearables-dat-ios, capi-param-builder AGENTS.md): needs section slicing, not built",
+          "fbjs eslint-config-fbjs, eslint-config-fb-strict, eslint-config-fbjs-opensource (2022) and the usort README: rules and tools, not prose",
+          "Forks carrying their upstream project's guide: fbnic_qemu (QEMU), fbghc (GHC), openbmc-linux (Linux kernel), kuduraft (Apache Kudu), gfxreconstruct (LunarG)",
+          "About 25 boilerplate CONTRIBUTING.md 'Coding Style: 2 spaces, 80 columns' sections; about 70 repositories with formatter configuration only; static analyzers (infer, pyre-check, pyrefly, Pysa, Lifeguard, mariana-trench)",
+          "stylex (a CSS styling system); flipper/docs/extending/style-guide.mdx (UI design, rendered from a React component)"
+        ]
+      }
+    }
+  }
+}

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Summarize a weekly upstream refresh for review; read-only unless --update-catalogs.
 
-Run after scripts/upstream/sync-cli-docs.sh has refreshed docs/upstream/ and the changes
+Run after scripts/upstream/sync-upstream.py has refreshed docs/upstream/ and the changes
 are staged (`git add docs/upstream`). Prints Markdown for the review pull request:
 
 1. Pages added, removed, and changed per tool.
@@ -25,7 +25,7 @@ import sys
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 CATALOGS = 'docs/upstream/catalogs.json'
-PAGES = ('docs/upstream', f':!{CATALOGS}')  # git pathspec: the mirrored pages only
+PAGES = ('docs/upstream', f':!{CATALOGS}', ':!docs/upstream/INDEX.md', ':!docs/upstream/*/MIRROR-INDEX.*')  # git pathspec: the mirrored pages only
 LOCK = WORKSPACE / 'skills/skills.lock'
 MANAGED = WORKSPACE / 'config/cli-settings.json'
 COLLECTIONS = ('affaan-m/everything-claude-code', 'anthropics/skills', 'mattpocock/skills')

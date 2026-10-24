@@ -1,0 +1,3 @@
+interface:
+  display_name: "Upstream Docs"
+  short_description: "Find and read a section of the mirrored style guides and CLI docs"
