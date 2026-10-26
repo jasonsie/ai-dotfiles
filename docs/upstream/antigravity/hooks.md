@@ -3,6 +3,8 @@
 
 # Hooks
 
+Available on: Antigravity App, Antigravity CLI, Antigravity IDE
+
 Hooks allow you to run custom scripts or shell commands at specific points during Antigravity’s execution loop to enforce rules, execute linters, or capture diagnostics.
 
 ## Antigravity App
@@ -25,12 +27,12 @@ Hooks intercept agent actions right before or immediately after execution. They 
 You can define hooks in any of the following locations:
 
 *   **Workspace level**: `.agents/hooks.json` at your project root.
-*   **Global level**: `~/.gemini/config/hooks.json` or inside your primary `~/.gemini/antigravity-cli/settings.json` file.
+*   **Global level**: `~/.gemini/config/hooks.json`. Hooks in `~/.gemini/antigravity-cli/settings.json` aren’t loaded.
 *   **Plugin level**: Packaged inside an installed plugin’s `hooks.json` file.
 
 You can inspect all loaded and active hooks interactively inside the TUI by typing:
 
-```
+```text
 /hooks
 ```
 
@@ -51,7 +53,7 @@ You can manage active hooks from the **…** > **Customizations** > **Hooks** me
 
 The `hooks.json` file maps hook names to their event configurations:
 
-```
+```json
 {
   "my-linter-hook": {
     "PostToolUse": [
@@ -262,7 +264,7 @@ Fires once when a new conversation session starts, before the first model invoca
 
 *   **Input (stdin)**:
 
-```
+```json
 {
   "conversationId": "ec33ebf9-0cba-4100-8142-c61503f6c587",
   "workspacePaths": ["/workspace/project"],
@@ -274,7 +276,7 @@ Fires once when a new conversation session starts, before the first model invoca
 
 *   **Output (stdout)**:
 
-```
+```json
 {
   "injectSteps": [
     {
@@ -321,7 +323,7 @@ Fires before a tool is executed.
 
 *   **Input (stdin)**:
 
-```
+```json
 {
   "toolCall": {
     "name": "run_command",
@@ -342,7 +344,7 @@ Fires before a tool is executed.
 
 *   **Output (stdout)**:
 
-```
+```json
 {
   "decision": "ask",
   "reason": "Requires confirmation for test execution.",
@@ -371,7 +373,7 @@ Fires after a tool completes.
 
 *   **Input (stdin)**:
 
-```
+```json
 {
   "toolCall": {
     "name": "run_command",
@@ -424,7 +426,7 @@ Each object in the `injectSteps` array can have one of the following fields:
 
 *   **Input (stdin)**:
 
-```
+```json
 {
   "invocationNum": 3,
   "initialNumSteps": 10,
@@ -438,7 +440,7 @@ Each object in the `injectSteps` array can have one of the following fields:
 
 *   **Output (stdout)**:
 
-```
+```json
 {
   "injectSteps": [{"ephemeralMessage": "Remember to lint"}]
 }
@@ -467,7 +469,7 @@ Fires immediately after each model invocation completes.
 *   **Input (stdin)**: Same as `PreInvocation`.
 *   **Output (stdout)**:
 
-```
+```json
 {
   "injectSteps": [],
   "terminationBehavior": ""
@@ -501,7 +503,7 @@ Fires when the execution loop terminates.
 
 *   **Input (stdin)**:
 
-```
+```json
 {
   "executionNum": 1,
   "terminationReason": "model_stop",
@@ -517,7 +519,7 @@ Fires when the execution loop terminates.
 
 *   **Output (stdout)**:
 
-```
+```json
 {
   "decision": "continue",
   "reason": "Not done yet"

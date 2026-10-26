@@ -3,6 +3,8 @@
 
 # Model quotas (/usage)
 
+Available on: Antigravity CLI
+
 View your active model quota usage and refresh your configuration.
 
 ## Overview
@@ -16,7 +18,7 @@ To open the **Model Quotas** panel, follow these steps:
 1.  Type `/usage` (or `/quota`) in the prompt box.
 2.  Press Enter.
 
-```
+```text
 /usage
 ```
 

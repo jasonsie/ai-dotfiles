@@ -3,6 +3,8 @@
 
 # Custom subagents
 
+Available on: Antigravity App, Antigravity CLI
+
 Delegate parallel builds, multi-file code generation, and research sweeps to concurrent background subagents while maintaining your active programming flow.
 
 ## Antigravity App
@@ -64,7 +66,7 @@ The content following the YAML `---` delimiter defines the subagent’s system p
 
 The following example defines a custom security auditor subagent:
 
-```
+```markdown
 ---
 name: code-auditor
 description: Specialized subagent for security audits, static analysis, and code quality reviews.
@@ -207,7 +209,7 @@ To inspect the inner reasoning, thoughts, and logs of a specific background agen
 
 For non-agentic background operations, such as direct shell commands, testing suites, or simple background queries initiated using `/btw`, use the `/tasks` command:
 
-```
+```text
 /tasks
 ```
 

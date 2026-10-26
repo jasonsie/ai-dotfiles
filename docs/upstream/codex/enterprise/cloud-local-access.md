@@ -61,13 +61,13 @@ A task has two parts: coordination and execution. Coordination decides which ste
 
 #### Where to review
 
-Open Admin Console → Agent Security. It replaces Policies & Configuration. Its rollout is independent of local computer access for Work and dots.
+Open Admin Console → Agent security. It replaces Policies & Configuration. Its rollout is independent of local computer access for Work and dots.
 
 - **Policy settings:** Review the Global baseline and any Local overrides. Keep orchestrator controls, including approvals and web search, in Global; environments cannot override them. Use the dedicated UI controls where available, including **Allowed approval policies** and **Allowed web search modes**, and TOML for other supported fields. See [orchestrator and executor controls](https://learn.chatgpt.com/docs/enterprise/agent-security#choose-controls-and-configuration-fields) for where each setting applies.
 
 - **Requirements and Defaults:** Requirements set limits users cannot override. Defaults provide starting values within those limits and cannot override a requirement.
 
-- **Feature access:** Use Workspace settings → Permissions & roles. Local computer access is a separate opt-in for Work and for dots.
+- **Feature access:** Use Admin Console → Permissions. Local computer access is a separate opt-in for Work and for dots.
 
 #### What carries over
 
@@ -100,8 +100,6 @@ Shared behavior for Work and dots with local access spans the following scopes:
 - **Local execution:** When a tool runs on a connected computer, it enforces supported local-execution requirements from Agent Security and applicable device policies, including policies delivered through MDM where supported. These can include filesystem and network restrictions. Only fields supported by the local executor apply; configuring a field in MDM or local `requirements.toml` does not guarantee that it is enforced locally.
 
 - **Cloud execution:** Work cloud containers and dots’ cloud computers use separate execution controls. Local filesystem and network restrictions do not automatically apply to these cloud environments.
-
-To configure shared cloud capabilities, go to Admin Console → Permissions & roles → Workspace capabilities → Cloud computer capabilities. These permissions cover both Work Cloud and dots. Review **Cloud browser use** and **Cloud network access** separately; configuring one does not configure the other. Global policies and Codex Cloud overrides do not configure these permissions.
 
 ### Check compatibility and data requirements
 
@@ -156,7 +154,7 @@ Before rollout, review the policies and compatibility requirements above. Review
 
 #### Work
 
-1. As a workspace owner, open **Workspace settings > Permissions & roles**.
+1. As a workspace owner, open **Admin Console** > **Permissions**.
 
 1. Enable **Work Cloud** for the intended users. **Use Codex locally on the ChatGPT desktop app** is not a prerequisite for this feature.
 
@@ -168,13 +166,13 @@ Before rollout, review the policies and compatibility requirements above. Review
 
 #### Dots
 
-1. As a workspace owner, open **Workspace settings > Permissions & roles** and enable dots for the intended users, subject to the eligibility requirements above.
+1. As a workspace owner, open **Admin Console** > **Permissions** and enable dots for the intended users, subject to the eligibility requirements above.
 
-1. Under **Use Dots**, turn on **Allow local computer access**. Review the confirmation modal, then open **Agent Security** to review or set policies, or confirm to turn on access.
+1. Under **Use dots**, turn on **Allow local computer access**. Review the confirmation modal, then open **Agent Security** to review or set policies, or confirm to turn on access.
 
 1. Have users update to ChatGPT desktop app version 26.929 or higher. The update is required for local computer access to take effect.
 
-1. Have users open their dot’s details in the ChatGPT desktop app and choose **Computers**. Find **Your computer** (or the computer’s name), select **Allow**, then confirm with **Allow access**.
+1. Have users connect their computer using the [dots end-user steps](#dots-end-user-steps) below.
 
 1. Have a member with the intended permissions and a connected computer test a local task with their dot.
 
@@ -208,6 +206,9 @@ For both Work and dots, local steps require the relevant computer to be online a
 - **Existing chats and projects.** Tasks created before this feature is enabled keep their original mode: locally only, or in the cloud without local file access. Start a new task after enabling the feature to use local computer access with Work Cloud.
 
 - **Local/Cloud setting.** For enterprises, the in-app Local/Cloud toggle and its default remain unchanged at launch. Eligible tasks with **Cloud** selected use cloud coordination and the connected computer for local steps.
+
+
+
 
 ### Dots
 

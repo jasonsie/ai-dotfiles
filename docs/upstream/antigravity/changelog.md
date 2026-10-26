@@ -9,9 +9,75 @@ New versions roll out gradually and may take a few days to reach all users.
 
 ## Antigravity App
 
-### [v2.24.0](/releases?tab=hub&version=2.24.0 "View release 2.24.0")
+### [v2.26.0](/releases?tab=hub&version=2.26.0 "View release 2.26.0")
 
 Latest
+
+October 22, 2026
+
+### Notifications settings, docked question prompts, and conversation palette filters
+
+This release adds a Notifications page in Settings with sound and volume controls, docks question and permission prompts above the message box so you can keep typing, and adds sort and filter options to the conversations palette. It includes 8 improvements and 15 fixes.
+
+**Improvements:**
+
+*   You can now manage notification preferences, toggle completion sounds, and adjust agent sound volume from the new Notifications page in Settings.
+*   Question prompts and permission requests now dock above the message box instead of replacing it, so you can keep typing or queue a follow-up message while a prompt is open.
+*   The Conversations palette (Cmd+P on macOS, Ctrl+P on Windows and Linux) now includes a filter and sort menu to sort by Last Updated or Last Prompt and filter by unread, automations, or archived conversations.
+*   Installed MCP servers on a plugin's page now include a Configure button so you can fill in or update their declared variables without turning the plugin off and on again.
+*   When installing a plugin that conflicts with an existing one, the conflict dialog now shows preview cards for both plugins and offers a single Replace action.
+*   Suggested prompts on a plugin's page now display the plugin's logo and automatically install or enable the plugin when selected.
+*   The more-actions menu on conversations in the sidebar now includes Pin and Archive alongside their keyboard shortcuts, matching the context menu.
+*   When signed in with Application Default Credentials, the Account page in Settings now marks the plan with (ADC), hides license management, and explains how to switch accounts on the disabled Sign Out button.
+
+**Fixes:**
+
+*   Fixed an issue where signing out of an Application Default Credentials session and signing in with Google continued using the ADC credentials until the app restarted.
+*   Fixed an issue where a failed undo on a conversation turn silently reset the transcript and overwrote your draft in the message box instead of showing an error notification.
+*   Fixed an issue where returning to a conversation could reopen a file tab you had already closed in the side panel.
+*   Fixed an issue where opening an artifact in the side panel showed an empty view instead of a loading spinner while its contents loaded.
+*   Fixed an issue where long-running turns with multiple background wakeups rendered as several consecutive Worked for rows with nothing visible between them.
+*   Fixed an issue where socket disconnect errors after waking from sleep or changing Wi-Fi networks stopped the agent instead of retrying automatically.
+*   Fixed an issue where user-configured variables were not substituted into HTTP request headers for plugin MCP servers.
+*   Fixed an issue where selecting See more on a Marketplace plugin shelf revealed only six items at a time and displayed fluctuating remaining counts.
+*   Fixed an issue where action buttons in the plugin and skill detail dialog sat on a separate row under the description and shifted layout after installation.
+*   Fixed an issue where the scrollbar overlapped the search icon in the Add MCP Server dialog on macOS.
+*   Fixed an issue where single-line and multi-line LaTeX display math blocks inside list items and paragraphs failed to render as block equations or broke list numbering.
+*   Fixed an issue where menu tooltips and submenus could cover the rows directly below them when horizontal space was tight.
+*   Fixed an issue where you could send a message from the new-conversation screen into a project that had been deleted.
+*   Fixed an issue where viewing Git diffs for files in subdirectories failed on Windows because of backslash path separators.
+*   Fixed an issue where the side panel Overview labelled plugin views as Plugins instead of Extensions.
+
+---
+
+### [v2.25.0](/releases?tab=hub&version=2.25.0 "View release 2.25.0")
+
+October 20, 2026
+
+### Plugin sidebar badges, window shortcuts, and reliability fixes
+
+This release shows plugin badges on managed projects in the sidebar, hides empty plugin projects, and improves window shortcuts. It includes 3 improvements and 8 fixes.
+
+**Improvements:**
+
+*   Project folders managed by UI plugins now display a dedicated plugin badge in the sidebar.
+*   Empty sidecar-managed projects are now automatically hidden from the sidebar to reduce clutter.
+*   Onboarding now displays the Google Cloud project auto-assignment panel directly when no pre-assigned licenses are found.
+
+**Fixes:**
+
+*   Fixed an issue where single-line unquoted description fields containing colons caused YAML frontmatter parsing errors in skills and rules.
+*   Fixed an issue where closing the last window on macOS could cause the application dock presence to disappear.
+*   Fixed an issue where pressing Cmd+W with no open tabs or panels did not pass the shortcut through to close the window.
+*   Fixed an issue where a corrupted summaries database caused conversation search to fail instead of recovering automatically.
+*   Fixed an issue where selecting files in the composer did not reset the file input, preventing re-selection of the same file.
+*   Fixed an issue where the Settings dialog scrollbar could render beneath modal content.
+*   Fixed an issue where caret placement and line navigation with Home, End, or arrow keys behaved erratically around prompt chips.
+*   Fixed an issue where the copy button on terminal and command steps was missing an accessible label for screen readers.
+
+---
+
+### [v2.24.0](/releases?tab=hub&version=2.24.0 "View release 2.24.0")
 
 October 15, 2026
 
@@ -2984,9 +3050,34 @@ VS CodeVisual Studio
 
 [Extension docs→](/docs/ide/extensions/vscode)
 
-### [v1.8.0](/docs/ide/extensions/vscode "View Visual Studio Code extension docs")
+### [v1.9.0](/docs/ide/extensions/vscode "View Visual Studio Code extension docs")
 
 Latest
+
+October 19, 2026
+
+### Inline diff hunk keyboard shortcuts, unified telemetry settings, Cloud Workstations ambient authentication, and server auto-recovery
+
+Introduces keyboard shortcuts for accepting or rejecting focused inline diff hunks, unifies telemetry controls in Account settings, adds seamless ambient authentication in Google Cloud Workstations and Google Cloud Shell, and enables opt-in automatic language server crash recovery and liveness probing alongside inline diff and chat reconnection fixes.
+
+**Improvements:**
+
+*   Added keyboard shortcuts (`Alt+Enter` on Windows and Linux or `Option+Enter` on macOS to accept, and `Alt+Shift+Enter` or `Option+Shift+Enter` to reject) for the focused inline diff change (`antigravity.inlineDiff.acceptFocusedHunk` and `antigravity.inlineDiff.rejectFocusedHunk`), with automatic fallback to accepting or rejecting all changes in the active side-by-side diff tab.
+*   Updated the **Enable Telemetry** toggle in **Settings > Account** to serve as the unified control for both conversation trajectory uploads and extension usage metrics, added the **Antigravity: Manage Data Sharing & Telemetry** (`antigravity.openTelemetrySettings`) command, and deprecated the legacy `antigravity.enableTelemetry` VS Code setting with a one-time **Open Account settings** migration notice.
+*   Added seamless ambient authentication in Google Cloud Workstations and Google Cloud Shell via the Cloud Developer Environments companion extension (`google.cloud-developer-environments-auth`), enabling zero-click language server startup and direct webview routing to license and project selection while falling back to interactive terminal login when ambient credentials are unavailable.
+*   Added opt-in automatic language server crash recovery (`antigravity.autoRecover`, up to 3 restarts within 10 minutes with jittered backoff and cached binary reuse) and periodic `/healthz` liveness heartbeat probing (`antigravity.heartbeatIntervalMs`, defaulting to 15 seconds with OS sleep and suspend drift detection) to automatically detect and restart hung or crashed background server processes.
+
+**Fixes:**
+
+*   Fixed `Cmd+L` / `Ctrl+L` closing the Antigravity chat panel when pressed inside the integrated terminal by restricting the toggle-close keybinding (`antigravity.toggleChatFocus`) to when neither the editor nor the terminal has focus (`!editorTextFocus && !terminalFocus`).
+*   Fixed switching conversations, starting a new conversation, or reloading the chat webview unexpectedly auto-accepting open inline diff reviews, preserving pending diff decisions so they are restored when returning to the conversation.
+*   Fixed follow-up or revert agent edits that result in zero diff hunks leaving editor tabs marked dirty or keeping stale file entries in the **Changes Overview** bar during inline diff reviews.
+*   Fixed reconnecting after a connection interruption clearing the active conversation and opening a blank chat prompt instead of resuming the current conversation unless **Start New Chat** is explicitly selected.
+*   Fixed duplicated titles, repeated ellipses during language server installation progress, and ambiguous headings in VS Code notification toasts.
+
+---
+
+### [v1.8.0](/docs/ide/extensions/vscode "View Visual Studio Code extension docs")
 
 October 12, 2026
 
@@ -3255,9 +3346,23 @@ Introduces the 1.0.0 release of Antigravity for VS Code, bringing an agentic AI 
 
 ---
 
-### [v1.0.261012.0](/docs/ide/extensions/visual-studio "View Visual Studio extension docs")
+### [v1.0.261016.0](/docs/ide/extensions/visual-studio "View Visual Studio extension docs")
 
 Latest
+
+October 16, 2026
+
+### Fixes an issue where the Antigravity chat panel could hang in a Working... state when sending a prompt
+
+Fixes an issue where the Antigravity chat panel could hang indefinitely in a "Working..." state when sending a prompt.
+
+**Fixes:**
+
+*   Fixed an issue where the Antigravity chat panel could hang indefinitely in a "Working..." state when sending a prompt by multiplexing all background and interactive chat streams over a WebSocket connection instead of exhausting the browser's per-origin HTTP/1.1 connection pool.
+
+---
+
+### [v1.0.261012.0](/docs/ide/extensions/visual-studio "View Visual Studio extension docs")
 
 October 12, 2026
 

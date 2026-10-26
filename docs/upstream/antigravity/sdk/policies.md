@@ -13,7 +13,7 @@ Define explicit rules to allow, deny, or request human approval for tool calls.
 
 For example, you can configure the SDK to require approval when an agent attempts to execute shell commands:
 
-```
+```python
 from google.antigravity import LocalAgentConfig
 from google.antigravity.hooks.policy import deny, allow, ask_user
 
@@ -36,7 +36,7 @@ In CLI applications, you can prompt the user interactively before high-risk tool
 
 For example, use `run_interactive_loop` combined with `policy.safe_defaults` to start a console session that prompts for user approval whenever any write tool (file creation, editing, or shell execution) is requested:
 
-```
+```python
 import asyncio
 from google.antigravity import LocalAgentConfig
 from google.antigravity.hooks import policy
@@ -53,7 +53,7 @@ if __name__ == "__main__":
 
 During execution, interactive approval prompts appear in the console:
 
-```
+```text
 Starting interactive loop. Type 'exit' or 'quit' to end.
 User: Run the 'ls' command to see what is in this directory.
 

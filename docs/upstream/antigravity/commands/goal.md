@@ -3,6 +3,8 @@
 
 # Goal command (/goal)
 
+Available on: Antigravity App, Antigravity CLI, Antigravity IDE
+
 Run a complex, long-running engineering objective autonomously. The agent keeps working, verifying, and fixing until it’s confident the goal is completely fulfilled, instead of yielding back to you after each intermediate step.
 
 ## Overview
@@ -26,7 +28,7 @@ Type `/goal` followed by the objective you want the agent to pursue. Write the o
 
 Type the command in the composer:
 
-```
+```text
 /goal Migrate the auth package from session cookies to OAuth2 and make sure all unit and integration tests pass
 ```
 
@@ -36,7 +38,7 @@ An **Active Goal** indicator appears above the composer while the goal is runnin
 
 Type the command in the interactive prompt:
 
-```
+```bash
 /goal Migrate the auth package from session cookies to OAuth2 and make sure all unit and integration tests pass
 ```
 
@@ -59,7 +61,7 @@ When you start a goal, Antigravity tracks it across every turn until it ends:
 
 To stop a running goal, tell the agent to stop or cancel in a follow-up message, for example:
 
-```
+```text
 Stop the current goal. I'll take it from here.
 ```
 
@@ -71,7 +73,7 @@ Goal mode is only as good as the completion criteria you give it. The following 
 
 *   **Name the evidence**: “all tests in `packages/api` pass,” “`npm run build` exits with zero errors,” or “p95 latency in the benchmark is under 50 ms.”
 *   **Scope the work**: list the packages, services, or files in scope so the agent doesn’t stop early or expand indefinitely.
-*   **Plan first for big changes**: run [`/plan`](/docs/plan) or `/grill-me` before `/goal` to align on the approach, then hand the approved plan to goal mode for execution.
+*   **Plan first for big changes**: run [`/plan`](/docs/plan) or [`/grill-me`](/docs/commands/grill-me) before `/goal` to align on the approach, then hand the approved plan to goal mode for execution.
 *   **Pair with a timer**: for recurring check-ins during a long goal, use [`/schedule`](/docs/commands/schedule) to have the agent report progress on an interval.
 
 ## Next steps

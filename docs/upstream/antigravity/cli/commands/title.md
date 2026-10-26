@@ -3,6 +3,8 @@
 
 # Window title command (/title)
 
+Available on: Antigravity CLI
+
 Configure dynamic terminal window titles interactively.
 
 ## Overview
@@ -17,19 +19,19 @@ You can control the window title feature by running the `/title` command.
 
 To toggle the feature on and off, run the following command:
 
-```
+```text
 /title
 ```
 
 To enable it explicitly, run the following command:
 
-```
+```text
 /title on
 ```
 
 To disable it explicitly, run the following command:
 
-```
+```text
 /title off
 ```
 

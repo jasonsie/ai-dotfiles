@@ -3,6 +3,8 @@
 
 # Projects
 
+Available on: Antigravity App, Antigravity CLI
+
 Projects organize multi-folder workspace configurations, isolated agent settings, and conversation histories across Antigravity surfaces.
 
 ## Antigravity App
@@ -41,7 +43,7 @@ When starting a new conversation in a project, you choose how the agent interact
 
 Settings and permissions are both scoped at the project level:
 
-*   **Settings**: When a project is created, it starts with the **Inherit General** permission preset, following your global permission settings, with read and write access to all of your project’s folders. On macOS and Linux under the **Default** preset, terminal commands run without prompting inside the [terminal sandbox](/docs/sandbox) and require approval to run outside it; on Windows, the agent asks for permission to run terminal commands. These settings can be modified and apply to all agents within this project.
+*   **Settings**: When a project is created, it starts with the **Inherit Global** permission preset, following your global permission settings, with read and write access to all of your project’s folders. Under the **Default** preset, terminal commands run without prompting inside the [terminal sandbox](/docs/sandbox) and require approval to run outside it. With the [previous permission settings](/docs/agent-settings#previous-permission-settings), the agent asks for permission to run terminal commands. These settings can be modified and apply to all agents within this project.
 *   **Permissions**: Projects inherit global permissions, and you can augment them at the project level so agents only have the exact access required for that specific project’s tasks.
 
 #### Workflows using projects
@@ -62,7 +64,7 @@ You can configure projects to support several common development workflows:
 
 When starting the CLI without any project flags, all conversations in the session run in the `default-cli-project`:
 
-```
+```bash
 agy
 ```
 
@@ -70,7 +72,7 @@ agy
 
 To open a session attached to a specific existing project, pass the `--project` flag with the target project ID:
 
-```
+```bash
 agy --project=<project_id>
 ```
 
@@ -78,7 +80,7 @@ agy --project=<project_id>
 
 To create a new project and initialize your CLI session inside it, pass the `--new-project` flag:
 
-```
+```bash
 agy --new-project
 ```
 
@@ -90,7 +92,7 @@ If you resume a conversation (whether on startup using `--conversation=<conv_id>
 
 While interacting in an active session, you can copy and continue your current conversation in a different project using the `/fork` slash command:
 
-```
+```text
 /fork <project_id>
 ```
 

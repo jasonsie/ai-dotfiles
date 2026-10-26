@@ -3621,8 +3621,11 @@ Custom rules are optional controls for specific ongoing boundaries. Start with
 clear instructions in your conversation; you don’t need to create a rule for
 every approval.
 
-After setting up your dot, open **Settings** > **Personalization** and select
-**Custom rules** under **Permissions**.
+After setting up your dot, open custom rules for your app:
+
+- **Desktop and web:** Open **Settings** > **Personalization** and select
+  **Custom rules** under **Permissions**.
+- **iOS and Android:** Open the sidebar, then select **Customize** > **Custom rules**.
 
 Select **Add**, describe the action, choose how your dot should handle it,
 and select **Add rule**. The choices are:
@@ -3734,6 +3737,8 @@ Add Codex to products, systems, and automated workflows.
 - [Codex SDK](https://learn.chatgpt.com/docs/codex-sdk): Control Codex programmatically from your application.
 
 - [App Server](https://learn.chatgpt.com/docs/app-server): Integrate with the protocol that powers Codex clients.
+
+- [Model catalogs](https://learn.chatgpt.com/docs/model-catalogs): Serve current model defaults through a cloud or gateway integration.
 
 - [GitHub Action](https://learn.chatgpt.com/docs/github-action): Run Codex from GitHub Actions workflows.
 
@@ -5098,6 +5103,10 @@ For example:
 Ask your dot to confirm what it saved. Use **Scheduled** to review recurring
 work, or ask your dot to list, change, or cancel its scheduled tasks.
 
+Your dot can also read and edit your existing ChatGPT Work automations. Ask it
+to review what's scheduled or change a recurring task's instructions or timing.
+Identify the automation you want to change and ask it to confirm the update.
+
 Stopping active work and canceling a schedule are separate actions. See
 [Controls](https://learn.chatgpt.com/docs/dots/controls#stop-work).
 
@@ -5122,6 +5131,12 @@ Context is the information available to your dot while it responds or works:
 messages, instructions, relevant source material, and results from its tools
 or delegated work. It can use this information to connect a new request to work
 already underway.
+
+Your dot can search your past ChatGPT conversations for relevant context. For
+example, ask it to find an earlier discussion and use the decisions from it
+in your current task. Retrieved conversation content is context for the work;
+it isn't the same as persistent memory or a complete history included in every
+task.
 
 The context available for an interaction is a selection of this information.
 Calls use selected conversation context, which can differ from the information
@@ -5175,6 +5190,86 @@ permissions and schedule are separate from proactive research.
 <a id="approvals-sandboxing-and-security"></a>
 
 Sandbox behavior, approvals, cyber-safety, and security-specific guidance.
+
+### Codex Security CI/CD overview
+
+Source: [Codex Security CI/CD overview](https://learn.chatgpt.com/docs/security/cli/ci.md)
+
+Run Codex Security in CI to review pull-request or merge-request changes, scan
+your default branch, and preserve findings and coverage. See your CI
+provider's guide for the workflow, report handling, and enforcement options.
+
+#### Prepare the workflow
+
+Running scans requires Codex Security access. Store an OpenAI API key in your
+CI provider's secret store as `CODEX_SECURITY_API_KEY`, then map it to the scan
+process's `OPENAI_API_KEY` environment variable.
+
+Run scans only for repositories and changes you trust. Scans use the runner's
+local permissions and don't pause for approval. Keep unrelated credentials and
+deployment steps in separate jobs.
+
+#### Use an approved Daybreak model
+
+For Daybreak Blue access through [Trusted Access for
+Cyber](https://learn.chatgpt.com/docs/cyber-safety#trusted-access-for-cyber), set the GitHub Action's
+`model` input to `gpt-6-sol` and `cyber-access-program` to
+`daybreak_blue`. For direct CLI scans, use `--model gpt-6-sol`
+and `--cyber-access-program daybreak_blue`.
+
+Use an API key from a project that has Daybreak Blue enabled and access to the
+selected model. Setting the model or program does not grant access. See
+[Configure optional Daybreak access](https://learn.chatgpt.com/docs/security/cli/ci/github#configure-optional-daybreak-access)
+for the Action settings.
+
+#### Choose an integration
+
+#### Add the GitHub Actions workflow
+
+Use the [GitHub Actions guide](https://learn.chatgpt.com/docs/security/cli/ci/github) for pull-request
+checks and scheduled repository scans. The Codex Security Action installs the CLI,
+saves reports, and adds a job summary and source annotations. The guide includes
+runner setup, optional Daybreak access, SARIF upload, and severity enforcement.
+
+#### Add the GitLab CI/CD pipeline
+
+Use the [GitLab CI/CD guide](https://learn.chatgpt.com/docs/security/cli/ci/gitlab) for merge-request,
+default-branch, and scheduled scans. Start with a scan-only pipeline, then
+adopt report handling, policy enforcement, and optional verified remediation.
+
+#### Use another CI system
+
+Install the public `@openai/codex-security` package and run the CLI directly.
+Use `--auth api-key`, choose a repository or diff scan, and save the output in a
+private directory outside the Git worktree. Your runner must provide the
+dependencies described in the [CLI quickstart](https://learn.chatgpt.com/docs/security/cli#check-the-prerequisites).
+
+See the [CLI reference](https://learn.chatgpt.com/docs/security/cli/reference) for scan options, diff
+revisions, report formats, state and output directories, and retry behavior.
+
+#### Choose a severity policy
+
+Start with advisory results. Review representative findings, scan coverage,
+cost, and runtime before deciding which outcomes should block a merge.
+
+Evaluate both findings and scan completeness. The severity policy evaluates
+findings from the current scan at or above the configured threshold. Earlier
+open findings in the repository summary don't affect that policy. An
+incomplete scan can leave areas without a review even when it reports no
+findings.
+
+In the Action release `action-v0.3.0`, a completed scan means the configured analysis
+produced a valid result. Scope exclusions, deferred investigations, and other
+coverage notes do not bypass the severity policy. Scanner and required
+reporting errors fail the job. CLI `0.3.0` returns exit code `2` for input,
+execution, result-integrity, or required-output failures. Review `coverage.json` when assessing the result; completion does
+not certify that every vulnerability was found.
+
+Configure enforcement in the [GitHub Actions
+guide](https://learn.chatgpt.com/docs/security/cli/ci/github#choose-a-severity-policy) or the [GitLab
+CI/CD guide](https://learn.chatgpt.com/docs/security/cli/ci/gitlab#separate-reporting-from-policy-enforcement).
+For direct CLI integrations, see [severity enforcement and exit
+codes](https://learn.chatgpt.com/docs/security/cli/reference#exit-codes-and-signals).
 
 ### Codex Security CLI FAQ
 
@@ -5391,7 +5486,16 @@ report with a budget warning. It returns `0`, or `1` if findings meet the
 configured severity threshold. If it can't produce a valid completed result,
 it returns `2` and preserves any available output.
 
-For pull-request checks, see [Run scans in CI](https://learn.chatgpt.com/docs/security/cli/ci).
+For GitHub pull-request checks and scheduled repository scans, use the
+[Codex Security GitHub Action](https://learn.chatgpt.com/docs/security/cli/ci/github). With
+`action-v0.3.0`, a completed scan means the configured analysis produced a
+valid result. Scope exclusions and deferred investigations do not bypass the
+severity policy. Review `coverage.json` to assess the scan's scope and
+limitations. To also reject empty diffs and dry runs, require the Action's
+`scan-status` output to be `completed`; see [Choose a severity
+policy](https://learn.chatgpt.com/docs/security/cli/ci/github#choose-a-severity-policy).
+
+For other providers, see the [CI/CD overview](https://learn.chatgpt.com/docs/security/cli/ci).
 For a check before each commit, use
 [`install-hook`](https://learn.chatgpt.com/docs/security/cli/reference#codex-security-install-hook).
 
@@ -5548,15 +5652,16 @@ commands](https://learn.chatgpt.com/docs/security/cli/reference#codex-security-v
 
 #### Choose the next scan
 
-| Goal                                     | Guide                                                                                    |
-| ---------------------------------------- | ---------------------------------------------------------------------------------------- |
-| Scan selected paths or a diff            | [Select the scan target](https://learn.chatgpt.com/docs/security/cli/reference#select-the-scan-target)           |
-| Use deep scans or limit their runtime    | [Configure deep scans](https://learn.chatgpt.com/docs/security/cli/reference#configure-deep-scans)               |
-| Supply architecture or security policies | [Add security context](https://learn.chatgpt.com/docs/security/cli/reference#add-security-context)               |
-| Change the model or reasoning effort     | [Configure the runtime](https://learn.chatgpt.com/docs/security/cli/reference#configure-the-runtime)             |
-| Set an estimated cost limit              | [Output and policy options](https://learn.chatgpt.com/docs/security/cli/reference#set-output-and-policy-options) |
-| Scan multiple repositories               | [Bulk scans](https://learn.chatgpt.com/docs/security/cli/bulk-scans)                                             |
-| Check pull requests automatically        | [CI guide](https://learn.chatgpt.com/docs/security/cli/ci)                                                       |
+| Goal                                             | Guide                                                                                    |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| Scan selected paths or a diff                    | [Select the scan target](https://learn.chatgpt.com/docs/security/cli/reference#select-the-scan-target)           |
+| Use deep scans or limit their runtime            | [Configure deep scans](https://learn.chatgpt.com/docs/security/cli/reference#configure-deep-scans)               |
+| Supply architecture or security policies         | [Add security context](https://learn.chatgpt.com/docs/security/cli/reference#add-security-context)               |
+| Change the model or reasoning effort             | [Configure the runtime](https://learn.chatgpt.com/docs/security/cli/reference#configure-the-runtime)             |
+| Set an estimated cost limit                      | [Output and policy options](https://learn.chatgpt.com/docs/security/cli/reference#set-output-and-policy-options) |
+| Scan multiple repositories                       | [Bulk scans](https://learn.chatgpt.com/docs/security/cli/bulk-scans)                                             |
+| Scan GitHub pull requests or run scheduled scans | [GitHub Actions guide](https://learn.chatgpt.com/docs/security/cli/ci/github)                                    |
+| Choose another CI provider                       | [CI/CD overview](https://learn.chatgpt.com/docs/security/cli/ci)                                                 |
 
 For authentication problems, repeat-scan differences, or false-positive
 feedback, see the [CLI FAQ](https://learn.chatgpt.com/docs/security/cli/faq).
@@ -7548,15 +7653,19 @@ Install the Codex Security plugin
 
 3. Confirm the plugin is enabled, then open **Security** in the sidebar.
 
+If plugin installation shows "Disabled by admin" in a managed workspace,
+ask your workspace owner to [check plugin access](https://learn.chatgpt.com/docs/enterprise/apps-and-connectors#troubleshoot-disabled-by-admin).
+For a personal account, see [plugin and app troubleshooting](https://help.openai.com/en/articles/20001497-troubleshooting-plugins-apps-in-chatgpt).
+
 1. In your terminal, go to the repository you want to assess and start Codex:
 
    ```bash
    codex
    ```
 
-1. Enter `/plugins`, search for **Codex Security**, and select **Install
+2. Enter `/plugins`, search for **Codex Security**, and select **Install
    plugin**.
-1. Enter `/new` to start a new chat for the repository.
+3. Enter `/new` to start a new chat for the repository.
 
 To install Codex Security for a local repository, use the ChatGPT desktop app
 or Codex CLI.
@@ -9348,261 +9457,363 @@ reference](https://learn.chatgpt.com/docs/security/cli/reference#codex-security-
 questions about scan coverage and findings, see the [CLI
 FAQ](https://learn.chatgpt.com/docs/security/cli/faq).
 
-### Run Codex Security in CI
+### Run Codex Security in GitHub Actions
 
-Source: [Run Codex Security in CI](https://learn.chatgpt.com/docs/security/cli/ci.md)
+Source: [Run Codex Security in GitHub Actions](https://learn.chatgpt.com/docs/security/cli/ci/github.md)
 
-Run the Codex Security CLI in CI to review the exact changes in a pull request
-or merge request, keep findings and coverage, and optionally fail the check at
-a chosen severity. Start with advisory results, review scan quality and
-runtime, then add a severity policy that fits your repository.
-
-Install the public `@openai/codex-security` package. Running scans still
-requires Codex Security access.
-
-This page provides a GitHub Actions workflow. For GitLab, use the
-[GitLab CI/CD guide](https://learn.chatgpt.com/docs/security/cli/ci/gitlab). The same scan and export
-commands work in other CI systems.
+Run Codex Security in GitHub Actions to review pull-request changes or scan
+your repository on a schedule. The Action installs the CLI, saves structured
+reports, and adds a job summary and source annotations. Start with advisory
+results, then configure enforcement after reviewing coverage and scan quality.
 
 #### Prepare the workflow
 
-Store an OpenAI API key in your CI provider's secret store as
-`CODEX_SECURITY_API_KEY`.
+Running scans requires Codex Security access. To add your OpenAI API key:
 
-Map this secret directly to the scan step's `OPENAI_API_KEY` environment
-variable. Keep the credential scoped to the scan process and use
-`--auth api-key` to select it explicitly.
+1. In your GitHub repository, open **Settings → Secrets and variables → Actions**.
+2. Select **New repository secret**.
+3. Enter `CODEX_SECURITY_API_KEY` as the name and paste your OpenAI API key as
+   the value. Save the secret.
+
+The workflow examples below pass this secret to the Codex Security Action
+automatically. You don't need to put your API key in the workflow file.
 
 Run the workflow only for repositories and pull requests you trust. Scans use
-the runner's local permissions and don't pause for approval. Scan processes
-can inherit the job environment, so keep unrelated tokens and cloud
-credentials out of it.
-
-The runner needs:
-
-- Node.js 24 or 26, or Node.js 22 starting with 22.13.0.
-- Python 3.10 or later.
-- The published `@openai/codex-security` package, installed outside the
-  repository checkout.
-- The pull-request or merge-request head and base history so Git can calculate
-  the merge base.
+the runner's local permissions and don't pause for approval. Keep unrelated
+credentials and deployment steps in separate jobs.
 
 #### Add the GitHub Actions workflow
 
-For private or internal repositories, enable [GitHub Code Security](https://docs.github.com/en/code-security/code-scanning/integrating-with-code-scanning/uploading-a-sarif-file-to-github)
-before you upload SARIF.
+**Scan costs:** These workflows use your API key and may incur charges. Both
+examples omit `max-cost`, so they have no estimated cost stop threshold. To
+set a threshold of $5 per scan, add `max-cost: "5"` to the Codex Security
+Action's `with` settings. This isn't a hard spending cap: requests already in
+progress can exceed it. See [Set an optional scan
+budget](#set-an-optional-scan-budget) for pricing-support requirements.
 
-Create `.github/workflows/codex-security.yml`. Before checking out the pull
-request, install `@openai/codex-security` under
-`$RUNNER_TEMP/codex-security` so the trusted executable is available at
-`$RUNNER_TEMP/codex-security/node_modules/.bin/codex-security`:
+#### Scan the repository on a schedule
+
+The workflow below scans your default branch every Monday at 07:23 UTC. You
+can also run it manually from GitHub's **Actions** tab. It uses an x64
+GitHub-hosted Ubuntu 24.04 runner and sets up the required sandbox automatically.
+
+1. In your repository, select **Add file → Create new file**.
+2. Name the file `.github/workflows/codex-security-repository.yml`.
+3. Paste the workflow below and commit it to your default branch.
 
 ```yaml
-name: Codex Security scan
+name: Codex Security repository
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 7 * * 1" # Mondays at 07:23 UTC
+
+permissions:
+  contents: read
+
+jobs:
+  security:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - name: Set up the Ubuntu sandbox
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes bubblewrap apparmor-profiles
+          sudo apparmor_parser -r /usr/share/apparmor/extra-profiles/bwrap-userns-restrict
+
+      - name: Check out the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Scan the repository
+        id: security
+        uses: openai/codex-security@3f61e5150981a5087c32e4395bbaa8ce5ce0c3e3 # action-v0.3.0
+        with:
+          scope: repository
+          model: gpt-6-sol
+          # For approved Daybreak Blue access, uncomment the next input.
+          # cyber-access-program: daybreak_blue
+          effort: high
+          fail-on-severity: none
+          upload-artifacts: "true"
+        env:
+          OPENAI_API_KEY: ${{ secrets.CODEX_SECURITY_API_KEY }}
+```
+
+**About the version:** Both examples pin the Codex Security Action to commit
+`3f61e5150981a5087c32e4395bbaa8ce5ce0c3e3` for the `action-v0.3.0` release,
+which installs CLI `0.3.0`. Review a newer Action release before updating the
+pinned commit.
+
+**Adapting the runner:** The Action needs Node.js 24 and Python 3.11 or later,
+which this runner provides. The sandbox setup installs the `bubblewrap`
+package and loads the supplied AppArmor profile before the scan. Installing
+the package alone is not enough on this runner.
+
+To run the workflow manually, open **Actions → Codex Security repository →
+Run workflow**. Open a completed run to review the summary, annotations, and
+downloadable reports.
+
+Findings are report-only because `fail-on-severity` is `none`. Scanner and
+required reporting errors still fail the job.
+
+To scan selected folders, add newline-separated literal paths to the scan
+step's `with` block:
+
+```yaml
+paths: |
+  src/api
+  src/auth
+```
+
+Paths require `scope: repository` and do not expand globs. For diff scans, omit
+`paths`. Keep `persist-credentials: false` and run the scan
+immediately after checkout.
+
+#### Scan pull-request changes
+
+Using the same secret, create `.github/workflows/codex-security-pr.yml`:
+
+```yaml
+name: Codex Security PR
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: codex-security-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
-  codex-security:
+  security:
     if: github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]'
-    runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
+    name: Codex Security
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
     steps:
-      - name: Set up Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
-        with:
-          node-version: "26"
-
-      - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
-        with:
-          python-version: "3.14"
-
-      - name: Install Codex Security
+      - name: Set up the Ubuntu sandbox
         run: |
-          set -euo pipefail
-          npm install \
-            --prefix "$RUNNER_TEMP/codex-security" \
-            --ignore-scripts \
-            --no-audit \
-            --no-fund \
-            @openai/codex-security
-
-      - name: Verify Codex Security
-        env:
-          CODEX_SECURITY_BIN: ${{ runner.temp }}/codex-security/node_modules/.bin/codex-security
-        run: |
-          set -euo pipefail
-          test -x "$CODEX_SECURITY_BIN"
-          "$CODEX_SECURITY_BIN" --version
+          sudo apt-get update
+          sudo apt-get install --yes bubblewrap apparmor-profiles
+          sudo apparmor_parser -r /usr/share/apparmor/extra-profiles/bwrap-userns-restrict
 
       - name: Check out the pull request
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Scan the pull request
+      - name: Scan PR changes
+        id: security
+        uses: openai/codex-security@3f61e5150981a5087c32e4395bbaa8ce5ce0c3e3 # action-v0.3.0
+        with:
+          scope: diff
+          model: gpt-6-sol
+          # For approved Daybreak Blue access, uncomment the next input.
+          # cyber-access-program: daybreak_blue
+          effort: high
+          fail-on-severity: none
+          upload-artifacts: "true"
         env:
           OPENAI_API_KEY: ${{ secrets.CODEX_SECURITY_API_KEY }}
-          CODEX_SECURITY_BIN: ${{ runner.temp }}/codex-security/node_modules/.bin/codex-security
-          CODEX_SECURITY_STATE_DIR: ${{ runner.temp }}/codex-security-state
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          SCAN_DIR: ${{ runner.temp }}/codex-security-results
-        run: |
-          set -euo pipefail
-          BASE_REVISION="$(git merge-base "$BASE_SHA" "$HEAD_SHA")"
-          "$CODEX_SECURITY_BIN" scan . \
-            --diff "$BASE_REVISION" \
-            --head "$HEAD_SHA" \
-            --auth api-key \
-            --output-dir "$SCAN_DIR" \
-            --json > "$RUNNER_TEMP/codex-security.json"
-
-      - name: Export SARIF
-        id: export-sarif
-        if: always()
-        env:
-          CODEX_SECURITY_BIN: ${{ runner.temp }}/codex-security/node_modules/.bin/codex-security
-          SCAN_DIR: ${{ runner.temp }}/codex-security-results
-          SARIF_FILE: ${{ runner.temp }}/codex-security.sarif
-        run: |
-          set -euo pipefail
-          if test -f "$SCAN_DIR/scan-manifest.json"; then
-            "$CODEX_SECURITY_BIN" export "$SCAN_DIR" \
-              --export-format sarif \
-              --source-root "$GITHUB_WORKSPACE" \
-              --output "$SARIF_FILE"
-            echo "available=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Upload SARIF
-        if: always() && steps.export-sarif.outputs.available == 'true'
-        uses: github/codeql-action/upload-sarif@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4
-        with:
-          sarif_file: ${{ runner.temp }}/codex-security.sarif
-          ref: refs/pull/${{ github.event.pull_request.number }}/head
-          sha: ${{ github.event.pull_request.head.sha }}
-          category: codex-security
-
-      - name: Preserve scan results
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: codex-security-results
-          path: |
-            ${{ runner.temp }}/codex-security-results
-            ${{ runner.temp }}/codex-security.json
-          if-no-files-found: warn
-          retention-days: 7
 ```
 
-The workflow checks out the pull-request head, calculates its merge base, and
-scans the committed changes between those revisions. Full history keeps the
-target exact. `persist-credentials: false` keeps the repository token out of
-the checked-out Git configuration. Installing the CLI before checkout and
-running its absolute path keeps repository-controlled executables away from
-the scan credential. `--auth api-key` explicitly selects the scoped API key.
-The scan saves its history in a writable state directory outside the
-repository.
+Open or update a PR from a branch in the same repository. The Action uses
+the full history to find the exact merge base and scans changes through the
+checked-out PR head. View the **Codex Security**
+check under **Checks** in the PR. Start with advisory findings, then [choose a severity
+policy](#choose-a-severity-policy) when you are ready to gate changes.
 
-`--json` writes one complete JSON document to stdout, so the workflow can save
-it directly. Progress, completion summaries, and errors remain on stderr. This
-differs from `codex exec --json`, which emits a JSON Lines event stream.
+This example skips fork PRs and PRs opened by `dependabot[bot]`. A skipped job
+is not evidence of a security review. To include these bot PRs, remove the actor
+exclusion and also
+configure `CODEX_SECURITY_API_KEY` as a [secret
+for dependabot[bot]](https://docs.github.com/en/code-security/reference/supply-chain-security/troubleshoot-dependabot/dependabot-on-actions#accessing-secrets). The Action does not support `pull_request_target` or `workflow_run`.
 
-The export step reads a completed, sealed scan and writes SARIF. It leaves the
-Codex runtime and credentials untouched. Scan artifacts can contain vulnerable
-source snippets, evidence, and remediation details. Set who can read them and
-how long to keep them.
+The scanner reads applicable `SECURITY.md` guidance from the checkout,
+including policy changes in the PR. Review those changes alongside the code.
 
-#### Add the GitLab CI/CD pipeline
+#### Configure optional Daybreak access
 
-For a production workflow with protected default-branch scans, opt-in scheduled
-deep scans, separate SARIF policy gating, and optional verified draft merge
-requests, use [Run Codex Security in GitLab
-CI/CD](https://learn.chatgpt.com/docs/security/cli/ci/gitlab).
+Daybreak is optional. Both workflow examples use `gpt-6-sol`. If your
+organization has been approved for [Trusted Access for
+Cyber](https://learn.chatgpt.com/docs/cyber-safety#trusted-access-for-cyber), remove the `#` before
+`cyber-access-program` in the scan step's `with` block:
 
-The GitLab guide includes a scan-only starting point and the complete pipeline.
-It covers protected variables, artifact access, and a separate policy gate so
-GitLab can ingest findings even when the scanner returns a nonzero exit code.
+```yaml
+model: gpt-6-sol
+cyber-access-program: daybreak_blue
+```
+
+Use an API key from a project enabled for Daybreak Blue with access to
+`gpt-6-sol`.
+
+The program input also accepts `standard`. Without Daybreak access, use a
+model your API key can access under standard safeguards and omit
+`cyber-access-program` or set it to `standard`. Selecting a model or program
+does not grant access. See the Action's [Daybreak access guidance](https://github.com/openai/codex-security/blob/3f61e5150981a5087c32e4395bbaa8ce5ce0c3e3/github-action/README.md#daybreak-access-and-refusals).
+
+A refusal or safety block that aborts the scan fails the Action, including when
+`fail-on-severity` is `none`. That input controls findings policy, not scanner
+errors.
+
+#### Set an optional scan budget
+
+Both workflow examples omit `max-cost`, so they have no estimated cost stop
+threshold. To set one, add a positive USD amount with the `max-cost` input.
+For direct CLI scans, use `--max-cost`.
+
+The cost limit requires CLI pricing support for the selected model. The
+estimated threshold is not a hard spending cap: the cost of requests already
+in progress can exceed it.
+Review findings and `coverage.json` if a scan stops at the threshold. See
+[output and policy options](https://learn.chatgpt.com/docs/security/cli/reference#set-output-and-policy-options)
+for cost-limit behavior.
+
+#### Save reports and upload SARIF
+
+The examples set `upload-artifacts: "true"` to save downloadable reports with a
+seven-day retention window. Reports can contain source snippets, vulnerability
+evidence, and remediation details. Choose a retention window and repository
+access appropriate for your code. The Action uploads only validated reports
+on its allowlist; do not recursively upload its `results-directory` output.
+
+SARIF upload is optional. For private or internal repositories, enable [GitHub Code Security](https://docs.github.com/en/code-security/how-tos/find-and-fix-code-vulnerabilities/integrate-with-existing-tools/upload-sarif-file) before uploading. Replace the workflow's `permissions` block with:
+
+```yaml
+permissions:
+  contents: read
+  security-events: write
+  actions: read # Required for private repositories
+```
+
+Then add this step after the scan in either workflow:
+
+```yaml
+- name: Upload security findings
+  if: ${{ always() && steps.security.outputs.sarif-upload-ready == 'true' }}
+  uses: github/codeql-action/upload-sarif@b96794f015dfd88f77b49b1c93e0fa7110f94c63 # v4.38.0
+  with:
+    sarif_file: ${{ steps.security.outputs.sarif-path }}
+    sha: ${{ steps.security.outputs.scanned-sha }}
+    ref: ${{ steps.security.outputs.analysis-ref }}
+    category: codex-security-repository
+```
+
+For the PR workflow, use `category: codex-security-pr` so each scope has a
+distinct category. Keep `id: security` on the scan step. Complete, validated
+reports remain available for upload when findings fail the severity policy.
+SARIF is not uploaded for failed or interrupted scans, empty diffs, or dry
+runs.
+
+See the Action's [input
+and output reference](https://github.com/openai/codex-security/blob/3f61e5150981a5087c32e4395bbaa8ce5ce0c3e3/github-action/README.md#inputs) for all settings, status fields, and report paths.
 
 #### Choose a severity policy
 
-The GitHub example is report-only because it omits `--fail-on-severity`. Once you
-are ready to make findings affect the check, add a threshold to the scan
-command:
+The GitHub workflows start with `fail-on-severity: none`. To fail on high or
+critical findings from a completed scan, change the scan step's input:
 
-```bash
-"$CODEX_SECURITY_BIN" scan . \
-  --diff origin/main \
-  --output-dir /path/outside/repository/results \
-  --fail-on-severity high
+```yaml
+fail-on-severity: high
 ```
 
-The supported thresholds are `critical`, `high`, `medium`, and `low`. A
-threshold includes findings from the current scan at that severity and above.
-Earlier open findings shown in the repository summary don't affect the policy.
+Make **Codex Security** a required status check in your repository rules to
+block merges when the PR job fails. GitHub treats a [conditionally skipped job as successful](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks#handling-skipped-but-required-checks),
+even for required checks. Fork PRs and PRs from `dependabot[bot]` pass this
+check without a scan. To block those skips, [require a
+successful, completed scan](#require-a-successful-completed-scan).
 
-The scan step uses these exit codes:
+The Action follows the CLI outcome:
 
-| Exit  | Meaning                                                                     |
-| ----- | --------------------------------------------------------------------------- |
-| `0`   | The scan completed, and any configured severity policy passed.              |
-| `1`   | The completed scan contains a finding at or above the threshold.            |
-| `2`   | An input, execution, result-integrity, or required-output failure occurred. |
-| `130` | Ctrl-C interrupted the scan.                                                |
-| `143` | SIGTERM terminated the scan.                                                |
+- Exit code `0` sets `scan-status: completed` and `policy-status: passed`.
+- Exit code `1` sets `scan-status: completed` and `policy-status: failed`;
+  the step fails on findings at or above the configured severity.
+- Exit code `2` or an interrupted process sets `scan-status: failed` and
+  `policy-status: not-evaluated`; the step fails.
+- Invalid or missing required reports, a changed checkout, failures to upload
+  requested artifacts, and runtime cleanup failures also fail the step.
 
-Coverage gaps don't change a completed scan's exit code or bypass its severity
-policy. Exit `0` doesn't mean every file was reviewed. Review excluded paths,
-deferred work, and open questions in `coverage.json` when assessing the result.
+A completed scan means the configured analysis produced a valid result.
+Scope exclusions, deferred investigations, and other notes in `coverage.json`
+do not create a separate scan outcome or bypass the severity policy.
+Completion does not certify that every vulnerability was found. Review
+`coverage.json` when assessing the result.
 
-#### Retry with an existing result directory
+#### Require a successful, completed scan
 
-Use a fresh runner directory for each CI job. For a persistent or self-hosted
-runner, preserve an earlier result with `--archive-existing`:
+For a stricter policy, add a separate gate that runs even if the scan job
+fails or GitHub skips it. A step inside the scan job can't check a skipped job
+because none of its steps run.
 
-```bash
-"$CODEX_SECURITY_BIN" scan . \
-  --diff origin/main \
-  --output-dir /path/outside/repository/results \
-  --archive-existing
+In the PR workflow, add this `outputs` mapping to the existing `security` job,
+at the same indentation as `runs-on` and `steps`:
+
+```yaml
+outputs:
+  scan-status: ${{ steps.security.outputs.scan-status }}
 ```
 
-The command archives the earlier results and starts with an empty scan directory.
+Then add this job under `jobs`, alongside the existing `security` job:
 
-#### Troubleshoot a CI scan
+```yaml
+security-gate:
+  name: Codex Security gate
+  needs: security
+  if: ${{ always() }}
+  runs-on: ubuntu-24.04
+  steps:
+    - name: Require a successful, completed scan
+      env:
+        SCAN_RESULT: ${{ needs.security.result }}
+        SCAN_STATUS: ${{ needs.security.outputs.scan-status }}
+      run: test "$SCAN_RESULT" = success && test "$SCAN_STATUS" = completed
+```
 
-- **Unknown Git ref or unexpected diff:** Fetch the base and head history,
-  calculate the merge base, and pass both revisions explicitly.
-- **Protected or non-empty output directory:** Choose a private directory
-  outside the enclosing Git worktree. Use `--archive-existing` when the
-  directory already contains results.
+Make **Codex Security gate** the required status check for this policy. It
+requires both a successful scan job and `scan-status: completed`. Checking
+both preserves failures from the severity policy, reporting, and cleanup,
+even when the scan itself completed.
+
+With the example's exclusions, this gate blocks fork PRs and PRs from
+`dependabot[bot]`. It also blocks empty diffs and dry runs, which the Action
+marks as `skipped`.
+The gate doesn't scan excluded PRs. Choose this policy only if these cases
+should prevent merging.
+
+#### Troubleshoot a scan
+
+- **Unknown Git ref or unexpected diff:** Check out the PR head with
+  `fetch-depth: 0`.
+- **Sandbox startup error:** On Ubuntu 24.04, install the `bubblewrap` package
+  and load the AppArmor profile before the Action. Installing the package alone
+  does not load the required profile.
 - **Missing credentials:** Confirm that `CODEX_SECURITY_API_KEY` is available to
-  the trusted workflow or pipeline and mapped directly to the scan process's
-  `OPENAI_API_KEY` environment variable.
-- **Scan history error:** Set `CODEX_SECURITY_STATE_DIR` to a writable
-  directory outside the repository.
-- **Python setup error:** Confirm that the runner uses Python 3.10 or later.
-- **Incomplete coverage:** Review `coverage.json`, including deferred surfaces
-  and open questions. Resolve the reported gaps before rerunning the scan.
-- **SARIF export error:** Confirm that the scan completed and the full scan
-  directory is available. Export validates the sealed artifacts before writing
-  SARIF.
-- **SARIF upload error:** For GitHub Actions, confirm that your organization
-  turned on GitHub Code Security for the repository and the workflow grants
-  `actions: read`, `contents: read`, and `security-events: write`. For GitLab
-  CI/CD, confirm that the project uses GitLab Ultimate 19.2 or later and that
-  the job uploads a SARIF 2.1.0 file through `artifacts:reports:sarif`.
+  the trusted workflow and mapped to the scan step's `OPENAI_API_KEY`
+  environment variable.
+- **Python setup error:** The Action requires Python 3.11 or later.
+- **Coverage notes:** Review scope exclusions and deferred investigations in
+  `coverage.json`. These notes do not cause execution failures or bypass the
+  severity policy.
+- **Missing SARIF:** Inspect `scan-status`, `report-status`, and
+  `sarif-upload-ready`. If optional SARIF is missing, the Action warns without
+  changing the scan outcome; requested artifact-upload failures still fail the
+  job.
+- **SARIF upload error:** Confirm that your organization has enabled GitHub Code
+  Security for the repository and that the workflow grants `actions: read`,
+  `contents: read`, and `security-events: write`.
 
 For every command, flag, artifact, and output field, see the [CLI
-reference](https://learn.chatgpt.com/docs/security/cli/reference). To invoke the plugin through `codex exec`, see [Review code changes for security](https://learn.chatgpt.com/docs/security/plugin/code-changes#automate-reviews-in-cicd).
+reference](https://learn.chatgpt.com/docs/security/cli/reference). For other providers, see the
+[CI/CD overview](https://learn.chatgpt.com/docs/security/cli/ci).
 
 ### Run Codex Security in GitLab CI/CD
 
@@ -9954,9 +10165,10 @@ before setting a budget. Treat `--max-cost` as an estimated cost guardrail, not
 a hard billing cap.
 
 Start with report-only scans. Add `--fail-on-severity` after your team has
-reviewed representative findings, coverage, cost, and runtime. See [Run Codex
-Security in CI](https://learn.chatgpt.com/docs/security/cli/ci) for severity policies and exit-code
-details.
+reviewed representative findings, coverage, cost, and runtime. See the
+[CI/CD overview](https://learn.chatgpt.com/docs/security/cli/ci#choose-a-severity-policy) for severity
+policies and the [CLI reference](https://learn.chatgpt.com/docs/security/cli/reference#exit-codes-and-signals)
+for exit-code details.
 
 When a job fails:
 
@@ -18175,8 +18387,43 @@ Save attachment or alias changes to apply them during setup; publish or
 republish to use them in new tasks. Editing a shared identity connection can
 affect other environments that use it.
 
-OIDC is available by request for Enterprise workspaces. Contact your OpenAI
-account team to enable it.
+OIDC compatibility by provider
+
+Compatibility depends on the service, operation, and client you use. Support
+applies to the operations and clients listed here.
+
+#### AWS
+
+| Service or workflow           | Status            | Scope and limitations                                                                                |
+| ----------------------------- | ----------------- | ---------------------------------------------------------------------------------------------------- |
+| AWS CLI and boto3             | Supported         | Authentication and credential renewal.                                                               |
+| Amazon S3                     | Supported         | Object reads and uploads, Terraform state, and presigned requests from within the Codex environment. |
+| Amazon ECR                    | Supported         | Image pulls and pushes for private registries.                                                       |
+| AWS CodeArtifact              | Supported         | npm and Python package installation and publishing.                                                  |
+| Amazon EKS                    | Supported         | `kubectl`, Helm, logs, exec, and port forwarding.                                                    |
+| Amazon ECS                    | Supported         | Fargate exec and port forwarding.                                                                    |
+| Amazon Bedrock                | Supported         | Nova Micro text inference and streaming. Other models are not covered.                               |
+| Amazon RDS IAM database login | Not yet supported | PostgreSQL and MySQL IAM database authentication.                                                    |
+
+#### Google Cloud
+
+| Service or workflow                | Status            | Scope and limitations                                                                                                       |
+| ---------------------------------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `gcloud` and Cloud Storage         | Supported         | `gcloud`, Terraform state, object reads, and uploads, including resumable uploads.                                          |
+| Artifact Registry containers       | Supported         | Docker image pulls and pushes, tested with layers up to 1 GiB.                                                              |
+| Artifact Registry packages         | Supported         | npm, Python, and Maven package installation and publishing. Uploads are limited to 10 MiB. Maven uses `gcloud` credentials. |
+| Google Kubernetes Engine (GKE)     | Supported         | `kubectl`, deployments, logs, exec, and port forwarding.                                                                    |
+| IAM, Secret Manager, and Cloud KMS | Supported         | Service account management, secret operations, and KMS encryption and signing. Service account key export is excluded.      |
+| Cloud SQL IAM database login       | Not yet supported | IAM database authentication.                                                                                                |
+
+#### Azure
+
+| Service or workflow                      | Status            | Scope and limitations                                    |
+| ---------------------------------------- | ----------------- | -------------------------------------------------------- |
+| Azure CLI and identity profiles          | Supported         | Authentication and profile selection.                    |
+| Resource Manager, Blob Storage, and ADLS | Not yet supported | OIDC workflows for these services are not yet supported. |
+| Container Registry image pulls           | Not yet supported | Image pulls are not yet supported.                       |
+| Container Registry image pushes          | Not yet supported | Image pushes are unavailable.                            |
 
 #### Run and return to a task
 
@@ -29915,9 +30162,13 @@ back to another callback. A malformed callback URL or issuer support advertised
 without a metadata issuer also remains a hard failure. See
 [Authenticate users](https://developers.openai.com/plugins/build/auth).
 
-If the MCP server advertises `scopes_supported`, Codex prefers those
-server-advertised scopes during OAuth login. Otherwise, Codex falls back to the
-scopes configured in `config.toml`.
+Set `mcp_servers..scopes` in `config.toml` to choose OAuth scopes
+for a server. To override them for one login, run
+`codex mcp login  --scopes read,write`.
+If neither is set, Codex uses advertised OAuth scopes when available.
+
+An empty list (`scopes = []`) still lets the OAuth library choose scopes.
+The library can also add `offline_access` when the authorization server supports it.
 
 #### OAuth client registration
 
@@ -38769,6 +39020,152 @@ on the thread.
 
 For more details, check out the [Python repo](https://github.com/openai/codex/tree/main/sdk/python).
 
+### Implementing model catalogs for gateways and clouds
+
+Source: [Implementing model catalogs for gateways and clouds](https://learn.chatgpt.com/docs/model-catalogs.md)
+
+This page is for developers implementing the Codex Models format, which defines
+the model catalog and powers the model picker. If you build an inference
+provider, such as a gateway or cloud service, use this specification to let the
+Codex desktop app and CLI discover your models and use their instructions and
+capability settings.
+
+If you administer an enterprise and want to control the model catalog, see the
+[`model_catalog_url` configuration guidance](https://learn.chatgpt.com/docs/enterprise/roll-out-a-gateway#serve-a-remote-catalog).
+
+To support the format, implement an authenticated catalog endpoint. Fetch your
+upstream provider's current defaults for the requesting Codex version, apply
+your overrides, and return the resulting catalog.
+
+Authenticated reads · `client_version`
+Model catalogs
+
+      OpenAI
+      Current model defaults
+      Instructions and settings
+
+      Cloud / upstream provider
+      Match deployed models
+      Account and region availability
+
+      Enterprise gateway
+      Read upstream catalogs
+      Filter and apply overrides
+
+      Codex app and CLI
+      Show available models
+      Use compatible settings
+
+      Enterprise / custom models
+      Optional reviewed definitions
+      Can originate outside OpenAI
+
+#### Implement the catalog endpoint
+
+The default catalog endpoint is `/models` under the provider's `base_url`.
+For example, with `base_url = "https://gateway.example.com/v1"`, Codex requests:
+
+```http
+GET /v1/models?client_version=0.162.1
+Authorization: Bearer <PROVIDER_ACCESS_TOKEN>
+```
+
+Default discovery supports command-backed authentication and Codex-backend
+authentication, such as ChatGPT. For a custom provider using API-key authentication
+without command-backed authentication, set `model_providers..model_catalog_url`
+explicitly to enable remote discovery. An API key alone doesn't trigger discovery
+at the default path.
+
+Use `model_catalog_url` to choose a full catalog URL, such as
+`https://gateway.example.com/codex/models`. It can also point to the default
+`/v1/models` endpoint. Codex uses this URL directly without appending `/models`.
+For API-key discovery, keep `features.api_key_model_discovery` enabled; it is on
+by default. Custom headers alone don't enable discovery.
+
+Codex sends the selected provider's authentication and configured headers, and
+appends `client_version` and any provider `query_params`. Host the catalog on a
+service authorized to receive those credentials.
+
+Authenticate the caller, fetch the corresponding upstream defaults, apply your
+overrides, and return the complete `ModelsResponse` JSON directly. Give every
+entry a unique, nonempty `slug`. For an explicit `model_catalog_url`, Codex rejects
+redirects and responses larger than 1 MiB. Continue enforcing model access on
+inference requests.
+
+Remove any effective `model_catalog_json` setting from clients using the endpoint:
+the local file takes precedence and prevents remote fetching.
+
+#### Match the client's schema
+
+Read the `client_version` query parameter on the catalog request. Codex sends its
+CLI version as `major.minor.patch`, with any prerelease suffix removed. For desktop
+clients, this is the bundled CLI version.
+
+Use the matching `rust-v` tag in the public Codex repository, or the
+exact source commit for a custom build. These links use `rust-v0.162.1`; select
+the revision matching your client:
+
+- Read the [`ModelsResponse` and `ModelInfo` response types](https://github.com/openai/codex/blob/rust-v0.162.1/codex-rs/protocol/src/openai_models.rs) for the schema.
+- Inspect the [bundled `models.json`](https://github.com/openai/codex/blob/rust-v0.162.1/codex-rs/models-manager/models.json) for a complete example. This is catalog data, not a JSON Schema document.
+
+The bundled file is a release snapshot. Fetch current defaults before producing
+your catalog.
+
+#### Fetch current upstream defaults
+
+Cloud providers serving OpenAI models fetch defaults from OpenAI. Gateways read
+their cloud or upstream provider's catalog so they retain the deployed model's
+settings and account and region availability. Pass the requesting Codex version
+at each step, and authenticate separately to each endpoint.
+
+To fetch defaults directly from OpenAI, call the Codex models endpoint with the
+same `client_version`. For example, with an OpenAI API key:
+
+```bash
+curl --fail --silent --show-error \
+  'https://chatgpt.com/backend-api/codex/models?client_version=0.162.1' \
+  -H "Authorization: Bearer $OPENAI_API_KEY"
+```
+
+For a ChatGPT integration, use the caller's ChatGPT access token and
+`ChatGPT-Account-ID` header when applicable. Use credentials authorized for the
+upstream endpoint; your gateway's own API key doesn't authenticate to OpenAI.
+
+Parse the full response, including its top-level `models` array. This endpoint
+returns Codex metadata such as instructions, reasoning defaults, tool settings,
+context limits, and service tiers. The public `/v1/models` endpoint doesn't
+supply this catalog.
+
+Refresh these defaults even when the Codex version hasn't changed. Keep requests
+scoped to the intended upstream identity and honor response cache controls:
+catalogs can depend on the caller's access. Keep your overrides separate so you
+can reapply them to fresh defaults.
+
+#### Apply provider overrides
+
+Change field values while preserving the version's response structure:
+
+- Filter models to those the caller can use. Map each `slug` to a supported
+  inference route, and adjust `display_name`, `description`, or `priority`.
+  For an alias without a model migration, set `upgrade` to `null`.
+- Set reasoning options, context limits, input modalities, and service tiers to
+  values your model and route support. Keep defaults within the supported
+  choices. For a route without service tiers, clear `service_tiers` and
+  `additional_speed_tiers`, and set `default_service_tier` to `null`.
+- Preserve upstream instructions and tool settings unless you have tested a
+  replacement. Metadata doesn't add model capabilities or grant inference access.
+
+For Bedrock through LiteLLM, apply the
+[required catalog edits](https://learn.chatgpt.com/docs/enterprise/bedrock-through-litellm#prepare-the-client-catalog).
+Test the resulting catalog with each supported Codex version.
+
+#### Use the public Rust types
+
+Use crates from the same public Git tag or commit as the client's schema:
+
+- Use [`codex-protocol`](https://github.com/openai/codex/tree/rust-v0.162.1/codex-rs/protocol) for `codex_protocol::openai_models::{ModelsResponse, ModelInfo}`. Parse with `serde_json::from_slice::()`, edit `catalog.models`, and serialize the whole wrapper with `serde_json::to_vec()`. The wrapper handles compatibility fields for model instructions.
+- Use [`codex-models-manager::bundled_models_response()`](https://github.com/openai/codex/blob/rust-v0.162.1/codex-rs/models-manager/src/lib.rs) to load that revision's static bundled catalog as a `ModelsResponse`. It doesn't fetch current upstream defaults.
+
 ### Non-interactive mode
 
 Source: [Non-interactive mode](https://learn.chatgpt.com/docs/non-interactive-mode.md)
@@ -40252,6 +40649,348 @@ Use the failing layer to narrow the problem:
 
 Retest the same user path after a fix. A successful gateway health check doesn't verify an authenticated inference request or a complete Codex turn.
 
+### Best practices for ChatGPT Edu workspace configuration in higher education
+
+Source: [Best practices for ChatGPT Edu workspace configuration in higher education](https://learn.chatgpt.com/docs/enterprise/higher-education-roles-and-permissions.md)
+
+Configure campus access with five recommended custom roles: **Core, Plus, Advanced, Power, and TEST**. Use the matrices below to choose each role's permissions, then set model access and usage limits separately.
+
+The permission labels and section order follow Edu Admin Console views reviewed on October 19 and 21, 2026. The values are recommended settings, not a copy of that workspace's configuration. Feature availability can differ by workspace and rollout.
+
+#### Choose the recommended roles
+
+| Custom role  | Recommended members                                                            | Purpose                                                                                                                                     |
+| ------------ | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Core**     | Undergraduate students and faculty with everyday needs                         | Study, teaching, writing, research, working with documents, and introductory coding. Use Core as the campus baseline.                       |
+| **Plus**     | Graduate students, professional staff, and faculty who use ChatGPT frequently  | Recurring academic and administrative work with additional approved workflows.                                                              |
+| **Advanced** | Research faculty, analysts, and program leads                                  | Complex research, analysis, and approved advanced reasoning.                                                                                |
+| **Power**    | Developers, data and IT teams, computer science labs, and advanced researchers | Coding, automation, and complex projects. Grant administrative authority separately.                                                        |
+| **TEST**     | A small implementation team with named test owners                             | Validate a planned configuration with sample data and explicit test cases before changing a campus role. Remove temporary grants afterward. |
+
+These are suggested names for custom roles your institution can create. **Plus** here is not the ChatGPT Plus subscription, and none of these names refers to an Edu plan or built-in admin role. Choose a role based on the work a person needs to do; a professor, student, or staff member can qualify for any appropriate level.
+
+Keep most people in the built-in **Member** role. Assign built-in administrative authority separately:
+
+| Built-in role        | Recommended assignment                                                                                          |
+| -------------------- | --------------------------------------------------------------------------------------------------------------- |
+| **Owner**            | The platform owner and a documented backup responsible for workspace configuration and custom-role assignments. |
+| **Admin**            | IT or academic technology staff responsible for supported member, group, app, and usage operations.             |
+| **Analytics viewer** | Program leads who need reporting without general administration.                                                |
+| **Member**           | Students, faculty, staff, researchers, and builders using the service.                                          |
+
+Have a workspace Owner create and assign custom roles. A custom role does not confer Owner or Admin authority. See [workspace roles](https://help.openai.com/en/articles/8266401-managing-members-workspace-roles-and-seats-in-chatgpt-enterprise-and-edu).
+
+#### Apply the matrix
+
+Open [Admin Console](https://admin.openai.com), select the intended Edu workspace, then go to **Policy & security → Permissions**. Use **Workspace default** for the campus baseline and **Roles** for overrides.
+
+| Matrix value | Action in the console                                                                                                                       |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| **On**       | Enable for the role, subject to the workspace's entitlement and approved institutional uses.                                                |
+| **Off**      | Leave disabled for this role. For approved exceptions, use a role tied to a specific responsibility.                                        |
+| **Review**   | Start with Off. Complete the decision described below the table, then explicitly choose On or Off. Review is guidance, not a console state. |
+
+Set **Workspace default** to match the Core column, with Review items Off until resolved. For each custom role, use **Default** only where the workspace value is the intended value; otherwise set an explicit On or Off. Some controls offer only On and Off.
+
+Ordinary roles combine grants: Off in one role does not cancel On in another. Check both direct assignments and group roles. A separate Lockdown Mode restriction can still apply. Parent permissions may hide their child controls when disabled; enable an approved parent before configuring its children. [How RBAC works](https://help.openai.com/en/articles/11750701-rbac).
+
+#### Permissions by role
+
+Choose a role to show its recommendations in every permission and model table. Select **All roles** to compare the full matrix. The sections follow the order in **Permissions → Workspace default**. The two **Allow local computer access** rows are distinguished by their parent section.
+
+#### Chat
+
+| Permission                                          | Core   | Plus   | Advanced | Power  | TEST   |
+| --------------------------------------------------- | ------ | ------ | -------- | ------ | ------ |
+| Search the web                                      | On     | On     | On       | On     | On     |
+| Run deep research                                   | On     | On     | On       | On     | On     |
+| Create and manage projects                          | On     | On     | On       | On     | On     |
+| Share projects                                      | On     | On     | On       | On     | On     |
+| Share projects via workspace links                  | Review | Review | Review   | Review | Review |
+| Browse and run workspace agents                     | Review | Review | On       | On     | On     |
+| Build workspace agents                              | Off    | Review | Review   | Review | On     |
+| Share workspace agents                              | Off    | Review | Review   | Review | On     |
+| Publish workspace agents                            | Off    | Review | Review   | Review | Review |
+| Share workspace agents with agent-owned connections | Off    | Review | Review   | Review | Review |
+| Create and manage GPTs                              | Off    | Off    | Off      | Off    | Review |
+| Publish GPTs to workspace                           | Off    | Review | Review   | Review | Review |
+| Publish GPTs externally                             | Off    | Off    | Off      | Off    | Off    |
+| Allow OpenAI GPTs                                   | On     | On     | On       | On     | On     |
+| Allow all third party GPTs                          | Off    | Off    | Off      | Off    | Off    |
+| Allow owner-approved GPTs only                      | On     | On     | On       | On     | On     |
+| Use image generation models                         | On     | On     | On       | On     | On     |
+| Use Voice                                           | On     | On     | On       | On     | On     |
+| Share screen and video in Voice                     | On     | On     | On       | On     | On     |
+| Reference Space files automatically                 | On     | On     | On       | On     | On     |
+| Use ChatGPT Record                                  | Review | Review | Review   | Review | On     |
+| Reference past notes and transcripts                | Review | Review | Review   | Review | On     |
+| Run code in Canvas and code blocks                  | On     | On     | On       | On     | On     |
+| Allow internet access in Canvas and code blocks     | On     | On     | On       | On     | On     |
+| Share chats and scheduled tasks in the workspace    | On     | On     | On       | On     | On     |
+| Use ChatGPT for PowerPoint                          | Review | Review | Review   | On     | On     |
+| Use ChatGPT for Excel and Sheets                    | On     | On     | On       | On     | On     |
+| Use ChatGPT for Word                                | Review | Review | Review   | On     | On     |
+
+Keep everyday learning, research, and collaboration available across roles. Apply institutional rules for recordings, screen sharing, stored files, and network-connected code. For **Review** items, identify the approved course, team, workflow, and sharing audience before enabling those permissions.
+
+Give agent-building access to people maintaining an approved workflow. Reserve workspace-wide publication for designated publishers. An agent-owned connection requires a separate review of the shared account, source data, permitted actions, and recipients; prefer users' own connections where supported. For details, see [Workspace agent administration](https://help.openai.com/en/articles/20001143-chatgpt-workspace-agents-for-enterprise-and-business).
+
+Use plugins for new reusable workflows. Keep GPT creation off; grant temporary migration access only where still supported. Custom GPTs are scheduled to retire on December 11, 2026; follow the owning workspace's notice. Migration does not transfer custom actions or sharing settings. For details, see [GPT migration guidance](https://help.openai.com/en/articles/20001519-custom-gpt-retirement-and-migration-faq).
+
+#### Work
+
+| Permission                                       | Core   | Plus   | Advanced | Power  | TEST |
+| ------------------------------------------------ | ------ | ------ | -------- | ------ | ---- |
+| Use Work                                         | On     | On     | On       | On     | On   |
+| Locally on the ChatGPT desktop app               | On     | On     | On       | On     | On   |
+| In the cloud on ChatGPT web, mobile, and desktop | On     | On     | On       | On     | On   |
+| Allow event-triggered scheduled tasks            | Off    | Review | Review   | Review | On   |
+| Allow local computer access                      | Review | Review | Review   | Review | On   |
+
+This follows the recommended setup's broad Work access for eligible members. Local work, cloud work, and a cloud task's access to a connected computer remain separate decisions. Enable **Allow local computer access** only for approved files, applications, and devices, with the applicable Agent security configuration.
+
+For event-triggered tasks, approve the trigger, connected app, allowed actions, owner, and monitoring. Members also need Work and app access. Sharing scheduled tasks is controlled separately in Chat. [Work and Codex availability](https://help.openai.com/en/articles/20001275-chatgpt-work-and-codex) · [Scheduled-task controls](https://help.openai.com/en/articles/8411955-managing-workspace-settings-in-chatgpt-enterprise).
+
+#### Codex
+
+| Permission                                                        | Core   | Plus   | Advanced | Power  | TEST   |
+| ----------------------------------------------------------------- | ------ | ------ | -------- | ------ | ------ |
+| Use Codex locally on the ChatGPT desktop app                      | On     | On     | On       | On     | On     |
+| Enable Computer History                                           | Off    | Off    | Review   | Review | Review |
+| Discover and control devices remotely                             | Review | Review | Review   | Review | On     |
+| Use Windows computer-use                                          | Off    | Off    | Review   | Review | On     |
+| Enable device code sign-in for Codex, Excel, PowerPoint, and Word | Review | Review | Review   | Review | On     |
+| Use Codex in the cloud                                            | On     | On     | On       | On     | On     |
+| Manage workspace environments                                     | Off    | Off    | Off      | Off    | Off    |
+| Use Codex Security                                                | Off    | Off    | Review   | Review | On     |
+| Administer Codex                                                  | Off    | Off    | Off      | Off    | Off    |
+| Administer Codex Security                                         | Off    | Off    | Off      | Off    | Off    |
+
+Provide coding access across eligible roles, including students in coding courses. Review repository access, local runtime policy, and cloud environments separately. Device-code sign-in affects all four products named in the control.
+
+Review Computer History capture and user opt-in before granting access to Computer History. Grant **Manage workspace environments**, **Administer Codex**, and **Administer Codex Security** through the specific responsibility roles below. A Power or TEST assignment should not automatically grant service administration. For details, see [Codex permission boundaries](https://learn.chatgpt.com/docs/enterprise/roles-and-workspace-permissions).
+
+#### Workspace capabilities—Let agents use cloud computers
+
+| Permission           | Core   | Plus   | Advanced | Power  | TEST   |
+| -------------------- | ------ | ------ | -------- | ------ | ------ |
+| Use a browser        | On     | On     | On       | On     | On     |
+| Allow network access | Review | Review | Review   | Review | Review |
+| Allow computer use   | Off    | Review | Review   | Review | On     |
+
+Before enabling a control, review how it affects Work Cloud, dots, and team automations. Browser access, network access, and computer use are separate controls. Approve required network destinations and applications for each workflow.
+
+#### Workspace capabilities—dots
+
+| Permission                            | Core | Plus   | Advanced | Power  | TEST   |
+| ------------------------------------- | ---- | ------ | -------- | ------ | ------ |
+| Use dots                              | Off  | Review | Review   | Review | On     |
+| Add dots to Slack and Microsoft Teams | Off  | Review | Review   | Review | Review |
+| Allow local computer access           | Off  | Review | Review   | Review | Review |
+| Use custom rules for dots             | Off  | Review | Review   | Review | Review |
+
+Dots is labeled **Beta** in the inspected console. Approve the ongoing responsibilities, messaging destinations, and rules before enabling it. The **Allow local computer access** row here is the dots permission; it is separate from the identically named Work control. [Read the dots guidance](https://help.openai.com/en/articles/20001530-getting-started-with-your-dot).
+
+#### Workspace capabilities—plugins and skills
+
+| Permission                             | Core   | Plus   | Advanced | Power  | TEST   |
+| -------------------------------------- | ------ | ------ | -------- | ------ | ------ |
+| Use plugins                            | On     | On     | On       | On     | On     |
+| Upload plugins                         | Review | Review | Review   | Review | On     |
+| Upload plugins with custom MCP servers | Off    | Review | Review   | Review | Review |
+| Share plugins                          | Review | Review | Review   | Review | On     |
+| Publish plugins to workspace           | Review | Review | Review   | Review | Review |
+| Create plugins with MCPs               | Off    | Review | Review   | Review | Review |
+| Use skills                             | On     | On     | On       | On     | On     |
+| Upload skills                          | Review | Review | Review   | Review | On     |
+| Share skills                           | Review | Review | Review   | Review | On     |
+| Publish skills to workspace            | Review | Review | Review   | Review | Review |
+| Install skills for others              | Off    | Off    | Off      | Off    | Off    |
+
+Use **Plugins → Plugins** and **Plugins → Skills** to approve individual items and their audiences. MCP-backed plugins require an integration owner, reviewed authentication, and approved data access and actions. Use the additional roles below to assign responsibility for publishing items to the workspace and installing them for other people.
+
+Plugin access does not authorize included apps or broaden permissions in the connected service. Review required apps and account authorization separately. For details, see [Plugin and app controls](https://help.openai.com/en/articles/11509118-admin-controls-security-and-compliance-for-plugins-and-apps).
+
+#### Workspace capabilities—Sites
+
+| Permission                           | Core   | Plus   | Advanced | Power  | TEST   |
+| ------------------------------------ | ------ | ------ | -------- | ------ | ------ |
+| Use Sites                            | Review | Review | Review   | Review | On     |
+| Publish sites to the public internet | Off    | Off    | Off      | Off    | Off    |
+| Publish Sites with private tunnels   | Off    | Off    | Off      | Off    | Off    |
+| Invite external visitors to sites    | Off    | Review | Review   | Review | Review |
+| Attach private tunnels to Sites      | Off    | Off    | Off      | Off    | Off    |
+
+Review site ownership, permitted content, and the displayed Sites terms before enabling those permissions. Grant permission to publish sites to the public internet through the institution's publishing process. Treat the two private-tunnel controls as separate grants for approved technical integrations; keep them off in the general campus roles. Their presence in a demo workspace does not establish availability in every Edu workspace.
+
+Check the supported Sites scope for your workspace and region before enabling Sites. New Sites in US or EU data residency workspaces use that region for supported storage and hosting; existing Sites are not automatically migrated. Sites hosting is separate from inference residency. See [Sites administration](https://help.openai.com/en/articles/20001338-managing-chatgpt-sites-for-your-workspace).
+
+#### Workspace capabilities—teams, memory, and credentials
+
+| Permission                        | Core   | Plus   | Advanced | Power  | TEST   |
+| --------------------------------- | ------ | ------ | -------- | ------ | ------ |
+| Create teams                      | Review | On     | On       | On     | On     |
+| Create and update team tasks      | Review | On     | On       | On     | On     |
+| Use password manager              | Review | Review | Review   | Review | Review |
+| Use shared memory                 | On     | On     | On       | On     | On     |
+| Use improved memory               | On     | On     | On       | On     | On     |
+| Create personal access tokens     | Review | Review | Review   | On     | Review |
+| View workspace members and groups | On     | On     | On       | On     | On     |
+
+Assign an accountable owner to each team and team task. Define which institutional information may be retained in memory and whether the directory should be visible to the intended population. If institutional policy requires either feature to be off, change the corresponding row for every affected role.
+
+Review password-manager use with IT. Allow personal access tokens only for approved integrations with an owner, the minimum necessary scope, and an expiration or revocation process. A token permission does not grant workspace Admin keys.
+
+#### Data export
+
+| Permission                             | Core | Plus   | Advanced | Power  | TEST   |
+| -------------------------------------- | ---- | ------ | -------- | ------ | ------ |
+| Allow members to export their own data | Off  | Review | Review   | Review | Review |
+
+Decide how students, faculty, and staff take permitted work with them when leaving. This permission covers members' own data. Edu workspaces with a data residency configuration are not eligible for member export. For details, see [Edu export requirements](https://help.openai.com/en/articles/20001279-exporting-data-from-a-chatgpt-edu-workspace).
+
+#### Teen experiences
+
+| Permission                 | Core   | Plus   | Advanced | Power  | TEST   |
+| -------------------------- | ------ | ------ | -------- | ------ | ------ |
+| Apply teen content filters | Review | Review | Review   | Review | Review |
+
+Choose the setting based on the actual population, including under-18 students. A role name, credit allowance, or filter setting does not determine eligibility to use ChatGPT.
+
+#### Space sharing
+
+| Permission                                    | Core   | Plus   | Advanced | Power  | TEST   |
+| --------------------------------------------- | ------ | ------ | -------- | ------ | ------ |
+| Share Space files, pages, folders, and spaces | On     | On     | On       | On     | On     |
+| Workspace links                               | Review | Review | Review   | Review | Review |
+
+Allow collaboration with approved recipients. Review whether workspace links fit the audience for course materials, research, and departmental files. The sharing permission controls creating shares and changing access; turning it off does not remove access to content already shared with a member.
+
+#### Assign publishing and administration responsibilities
+
+Assign narrowly scoped roles to the appropriate people instead of granting these capabilities to everyone in Power or TEST. Keep unrelated permissions Off in each additional role so it does not inherit broader workspace grants.
+
+| Suggested additional role        | Permissions to enable                                                                                                                                     | Who should receive it                                                            |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| **Workspace publisher**          | Only the relevant permission (Publish workspace agents, Publish plugins to workspace, or Publish skills to workspace) and its required parent permissions | Owners of reviewed content and workflows approved for campus-wide distribution.  |
+| **Site publisher**               | Use Sites and Publish sites to the public internet; enable external invitations only if needed                                                            | Institutional web publishers responsible for content, audience, and maintenance. |
+| **Codex environment manager**    | Use Codex in the cloud and Manage workspace environments                                                                                                  | Maintainers of shared coding environments.                                       |
+| **Codex administrator**          | Administer Codex, with required product access                                                                                                            | Staff operating the Codex service.                                               |
+| **Codex Security administrator** | Use Codex Security and Administer Codex Security                                                                                                          | Security staff responsible for the service and approved repositories.            |
+| **Skill distributor**            | Use skills and Install skills for others, with the authoring permissions needed for the workflow                                                          | Staff responsible for managed skill distribution.                                |
+| **Integration maintainer**       | Only the required MCP, personal-token, or Sites private-tunnel permissions, plus their required parent permissions                                        | Named technical owners of reviewed integrations.                                 |
+
+For example, a faculty member may receive Plus and Workspace publisher, while a student in a programming course receives Core with Codex access. Increasing a researcher's credit allowance does not require giving them publishing or administration permissions.
+
+#### Model access by role
+
+Open **Policy & security → Models**. Configure **Workspace default**, then use **Roles** for role-specific settings. The table uses the model names and preference labels shown in the console we inspected. Enable only models available to your workspace.
+
+| Permission                          | Core | Plus | Advanced | Power  | TEST   |
+| ----------------------------------- | ---- | ---- | -------- | ------ | ------ |
+| 6.1 Sol                             | Off  | Off  | Review   | On     | On     |
+| 6 Astra                             | Off  | Off  | Review   | On     | On     |
+| 6 Sol                               | Off  | Off  | Review   | On     | On     |
+| 6 Luna                              | On   | On   | On       | On     | On     |
+| 5.6 Sol                             | On   | On   | On       | On     | On     |
+| 5.6 Terra                           | Off  | Off  | Review   | Review | Review |
+| 5.6 Luna                            | On   | On   | On       | On     | On     |
+| Daybreak Blue                       | Off  | Off  | Off      | Off    | Off    |
+| Allow medium/high/extra high effort | On   | On   | On       | On     | On     |
+| Allow Pro models                    | Off  | Off  | Review   | On     | On     |
+| Allow fast mode                     | Off  | Off  | Review   | Review | Review |
+| Allow Ultra Fast mode               | Off  | Off  | Off      | Review | Review |
+
+**Model recommendations:** Keep 5.6 Sol available for ordinary Chat and 6 Luna for routine Work and Codex. Keep 5.6 Luna as a fallback where needed. Enable 6.1 Sol and 6 Sol for Power workflows, and review them for Advanced users. Approve Astra/Pro access and faster modes based on the expected work and budget. Keep Daybreak Blue outside general campus roles; consider a separately approved security role only where eligible.
+
+A model being listed or enabled in the demo does not establish access for every Edu workspace or every product. In particular, 6.1 Sol and 6 Luna are Work and Codex options, not regular Chat defaults. Use **Models → Test** to check model access for the intended member. See [current model availability](https://help.openai.com/en/articles/11165333-chatgpt-enterprise-and-edu-models-and-limits).
+
+#### Defaults by product
+
+| Console control          | Core and Plus                               | Advanced                                                 | Power                                                        | TEST                        |
+| ------------------------ | ------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------ | --------------------------- |
+| Chat → Model             | 5.6 Sol, or the current approved Chat model | Approved Chat model                                      | Approved Chat model                                          | Match the role being tested |
+| Chat → Effort            | Instant                                     | Medium for reasoning-heavy work                          | Medium                                                       | Match the role being tested |
+| Chat → New chats         | Admin default                               | Admin default                                            | Admin default                                                | Match the role being tested |
+| Work & Codex → Model     | 6 Luna; 5.6 Luna if needed                  | 6 Luna, with an approved Sol override for demanding work | 6.1 Sol when enabled; otherwise, an available approved model | Match the role being tested |
+| Work & Codex → Effort    | Medium                                      | Medium                                                   | Medium                                                       | Match the role being tested |
+| Work & Codex → Speed     | Standard                                    | Standard                                                 | Standard                                                     | Match the role being tested |
+| Work & Codex → New chats | Admin default                               | Admin default                                            | Admin default                                                | Match the role being tested |
+
+A starting default does not grant model access. **Allow medium/high/extra high effort** and **Allow Pro models** apply to Chat; **Allow fast mode** and **Allow Ultra Fast mode** apply to Work & Codex. Members can select other permitted options. Review role overrides for each product separately.
+
+#### Set usage limits independently
+
+Use **Billing → Usage limits** to configure member limits through workspace defaults, group defaults, and user overrides. Review the shared credit pool and workspace overage limit separately in **Billing**. The amounts below illustrate credit-based limits; approve them based on your institution's agreement, purchased credits, expected activity, and the displayed limit period.
+
+| Usage group | Illustrative monthly limit per member | Budget owner          |
+| ----------- | ------------------------------------- | --------------------- |
+| Core        | 1,000 credits                         | Teaching and learning |
+| Plus        | 2,500 credits                         | Academic technology   |
+| Advanced    | 5,000 credits                         | Research office       |
+| Power       | 10,000 credits                        | IT or engineering     |
+| TEST        | 5,000 credits                         | Implementation lead   |
+
+A group's usage limit does not create a permission role or grant features. Use corresponding groups when membership matches, and separate groups when access and budget needs differ. Set the fallback for unassigned users to the intended campus baseline.
+
+For credit-based agreements, keep workspace overages at **0** unless additional spending is approved. User overrides take precedence over group limits; otherwise, the highest applicable group limit takes precedence over the workspace default. Alerts notify recipients but do not stop usage. Running work can settle after a limit is reached. See [Usage limits and overages](https://help.openai.com/en/articles/20001001-manage-usage-limits-and-overages-in-chatgpt-enterprise-and-edu).
+
+Use the [current rate card](https://help.openai.com/en/articles/11481834-chatgpt-rate-card-business-enterpriseedu-credit-based-pricing) for included allowances and chargeable usage.
+
+#### Use the Admin plugin to prepare and check changes
+
+The Admin plugin can review roles and permissions and, after confirmation, assign an existing role to an existing group. It cannot create roles or edit their permissions. Configure the roles and permissions in Admin Console first. See [Admin plugin scope](https://learn.chatgpt.com/docs/enterprise/admin-plugin).
+
+Attach your institution's approved matrix, resolve every Review item, and replace the placeholders below.
+
+#### Compare the workspace with the matrix
+
+**Prompt:**
+
+```text
+Use the Admin plugin to compare workspace {workspace_id} with the attached Core, Plus, Advanced, Power, and TEST matrix. Show role IDs and a table of current versus recommended permissions. Flag missing roles, unresolved decisions, and anything you cannot inspect. Prepare a manual Admin Console change checklist. Do not make changes.
+```
+
+#### Assign a configured role to a group
+
+**Prompt:**
+
+```text
+In workspace {workspace_id}, prepare to assign existing role {role_id} to existing group {group_id}. Show current assignments, the access this adds, and the recorded approver. Wait for my explicit approval. Then make only that assignment and re-read the group to verify it.
+```
+
+#### Verify assignments and overlaps
+
+**Prompt:**
+
+```text
+Review user {user_id} in workspace {workspace_id} against the attached approved matrix. Show direct and group-based roles, overlapping grants, and unexpected access. Mark unsupported checks as unknown. Do not claim that role access verifies a specific connected app. Do not make changes.
+```
+
+#### Configure and verify
+
+1. In **Identity & access → Groups & roles → Roles**, select **Add role**. Enter a role name and description, then select **Create role**. Create only the roles your institution needs.
+2. In **Policy & security → Permissions → Workspace default**, apply the Core baseline. In **Roles**, open each role and apply the approved matrix values. Select **Save changes**.
+3. In **Groups & roles → Roles**, open the role. Use **Role groups → Add group** to assign the intended groups. Manage SCIM-synchronized membership in the identity provider.
+4. Configure **Models → Workspace default** and **Models → Roles**, then set usage limits. Approve individual plugins, apps, skills, and source-system access separately.
+5. Use **Permissions → Permissions by roles** to compare assignments and **Test** to inspect effective access. Allow up to five minutes for permission updates. Use **Models → Test** to check model access.
+6. Verify actual workflows with representative members, including someone with overlapping roles. Use the **TEST** custom role to exercise allowed actions and attempt intentionally blocked actions, then remove temporary grants.
+
+The comparison view can retain older labels that differ from the editable permission page. Configure shared cloud-computer access in **Workspace capabilities → Let agents use cloud computers** using **Use a browser**, **Allow network access**, and **Allow computer use**.
+
+| Check                                                                                                       | Expected result                                                                                                                      |
+| ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Core member uses Chat, deep research, images, Work, and Codex                                               | Approved, entitled tools are available; the expected limits apply.                                                                   |
+| Plus, Advanced, or Power member uses an approved exception                                                  | Only the intended additional capabilities and models are available.                                                                  |
+| Member without publishing or administration responsibilities attempts a publishing or administration action | The action remains unavailable after considering every assigned role.                                                                |
+| Member has both Core and an additional responsibility role                                                  | Access reflects the combined grants and the intended exception.                                                                      |
+| Work or dots task uses a cloud computer or connected device                                                 | Only the approved browser, network, computer-use, and local-access capabilities work.                                                |
+| A plugin or agent connects to a source system                                                               | The plugin or agent uses the intended account and approved data, performs approved actions, and cannot access unrelated source data. |
+| A member starts Chat and Work/Codex                                                                         | Starting model, effort, speed, and available alternatives match the intended product settings.                                       |
+| A course, project, or temporary test ends                                                                   | Group membership and direct grants are removed; access and budget match the new responsibilities.                                    |
+
+Review roles each term and whenever a new permission appears. Where **Admin preview** is offered, decide preview access and launch access separately. General workspace settings, identity policies, Agent security, app actions, and retention remain separate from these role matrices.
+
 ### ChatGPT usage limits and spend controls
 
 Source: [ChatGPT usage limits and spend controls](https://learn.chatgpt.com/docs/enterprise/usage-limits.md)
@@ -40961,13 +41700,17 @@ removes the interactive website-access review. Neither grants new app
 permissions or approves every action on a website. Consequential actions can
 still require separate confirmation.
 
-Configure **Cloud browser use** and **Cloud network access** under **Admin Console > Permissions & roles > Workspace capabilities > Cloud computer capabilities**. These shared capabilities are available to Work Cloud and dots and can be configured independently of Work Cloud access. A Work task still needs Work access and permission to use each capability it requires. Review browser access and code or shell network access separately. Disabling one does not automatically disable the other.
+Configure **Use a browser** and **Allow network access** under **Admin Console** > **Permissions** > **Workspace default** > **Workspace capabilities** > **Let agents use cloud computers**. These permissions are independent of Work Cloud access. Review browser access and code or shell network access separately. Disabling one does not automatically disable the other.
+
+When you enable Work Cloud, you may be prompted to enable the relevant cloud computer capabilities if they are not already enabled. These permissions are shared across dots, Work Cloud, and team automations; available functionality varies by product. Enable the capabilities your organization’s policies allow.
+
+To review them later, go to **Admin Console** > **Permissions** > **Workspace default** > **Workspace capabilities** > **Let agents use cloud computers**. Local computer access is a separate opt-in.
 
 For a Work task to use the cloud browser in an Enterprise workspace,
-administrators must enable both Work access and cloud browser access. See
+the user needs both Work access and cloud browser access. See
 [Using cloud browser in ChatGPT](https://help.openai.com/en/articles/20001280-using-cloud-browser-in-chatgpt).
 
-Also review **Cloud computer use** under **Workspace capabilities > Cloud computer capabilities**. This control also applies to ChatGPT Work. **Use password manager** is a separate permission directly under **Workspace capabilities**, outside the **Cloud computer capabilities** group. It governs password-manager access in the local in-app browser and cloud browser.
+Also review **Allow computer use** under **Admin Console** > **Permissions** > **Workspace default** > **Workspace capabilities** > **Let agents use cloud computers**. This control also applies to ChatGPT Work. **Use password manager** is a separate permission directly under **Workspace capabilities**, outside the **Let agents use cloud computers** group. It governs password-manager access in the local in-app browser and cloud browser.
 
 #### Code and shell networking
 
@@ -41019,7 +41762,7 @@ OpenAI API [Zero Data Retention](https://developers.openai.com/api/docs/guides/y
 
 Enable **Allow local computer access** under Work Cloud. **Use Codex locally on the ChatGPT desktop app** is not a prerequisite. If `enforce_residency` is enabled in any cloud policy, **Allow local computer access** is disabled for both Work and dots. This safeguard does not configure workspace residency or, by itself, disable Work Cloud or dots. Before enabling it, review or create the global cloud baseline in **Agent Security**.
 
-Use the policy API to manage Global settings. To manage Local or Codex Cloud settings, use the Agent Security UI. Existing Global API workflows remain available after migration. Test your scripts and Terraform integrations, and confirm that policy assignments and ordering are unchanged.
+For policy API, migration, and Terraform guidance, see [What carries over](https://learn.chatgpt.com/docs/enterprise/cloud-local-access#what-carries-over).
 
 Review each control in the context where it applies:
 
@@ -41035,7 +41778,7 @@ Turning off Local computer access with Work Cloud interrupts currently running t
 
 Review the controls that apply to each part of a cloud task:
 
-- **Work Cloud and Work Local:** Where independent controls are available, manage cloud and local Work as distinct controls in **Workspace settings** > **Permissions & roles**. In other workspaces, local Work can share a control with Codex Local.
+- **Work Cloud and Work Local:** Where independent controls are available, manage cloud and local Work as distinct controls in **Admin Console** > **Permissions**. In other workspaces, local Work can share a control with Codex Local.
 
 - **Apps and plugins:** Choose which integrations are available and which people or roles can use them.
 
@@ -43856,9 +44599,10 @@ Group membership by itself doesn't grant a workspace feature permission.
 #### Connect a group to the right permissions
 
 Workspace owners can assign custom roles to groups or, where available, directly
-to members. Check every applicable role: an explicit **Off** in any role
-denies that permission, even when another role grants it. A member's seat type
-and product eligibility still apply.
+to members. Members receive permissions granted by any of their ordinary
+roles. Lockdown Mode restrictions, seat type, and product eligibility still
+apply. See
+[how role permissions combine](https://learn.chatgpt.com/docs/enterprise/roles-and-workspace-permissions#set-the-workspace-default-then-create-targeted-custom-roles).
 
 SCIM provisions workspace membership and group assignments. It doesn't grant
 permissions in GitHub, Google Drive, Slack, or another connected system. It also
@@ -43951,13 +44695,13 @@ A task has two parts: coordination and execution. Coordination decides which ste
 
 #### Where to review
 
-Open Admin Console → Agent Security. It replaces Policies & Configuration. Its rollout is independent of local computer access for Work and dots.
+Open Admin Console → Agent security. It replaces Policies & Configuration. Its rollout is independent of local computer access for Work and dots.
 
 - **Policy settings:** Review the Global baseline and any Local overrides. Keep orchestrator controls, including approvals and web search, in Global; environments cannot override them. Use the dedicated UI controls where available, including **Allowed approval policies** and **Allowed web search modes**, and TOML for other supported fields. See [orchestrator and executor controls](https://learn.chatgpt.com/docs/enterprise/agent-security#choose-controls-and-configuration-fields) for where each setting applies.
 
 - **Requirements and Defaults:** Requirements set limits users cannot override. Defaults provide starting values within those limits and cannot override a requirement.
 
-- **Feature access:** Use Workspace settings → Permissions & roles. Local computer access is a separate opt-in for Work and for dots.
+- **Feature access:** Use Admin Console → Permissions. Local computer access is a separate opt-in for Work and for dots.
 
 #### What carries over
 
@@ -43990,8 +44734,6 @@ Shared behavior for Work and dots with local access spans the following scopes:
 - **Local execution:** When a tool runs on a connected computer, it enforces supported local-execution requirements from Agent Security and applicable device policies, including policies delivered through MDM where supported. These can include filesystem and network restrictions. Only fields supported by the local executor apply; configuring a field in MDM or local `requirements.toml` does not guarantee that it is enforced locally.
 
 - **Cloud execution:** Work cloud containers and dots’ cloud computers use separate execution controls. Local filesystem and network restrictions do not automatically apply to these cloud environments.
-
-To configure shared cloud capabilities, go to Admin Console → Permissions & roles → Workspace capabilities → Cloud computer capabilities. These permissions cover both Work Cloud and dots. Review **Cloud browser use** and **Cloud network access** separately; configuring one does not configure the other. Global policies and Codex Cloud overrides do not configure these permissions.
 
 #### Check compatibility and data requirements
 
@@ -44037,7 +44779,7 @@ Before rollout, review the policies and compatibility requirements above. Review
 
 #### Work
 
-1. As a workspace owner, open **Workspace settings > Permissions & roles**.
+1. As a workspace owner, open **Admin Console** > **Permissions**.
 
 1. Enable **Work Cloud** for the intended users. **Use Codex locally on the ChatGPT desktop app** is not a prerequisite for this feature.
 
@@ -44049,13 +44791,13 @@ Before rollout, review the policies and compatibility requirements above. Review
 
 #### Dots
 
-1. As a workspace owner, open **Workspace settings > Permissions & roles** and enable dots for the intended users, subject to the eligibility requirements above.
+1. As a workspace owner, open **Admin Console** > **Permissions** and enable dots for the intended users, subject to the eligibility requirements above.
 
-1. Under **Use Dots**, turn on **Allow local computer access**. Review the confirmation modal, then open **Agent Security** to review or set policies, or confirm to turn on access.
+1. Under **Use dots**, turn on **Allow local computer access**. Review the confirmation modal, then open **Agent Security** to review or set policies, or confirm to turn on access.
 
 1. Have users update to ChatGPT desktop app version 26.929 or higher. The update is required for local computer access to take effect.
 
-1. Have users open their dot’s details in the ChatGPT desktop app and choose **Computers**. Find **Your computer** (or the computer’s name), select **Allow**, then confirm with **Allow access**.
+1. Have users connect their computer using the [dots end-user steps](#dots-end-user-steps) below.
 
 1. Have a member with the intended permissions and a connected computer test a local task with their dot.
 
@@ -44334,13 +45076,230 @@ follow workspace retention policy.
 stops future access through that connection but does not automatically delete
 saved content.
 
+### Manage dots permissions and capabilities
+
+Source: [Manage dots permissions and capabilities](https://learn.chatgpt.com/docs/enterprise/dots-admin-guide.md)
+
+A dot is a personal agent in ChatGPT that can take on ongoing work, use connected apps, and delegate tasks to Work or Codex. You choose who can use dots and which capabilities they can access. Members connect their accounts and tell their dots what to work on.
+
+For detailed settings, see [Manage dots in ChatGPT workspaces](https://help.openai.com/en/articles/20001554-manage-dots-in-chatgpt-workspaces). The [privacy, security, and safety FAQ](https://help.openai.com/en/articles/20001529-dots-privacy-security-and-safety-faqs) covers data handling and approvals.
+
+#### Find what you need
+
+| If you need to…                                    | Start here                                                                                   |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Give a group access                                | [Set up dots for work](#set-up-dots-for-work)                                                |
+| Choose which data and tools a dot can use          | [App access](#2-configure-app-access) and [computer capabilities](#available-admin-controls) |
+| Set up Slack                                       | [Slack connections and dot identities](#3-configure-communication-channels)                  |
+| Understand background work and approvals           | [Actions and ongoing work](#actions-and-ongoing-work)                                        |
+| Track usage or investigate an action               | [Models and usage](#models-and-usage) and [Data and compliance](#data-and-compliance)        |
+| Remove access when someone changes roles or leaves | [Manage access changes](#manage-access-changes)                                              |
+
+#### Set up dots for work
+
+#### 1. Configure role-based access
+
+Workspace owners manage access through workspace defaults and custom roles. To give selected groups access, keep the workspace default off and assign a custom role to those groups. Check every role assigned to a member: if one role grants access, turning it off in another role won't remove it.
+
+Review these permissions in **Permissions**:
+
+- **Use dots**: Allow members to use dots.
+
+- **Add dots to Slack and Microsoft Teams**: Allow members to connect their dots to supported messaging channels where available.
+
+- **Allow local computer access**: Allow dots to use a member’s local computer.
+
+- **Use custom rules for dots**: Allow members to add or edit rules for their dots.
+
+For role creation, assignment, and access checks, see the [role-based access control guide](https://learn.chatgpt.com/docs/enterprise/roles-and-workspace-permissions#set-the-workspace-default-then-create-targeted-custom-roles).
+
+1. Open **Admin Console** > **Permissions**.
+
+2. Under Permissions &gt; Workspace default &gt; Workspace capabilities, enable Use dots (Beta) if it should be available by default; otherwise grant access through a custom role.
+
+3. Set Slack participation and custom dot rules. Local computer access requires a separate admin opt-in; review [local computer access setup](https://learn.chatgpt.com/docs/enterprise/cloud-local-access#enable-local-computer-access) before enabling it.
+
+4. Under **Let agents use cloud computers**, review **Use a browser**, **Allow network access**, and **Allow computer use** where your policies allow browsing websites, accessing online services, and interacting with apps. Review both workspace defaults and custom roles.
+
+5. Under Workspace capabilities, set Use password manager according to your workspace policy.
+
+6. Save, then check access for an intended member.
+
+When you enable dots, you may be asked to turn on cloud computer capabilities that are still off. Dots, Work Cloud, and team automations share these permissions. Choose the capabilities your organization's policies allow.
+
+To review them later, go to **Admin Console** > **Permissions** > **Workspace default** > **Workspace capabilities** > **Let agents use cloud computers**. Local computer access is a separate opt-in.
+
+Members still need to complete [Slack](https://learn.chatgpt.com/docs/dots/channels#slack) and [local-computer setup](https://learn.chatgpt.com/docs/dots/computers-and-apps#connect-your-computer) after you enable access. Supported app connections they've already set up may be available to their dot.
+
+#### 2. Configure app access
+
+Dots can use supported ChatGPT app connections. When setting up access, check:
+
+1. **Which apps members can use.** Set available apps and allowed actions in [Plugin controls](https://learn.chatgpt.com/docs/enterprise/apps-and-connectors).
+2. **What the connected account can access.** Check the account's permissions in the source app. Enabling dots doesn't give it access to every shared drive, channel, or document.
+3. **When approval is required.** An app can be available while some actions still need approval. See [app permissions](https://help.openai.com/en/articles/20001495-managing-app-permissions-in-chatgpt) for the options.
+
+For example, permission to read a document may not include editing or sharing it. To restrict access to a particular source, check the connected account and app permissions.
+
+#### 3. Configure communication channels
+
+Members can connect Slack to their dot in two ways:
+
+| Setup                                              | Member experience                                                                                              | What to configure                                                           |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Connect the member’s Slack account through Plugins | Members talk to their dot in ChatGPT. It can use their Slack connection without having its own Slack identity. | Slack plugin access, the connected account, allowed actions, and approvals. |
+| Give the dot its own Slack identity                | The owner can message or mention the dot in Slack, and its posts are visible to people in that conversation.   | Dots messaging permission, Slack app approval, and each member’s dot setup. |
+
+Turning off a dot's Slack identity doesn't remove its access through the member's connected Slack account. Check both when removing Slack access. For member setup, see [Messaging](https://learn.chatgpt.com/docs/dots/channels#slack).
+
+**Before members connect their dots to Slack**
+
+- **ChatGPT workspace owner:** Enable Use dots and Add dots to Slack and Microsoft Teams for the intended members through workspace defaults or custom roles.
+
+- **Slack workspace owner or app manager:** Ensure the ChatGPT app is installed in Slack. Approve app requests if required by your workspace. See [Slack’s app approval guidance](https://slack.com/help/articles/360024269514-Manage-app-requests-for-your-workspace).
+
+- **Each member:** Connect your dot to Slack from its profile. See [Message your dot in Slack](https://learn.chatgpt.com/docs/dots/channels#slack).
+
+Enabling the ChatGPT permission does not install an app in Slack or connect a member’s dot.
+
+#### Available admin controls
+
+| **Area**                            | **Admin capability**                                                                                                   |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Access to dots                      | Grant or revoke dots access through workspace permissions.                                                             |
+| Cloud and connected local computers | Control Use a browser, Allow network access, Allow computer use, Use password manager, and local-computer access.      |
+| Messaging and participation         | Enable or disable Slack participation.                                                                                 |
+| Connected apps                      | Set available apps and allowed actions through [Plugin controls](https://learn.chatgpt.com/docs/enterprise/apps-and-connectors).               |
+| Custom dot rules                    | When disabled, members cannot add or edit custom rules, and saved rules do not apply.                                  |
+| Models                              | Enterprise model controls and defaults do not apply to the main dot. Review delegated Work and Codex tasks separately. |
+
+#### Review availability and data requirements
+
+Before enabling dots, review current availability in [Getting started with your dot](https://help.openai.com/en/articles/20001530-getting-started-with-your-dot) and the workspace notices shown during setup. If your organization requires data or inference residency, Enterprise Key Management, or specific compliance coverage, confirm support for dots with your account team before enabling access.
+
+Check requirements for the dot itself, tasks it delegates to Work or Codex, and any connected computer. For cloud browser, network, and computer use, see [cloud security](https://learn.chatgpt.com/docs/enterprise/chatgpt-work-cloud-security). For work on employee devices, see [local computer access](https://learn.chatgpt.com/docs/enterprise/cloud-local-access).
+
+#### Dots FAQ
+
+#### Access and eligibility
+
+#### Does access to dots grant access to apps and websites?
+
+No. Dots access does not grant access to apps or websites. App connections require authorization; website work uses the browser’s signed-in account.
+
+#### Whose account does a dot use for connected work?
+
+For apps, a dot uses the connected account. For websites, it uses the account signed in to the cloud browser. Check the permissions for each account. See [Managing app accounts](https://help.openai.com/en/articles/20001494-connecting-and-managing-app-accounts-in-chatgpt).
+
+#### Can a dot use a local computer, VPN, or existing sign-in?
+
+A dot’s cloud computer is separate from a member’s local computer. Local work requires a connected, online computer with ChatGPT open and access enabled. Local sign-in, VPN access, and device policies do not automatically extend to the cloud computer.
+
+#### How do cloud policies affect local computer access?
+
+If any cloud policy has `enforce_residency` enabled, local computer access is unavailable for dots. Work Cloud remains available. See the [local-access safeguard](https://learn.chatgpt.com/docs/enterprise/cloud-local-access#check-data-handling-and-the-local-access-safeguard) for the policy requirements.
+
+#### Actions and ongoing work
+
+#### Can a dot keep working when the user is away?
+
+Yes. Members can assign [ongoing responsibilities](https://learn.chatgpt.com/docs/dots/tasks-and-memory#assigned-work). Workspace permissions and approval rules still apply. Local work requires the computer to stay online with ChatGPT open and access enabled.
+
+[Proactive research](https://learn.chatgpt.com/docs/dots/tasks-and-memory#proactive-research) uses restricted tools to read connected apps. It cannot send messages, change content, or control a browser or computer. To act on what it finds, the dot needs the user's authorization and the required permissions and approvals.
+
+#### Who can message a dot or see its results?
+
+Only the owner can direct their dot through a Slack direct message or supported channel mention. Messages from other people do not start work.
+
+A dot may use other participants' messages as context when its owner brings it into a Slack thread. Anyone with access to the conversation can see its posts. Information from another channel doesn't give the dot permission to share it with a new audience. Check recipients before posting work content.
+
+Microsoft Teams access is limited to an invite-only alpha.
+
+#### Does a dot always ask before sending or changing something?
+
+[Auto-review](https://learn.chatgpt.com/docs/dots/controls#how-action-review-works) checks proposed actions against the user's instructions, custom rules, and safety requirements. Asking a dot to draft a message doesn't give it permission to send it. See [app permissions](https://help.openai.com/en/articles/20001495-managing-app-permissions-in-chatgpt) for approval options.
+
+#### How do admins revoke dots access?
+
+See [Manage access changes](#manage-access-changes) for steps to remove access and check connected accounts, computers, and ongoing work.
+
+#### How do custom rules affect confirmations?
+
+[Custom dot rules](https://learn.chatgpt.com/docs/dots/controls#set-custom-rules) guide when a dot acts or asks for confirmation. If you turn them off, members can't add or edit rules, and saved rules won't apply. The dot still follows default rules and the user's instructions.
+
+Custom rules don't grant tool access or override workspace permissions and built-in safety requirements. Turning them off also doesn't make the dot ask before every action. Check capability and app approval settings to control what it can do.
+
+#### What safeguards help protect work done by dots?
+
+Built-in safeguards help defend against malicious instructions and can pause or stop work when monitoring detects a safety concern.
+
+Members can follow progress in [Activity View](https://learn.chatgpt.com/docs/dots/controls#review-work), redirect work, and check results before using them.
+
+#### Models and usage
+
+#### Do existing model controls and defaults apply to dots?
+
+Enterprise model controls and defaults do not apply to the main dot. Tasks it delegates to Work or Codex follow those products' permissions and controls. Check dots permissions and the settings for Work and Codex when configuring access.
+
+#### How should admins monitor adoption and usage?
+
+Use the [Analytics API](https://learn.chatgpt.com/docs/enterprise/analytics-api) to see who is using dots. Tasks a dot starts or manages in Work or Codex count toward those products' usage limits and appear in their reporting. Include those tasks when reviewing usage, and check current plan terms when setting budgets. See [Work usage and cost](https://learn.chatgpt.com/docs/enterprise/chatgpt-work-usage-and-cost) for the available controls.
+
+The daily usage endpoint `/v1/analytics/workspaces/{workspace_id}/usage` identifies dots with `client_id = DOTS` and supports per-user or workspace-level reporting.
+
+#### Data and compliance
+
+OpenAI does not use ChatGPT Enterprise data to improve its models by default. For OpenAI’s business data commitments, see [Enterprise privacy](https://openai.com/enterprise-privacy/).
+
+#### What does a dot remember between requests?
+
+A dot keeps its own context, separate from ChatGPT Memory. Turning off ChatGPT Memory stops memory sharing with the dot, but doesn't erase information it already has. Disconnecting a plugin stops future access through that connection; it doesn't remove information the dot has retained.
+
+Deleting a dot removes its own context. Files, Codex threads, and ChatGPT conversations it created are stored separately and aren't all deleted with it. Follow the deletion steps for each location.
+
+See the [dots privacy FAQ](https://help.openai.com/en/articles/20001529-dots-privacy-security-and-safety-faqs) for what is retained and deleted, and [Getting started with your dot](https://help.openai.com/en/articles/20001530-getting-started-with-your-dot) for the member’s Pause and Reset controls.
+
+#### How can admins investigate work a dot has done?
+
+Members can follow their dot's work in Activity View. Admins can use [Compliance API](https://learn.chatgpt.com/docs/enterprise/compliance-api#confirm-the-administration-boundaries) records to investigate user messages and dots' replies. Check which records are available before relying on exports for an audit, DLP, legal hold, or e-discovery.
+
+Supported dots records are available through the Compliance Logs Platform, including user prompts and responses, supported tool-call events, and connected-app MCP calls and results. Records identify the user and workspace; dots-attributed records use `client_id = DOTS`, and the agent object includes the dot ID, name, and type when available.
+
+Workspace owners or admins can select their workspace in Admin Console, then open **Credentials > Admin keys** and create a key with the appropriate available permissions: `enterprise.analytics.usage.read` for unified usage reporting, or `CODEX_LOG` access for dots compliance records. Only workspace owners can grant broad compliance or **Conversation messages** access where supported. Use the [Admin API reference](https://chatgpt.com/public/admin/api-reference) to list and download compliance JSONL files and select records with `client_id = DOTS`.
+
+#### Manage access changes
+
+When someone changes roles or leaves, check their dot's permissions, connections, and ongoing work:
+
+1. **Remove dots access.** Check the workspace default and every role assigned directly or through groups. Remove each permission that grants access; any remaining grant can keep it enabled.
+2. **Check connected accounts and devices.** Review plugin authorizations, website sessions, local computer access, and the dot's Slack identity. Each has its own settings.
+3. **Decide what happens to ongoing work.** Check active tasks, recurring schedules, and tasks delegated to Work or Codex. Decide what should stop and who should take over any remaining responsibilities.
+4. **Delete data where needed.** Access changes and deletion are separate steps. Follow the deletion process for the dot's context and any files or tasks stored elsewhere.
+
+For adding and removing workspace members, see [User lifecycle management](https://learn.chatgpt.com/docs/enterprise/user-lifecycle). For dots access removal, see [Manage dots in ChatGPT workspaces](https://help.openai.com/en/articles/20001554-manage-dots-in-chatgpt-workspaces).
+
+#### Respond to an unexpected action
+
+Ask the member to pause their dot and review the affected task. Save the task link and available activity records, check the app or computer permissions involved, and follow your organization's incident process. Whether you can undo an action depends on the action and the service. See the [privacy and safety FAQ](https://help.openai.com/en/articles/20001529-dots-privacy-security-and-safety-faqs) for how to report an issue.
+
+#### Help members work well with dots
+
+Help members choose work to delegate and connect the accounts and tools they'll need. Encourage them to tell their dot what to do, when to do it, and who should see the result.
+
+For example, “Prepare a weekly project update for me to review” asks for a draft. “Post the approved update in our team channel every Friday” also gives permission to post. Members should check important results and know how to review activity, change a schedule, and pause their dot. Share [Getting started](https://learn.chatgpt.com/docs/dots/getting-started), [Tasks and memory](https://learn.chatgpt.com/docs/dots/tasks-and-memory), and [Controls](https://learn.chatgpt.com/docs/dots/controls) to help them get started.
+
 ### Managed configuration
 
 Source: [Managed configuration](https://learn.chatgpt.com/docs/enterprise/managed-configuration.md)
 
 Managed configuration lets enterprise admins set supported requirements and defaults for ChatGPT Work and Codex. Requirements constrain what users and tasks can do. Defaults provide starting values. Support depends on the product, client version, and execution environment.
 
-For Work with local access and dots, supported Global policy governs the shared cloud orchestrator when managed policy is enabled; applicable local execution requirements govern the connected computer. Work cloud containers retain existing Work Cloud policies, and supported device controls still apply to local execution. Codex keeps its existing configuration behavior. Managed configuration does not grant a workspace seat or feature access. Use [Roles and workspace permissions](https://learn.chatgpt.com/docs/enterprise/roles-and-workspace-permissions) for those controls.
+Start in **Agent security** in the Admin Console for supported cloud-managed
+settings. Use the settings controls for common tasks, or select **Edit as TOML**
+to inspect, copy, or edit the configuration text. Both views edit the same policy;
+TOML also exposes supported fields without a dedicated control. You don't need to
+distribute a local file to use cloud-managed settings. Authentication restrictions and
+device-managed deployments have separate [local setup](#manage-authentication-locally).
 
 Enterprise admins can control supported local client behavior with:
 
@@ -44352,35 +45311,376 @@ Enterprise admins can control supported local client behavior with:
 
 See [Agent Security](https://learn.chatgpt.com/docs/enterprise/agent-security) for the Global baseline, environment overrides, and orchestrator and executor field lists.
 
-#### Agent Security and Local computer access with Work Cloud
+#### Configure a policy in Agent security
 
-Use Agent Security in the Admin Console to manage policies and configuration. It replaces Policies & Configuration. Agent Security will be available to everyone, independently of Local computer access with Work Cloud. Existing policies, assignments, and ordering are preserved. Review your existing policies in Agent Security. Local computer access with Work Cloud is a separate opt-in. See [Agent Security](https://learn.chatgpt.com/docs/enterprise/agent-security) for migration guidance.
+Where Agent security is enabled, workspace owners, workspace admins, and members
+with Codex admin permissions can manage policies. Access to the policy editor
+doesn't grant members access to the features that a policy controls.
 
-Before moving policy automation to **Agent Security**:
+Use **Workspace default** for the workspace baseline. Use **Overrides** when
+specific users, groups, or roles need different settings. An audience override
+selects who receives a policy; an environment setting selects where supported
+execution controls apply.
 
-1. Identify affected integrations. Inventory Terraform configurations and scripts that update policies, and record which policies they manage.
+1. Open **Admin Console** > **Agent security** and select **Workspace default** or
+   the policy you want to edit under **Overrides**.
+1. Open **Requirements** to set enforced limits, or **Defaults** to set starting
+   values that members can change within those limits.
+1. Keep approval, web search, and other agent-wide settings in **Global**. Where
+   available, use **Add environment settings** in the relevant card to add
+   **Local Environments** or **Codex Cloud Environments** for supported execution
+   settings. An empty environment document inherits settings from Global; it doesn't copy or
+   pin the current baseline.
+1. Use the controls described in this guide. For advanced fields, select
+   **Edit as TOML** and edit the appropriate scope's `requirements.toml` or
+   `config.toml`. Select **Use settings controls** to return to the visual editor.
+1. Review validation messages, then select **Save changes**. Applying a rule in
+   a rule editor updates the draft; it doesn't save the policy by itself.
+1. Check policy selection and the supported client behavior as described in
+   [Confirm the admin and employee experience](#confirm-the-admin-and-employee-experience).
 
-1. Use the policy API to manage Global settings. To manage Local or Codex Cloud settings, use the Agent Security UI. Existing Global API workflows remain available after migration. Test your scripts and Terraform integrations, and confirm that policy assignments and ordering are unchanged.
+Environment editors and supported fields depend on the workspace and policy.
+See [Where settings apply](https://learn.chatgpt.com/docs/enterprise/agent-security#where-settings-apply)
+before moving a Global setting into an environment. A setting in Global doesn't
+necessarily apply to every product or execution path.
 
-1. Make any required changes and test the automation. Verify that an intended update reaches the correct Agent Security policy and that the resulting controls are enforced.
+#### Copy or reuse a configuration
 
-Policy migration does not grant local computer access for Work or dots. Reviewing or creating policies is recommended before rollout, but the confirmation flow does not require policy creation to enable access. Before enabling **Allow local computer access**, review the migrated baseline or create a cloud baseline if your policies are currently delivered only through MDM. If `enforce_residency` is enabled in any cloud policy, **Allow local computer access** is disabled for both Work and dots. This safeguard does not configure workspace residency or, by itself, disable Work Cloud or dots.
+The visual editor doesn't replace TOML. Select **Edit as TOML** to copy a
+configuration, keep a reference copy, or reuse settings in another policy.
+Select **Use settings controls** to switch back to the visual editor.
 
-Environment overrides vary supported settings within a policy. Within a given policy, the order from highest to lowest is OS-specific environment override → all-OS environment override → Global. A higher-priority policy still wins over a lower-priority policy, even when the lower-priority policy is more specific. Some requirements have field-specific merge rules. Confirm which override editors and fields are available for your workspace.
+1. Open the source policy and select **Edit as TOML**.
+1. Choose the scope you want to copy: **Global** or an available environment tab.
+   Copy the text from **Requirements** (`requirements.toml`), **Defaults**
+   (`config.toml`), or both, depending on what you want to reuse.
+1. Open the destination policy, select **Edit as TOML**, and choose the matching
+   scope. Paste requirements into `requirements.toml` and defaults into
+   `config.toml`. Review existing destination settings before replacing text;
+   keep unrelated settings that should still apply.
+1. Review validation messages and the destination policy's targets and priority,
+   then select **Save changes**. Confirm the resulting client behavior before
+   relying on the copied policy.
 
-When managed policy and remote hooks are enabled, Work Cloud with local access and dots use admin-managed remote MCP hooks on the cloud orchestrator. Configure `mcp_tool` handlers in Global `requirements.toml`. Work Cloud without local access and personal accounts do not use these enterprise hooks. Command/shell, prompt, and agent handlers; hooks from local configuration, plugins, or local directories; environment-scoped hooks; and `SessionEnd` MCP hooks are not supported with cloud orchestration, even when tools execute locally. When both orchestration and execution are local, existing supported hooks continue to work in local-only Work and Codex threads. Admins can still configure supported managed hooks in Agent Security for those workflows. Before relying on these hooks, test callback connectivity, required events, and failure behavior. An explicit supported denial can block an action, but a `PreToolUse` callback error, timeout, or malformed response can fail the hook without blocking the tool. MCP hooks do not provide a complete Compliance API audit trail. See the [Configuration Reference](https://learn.chatgpt.com/docs/config-file/config-reference).
+The copied text contains the authored settings for that policy and scope. It doesn't include assignments, policy order, other environment documents, or the
+effective configuration combined from other policies and device settings.
+Copy environment settings separately when needed. Switching views or copying
+text doesn't save a policy change.
 
-#### Configure plugin marketplaces and defaults
+Try the example below: change a setting, then select **Edit as TOML** to see its
+configuration. Switch back with **Use settings controls** to keep experimenting.
 
-Define local or Git marketplaces and plugin defaults in system `config.toml`
-or the supported configuration defaults in **Agent Security**.
-These settings are defaults, not enforced policy.
+#### Choose the right control
 
-See [Configuration Reference](https://learn.chatgpt.com/docs/config-file/config-reference) for configuration keys,
-[Configuration precedence](https://learn.chatgpt.com/docs/config-file/config-basic#configuration-precedence)
-for overrides, and [repo plugin settings](https://developers.openai.com/plugins/build/plugins#enable-or-disable-a-plugin-for-a-repo)
-for project-level configuration. [Workspace GitHub import and
-sync](https://learn.chatgpt.com/docs/enterprise/plugin-management) is separate.
+| Task                                                                                              | Where to configure it                                                                  | What it changes                                                                                           |
+| ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| [Restrict browser and native-app access](#control-browser-and-computer-use)                       | **Requirements** > **Desktop feature availability**, **Site rules**, and **App rules** | Controls which supported desktop capabilities are available and which sites or apps they can access.      |
+| [Limit approval, sandbox, or web search choices](#set-approval-sandbox-and-web-search-guardrails) | **Requirements** > **Policy guardrails**                                               | Restricts the choices available to supported clients.                                                     |
+| [Set starting approval, permission, search, or tool behavior](#set-configuration-defaults)        | **Defaults**                                                                           | Sets values members can change within enforced requirements.                                              |
+| [Restrict command network destinations](#configure-network-access)                                | **Requirements** > **Network use controls**                                            | Applies managed networking rules to supported command traffic. It isn't a workspace-wide internet switch. |
+| [Configure plugins and managed hooks](#configure-plugins-and-managed-hooks)                       | **Edit as TOML**                                                                       | Lets you configure supported policy fields that have no dedicated visual control.                         |
+| [Restrict login methods or workspaces before sign-in](#manage-authentication-locally)             | Local system requirements or macOS MDM                                                 | Applies authentication restrictions before cloud policy is loaded.                                        |
+
+#### Control browser and Computer Use
+
+Use **Agent security** in the Admin Console to manage browser and native-app access
+for supported desktop clients. Start with the UI controls. The TOML examples below
+provide a configuration reference for file-based policy delivery and settings that
+need the TOML editor.
+
+Browser Use controls agent-driven activity in a browser. Computer Use controls
+agent-driven activity in native desktop apps. Settings for the built-in browser
+pane are separate from Browser Use. See [browser sessions and existing
+sign-ins](https://learn.chatgpt.com/docs/enterprise/chatgpt-work-local-security#browser-sessions-and-existing-sign-ins)
+for the differences between browser paths.
+
+#### Before you begin
+
+Use an account with permission to manage Agent Security policies. Confirm which
+people receive the policy and which client versions and operating systems you need
+to support. Review [Agent Security](https://learn.chatgpt.com/docs/enterprise/agent-security) for policy
+assignments, Global settings, and supported environment overrides.
+
+Use **Requirements** for limits users can't override. **Defaults** set starting
+values within those limits. Allowing a site or app doesn't install a plugin, grant
+operating-system permissions, sign a user in, or approve an action that still
+requires review.
+
+Under **Desktop feature availability**, review **Browser use**, **External browser
+use**, and **Computer use**. **Force off** disables the corresponding feature; an
+allow rule for a site or app doesn't override it. Review **Full CDP access**
+separately; **Block user opt-in** prevents users from enabling it.
+
+These desktop controls don't configure the hosted Work Cloud browser. Manage
+**Cloud browser use** and **Cloud network access** separately under
+**Admin Console > Permissions & roles > Workspace capabilities > Cloud computer capabilities**.
+See [how Agent Security applies to Work Cloud](https://learn.chatgpt.com/docs/enterprise/agent-security#how-agent-security-applies-to-work-cloud).
+
+#### Configure browser access
+
+{/_ Preserve the console label "Auto-approve requests". _/}
+{/_ vale Microsoft.Auto = NO _/}
+
+1. Open **Admin Console > Agent security**. Use **Workspace default** for the
+   workspace baseline, or open the relevant policy under **Overrides**. In
+   **Requirements**, go to **Desktop browser controls**.
+1. In **Site rules**, open the **Default** row's actions and choose **Edit Default**.
+   For access limited to approved sites, set **Site access** to **Block**, then
+   choose **Apply rule**. The **Default** row supplies values that a matching site
+   rule leaves at **Use default rule**.
+1. Choose **Add site rule**. In **Site or pattern**, enter an origin: a scheme,
+   hostname, and optional port. For example, `https://example.com` is valid;
+   `https://example.com/files` isn't. Don't include a path, query, or fragment.
+   HTTP and HTTPS are different origins. Specify the port when it differs from
+   the scheme's default.
+1. Set **Site access** and review **Downloads**, **Uploads**, and **Debug/CDP**.
+   Choose **Allow** or **Block** as appropriate, or leave a setting at **Use default
+   rule**. **Debug/CDP** controls full Chrome DevTools Protocol access for browser
+   debugging. **Allow** lets normal policy and approval checks continue.
+1. Review **Auto-review**, **Always allow**, and **Approval duration** for the site.
+   **Approval duration** offers **This turn** and **This thread**. Review **Browser
+   history**, **Save site approvals**, and **Auto-approve requests** in **Desktop
+   browser controls** as well.
+1. Choose **Add rule**, review validation messages, and select **Save changes**.
+   Test an allowed site and a blocked site on a supported client that receives the policy. Test
+   uploads, downloads, and other restricted actions separately.
+
+{/_ vale Microsoft.Auto = YES _/}
+
+Disabling automatic review for browser actions sends those actions to the user for
+approval instead. It doesn't disable model safety monitoring.
+
+When several origin patterns match, the most restrictive value wins for each
+setting. Local configuration can't relax a managed denial. Managed network denies
+and exclusive allowlists also apply to browser tools. See the [browser policy
+fields](https://learn.chatgpt.com/docs/config-file/config-reference#requirementstoml) for origin patterns
+and approval behavior.
+
+Computer Use can also operate a browser as a native app. Browser Use site and
+capability rules don't apply to that path. Review native-app access separately;
+see the [browser security
+boundaries](https://learn.chatgpt.com/docs/enterprise/chatgpt-work-local-security#browser-sessions-and-existing-sign-ins).
+
+#### Configure native-app access
+
+1. In **Requirements**, go to **Desktop app controls > App rules**.
+1. Use the **Default** row's actions to configure access for apps without a matching
+   rule. To limit Computer Use to approved apps, block access by default and add
+   allow rules for those apps.
+1. Choose **Add app rule**. In the **Edit rule** dialog, select **macOS bundle ID**,
+   **Windows AUMID**, or **Windows executable** from **App**. Enter the exact **App
+   identifier** for a bundle ID or Application User Model ID (AUMID). For **Windows
+   executable**, enter **Publisher name** and **Product name**; **Binary name** is
+   optional. Use verified app identity information, not a display name or file path.
+1. Set **App access** for the rule, then choose **Add rule**. Review **Save app
+   approvals** under **Desktop app controls**, review validation messages, and
+   select **Save changes**. Disabling saved approvals still permits approvals for the current
+   session; allowing saved approvals doesn't approve an app.
+1. Test an allowed app and a blocked app on each supported operating system in
+   your deployment. Confirm that operating-system permissions still apply and that users must still provide required approvals.
+
+See the [Computer Use policy
+fields](https://learn.chatgpt.com/docs/config-file/config-reference#requirementstoml) for Windows identity
+requirements and [locked-use restrictions](#restrict-locked-computer-use) for
+managed Macs.
+
+#### Check the effective policy
+
+If an allowed site or app is still blocked, check other matching rules, policy
+assignments and priority, device requirements, and user configuration. An allow
+rule in one source doesn't bypass another applicable denial. See [requirements
+locations and precedence](#locations-and-precedence).
+
+If a setting has no effect, verify that the client, operating system, and policy
+delivery path support it. Pay particular attention to Work Cloud with local
+computer access: some fields have partial support or require validation. See
+[Work compatibility in the Configuration Reference](https://learn.chatgpt.com/docs/config-file/config-reference).
+
+Check [workspace permissions](https://learn.chatgpt.com/docs/enterprise/roles-and-workspace-permissions)
+and [plugin controls](https://learn.chatgpt.com/docs/enterprise/apps-and-connectors) separately when a user
+can't access the feature or required plugin.
+
+#### TOML configuration reference
+
+The following examples describe the same policy intent for `requirements.toml`.
+Use them when managing policy through files or the TOML editor. You don't need to
+edit a local file to use the controls available in Agent Security.
+
+This browser example denies access by default, allows `https://example.com`, blocks
+uploads and full CDP access there, and limits site-access approval to the current
+turn:
+
+```toml
+[browser_use]
+allow_history_access = false
+allow_global_persistent_approval = false
+
+[browser_use.default_origin_policy]
+access = "deny"
+
+[browser_use.origins."https://example.com"]
+access = "allow"
+uploads = "deny"
+downloads = "allow"
+full_cdp_access = "deny"
+persistent_approval = false
+access_approval_lifetime = "turn"
+```
+
+To disable automatic review for browser actions, set
+`browser_use.disable_auto_review = true`, or set `auto_review = "deny"` on an
+origin policy to restrict it for that origin.
+
+To enable [Site tools](https://learn.chatgpt.com/docs/webmcp) for an eligible Enterprise workspace,
+set `browser_use.allow_webmcp = true`. This managed opt-in applies to the
+desktop app's built-in browser. Setting it to `false` or omitting it leaves
+normal feature availability checks in place; `false` does not enforce a block.
+User preferences and site permissions still apply.
+
+This native-app example allows Calculator on macOS, denies other apps by default,
+and prevents app approvals from persisting across sessions:
+
+```toml
+[computer_use]
+default_app_access = "deny"
+allow_persistent_approval = false
+
+[computer_use.macos.bundle_ids]
+"com.apple.calculator" = "allow"
+```
+
+Windows policies can identify packaged apps with `computer_use.windows.aumids` or
+executables with `computer_use.windows.exes`. Executable rules require
+`publisher_name`, `product_name`, and `access`; `binary_name` is optional.
+
+For all supported fields and values, use the
+[`requirements.toml` reference](https://learn.chatgpt.com/docs/config-file/config-reference#requirementstoml).
+To disable a capability rather than restrict individual sites or apps, see
+[Pin feature flags](#pin-feature-flags).
+
+#### Other desktop controls
+
+The following desktop controls cover feature availability, Locked Use, Appshots, and device remote control. Use dedicated settings for feature availability and Locked Use; configure Appshots and device remote control with **Edit as TOML**. For destination restrictions on desktop-app traffic, see [Control desktop app network destinations](#control-desktop-app-network-destinations).
+
+#### Pin feature flags
+
+For desktop features exposed in Agent security, open **Global** > **Requirements** > **Desktop feature availability**. Set **In-app browser**, **Browser use**,
+**External browser use**, or **Computer use** to **Force off** to disable that
+capability, then select **Save changes**. For **Full CDP access**, choose
+**Block user opt-in** to prevent users from enabling it. Allowing a feature doesn't override its product, platform, or rollout availability.
+
+For other supported [feature flags](https://learn.chatgpt.com/docs/config-file/config-basic#feature-flags),
+use **Edit as TOML** and the Global `requirements.toml` document, or a supported
+local requirements source. The following examples include both runtime and
+desktop-specific feature pins:
+
+```toml
+[features]
+hooks = true
+unified_exec = false
+
+# Disable surface-specific features when needed.
+browser_use = false
+browser_use_full_cdp_access = false
+browser_use_external = false
+in_app_browser = false
+in_app_updates = false
+computer_use = false
+```
+
+Use the canonical feature keys from `config.toml`'s `[features]` table for
+runtime features. The local runtime normalizes recognized features to meet these
+pins and rejects conflicting writes to `config.toml` or profile file feature
+settings.
+
+A managed `unified_exec = false` keeps command execution available, but disables
+resumable processes and the `write_stdin` tool. User configuration can't disable
+this feature.
+
+- `in_app_browser = false` disables the built-in browser pane.
+- `in_app_updates = false` disables the ChatGPT desktop app's own updater on
+  restart, where supported. It doesn't affect external package deployment or
+  extend support for older app versions. For setup and rollout guidance, see
+  [Manage app updates](https://learn.chatgpt.com/docs/enterprise/manage-app-updates).
+- `browser_use = false` disables supported Browser Use capabilities. External
+  Browser Use and native-app Computer Use have separate controls.
+- `browser_use_full_cdp_access = false` disables full CDP access in the local
+  runtime, including Browser Developer mode, and prevents the ChatGPT desktop
+  app from enabling the corresponding setting.
+- `browser_use_external = false` disables agent-driven Browser Use through
+  supported browser extensions.
+- `computer_use = false` disables native-app Computer Use, including operating
+  a browser as a native app, along with Record & Replay and related install or
+  setup flows.
+
+**Disabling Browser Use alone does not block every browser path.** Native-app
+Computer Use can still operate a browser when that capability and app access are
+allowed; Browser Use site and capability rules do not apply to that path. To
+block it, set **Computer use** to **Force off** (`computer_use = false`), or
+[deny the browser app in App rules](#configure-native-app-access) if other native
+apps should remain available. Review **External browser use** and **In-app
+browser** separately. See [browser sessions and existing
+sign-ins](https://learn.chatgpt.com/docs/enterprise/chatgpt-work-local-security#browser-sessions-and-existing-sign-ins)
+for the controls that apply to each path.
+
+If you omit these keys, policy allows the features, subject to normal client,
+platform, and rollout availability.
+
+#### Restrict locked computer use
+
+To prevent users from enabling [Locked Use](https://learn.chatgpt.com/docs/computer-use#locked-use)
+on a managed Mac, open **Global** > **Requirements** > **Desktop app controls**,
+set **Allow use while locked** to **Disabled**, and select **Save changes**.
+This setting doesn't turn off Locked Use on a Mac where it's already enabled.
+
+The equivalent requirement for the TOML editor or device-managed delivery is:
+
+```toml
+[computer_use]
+allow_locked_computer_use = false
+```
+
+This requirement removes the controls for enabling Locked Use. It doesn't
+turn off Locked Use if it's already enabled. If you omit it, normal product
+availability and the user's local setting still apply.
+
+#### Disable Appshots
+
+Appshots let supported clients include application snapshots. To disable them
+for cloud-managed users, open **Edit as TOML** in Agent security and set the
+top-level `allow_appshots` field in Global `requirements.toml`. For device-managed
+deployments, use the applicable local requirements source:
+
+```toml
+allow_appshots = false
+```
+
+Where Appshots are available, `allow_appshots = false` disables them. If you
+omit the key, requirements don't constrain Appshots, and normal product
+availability checks apply. App-server clients that read effective requirements
+through `configRequirements/read` receive the same restriction as
+`allowAppshots`; an omitted or `null` `allowAppshots` value doesn't disable
+Appshots.
+
+#### Disable device remote control
+
+To disable [device remote control](https://learn.chatgpt.com/docs/remote-connections#pick-up-work-from-another-device)
+for cloud-managed users, use **Edit as TOML** in Agent security and set the
+top-level `allow_remote_control` field in Global `requirements.toml`. You can
+also set `allow_remote_control` in a supported local requirements source:
+
+```toml
+allow_remote_control = false
+```
+
+Where device remote control is supported, `allow_remote_control = false`
+disables it. If you omit the key, requirements don't constrain device remote
+control, and normal product availability checks apply. This requirement doesn't
+disable SSH remote connections.
+
+#### Set approvals and execution permissions
+
+Use this section to set approval behavior, permission boundaries, and starting defaults. Begin with [Policy guardrails](#set-approval-sandbox-and-web-search-guardrails) and [Defaults](#set-configuration-defaults). The later tasks explain TOML requirements for reviewer enforcement, custom permission profiles, filesystem restrictions, host overrides, and command rules.
 
 #### Admin-enforced requirements (requirements.toml)
 
@@ -44394,6 +45694,77 @@ with `allowed_permission_profiles` and managed `default_permissions`. Use
 `sandbox_mode`.
 
 For the exact key list, see the [`requirements.toml` section in Configuration Reference](https://learn.chatgpt.com/docs/config-file/config-reference#requirementstoml).
+
+#### Set approval, sandbox, and web search guardrails
+
+Use **Requirements** > **Policy guardrails** to limit supported client choices.
+These controls constrain configuration; they don't select the starting value.
+Set the starting value separately under **Defaults**.
+
+1. In **Global**, open **Approval policies** and select the allowed approval
+   styles. For example, **Ask when needed** allows the agent to request approval
+   for actions such as sandbox escalation. **Never ask** prevents approval
+   requests; it doesn't grant unrestricted execution.
+1. Open **Sandbox modes** to limit legacy sandbox choices. **Read-only** restricts
+   writes, **Workspace write** permits writes within the workspace and configured
+   writable roots, and **Full access** removes filesystem sandboxing. Use
+   [permission-profile requirements](#control-available-permission-profiles) for
+   deployments that use permission profiles instead of `sandbox_mode`.
+1. In **Global**, open **Web search modes** to limit web search. Choose **Cached**
+   to permit cached search without live search, or **Disabled** to turn off web
+   search. Web search restrictions are separate from command network rules.
+1. Review the allowed choices and corresponding defaults, then select
+   **Save changes**.
+
+Leaving a requirement unset imposes no limit under that policy. Other
+applicable policies still apply. The **Ask for untrusted commands** option
+corresponds to `untrusted` in the requirements allowlist; it doesn't restore the
+retired explicit `approval_policy = "untrusted"` setting. Follow the migration
+guidance below for that case.
+
+To constrain web search, use **Global** > **Requirements** > **Policy guardrails** > **Web search modes**. The equivalent TOML is:
+
+```toml
+allowed_web_search_modes = ["cached"] # "disabled" remains implicitly allowed
+```
+
+`allowed_web_search_modes = []` allows only `"disabled"`.
+For example, `allowed_web_search_modes = ["cached"]` prevents live web search even in `danger-full-access` sessions.
+
+#### Set configuration defaults
+
+Defaults give members a starting configuration. They don't enforce a
+restriction or grant access to a workspace capability.
+
+1. Open the policy's **Defaults** card. Keep agent-wide defaults in **Global**;
+   use an available environment tab for supported execution defaults.
+1. Under **Command execution**, choose the starting **Approval policy** and
+   **Approval reviewer**, and the applicable **Sandbox mode** or **Default
+   permissions**. The reviewer determines who reviews approval requests by
+   default; the approval policy determines when requests can occur.
+1. Under **Web search**, choose the starting **Web search** mode and **Web search
+   context**. Under **Apps and tools**, review **Apps/connectors**, **Open-world
+   tools**, and **Destructive tools** for supported app tools.
+1. Confirm the defaults meet your **Requirements**, then select **Save changes**.
+
+Use **Edit as TOML** for supported defaults without visual controls, such as
+plugin marketplace configuration. These cloud defaults use [normal configuration
+precedence](https://learn.chatgpt.com/docs/config-file/config-basic#configuration-precedence). They differ
+from the [legacy `managed_config.toml` precedence](#precedence-and-layering),
+which places managed defaults above local configuration at startup.
+
+#### Example requirements.toml
+
+This example blocks `--ask-for-approval never` and `--sandbox danger-full-access` (including `--yolo`):
+
+```toml
+allowed_approval_policies = ["untrusted", "on-request"]
+allowed_sandbox_modes = ["read-only", "workspace-write"]
+```
+
+Here, `untrusted` preserves the stricter approval behavior derived from
+`trust_level = "untrusted"`; it does not make `approval_policy = "untrusted"` a
+supported explicit setting.
 
 #### Migrate the retired `untrusted` approval policy
 
@@ -44413,230 +45784,45 @@ overrides that policy. See
 [Migrate from the retired `untrusted` approval policy](https://learn.chatgpt.com/docs/agent-approvals-security#migrate-from-the-retired-untrusted-approval-policy)
 for examples and security tradeoffs.
 
-#### Locations and precedence
+#### Configure automatic review policy
 
-For local execution, requirements are applied from lower to higher priority as follows. This ordering also applies to local steps in Local computer access with Work Cloud:
+To make automatic review the default, use **Global** > **Defaults** > **Command execution** > **Approval reviewer**. A default lets users choose
+another permitted reviewer. To require automatic review or supply your
+organization's review instructions, use **Edit as TOML** and edit Global
+`requirements.toml` instead. These requirements are separate from the browser's
+automatic-review controls.
 
-1. System `requirements.toml` (`/etc/codex/requirements.toml` on Unix systems,
-   including Linux and macOS, or `%ProgramData%\OpenAI\Codex\requirements.toml`
-   on Windows).
-2. Agent Security requirements delivered in the cloud config bundle.
-3. Legacy `managed_config.toml` fields that the local client reinterprets as requirements.
-4. macOS managed preferences (MDM) delivered through
-   `com.openai.codex:requirements_toml_base64`.
+Use `allowed_approvals_reviewers` to require or allow automatic review. Set it
+to `["auto_review"]` to require automatic review, or include `"user"` when users
+can choose manual approval.
 
-Higher-precedence layers override ordinary scalar and list values from lower
-layers. Tables merge by key, while requirements such as rules, hooks, and
-filesystem restrictions have field-specific composition behavior. Use the
-[`requirements.toml` reference](https://learn.chatgpt.com/docs/config-file/config-reference#requirementstoml)
-for the current schema instead of assuming that every field merges the same
-way.
-
-For backward compatibility, supported local clients reinterpret the legacy
-`approval_policy`, `approvals_reviewer`, and `sandbox_mode` fields as
-requirements. This conversion adds compatibility choices where necessary; use
-`requirements.toml` for explicit allowlists.
-
-#### Precedence for Local computer access with Work Cloud
-
-For Work with local access and dots, distinguish Global orchestrator policy from execution policy. Applicable local requirements govern the connected computer. Work cloud containers and dots cloud computers use their own execution configuration and requirements, rather than the managed environment bundle used by other executors.
-
-For local execution, MDM and legacy managed-device requirements rank above Agent Security. The device's system requirements file ranks below Agent Security. Within each policy, resolve OS-specific environment overrides before all-OS environment overrides, then Global. Policy priority wins over specificity across policies.
-
-| Control                       | Local Work without sync and local Codex               | Local computer access with Work Cloud                                                                                                                       |
-| ----------------------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Enterprise requirements       | Follow the local requirements order above.            | Apply to local executors. Work cloud containers retain existing Work Cloud policies.                                                                        |
-| Device execution restrictions | Enforced by supported local controls.                 | Follow the local requirements order above, including MDM and legacy requirements above Agent Security.                                                      |
-| Environment overrides         | Use the configuration model for the relevant product. | Within one policy: OS-specific environment override, then all-OS environment override, then Global. A lower-priority policy cannot win through specificity. |
-
-Requirements impose constraints, while configuration defaults supply starting values. For Work with local access and dots, supported Global policy applies through the shared cloud orchestrator when managed policy is enabled. Applicable local `requirements.toml` requirements govern execution on a connected computer. Work cloud containers and dots cloud computers use their own execution configuration and requirements, rather than the managed environment bundle used by other executor types. Local execution restrictions do not automatically apply to these cloud computers. Review cloud capability permissions and test local and cloud execution separately.
-
-Keep orchestrator controls, including approvals and web search, in Global. Use the dedicated Allowed approval policies and Allowed web search modes controls where available, and TOML for other supported fields. See the [Configuration Reference](https://learn.chatgpt.com/docs/config-file/config-reference) for the field list and execution scope.
-
-#### Network policy precedence and runtime limits
-
-Within a given policy, the order from highest to lowest is OS-specific environment override → all-OS environment override → Global. A higher-priority policy still wins over a lower-priority policy, even when the lower-priority policy is more specific. Some requirements have field-specific merge rules. The runtime then enforces the resolved requirements. Consider the field-specific network cases below separately from policy priority.
-
-These examples compare environment and Global settings within the same policy, with managed networking already configured and no higher-priority policy changing the values. They describe field-specific merge and runtime behavior.
-
-#### Set different domain access by environment
-
-For the same domain rule within a policy, an admin environment override can allow a domain denied in Global or deny a domain allowed in Global. Without an environment override, the Global rule is inherited. Other effective Deny rules or access controls can still block a request.
-
-**How domain rules combine**
-
-| Global rule   | Environment rule | Domain-policy result                                                  |
-| ------------- | ---------------- | --------------------------------------------------------------------- |
-| Deny          | Allow            | Allowed by the environment override, subject to the conditions below. |
-| Allow         | Deny             | Blocked in that environment.                                          |
-| Allow         | Allow            | Allowed by these domain rules.                                        |
-| Deny          | Deny             | Blocked by these domain rules.                                        |
-| Allow or Deny | No override      | Inherits the Global rule.                                             |
-
-These outcomes compare the same domain key within one policy, with no higher-priority policy changing the result. A higher-priority value replaces the same key. Other inherited keys remain. An Allow does not bypass a different matching Deny, such as an inherited wildcard. An empty environment map does not clear inherited rules.
-
-**Example:** Deny `packages.example.com` in Global and allow it in Development. Development can permit it under the conditions above. Production inherits the Global Deny unless overridden.
-
-Confirm the deployed executor supports these merge rules. Coverage for regular managed executors still needs validation.
-
-Orchestrator limits. Managed HTTP/SOCKS listener ports and non-loopback proxy listeners are unsupported by the cloud runtime; socket-rule support depends on the execution path. A local-execution setting in the table below is not a supported Orchestrator configuration.
-
-#### Other network runtime limits
-
-All field names below are under `experimental_network` in `requirements.toml`. The arrows show a Global value followed by an environment value within the same policy. These local-execution cases do not establish Orchestrator support for the same settings.
-
-| **Setting and attempted override**           | **Runtime behavior**                                                                                                                                                                      | **Admin action**                                                                                                   |
-| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| domains: deny → allow                        | The environment Allow replaces the same Global domain key on supported paths. Other matching Deny rules still apply.                                                                      | Test both allowed and blocked requests on the deployed executor.                                                   |
-| `managed_allowed_domains_only`: true → false | Do not infer exclusivity behavior from domain-key composition. With effective `enabled = true` and `managed_allowed_domains_only = true`, ordinary commands need effective Allow entries. | Review effective settings and inherited Allow entries. A deny-only policy does not allow the rest of the internet. |
-| `allow_local_binding`: false → true          | On the supported Codex Cloud proxy path, an explicit false can prevent upstream-proxy access. A supported higher-priority Cloud override can change it.                                   | Check the source of the effective value and executor support. Do not apply the Cloud default to Local.             |
-
-Proxy activation, exclusivity, upstream-proxy behavior, and Unix-socket rules have executor-specific behavior. Do not generalize domain-key composition to these settings. Verify the effective values and test the deployed runtime. For Codex Cloud local/private connectivity, see [Configure network access requirements](#configure-network-access-requirements).
-
-#### Verify behavior before rollout
-
-Test the actual destinations, local listeners, proxy behavior, and socket paths your workflows use. Check an action that should succeed and one that should be blocked in each affected environment. Check that the deployed runtime version supports each setting you use.
-
-#### Cloud-managed requirements
-
-When a user signs in with ChatGPT on a supported plan, supported local clients
-can receive admin-enforced requirements associated with the workspace. This is
-a delivery channel for `requirements.toml`-compatible policy. It doesn't grant
-workspace access or replace workspace RBAC. Authentication requirements must be
-[managed locally](#manage-authentication-locally).
-
-Open **Agent Security** in the Admin Console to review and manage cloud
-requirements. Use the migrated global baseline for existing policies. For
-example, this policy limits
-approval and sandbox choices and prompts before a supported shell entry point
-runs:
+Set `guardian_policy_config` to replace the tenant-specific section of the
+automatic review policy. The local runtime still uses the built-in reviewer
+template and output contract. Managed `guardian_policy_config` takes precedence
+over local `[auto_review].policy`.
 
 ```toml
 allowed_approval_policies = ["on-request"]
-allowed_sandbox_modes = ["read-only", "workspace-write"]
+allowed_approvals_reviewers = ["auto_review"]
 
-[rules]
-prefix_rules = [
-  { pattern = [{ any_of = ["bash", "sh", "zsh"] }], decision = "prompt", justification = "Require explicit approval for shell entry points" },
-]
+guardian_policy_config = """
+## Environment Profile
+- Trusted internal destinations include github.com/my-org, artifacts.example.com,
+  and internal CI systems.
+
+## Tenant Risk Taxonomy and Allow/Deny Rules
+- Treat uploads to unapproved third-party file-sharing services as high risk.
+- Deny actions that expose credentials or private source code to untrusted
+  destinations.
+"""
 ```
-
-Check that every managed client version supports the keys you select. Assign the policy to the intended users or groups and verify that it takes effect on their supported clients. Use
-the configuration reference for the current schema and the administration
-surface for current assignment behavior.
-
-The service selects the enterprise-managed requirement layers that apply to the
-signed-in identity. The local client evaluates those layers with the other
-requirements sources described in [Locations and precedence](#locations-and-precedence).
-Use the current administration surface for workspace-side creation and
-assignment. Don't rely on a copied group-matching algorithm; the administration
-service owns that behavior and can change it independently of the local
-requirements format.
-
-For supported keys and examples, see
-[Example requirements.toml](#example-requirementstoml) and the
-[`requirements.toml` reference](https://learn.chatgpt.com/docs/config-file/config-reference#requirementstoml).
-
-#### How local clients apply cloud-managed requirements
-
-The local loading and cache behavior below describes supported local clients. It does not establish when a changed cloud policy takes effect in an already-running task using Local computer access with Work Cloud. Verify the effective policy before relying on a changed restriction.
-
-When a user starts a supported local client and signs in with ChatGPT on a
-supported plan, the client first checks for a valid, identity-matched cache
-entry. If no valid entry is available, the client fetches the applicable bundle
-with retries and writes a signed cache entry on success. If the request fails or
-times out and no valid cache is available, the cloud config bundle load returns
-an error rather than silently starting without the cloud-managed requirements
-layer.
-
-After cache resolution, the client composes the cloud requirements with the
-other requirements layers described above. A background refresh can update the
-cache for a later start; it doesn't replace the requirements already loaded
-into the current process.
-
-#### Confirm the admin and employee experience
-
-Assign a person to own each managed policy, record which users or groups should
-receive it, and document the business reason for any filesystem, network,
-approval, or permission-profile restriction.
-
-Test an allowed workflow and a blocked workflow with a user who has the intended permissions. Check the effective settings in the supported client. A workspace role or group alone does not enforce a local runtime restriction.
-
-#### Manage authentication locally
-
-Set `allowed_login_methods`, `allowed_chatgpt_workspaces`,
-`cli_auth_credentials_store`, and `chatgpt_base_url` in the local system
-`requirements.toml` or macOS MDM requirements. Codex ignores these four fields
-in cloud-managed requirements. Local authentication requirements apply before
-credentials load and before Codex retrieves cloud policy.
-
-To require ChatGPT login to an approved workspace and store credentials in the
-OS credential store, use:
-
-```toml
-allowed_login_methods = ["chatgpt"]
-allowed_chatgpt_workspaces = ["00000000-0000-0000-0000-000000000000"]
-cli_auth_credentials_store = "keyring"
-```
-
-`allowed_login_methods` accepts `chatgpt`, `api`, or both. If omitted, this setting
-doesn't restrict login methods. If set, the list must contain at least one method.
-`api` permits API authentication, including Amazon Bedrock.
-The workspace restriction also applies to
-[Codex access tokens](https://learn.chatgpt.com/docs/enterprise/access-tokens).
-
-User-configured `forced_login_method` and `forced_chatgpt_workspace_id` must
-follow the requirements. When a user selects a workspace, it must also appear
-in the managed workspace allowlist. If no workspaces match, ChatGPT login is
-unavailable. API authentication remains available when permitted. If no login method
-is available, Codex refuses to start.
-
-See the [requirements reference](https://learn.chatgpt.com/docs/config-file/config-reference#requirementstoml)
-for credential storage modes and service URL configuration.
-
-#### Example requirements.toml
-
-This example blocks `--ask-for-approval never` and `--sandbox danger-full-access` (including `--yolo`):
-
-```toml
-allowed_approval_policies = ["untrusted", "on-request"]
-allowed_sandbox_modes = ["read-only", "workspace-write"]
-```
-
-Here, `untrusted` preserves the stricter approval behavior derived from
-`trust_level = "untrusted"`; it does not make `approval_policy = "untrusted"` a
-supported explicit setting.
-
-#### Disable Appshots
-
-To disable Appshots for managed users, set the top-level `allow_appshots` requirement:
-
-```toml
-allow_appshots = false
-```
-
-Where Appshots are available, `allow_appshots = false` disables them. If you
-omit the key, requirements don't constrain Appshots, and normal product
-availability checks apply. App-server clients that read effective requirements
-through `configRequirements/read` receive the same restriction as
-`allowAppshots`; an omitted or `null` `allowAppshots` value doesn't disable
-Appshots.
-
-#### Disable device remote control
-
-To disable [device remote control](https://learn.chatgpt.com/docs/remote-connections#pick-up-work-from-another-device)
-for managed users, set the top-level `allow_remote_control` requirement:
-
-```toml
-allow_remote_control = false
-```
-
-Where device remote control is supported, `allow_remote_control = false`
-disables it. If you omit the key, requirements don't constrain device remote
-control, and normal product availability checks apply. This requirement doesn't
-disable SSH remote connections.
 
 #### Control available permission profiles
+
+Use **Defaults** > **Command execution** > **Default permissions** to choose the built-in profile users start with. To enforce which profiles users can select or to define
+custom profiles, use **Edit as TOML** and configure `requirements.toml` for the
+applicable Global or supported execution environment scope. Choosing a default
+alone doesn't restrict the available profiles.
 
 Use `allowed_permission_profiles` to control which built-in and custom
 [permission profiles](https://learn.chatgpt.com/docs/permissions) users can select. This is the
@@ -44751,7 +45937,37 @@ select. Every entry must name a built-in profile or a custom profile defined in
 a loaded config or requirements source. Define custom profiles in managed
 requirements to control their behavior centrally.
 
+#### Enforce deny-read requirements
+
+Use **Edit as TOML** to add filesystem restrictions to the applicable Global or
+supported execution environment `requirements.toml`. These restrictions block
+reads of sensitive paths; a read-only default by itself doesn't hide files.
+
+Admins can deny reads for exact paths or glob patterns with
+`[permissions.filesystem]`. Users can't weaken these requirements with local
+configuration.
+
+```toml
+[permissions.filesystem]
+deny_read = [
+  # values can be absolute paths...
+  "/**/*.env",
+  # ...or relative to $HOME/%USERPROFILE% using `~`.
+  "~/.ssh",
+  # But relative paths starting with `./` are not allowed.
+]
+```
+
+When deny-read requirements are present, the local runtime rejects full-access
+permissions and keeps local execution in a read-only or workspace sandbox so it
+can enforce them. On native Windows, managed `deny_read` applies to direct file
+tools; shell subprocess reads don't use this sandbox rule.
+
 #### Override sandbox requirements by host
+
+Use **Edit as TOML** in Agent security to author host-specific requirements.
+Environment controls select an execution environment; host patterns select
+matching machines within the supported runtime.
 
 Use `[[remote_sandbox_config]]` when one managed policy should apply different
 sandbox requirements on different hosts. For example, you can keep a stricter
@@ -44776,14 +45992,66 @@ requirements source. If no entry matches, the local runtime keeps the top-level
 `allowed_sandbox_modes`. Host name matching is for policy selection only; don't
 treat it as authenticated device proof.
 
-You can also constrain web search mode:
+#### Enforce command rules from requirements
+
+Use **Edit as TOML** in Agent security to add command rules and MCP server
+restrictions to Global `requirements.toml`. Command rules specify approval or denial
+decisions for matching commands; MCP restrictions limit which server identities
+the client can enable. The **Approval policies** control doesn't author either
+of these rule sets.
+
+Admins can also enforce restrictive command rules from `requirements.toml`
+using a `[rules]` table. These rules merge with regular `.rules` files, and the
+most restrictive decision still wins.
+
+Unlike `.rules`, requirements rules must specify `decision`, and that decision
+must be `"prompt"` or `"forbidden"` (not `"allow"`).
 
 ```toml
-allowed_web_search_modes = ["cached"] # "disabled" remains implicitly allowed
+[rules]
+prefix_rules = [
+  { pattern = [{ token = "rm" }], decision = "forbidden", justification = "Use git clean -fd instead." },
+  { pattern = [{ token = "git" }, { any_of = ["push", "commit"] }], decision = "prompt", justification = "Require review before mutating history." },
+]
 ```
 
-`allowed_web_search_modes = []` allows only `"disabled"`.
-For example, `allowed_web_search_modes = ["cached"]` prevents live web search even in `danger-full-access` sessions.
+To restrict which MCP servers a local client can enable, add an `mcp_servers`
+approved list. For stdio servers, match on `command`; for streamable HTTP
+servers, match on `url`:
+
+```toml
+[mcp_servers.docs]
+identity = { command = "codex-mcp" }
+
+[mcp_servers.remote]
+identity = { url = "https://example.com/mcp" }
+```
+
+The string form of `identity.command` matches only the configured `command`. It
+doesn't inspect `args`, `cwd`, `env`, or `env_vars`.
+
+To constrain a complete stdio invocation, match the executable and each
+positional argument:
+
+```toml
+[mcp_servers.internal.identity]
+command = { executable = "/usr/local/bin/codex-mcp", args = [
+  { match = "exact", value = "serve" },
+  { match = "prefix", value = "--workspace=" },
+] }
+```
+
+The executable, argument count, and argument order must match. Argument and URL
+rules support `exact`, `prefix`, and full-value `regex` matching. Structured
+command rules still don't inspect `cwd`, `env`, or `env_vars`. Plugin-bundled
+MCP servers use the same identity shapes under
+`plugins..mcp_servers.`.
+
+If `mcp_servers` is present but empty, the local client disables all MCP servers.
+
+#### Configure network access
+
+Command networking and desktop-app networking use different controls. Start with **Network use controls** for supported command traffic, review the environment and runtime limits, then use the separate desktop-app requirements if needed. Browser site rules remain in [Control browser and Computer Use](#control-browser-and-computer-use).
 
 #### Configure network access requirements
 
@@ -44792,6 +46060,35 @@ requirements broadly across an enterprise deployment without validating them
 on the local client versions and operating systems your users run. Windows
 support is still limited; avoid applying this policy to Windows users unless
 you have tested it in your environment.
+
+Use **Requirements** > **Network use controls** to manage supported command
+networking in Agent security. Configure a shared baseline in **Global**, or an
+available **Local Environments** or **Codex Cloud Environments** tab for
+environment-specific execution settings.
+
+1. Set **Managed networking** to **On** to apply domain rules to managed command
+   traffic. Adding domain rules alone doesn't activate the managed proxy.
+1. Under **Network rules**, select **Add network rule**. Enter a **Domain** such
+   as `api.openai.com` or `**.example.com`, without a URL scheme or path. Choose
+   **Allow** or **Deny** under **Access**, then select **Save rule** to update the
+   draft. Repeat for other destinations.
+1. Set **Only allow domains added by admins** to **On** if user settings and
+   per-domain approvals must not expand the managed allowlist. Include the
+   required Allow entries; a deny-only list doesn't allow other destinations.
+1. Review **Allow local network access** for workflows that need local listeners
+   or private destinations. Direct local connections may bypass the proxy's
+   domain rules. Review the Codex Cloud connectivity limits below before changing
+   this setting.
+1. Review inherited rules and validation messages, then select **Save changes**.
+   Test a request that should succeed and one that should be blocked in every
+   affected execution environment.
+
+Setting **Managed networking** to **Off** clears that scope's authored network
+rules and stores an explicit off value; it doesn't disable internet access.
+**Not set** removes that scope's authored network settings so applicable policy
+or runtime defaults can apply. Removing environment settings can reveal inherited
+Global rules. Use **Edit as TOML** for advanced network fields or existing legacy
+domain lists that the visual editor can't represent.
 
 Use `[experimental_network]` in `requirements.toml` when administrators should
 define network access requirements centrally. These requirements are separate
@@ -44849,13 +46146,64 @@ On supported managed Codex Cloud execution paths, Agent Security requirements co
 
 A managed command allowlist applies to commands using the managed proxy. Where policy permits full sandbox escalation and it is approved, that execution can bypass the command proxy. A narrow network grant is different from full sandbox escalation. Configure enforced approval and sandbox requirements for the intended boundary, and test both ordinary and escalated commands.
 
-> **No effective allowed destinations:** When **Manage Networking** and **Only allow domains added by admins** are On, ordinary managed commands need effective allowed destinations. If no Allow entries are configured or inherited, those commands have no allowed destinations. A deny-only policy does not implicitly allow the rest of the internet. Add required Allow entries and check inherited rules before saving. This restriction applies to the managed command proxy, not every tool or approved full sandbox escalation.
+> **No effective allowed destinations:** When **Managed networking** and **Only allow domains added by admins** are On, ordinary managed commands need effective allowed destinations. If no Allow entries are configured or inherited, those commands have no allowed destinations. A deny-only policy does not implicitly allow the rest of the internet. Add required Allow entries and check inherited rules before saving. This restriction applies to the managed command proxy, not every tool or approved full sandbox escalation.
 
 > **Codex Cloud local/private connectivity:** An explicit Off value for local/private connectivity can prevent Codex Cloud from reaching its upstream proxy, even when the destination domain is allowed. Check the final `allow_local_binding` value and identify which policy or setting supplies it. On the supported Cloud proxy path, this defaults to true only when no applicable requirement, selected network profile, or proxy feature setting supplies a value. An inherited false still counts as an explicit setting. Where supported, set a higher-priority Cloud override to change this value for Codex Cloud without changing the Global value used by Local. This does not add domain Allow entries. Verify executor support before relying on the override. Do not apply this Cloud default to Local.
 
-Empty environment requirements inherit Global. Manage Networking Off is not the Cloud environment Internet access Off switch. See [Configure networking in the UI](https://learn.chatgpt.com/docs/enterprise/agent-security#configure-networking-in-the-ui).
+When environment requirements are empty, Global requirements apply. **Managed networking** set to
+**Off** is separate from the Cloud environment's Internet access setting. See
+[Agent Security execution controls](https://learn.chatgpt.com/docs/enterprise/agent-security#execution-controls-executor)
+for details about execution scope.
+
+#### Network policy precedence and runtime limits
+
+Within a given policy, the order from highest to lowest is OS-specific environment override → all-OS environment override → Global. A higher-priority policy still wins over a lower-priority policy, even when the lower-priority policy is more specific. Some requirements have field-specific merge rules. The runtime then enforces the resolved requirements. Consider the field-specific network cases below separately from policy priority.
+
+These examples compare environment and Global settings within the same policy, with managed networking already configured and no higher-priority policy changing the values. They describe field-specific merge and runtime behavior.
+
+#### Set different domain access by environment
+
+For the same domain rule within a policy, an admin environment override can allow a domain denied in Global or deny a domain allowed in Global. Without an environment override, the Global rule is inherited. Other effective Deny rules or access controls can still block a request.
+
+**How domain rules combine**
+
+| Global rule   | Environment rule | Domain-policy result                                                  |
+| ------------- | ---------------- | --------------------------------------------------------------------- |
+| Deny          | Allow            | Allowed by the environment override, subject to the conditions below. |
+| Allow         | Deny             | Blocked in that environment.                                          |
+| Allow         | Allow            | Allowed by these domain rules.                                        |
+| Deny          | Deny             | Blocked by these domain rules.                                        |
+| Allow or Deny | No override      | Inherits the Global rule.                                             |
+
+These outcomes compare the same domain key within one policy, with no higher-priority policy changing the result. A higher-priority value replaces the same key. Other inherited keys remain. An Allow does not bypass a different matching Deny, such as an inherited wildcard. An empty environment map does not clear inherited rules.
+
+**Example:** Deny `packages.example.com` in Global and allow it in Development. Development can permit it under the conditions above. Production inherits the Global Deny unless overridden.
+
+Confirm the deployed executor supports these merge rules. Coverage for regular managed executors still needs validation.
+
+Orchestrator limits. Managed HTTP/SOCKS listener ports and non-loopback proxy listeners are unsupported by the cloud runtime; socket-rule support depends on the execution path. A local-execution setting in the table below is not a supported Orchestrator configuration.
+
+#### Other network runtime limits
+
+All field names below are under `experimental_network` in `requirements.toml`. The arrows show a Global value followed by an environment value within the same policy. These local-execution cases do not establish Orchestrator support for the same settings.
+
+| **Setting and attempted override**           | **Runtime behavior**                                                                                                                                                                      | **Admin action**                                                                                                   |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| domains: deny → allow                        | The environment Allow replaces the same Global domain key on supported paths. Other matching Deny rules still apply.                                                                      | Test both allowed and blocked requests on the deployed executor.                                                   |
+| `managed_allowed_domains_only`: true → false | Do not infer exclusivity behavior from domain-key composition. With effective `enabled = true` and `managed_allowed_domains_only = true`, ordinary commands need effective Allow entries. | Review effective settings and inherited Allow entries. A deny-only policy does not allow the rest of the internet. |
+| `allow_local_binding`: false → true          | On the supported Codex Cloud proxy path, an explicit false can prevent upstream-proxy access. A supported higher-priority Cloud override can change it.                                   | Check the source of the effective value and executor support. Do not apply the Cloud default to Local.             |
+
+Proxy activation, exclusivity, upstream-proxy behavior, and Unix-socket rules have executor-specific behavior. Do not generalize domain-key composition to these settings. Verify the effective values and test the deployed runtime. For Codex Cloud local/private connectivity, see [Configure network access requirements](#configure-network-access-requirements).
+
+#### Verify behavior before rollout
+
+Test the actual destinations, local listeners, proxy behavior, and socket paths your workflows use. Check an action that should succeed and one that should be blocked in each affected environment. Check that the deployed runtime version supports each setting you use.
 
 #### Control desktop app network destinations
+
+Use **Edit as TOML** in Agent security to configure these desktop-specific
+requirements in Global. The **Network use controls** UI manages command
+networking, which is a separate policy.
 
 Use `[application.network]` in `requirements.toml` to restrict the desktop
 app's network destinations. With `enabled = true`, external requests must use
@@ -44868,285 +46216,31 @@ This policy is separate from command networking and browser origin rules. It
 doesn't impose destination restrictions on native modules or spawned processes,
 and it doesn't govern Work Cloud execution.
 
-#### Control browser and Computer Use
+#### Configure plugins and managed hooks
 
-Use the `[browser_use]` and `[computer_use]` tables in `requirements.toml` to
-restrict supported desktop clients. Validate the policy on the client versions
-and operating systems in your deployment. A configured allow rule doesn't
-install a plugin, grant an operating-system permission, or approve an action
-that still requires review.
+For these tasks, use **Edit as TOML** in Agent security or a supported local configuration source. Marketplace defaults, enforced plugin restrictions, and managed hooks have different purposes; choose the task that matches the policy you need.
 
-For browser access, configure an origin policy. An origin includes the scheme,
-host, and optional port, such as `https://example.com` or
-`https://*.example.com:8443`. Don't include a path, query, or fragment. Unlike
-command-network domain rules, browser origin rules distinguish HTTP from HTTPS
-and match the port.
+#### Configure plugin marketplaces and defaults
 
-This example restricts browser access to an approved site and prevents uploads
-and full Chrome DevTools Protocol (CDP) access there:
+Use **Agent security** > **Edit as TOML** to define local or Git marketplaces and
+plugin defaults in the Global `config.toml` document. You can also distribute
+these settings in system `config.toml`. They provide starting marketplace and
+plugin configuration, not enforced policy. To limit which sources members can
+use, configure [marketplace source requirements](#restrict-plugin-marketplace-sources).
 
-```toml
-[browser_use]
-allow_history_access = false
-allow_global_persistent_approval = false
-
-[browser_use.default_origin_policy]
-access = "deny"
-
-[browser_use.origins."https://example.com"]
-access = "allow"
-uploads = "deny"
-downloads = "allow"
-full_cdp_access = "deny"
-persistent_approval = false
-access_approval_lifetime = "turn"
-```
-
-Matching origin rules are resolved per field. A matching deny wins. Otherwise,
-the default origin policy supplies fields that matching rules don't specify.
-Local configuration can add restrictions but can't relax a managed deny.
-Network denies and exclusive managed network allowlists still apply.
-
-Set `browser_use.disable_auto_review = true` to disable automatic approval
-review for browser actions, or set `auto_review = "deny"` on an origin policy
-to restrict it for that origin. This controls approval handling; it doesn't
-disable model safety monitoring.
-
-To enable [Site tools](https://learn.chatgpt.com/docs/webmcp) for an eligible Enterprise workspace,
-set `browser_use.allow_webmcp = true`. This managed opt-in applies to the
-desktop app's built-in browser. Setting it to `false` or omitting it leaves
-normal feature availability checks in place; `false` does not enforce a block.
-User preferences and site permissions still apply.
-
-For native apps, set a default access policy and identify permitted apps. For
-example, this macOS policy allows Calculator and prevents saved approvals:
-
-```toml
-[computer_use]
-default_app_access = "deny"
-allow_persistent_approval = false
-
-[computer_use.macos.bundle_ids]
-"com.apple.calculator" = "allow"
-```
-
-Windows policies can identify packaged apps with
-`computer_use.windows.aumids` or executables with
-`computer_use.windows.exes`. Executable rules require `publisher_name`,
-`product_name`, and `access`; `binary_name` is optional. Use the app's verified
-identity rather than its display name alone.
-
-See the [configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference#requirementstoml)
-for the complete fields and [locked-use restrictions](#restrict-locked-computer-use)
-for managed macOS devices.
-
-#### Pin feature flags
-
-You can also pin [feature flags](https://learn.chatgpt.com/docs/config-file/config-basic#feature-flags) for users
-receiving a managed `requirements.toml`:
-
-```toml
-[features]
-hooks = true
-unified_exec = false
-
-# Disable surface-specific features when needed.
-browser_use = false
-browser_use_full_cdp_access = false
-browser_use_external = false
-in_app_browser = false
-in_app_updates = false
-computer_use = false
-```
-
-Use the canonical feature keys from `config.toml`'s `[features]` table for
-runtime features. The local runtime normalizes recognized features to meet these
-pins and rejects conflicting writes to `config.toml` or profile file feature
-settings.
-
-A managed `unified_exec = false` keeps command execution available, but disables
-resumable processes and the `write_stdin` tool. User configuration can't disable
-this feature.
-
-- `in_app_browser = false` disables the built-in browser pane.
-- `in_app_updates = false` disables the ChatGPT desktop app's own updater on
-  restart, where supported. It doesn't affect external package deployment or
-  extend support for older app versions. For setup and rollout guidance, see
-  [Manage app updates](https://learn.chatgpt.com/docs/enterprise/manage-app-updates).
-- `browser_use = false` disables Computer Use in browsers and Browser Agent availability.
-- `browser_use_full_cdp_access = false` disables full CDP access in the local
-  runtime, including Browser Developer mode, and prevents the ChatGPT desktop
-  app from enabling the corresponding setting.
-- `browser_use_external = false` disables external Browser Use.
-- `computer_use = false` disables Computer Use, Record & Replay, and related
-  install or setup flows.
-
-If you omit these keys, policy allows the features, subject to normal client,
-platform, and rollout availability.
-
-#### Restrict locked computer use
-
-To prevent users from enabling [Locked Use](https://learn.chatgpt.com/docs/computer-use#locked-use)
-on a managed Mac, add this requirement:
-
-```toml
-[computer_use]
-allow_locked_computer_use = false
-```
-
-This requirement removes the controls for enabling Locked Use. It doesn't
-turn off Locked Use if it's already enabled. If you omit it, normal product
-availability and the user's local setting still apply.
-
-#### Configure automatic review policy
-
-Use `allowed_approvals_reviewers` to require or allow automatic review. Set it
-to `["auto_review"]` to require automatic review, or include `"user"` when users
-can choose manual approval.
-
-Set `guardian_policy_config` to replace the tenant-specific section of the
-automatic review policy. The local runtime still uses the built-in reviewer
-template and output contract. Managed `guardian_policy_config` takes precedence
-over local `[auto_review].policy`.
-
-```toml
-allowed_approval_policies = ["on-request"]
-allowed_approvals_reviewers = ["auto_review"]
-
-guardian_policy_config = """
-## Environment Profile
-- Trusted internal destinations include github.com/my-org, artifacts.example.com,
-  and internal CI systems.
-
-## Tenant Risk Taxonomy and Allow/Deny Rules
-- Treat uploads to unapproved third-party file-sharing services as high risk.
-- Deny actions that expose credentials or private source code to untrusted
-  destinations.
-"""
-```
-
-#### Enforce deny-read requirements
-
-Admins can deny reads for exact paths or glob patterns with
-`[permissions.filesystem]`. Users can't weaken these requirements with local
-configuration.
-
-```toml
-[permissions.filesystem]
-deny_read = [
-  # values can be absolute paths...
-  "/**/*.env",
-  # ...or relative to $HOME/%USERPROFILE% using `~`.
-  "~/.ssh",
-  # But relative paths starting with `./` are not allowed.
-]
-```
-
-When deny-read requirements are present, the local runtime rejects full-access
-permissions and keeps local execution in a read-only or workspace sandbox so it
-can enforce them. On native Windows, managed `deny_read` applies to direct file
-tools; shell subprocess reads don't use this sandbox rule.
-
-#### Enforce managed hooks from requirements
-
-When managed policy and remote hooks are enabled, Work Cloud with local access and dots use admin-managed remote MCP hooks on the cloud orchestrator. Configure `mcp_tool` handlers in Global `requirements.toml`. Work Cloud without local access and personal accounts do not use these enterprise hooks. Command/shell, prompt, and agent handlers; hooks from local configuration, plugins, or local directories; environment-scoped hooks; and `SessionEnd` MCP hooks are not supported with cloud orchestration, even when tools execute locally. When both orchestration and execution are local, existing supported hooks continue to work in local-only Work and Codex threads. Admins can still configure supported managed hooks in Agent Security for those workflows.
-
-Before relying on these hooks, test callback connectivity, required events, and failure behavior. An explicit supported denial can block an action, but a `PreToolUse` callback error, timeout, or malformed response can fail the hook without blocking the tool. MCP hooks do not provide a complete Compliance API audit trail. The following script and directory examples retain their Codex scope.
-
-Admins can also define managed lifecycle hooks directly in `requirements.toml`.
-Use `[hooks]` for the hook configuration itself, and point `managed_dir` at the
-directory where your MDM or endpoint-management tooling installs the referenced
-scripts.
-
-To enforce managed hooks even for users who turned hooks off locally, pin
-`[features].hooks = true` alongside `[hooks]`. To skip user, project, session,
-and plugin hooks while still allowing managed hooks, set
-`allow_managed_hooks_only = true`.
-
-```toml
-allow_managed_hooks_only = true
-
-[features]
-hooks = true
-
-[hooks]
-managed_dir = "/enterprise/hooks"
-windows_managed_dir = 'C:\enterprise\hooks'
-
-[[hooks.PreToolUse]]
-matcher = "^Bash$"
-
-[[hooks.PreToolUse.hooks]]
-type = "command"
-command = "python3 /enterprise/hooks/pre_tool_use_policy.py"
-command_windows = 'py -3 C:\enterprise\hooks\pre_tool_use_policy.py'
-timeout = 30
-statusMessage = "Checking managed Bash command"
-```
-
-Notes:
-
-- The local runtime enforces the hook configuration from `requirements.toml`,
-  but it doesn't distribute the scripts in `managed_dir`.
-- Deliver those scripts with your MDM or device-management solution.
-- Managed hook commands should reference absolute script paths under the
-  configured managed directory.
-- `allow_managed_hooks_only = true` skips hooks from user, project, session, and
-  plugin sources, but still loads hooks from `requirements.toml` and other
-  managed config layers.
-
-#### Enforce command rules from requirements
-
-Admins can also enforce restrictive command rules from `requirements.toml`
-using a `[rules]` table. These rules merge with regular `.rules` files, and the
-most restrictive decision still wins.
-
-Unlike `.rules`, requirements rules must specify `decision`, and that decision
-must be `"prompt"` or `"forbidden"` (not `"allow"`).
-
-```toml
-[rules]
-prefix_rules = [
-  { pattern = [{ token = "rm" }], decision = "forbidden", justification = "Use git clean -fd instead." },
-  { pattern = [{ token = "git" }, { any_of = ["push", "commit"] }], decision = "prompt", justification = "Require review before mutating history." },
-]
-```
-
-To restrict which MCP servers a local client can enable, add an `mcp_servers`
-approved list. For stdio servers, match on `command`; for streamable HTTP
-servers, match on `url`:
-
-```toml
-[mcp_servers.docs]
-identity = { command = "codex-mcp" }
-
-[mcp_servers.remote]
-identity = { url = "https://example.com/mcp" }
-```
-
-The string form of `identity.command` matches only the configured `command`. It
-doesn't inspect `args`, `cwd`, `env`, or `env_vars`.
-
-To constrain a complete stdio invocation, match the executable and each
-positional argument:
-
-```toml
-[mcp_servers.internal.identity]
-command = { executable = "/usr/local/bin/codex-mcp", args = [
-  { match = "exact", value = "serve" },
-  { match = "prefix", value = "--workspace=" },
-] }
-```
-
-The executable, argument count, and argument order must match. Argument and URL
-rules support `exact`, `prefix`, and full-value `regex` matching. Structured
-command rules still don't inspect `cwd`, `env`, or `env_vars`. Plugin-bundled
-MCP servers use the same identity shapes under
-`plugins..mcp_servers.`.
-
-If `mcp_servers` is present but empty, the local client disables all MCP servers.
+See [Configuration Reference](https://learn.chatgpt.com/docs/config-file/config-reference) for configuration keys,
+[Configuration precedence](https://learn.chatgpt.com/docs/config-file/config-basic#configuration-precedence)
+for overrides, and [repo plugin settings](https://developers.openai.com/plugins/build/plugins#enable-or-disable-a-plugin-for-a-repo)
+for project-level configuration. [Workspace GitHub import and
+sync](https://learn.chatgpt.com/docs/enterprise/plugin-management) is separate.
 
 #### Control plugin availability
+
+Use **Edit as TOML** in Agent security for enforced plugin feature settings in
+Global `requirements.toml`, or distribute them through local requirements for
+device-managed clients. **Defaults** > **Apps and tools** > **Apps/connectors**
+sets app-tool defaults; it isn't the enforced `features.plugins` switch. For
+workspace plugin permissions, see [Apps and connectors](https://learn.chatgpt.com/docs/enterprise/apps-and-connectors).
 
 To turn off plugins in supported local clients, set `features.plugins` to
 `false` in `requirements.toml`:
@@ -45161,6 +46255,11 @@ reference](https://learn.chatgpt.com/docs/config-file/config-reference#requireme
 supported configuration.
 
 #### Restrict plugin marketplace sources
+
+Use **Edit as TOML** to configure marketplace source requirements in Global
+`requirements.toml`, or deliver them through local requirements. These rules
+limit which local or Git sources users can add and use. They are separate from
+the [marketplace defaults](#configure-plugin-marketplaces-and-defaults).
 
 To restrict plugin marketplace sources, set
 `restrict_to_allowed_sources = true` and define one or more source rules:
@@ -45212,7 +46311,241 @@ marketplace operations: ChatGPT and Codex in the desktop app, and Codex CLI.
 They don't control plugin use in ChatGPT on the web or mobile, and they don't
 add plugins to the IDE extension.
 
+#### Enforce managed hooks from requirements
+
+Managed hooks run administrator-defined actions at supported task or tool
+events. Use **Edit as TOML** in Agent security to configure them in Global
+`requirements.toml`; the settings controls don't include a dedicated hook editor. The execution paths below determine which hook types can run.
+
+When managed policy and remote hooks are enabled, Work Cloud with local access and dots use admin-managed remote MCP hooks on the cloud orchestrator. Configure `mcp_tool` handlers in Global `requirements.toml`. Work Cloud without local access and personal accounts do not use these enterprise hooks. Command/shell, prompt, and agent handlers; hooks from local configuration, plugins, or local directories; environment-scoped hooks; and `SessionEnd` MCP hooks are not supported with cloud orchestration, even when tools execute locally. When both orchestration and execution are local, existing supported hooks continue to work in local-only Work and Codex threads. Admins can still configure supported managed hooks in Agent Security for those workflows.
+
+Before relying on these hooks, test callback connectivity, required events, and failure behavior. An explicit supported denial can block an action, but a `PreToolUse` callback error, timeout, or malformed response can fail the hook without blocking the tool. MCP hooks do not provide a complete Compliance API audit trail. The following script and directory examples retain their Codex scope.
+
+Admins can also define managed lifecycle hooks directly in `requirements.toml`.
+Use `[hooks]` for the hook configuration itself, and point `managed_dir` at the
+directory where your MDM or endpoint-management tooling installs the referenced
+scripts.
+
+To enforce managed hooks even for users who turned hooks off locally, pin
+`[features].hooks = true` alongside `[hooks]`. To skip user, project, session,
+and plugin hooks while still allowing managed hooks, set
+`allow_managed_hooks_only = true`.
+
+```toml
+allow_managed_hooks_only = true
+
+[features]
+hooks = true
+
+[hooks]
+managed_dir = "/enterprise/hooks"
+windows_managed_dir = 'C:\enterprise\hooks'
+
+[[hooks.PreToolUse]]
+matcher = "^Bash$"
+
+[[hooks.PreToolUse.hooks]]
+type = "command"
+command = "python3 /enterprise/hooks/pre_tool_use_policy.py"
+command_windows = 'py -3 C:\enterprise\hooks\pre_tool_use_policy.py'
+timeout = 30
+statusMessage = "Checking managed Bash command"
+```
+
+Notes:
+
+- The local runtime enforces the hook configuration from `requirements.toml`,
+  but it doesn't distribute the scripts in `managed_dir`.
+- Deliver those scripts with your MDM or device-management solution.
+- Managed hook commands should reference absolute script paths under the
+  configured managed directory.
+- `allow_managed_hooks_only = true` skips hooks from user, project, session, and
+  plugin sources, but still loads hooks from `requirements.toml` and other
+  managed config layers.
+
+#### Understand policy scope and precedence
+
+Use this section to check where a policy applies, how requirements combine, how clients receive cloud-managed settings, and how to verify the result.
+
+For Work with local access and dots, supported Global policy governs the shared cloud orchestrator when managed policy is enabled; applicable local execution requirements govern the connected computer. Work cloud containers retain existing Work Cloud policies, and supported device controls still apply to local execution. Codex keeps its existing configuration behavior. Managed configuration does not grant a workspace seat or feature access. Use [Roles and workspace permissions](https://learn.chatgpt.com/docs/enterprise/roles-and-workspace-permissions) for those controls.
+
+#### Agent Security and Local computer access with Work Cloud
+
+Use Agent Security in the Admin Console to manage policies and configuration. It replaces Policies & Configuration. Agent Security is available in the Admin Console, independently of Local computer access with Work Cloud. Existing policies, assignments, and ordering are preserved. Review your existing policies in Agent Security. Local computer access with Work Cloud is a separate opt-in. See [Agent Security](https://learn.chatgpt.com/docs/enterprise/agent-security) for migration guidance.
+
+Before moving policy automation to **Agent Security**:
+
+1. Identify affected integrations. Inventory Terraform configurations and scripts that update policies, and record which policies they manage.
+
+1. Use the policy API to manage Global settings. To manage Local or Codex Cloud settings, use the Agent Security UI. Existing Global API workflows remain available after migration. Test your scripts and Terraform integrations, and confirm that policy assignments and ordering are unchanged.
+
+1. Make any required changes and test the automation. Verify that an intended update reaches the correct Agent Security policy and that the resulting controls are enforced.
+
+Policy migration does not grant local computer access for Work or dots. Reviewing or creating policies is recommended before rollout, but the confirmation flow does not require policy creation to enable access. Before enabling **Allow local computer access**, review the migrated baseline or create a cloud baseline if your policies are currently delivered only through MDM. If `enforce_residency` is enabled in any cloud policy, **Allow local computer access** is disabled for both Work and dots. This safeguard does not configure workspace residency or, by itself, disable Work Cloud or dots.
+
+Environment overrides vary supported settings within a policy. Within a given policy, the order from highest to lowest is OS-specific environment override → all-OS environment override → Global. A higher-priority policy still wins over a lower-priority policy, even when the lower-priority policy is more specific. Some requirements have field-specific merge rules. Confirm which override editors and fields are available for your workspace.
+
+When managed policy and remote hooks are enabled, Work Cloud with local access and dots use admin-managed remote MCP hooks on the cloud orchestrator. Configure `mcp_tool` handlers in Global `requirements.toml`. Work Cloud without local access and personal accounts do not use these enterprise hooks. Command/shell, prompt, and agent handlers; hooks from local configuration, plugins, or local directories; environment-scoped hooks; and `SessionEnd` MCP hooks are not supported with cloud orchestration, even when tools execute locally. When both orchestration and execution are local, existing supported hooks continue to work in local-only Work and Codex threads. Admins can still configure supported managed hooks in Agent Security for those workflows. Before relying on these hooks, test callback connectivity, required events, and failure behavior. An explicit supported denial can block an action, but a `PreToolUse` callback error, timeout, or malformed response can fail the hook without blocking the tool. MCP hooks do not provide a complete Compliance API audit trail. See the [Configuration Reference](https://learn.chatgpt.com/docs/config-file/config-reference).
+
+#### Locations and precedence
+
+For local execution, requirements are applied from lower to higher priority as follows. This ordering also applies to local steps in Local computer access with Work Cloud:
+
+1. System `requirements.toml` (`/etc/codex/requirements.toml` on Unix systems,
+   including Linux and macOS, or `%ProgramData%\OpenAI\Codex\requirements.toml`
+   on Windows).
+2. Agent Security requirements delivered in the cloud config bundle.
+3. Legacy `managed_config.toml` fields that the local client reinterprets as requirements.
+4. macOS managed preferences (MDM) delivered through
+   `com.openai.codex:requirements_toml_base64`.
+
+Higher-precedence layers override ordinary scalar and list values from lower
+layers. Tables merge by key, while requirements such as rules, hooks, and
+filesystem restrictions have field-specific composition behavior. Use the
+[`requirements.toml` reference](https://learn.chatgpt.com/docs/config-file/config-reference#requirementstoml)
+for the current schema instead of assuming that every field merges the same
+way.
+
+For backward compatibility, supported local clients reinterpret the legacy
+`approval_policy`, `approvals_reviewer`, and `sandbox_mode` fields as
+requirements. This conversion adds compatibility choices where necessary; use
+`requirements.toml` for explicit allowlists.
+
+#### Precedence for Local computer access with Work Cloud
+
+For Work with local access and dots, distinguish Global orchestrator policy from execution policy. Applicable local requirements govern the connected computer. Work cloud containers and dots cloud computers use their own execution configuration and requirements, rather than the managed environment bundle used by other executors.
+
+For local execution, MDM and legacy managed-device requirements rank above Agent Security. The device's system requirements file ranks below Agent Security. Within each policy, resolve OS-specific environment overrides before all-OS environment overrides, then Global. Policy priority wins over specificity across policies.
+
+| Control                       | Local Work without sync and local Codex               | Local computer access with Work Cloud                                                                                                                       |
+| ----------------------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Enterprise requirements       | Follow the local requirements order above.            | Apply to local executors. Work cloud containers retain existing Work Cloud policies.                                                                        |
+| Device execution restrictions | Enforced by supported local controls.                 | Follow the local requirements order above, including MDM and legacy requirements above Agent Security.                                                      |
+| Environment overrides         | Use the configuration model for the relevant product. | Within one policy: OS-specific environment override, then all-OS environment override, then Global. A lower-priority policy cannot win through specificity. |
+
+Requirements impose constraints, while configuration defaults supply starting values. For Work with local access and dots, supported Global policy applies through the shared cloud orchestrator when managed policy is enabled. Applicable local `requirements.toml` requirements govern execution on a connected computer. Work cloud containers and dots cloud computers use their own execution configuration and requirements, rather than the managed environment bundle used by other executor types. Local execution restrictions do not automatically apply to these cloud computers. Review cloud capability permissions and test local and cloud execution separately.
+
+Keep orchestrator controls, including approvals and web search, in Global. Use the dedicated Allowed approval policies and Allowed web search modes controls where available, and TOML for other supported fields. See the [Configuration Reference](https://learn.chatgpt.com/docs/config-file/config-reference) for the field list and execution scope.
+
+#### Cloud-managed requirements
+
+When a user signs in with ChatGPT on a supported plan, supported local clients
+can receive admin-enforced requirements associated with the workspace. This is
+a delivery channel for `requirements.toml`-compatible policy. It doesn't grant
+workspace access or replace workspace RBAC. Authentication requirements must be
+[managed locally](#manage-authentication-locally).
+
+Configure common requirements with the [Agent security
+controls](#configure-a-policy-in-agent-security). For a policy that allows only
+on-request approvals and read-only or workspace-write sandboxes, use **Approval
+policies** and **Sandbox modes** under **Policy guardrails**. To also prompt before
+a supported shell entry point runs, use **Edit as TOML** to add the `[rules]`
+table to Global `requirements.toml`.
+
+The complete TOML equivalent is:
+
+```toml
+allowed_approval_policies = ["on-request"]
+allowed_sandbox_modes = ["read-only", "workspace-write"]
+
+[rules]
+prefix_rules = [
+  { pattern = [{ any_of = ["bash", "sh", "zsh"] }], decision = "prompt", justification = "Require explicit approval for shell entry points" },
+]
+```
+
+Check that every managed client version supports the keys you select. Assign the policy to the intended users or groups and verify that it takes effect on their supported clients. Use
+the configuration reference for the current schema and the administration
+surface for current assignment behavior.
+
+The service selects the enterprise-managed requirement layers that apply to the
+signed-in identity. The local client evaluates those layers with the other
+requirements sources described in [Locations and precedence](#locations-and-precedence).
+Use the current administration surface for workspace-side creation and
+assignment. Don't rely on a copied group-matching algorithm; the administration
+service owns that behavior and can change it independently of the local
+requirements format.
+
+For supported keys and examples, see
+[Example requirements.toml](#example-requirementstoml) and the
+[`requirements.toml` reference](https://learn.chatgpt.com/docs/config-file/config-reference#requirementstoml).
+
+#### How local clients apply cloud-managed requirements
+
+The local loading and cache behavior below describes supported local clients. It does not establish when a changed cloud policy takes effect in an already-running task using Local computer access with Work Cloud. Verify the effective policy before relying on a changed restriction.
+
+When a user starts a supported local client and signs in with ChatGPT on a
+supported plan, the client first checks for a valid, identity-matched cache
+entry. If no valid entry is available, the client fetches the applicable bundle
+with retries and writes a signed cache entry on success. If the request fails or
+times out and no valid cache is available, the cloud config bundle load returns
+an error rather than silently starting without the cloud-managed requirements
+layer.
+
+After cache resolution, the client composes the cloud requirements with the
+other requirements layers described above. A background refresh updates the
+cached bundle and makes it available to subsequent configuration loads. This
+doesn't guarantee that an already-running task immediately uses a changed policy.
+Some desktop settings require an app restart; follow any restart prompt and
+verify the effective settings before relying on the change.
+
+#### Confirm the admin and employee experience
+
+Assign a person to own each managed policy, record which users or groups should
+receive it, and document the business reason for any filesystem, network,
+approval, or permission-profile restriction.
+
+Test an allowed workflow and a blocked workflow with a user who has the intended permissions. Check the effective settings in the supported client. A workspace role or group alone does not enforce a local runtime restriction.
+
+Use **Test policies** in Agent security to check which policies match a member,
+group, or role selection. In an editable session, this checks the current draft
+without saving it. The result shows policy selection, not the final merged
+configuration or whether a client enforces a restriction. After saving, test
+the allowed and blocked workflows on each relevant client and execution path.
+
+#### Deploy device-managed configuration
+
+Use local system requirements or MDM for authentication restrictions and device-managed policies. The legacy `managed_config.toml` mechanism has different startup precedence from Agent security **Defaults**. The MDM workflow covers both requirements and legacy defaults.
+
+#### Manage authentication locally
+
+Set `allowed_login_methods`, `allowed_chatgpt_workspaces`,
+`cli_auth_credentials_store`, and `chatgpt_base_url` in the local system
+`requirements.toml` or macOS MDM requirements. Codex ignores these four fields
+in cloud-managed requirements. Local authentication requirements apply before
+credentials load and before Codex retrieves cloud policy.
+
+To require ChatGPT login to an approved workspace and store credentials in the
+OS credential store, use:
+
+```toml
+allowed_login_methods = ["chatgpt"]
+allowed_chatgpt_workspaces = ["00000000-0000-0000-0000-000000000000"]
+cli_auth_credentials_store = "keyring"
+```
+
+`allowed_login_methods` accepts `chatgpt`, `api`, or both. If omitted, this setting
+doesn't restrict login methods. If set, the list must contain at least one method.
+`api` permits API authentication, including Amazon Bedrock.
+The workspace restriction also applies to
+[Codex access tokens](https://learn.chatgpt.com/docs/enterprise/access-tokens).
+
+User-configured `forced_login_method` and `forced_chatgpt_workspace_id` must
+follow the requirements. When a user selects a workspace, it must also appear
+in the managed workspace allowlist. If no workspaces match, ChatGPT login is
+unavailable. API authentication remains available when permitted. If no login method
+is available, Codex refuses to start.
+
+See the [requirements reference](https://learn.chatgpt.com/docs/config-file/config-reference#requirementstoml)
+for credential storage modes and service URL configuration.
+
 #### Managed defaults (`managed_config.toml`)
+
+Use [Agent security Defaults](#set-configuration-defaults) for supported
+cloud-managed starting values. This section covers the legacy device-managed
+`managed_config.toml` mechanism and its different startup precedence. Editing
+**Defaults** in Agent security doesn't deploy a `managed_config.toml` file to
+members' devices.
 
 Managed defaults set the configuration a supported local client starts with. At
 startup, they override the user's local `config.toml` and any CLI `--config`
@@ -45254,37 +46587,6 @@ not the legacy ordering above. Cloud `requirements.toml` uses
 
 If the file is missing, the local runtime skips the managed layer.
 
-#### macOS managed preferences (MDM)
-
-On macOS, admins can push a device profile that provides base64-encoded TOML payloads at:
-
-- Preference domain: `com.openai.codex`
-- Keys:
-  - `config_toml_base64` (managed defaults)
-  - `requirements_toml_base64` (requirements)
-
-The local runtime parses these "managed preferences" payloads as TOML. For
-managed defaults (`config_toml_base64`), managed preferences have the highest
-precedence. For requirements (`requirements_toml_base64`), precedence follows
-the cloud-managed requirements order described above. The same
-requirements-side `[features]` table works in `requirements_toml_base64`; use
-canonical feature keys there as well.
-
-#### MDM setup workflow
-
-The local runtime honors standard macOS MDM payloads, so you can distribute
-settings with tooling like `Jamf Pro`, `Fleet`, or `Kandji`. A lightweight
-deployment looks like:
-
-1. Build the managed payload TOML and encode it with `base64` (no wrapping).
-2. Drop the string into your MDM profile under the `com.openai.codex` domain at `config_toml_base64` (managed defaults) or `requirements_toml_base64` (requirements).
-3. Push the profile, then ask users to restart the supported local client and
-   confirm the startup config summary reflects the managed values.
-4. When revoking or changing policy, update the managed payload; the client
-   reads the refreshed preference the next time it launches.
-
-Avoid embedding secrets or high-churn dynamic values in the payload. Treat the managed TOML like any other MDM setting under change control.
-
 #### Example managed_config.toml
 
 ```toml
@@ -45308,6 +46610,37 @@ log_user_prompt = false            # keep prompts redacted
 - Keep `network_access = false` unless your security review allows a collector or domains required by your workflows.
 - Use managed configuration to pin OTel settings (exporter, environment), but keep `log_user_prompt = false` unless your policy explicitly allows storing prompt contents.
 - Periodically audit diffs between local `config.toml` and managed policy to catch drift; managed layers should win over local flags and files.
+
+#### macOS managed preferences (MDM)
+
+On macOS, admins can push a device profile that provides base64-encoded TOML payloads at:
+
+- Preference domain: `com.openai.codex`
+- Keys:
+  - `config_toml_base64` (managed defaults)
+  - `requirements_toml_base64` (requirements)
+
+The local runtime parses these "managed preferences" payloads as TOML. For
+managed defaults (`config_toml_base64`), managed preferences have the highest
+precedence. For requirements (`requirements_toml_base64`), precedence follows
+the [requirements order](#locations-and-precedence). The same
+requirements-side `[features]` table works in `requirements_toml_base64`; use
+canonical feature keys there as well.
+
+#### MDM setup workflow
+
+The local runtime honors standard macOS MDM payloads, so you can distribute
+settings with tooling like `Jamf Pro`, `Fleet`, or `Kandji`. A lightweight
+deployment looks like:
+
+1. Build the managed payload TOML and encode it with `base64` (no wrapping).
+2. Drop the string into your MDM profile under the `com.openai.codex` domain at `config_toml_base64` (managed defaults) or `requirements_toml_base64` (requirements).
+3. Push the profile, then ask users to restart the supported local client and
+   confirm the startup config summary reflects the managed values.
+4. When revoking or changing policy, update the managed payload; the client
+   reads the refreshed preference the next time it launches.
+
+Avoid embedding secrets or high-churn dynamic values in the payload. Treat the managed TOML like any other MDM setting under change control.
 
 ### Plugin controls
 
@@ -45377,6 +46710,34 @@ packaging and distribution.
 
 To import workspace plugins from GitHub and keep them up to date, see
 [Plugin management](https://learn.chatgpt.com/docs/enterprise/plugin-management).
+
+#### Troubleshoot "Disabled by admin"
+
+If you're a workspace owner, check these settings when a plugin shows
+"Disabled by admin" on the web or desktop:
+
+1. Open [Admin console](https://admin.openai.com), select the workspace, and open **Plugins** (**Apps** in
+   FedRAMP workspaces). Review the plugin's workspace availability and any
+   supported role settings. ChatGPT Business uses workspace-wide availability.
+2. If your workspace supports RBAC, review the workspace default and all direct
+   and group role assignments in **Permissions & roles**. Confirm the member's
+   general plugin permission is enabled: **Allow members to use plugins** or
+   **Use plugins**, depending on the label shown. FedRAMP workspaces may show
+   **Use apps**.
+3. Confirm the member can access each app required by the plugin and that the
+   task's required actions are enabled.
+4. Where Lockdown Mode roles are available, check all direct and group role
+   assignments for restrictions on the capability the member needs. Lockdown Mode
+   doesn't automatically disable every app in managed workspaces, but its
+   restrictions can apply even when an ordinary role grants access.
+
+For self-serve ChatGPT Business accounts, ask the member to review [Lockdown Mode](https://help.openai.com/en/articles/20001061-lockdown-mode) in
+**Settings > Security**, where available. Lockdown Mode doesn't affect Codex
+network access.
+
+Correct unintended settings or role assignments according to your organization's
+security policy. Allow up to five minutes for role changes to apply, then ask the
+member to try again. See [Role-based access control (RBAC)](https://help.openai.com/en/articles/11750701-rbac) for details.
 
 #### Export the public catalog for review
 
@@ -45880,18 +47241,22 @@ change local runtime requirements.
 
 #### Set the workspace default, then create targeted custom roles
 
-Only workspace owners can configure role-based access control (RBAC) and create
-custom roles. Workspace settings establish the baseline for eligible
-permissions. Workspace owners can assign custom roles through groups or
-directly to individual members where supported. Groups can be manually managed
-or SCIM-synced, and a member can receive more than one custom role.
+Workspace owners can create custom roles for role-based access control (RBAC)
+and assign them through groups or directly to members where supported.
+Workspace settings establish the baseline for eligible permissions. Groups can
+be manually managed or SCIM-synced, and a member can receive more than one custom role.
 
 For eligible permissions, **Default** inherits the workspace setting, **On**
 grants access through that role, and **Off** does not grant access through that
-role. Ordinary role permissions combine additively: another assigned role can
-still grant access. Review direct assignments and roles received through groups.
-Lockdown Mode and product eligibility apply separately. Available permission
-states can vary by feature.
+role. Available permission states can vary by feature.
+
+Ordinary role permissions combine additively. For example, **On** in one role
+allows a feature even if another role sets it to **Off**. Review direct and group
+role assignments.
+
+Lockdown Mode restrictions and product eligibility still apply when an ordinary
+role grants access. For plugins,
+see [plugin access troubleshooting](https://learn.chatgpt.com/docs/enterprise/apps-and-connectors#troubleshoot-disabled-by-admin).
 
 #### Review Work Local and Work Cloud permissions
 
@@ -46079,20 +47444,14 @@ Supply a model catalog when your gateway uses a model name Codex does not recogn
 
 Host a remote catalog with `model_providers..model_catalog_url` to update model metadata centrally, or distribute a local file with `model_catalog_json`. See the [configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference) for both settings.
 
-For example, to use `company-coding-model` as an alias for `gpt-6-luna`:
-
-1. Create the `company-coding-model` alias on the gateway and route it to the approved upstream `gpt-6-luna` model.
-2. Download the [Codex model catalog](https://github.com/openai/codex/blob/main/codex-rs/models-manager/models.json) for your Codex version and save a copy as `gateway-models.json`. Use this file as your starting point.
-3. Edit the `gpt-6-luna` entry in your copy: set `slug` to `company-coding-model` and check that the remaining metadata matches the upstream model and gateway capabilities. For an alias without a model migration, set `upgrade` to `null`.
-4. Keep the entries in the top-level `models` array. Include every model users need to select, then serve the file from a catalog endpoint or distribute it locally as described below.
-
-To use a catalog for a specific Codex version, check `codex --version` and select the matching `rust-v` tag. For a custom build, use its exact source commit. For a desktop deployment, match the bundled CLI version.
-
-For Bedrock through LiteLLM, apply the [required catalog edits](https://learn.chatgpt.com/docs/enterprise/bedrock-through-litellm#prepare-the-client-catalog).
+Get a catalog endpoint or file compatible with your Codex version from your cloud
+or gateway provider. Make sure it includes each approved alias and its model
+metadata. For catalog implementation, see
+[Implementing model catalogs for gateways and clouds](https://learn.chatgpt.com/docs/model-catalogs).
 
 #### Serve a remote catalog
 
-Serve the prepared `gateway-models.json` as the response body of an HTTPS endpoint.
+Use the HTTPS catalog endpoint supplied by your provider.
 Distribute the full endpoint URL in the selected provider's `config.toml` table:
 
 ```toml
@@ -46103,7 +47462,7 @@ web_search = "disabled"
 [model_providers.enterprise-gateway]
 name = "Organization Gateway"
 base_url = "https://gateway.example.com/v1"
-model_catalog_url = "https://gateway.example.com/codex/models.json"
+model_catalog_url = "https://gateway.example.com/codex/models"
 wire_api = "responses"
 env_key = "CODEX_GATEWAY_API_KEY"
 ```
@@ -46115,18 +47474,7 @@ default OpenAI endpoint for the current authentication mode.
 Discovery requires API-key, command-backed, or Codex-backend authentication.
 Custom headers alone don't trigger it.
 
-The catalog endpoint must:
-
-- Accept `GET` requests at the configured URL, including the `client_version`
-  query parameter Codex adds and any configured provider `query_params`.
-- Accept the selected provider's authentication and configured headers. Host
-  the catalog on a service authorized to receive those credentials.
-- Return a top-level `models` array with complete Codex model metadata matching
-  the client's version. Use the version-matched catalog prepared above, rather
-  than a list of model IDs. Give each entry a unique, nonempty `slug`.
-- Return the JSON directly without redirects and keep the response within 1 MiB.
-
-Update the catalog when your approved models change. Restart the client after
+Coordinate catalog updates with your provider when your approved models change. Restart the client after
 changing its configuration.
 
 Remove any effective `model_catalog_json` setting, including one enforced through
@@ -46134,7 +47482,7 @@ Remove any effective `model_catalog_json` setting, including one enforced throug
 
 #### Distribute a local catalog
 
-Use `model_catalog_json` to load the prepared file at startup. A local custom
+Use `model_catalog_json` to load the provider-supplied file at startup. A local custom
 catalog replaces the bundled catalog.
 
 Set the gateway alias, catalog `slug`, and Codex `model` to `company-coding-model`. Add these settings before the first TOML table in the Codex configuration you distribute, using the file's actual absolute path:
@@ -46809,23 +48157,12 @@ requires_openai_auth = true # Use the ChatGPT credential for OpenAI.
 env_http_headers = { "X-Gateway-Key" = "GATEWAY_KEY" } # Send the same gateway key separately.
 ```
 
-Use a launch helper such as this shell function for the CLI. Replace the command and arguments with those from your existing `auth` block:
-
-```sh
-codex_with_gateway() (
-  set -eu
-  GATEWAY_KEY=$(/usr/local/bin/fetch-gateway-token)
-  test -n "$GATEWAY_KEY"
-  export GATEWAY_KEY
-  exec codex "$@"
-)
-
-codex_with_gateway
-```
+Use a launch helper function to run the command from your existing `auth` block, verify that it returned a non-empty key, export the key as `GATEWAY_KEY`, and then start Codex.
 
 Configure your gateway to accept `X-Gateway-Key`, validate the key, and remove that header before forwarding the request to the backend. The request from the client now carries:
 
 ```http
+POST /backend-api/codex/responses
 Authorization: Bearer <ChatGPT token>
 ChatGPT-Account-ID: <workspace ID, when available>
 X-Gateway-Key: <same gateway key returned by your command>
@@ -46833,11 +48170,24 @@ X-Gateway-Key: <same gateway key returned by your command>
 
 The helper runs once per launch. Codex does not rerun it or refresh this header; when the key expires, obtain a new key and relaunch. For desktop, your launch integration must supply `GATEWAY_KEY` to the app process. Choose Option B if you want Codex to manage gateway sign-in and token renewal.
 
-The diagrams abbreviate the request headers and launch helper. Use `Authorization: Bearer ` and keep the helper's empty-key check from the examples above. If `GATEWAY_KEY` is empty, Codex omits `X-Gateway-Key`.
-
 #### Option B: Use native gateway OAuth
 
-Use this option to replace the command and launch helper with Codex-managed gateway sign-in. Your gateway must have an OAuth authorization server. Register a public client that supports authorization code with PKCE, then replace the example URLs and client ID. Remove the existing provider's `auth` block and use the following managed configuration.
+Use this option to replace API-key or command-backed gateway authentication with Codex-managed gateway sign-in. Your gateway must have an OAuth authorization server. Register a public client that supports authorization code with PKCE, then replace the example URLs and client ID.
+
+For comparison, an existing API-key provider that reads its key from an environment variable might contain:
+
+```toml
+# config.toml — existing API-key path
+model_provider = "enterprise_gateway"
+
+[model_providers.enterprise_gateway]
+name = "Enterprise gateway"
+base_url = "https://gateway.example.com/v1"
+requires_openai_auth = false
+env_key = "CODEX_GATEWAY_API_KEY"
+```
+
+For ChatGPT sign-in, replace the existing provider with the following managed configuration:
 
 ```toml
 # requirements.toml
@@ -46857,6 +48207,15 @@ delivery = { kind = "cookie", name = "auth-openid" } # Add gateway auth as a coo
 ```
 
 Codex uses a free loopback port by default. If your identity provider requires a fixed redirect URI, set `redirect_port` and register `http://127.0.0.1:43127/callback` for this example.
+
+The request from the client now carries:
+
+```http
+POST /backend-api/codex/responses
+Authorization: Bearer <ChatGPT token>
+ChatGPT-Account-ID: <workspace ID, when available>
+Cookie: auth-openid=<gateway token>
+```
 
 #### Add routing headers (optional)
 
@@ -47109,6 +48468,55 @@ owns it.
 - [Build plugins](https://developers.openai.com/plugins/build/plugins)
 - [Admin rollout guide](https://learn.chatgpt.com/docs/enterprise/admin-setup)
 - [Plugin controls](https://learn.chatgpt.com/docs/enterprise/apps-and-connectors)
+
+### Understand ChatGPT education plans
+
+Source: [Understand ChatGPT education plans](https://learn.chatgpt.com/docs/enterprise/education-plans.md)
+
+Understand what your plan includes, how members get access, and how to use multiple workspaces. Your OpenAI account team can help confirm the plan and terms for each institutional workspace.
+
+#### Compare plans
+
+| Plan | Availability | End-user access | What’s included | Guidance |
+| ---- | ------------ | --------------- | --------------- | -------- |
+
+| **ChatGPT Edu**
+Credit-based pricing | Contact your OpenAI account team | Access provided through a designated Edu workspace | Eligible metered usage draws on workspace credits. | Review your agreement and [Pricing and usage](https://learn.chatgpt.com/docs/pricing) for included usage and credit rules. |
+| **Edu Plus** | Contact your OpenAI account team | Access provided through a designated Edu Plus workspace | Included usage aligns with [ChatGPT Plus](https://help.openai.com/en/articles/6950777-what-is-chatgpt-plus) rate limits.
+Additional credits can be purchased as needed. | See [ChatGPT Plus](https://help.openai.com/en/articles/6950777-what-is-chatgpt-plus) for current usage guidance. |
+| **Edu Pro** | Contact your OpenAI account team | Access provided through a designated Edu Pro workspace | Included usage aligns with [ChatGPT Pro](https://help.openai.com/en/articles/9793128-about-chatgpt-pro-tiers) rate limits.
+Additional credits can be purchased as needed. | See [ChatGPT Pro](https://help.openai.com/en/articles/9793128-about-chatgpt-pro-tiers) for current usage guidance. |
+| **ChatGPT for Teachers** | Self-serve with verification | Eligible U.S. K–12 educators verify eligibility, then create or join a school or district workspace. | Tools for writing, file analysis, and research, with collaboration features and school or district admin controls. | See the [Teachers guide](https://help.openai.com/en/articles/12844995-chatgpt-for-teachers) for eligibility, included features, and setup. |
+| **ChatGPT for Academic Researchers** | Self-serve with verification
+**Currently closed to new applications** | Approved participants verify eligibility, then follow their workspace setup instructions. New signups join an informational waitlist. | Dedicated researcher workspace with Pro-level rate limits and [business data protections](https://openai.com/enterprise-privacy/). See the Researchers guide for current offers and limits. | No institutional contract required. Existing Edu or Enterprise members use an institution-managed process. See the [Researchers guide](https://help.openai.com/en/articles/20001406-chatgpt-for-academic-researchers) for current terms and setup. |
+
+ChatGPT Edu includes file uploads, data analysis, web browsing, custom GPTs, and admin controls. See the [Edu overview](https://help.openai.com/en/articles/9377311-chatgpt-edu-at-openai).
+
+Plus and Pro links describe usage levels. Institution-managed pricing, promotions, and features can differ. Before changing plans, confirm how content, credits, and usage will be handled with your OpenAI account team.
+
+#### Use multiple workspaces
+
+Each workspace has one plan type and its own members, settings, and content. Different plan types require separate workspaces.
+
+**Choose a primary workspace for each team’s shared work.** Give workspaces clear names and tell members when to use each one.
+
+1. In ChatGPT on the web, open your profile menu and select a workspace. On mobile, use the sidebar.
+
+2. Confirm the intended workspace is active before opening or creating work.
+
+#### Common scenarios
+
+| When this happens                                                       | What to do or tell users                                                                                                                                                                                                                                                        |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Team members use different workspaces and need to collaborate           | Check the feature’s [sharing options](https://learn.chatgpt.com/docs/space/collaboration) and confirm that all collaborators can access the shared work.                                                                                                                                                |
+| A user cannot find a chat, file, or shared resource                     | Ask them to switch to the workspace where the work was created. [Switching workspaces](https://help.openai.com/en/articles/8265430-what-is-a-chatgpt-enterprise-workspace-how-can-i-switch-workspaces) does not transfer content.                                               |
+| A user cannot see a workspace                                           | Verify they signed in with the correct account, then confirm their [invitation or provisioning status](https://help.openai.com/en/articles/9047883-getting-started-with-openai-identity-and-access-for-managed-workspaces).                                                     |
+| A model or feature is available in one workspace but missing in another | Check the active workspace’s [plan and permissions](https://help.openai.com/en/articles/8266401-managing-members-workspace-roles-and-seats-in-chatgpt-enterprise-and-edu). Tell users which workspace to use. Extra credits do not automatically enable every model or feature. |
+| A user reaches a usage limit                                            | Review that workspace’s [allowance and spending controls](https://help.openai.com/en/articles/20001001-manage-usage-limits-and-overages-in-chatgpt-enterprise-and-edu). Explain the available options under the institution’s plan.                                             |
+| A researcher wants to join another Academic Researchers workspace       | Explain that a verified email can belong to [only one researcher workspace at a time](https://help.openai.com/en/articles/20001406-chatgpt-for-academic-researchers). Confirm the appropriate setup path before changing access.                                                |
+| A district wants to claim its domain                                    | Review existing [Teachers workspaces](https://help.openai.com/en/articles/12844995-chatgpt-for-teachers) and coordinate with the workspace owners before claiming the domain because the claim can affect access.                                                               |
+
+Related guidance: [Switch workspaces](https://help.openai.com/en/articles/8265430-what-is-a-chatgpt-enterprise-workspace-how-can-i-switch-workspaces) · [User lifecycle management](https://learn.chatgpt.com/docs/enterprise/user-lifecycle) · [Pricing and usage](https://learn.chatgpt.com/docs/pricing)
 
 ### Usage Insights for ChatGPT Work in Codex
 
@@ -47677,11 +49085,10 @@ new access level:
    approving a separate group-wide policy change and reviewing its effect on
    every member.
 5. Have a workspace owner open the employee's profile, review **Direct roles**,
-   and remove outdated roles assigned directly to that person. Custom roles use **Default**,
-   **On**, and **Off**. An explicit **Off** in any assigned role overrides
-   **On** in another role.
-6. Review the employee's effective permissions across all direct and
-   group-assigned roles before approving the team change.
+   and remove outdated direct role assignments.
+6. Review the employee's
+   [effective permissions](https://learn.chatgpt.com/docs/enterprise/roles-and-workspace-permissions#set-the-workspace-default-then-create-targeted-custom-roles)
+   across all direct and group-assigned roles before approving the team change.
 7. If the workspace supports more than one seat type, have a workspace owner open
    **Workspace settings > Members > Change seat type** and review the
    employee's intended product access.
@@ -48626,7 +50033,7 @@ Plan your rollout and explore tools for routine administration.
 
 Choose a setup task, then review its access and security requirements.
 
-- [Configure dots permissions](https://learn.chatgpt.com/docs/dots/controls#for-workspace-admins): Manage dots access, communication, computers, and custom rules.
+- [Configure dots permissions](https://learn.chatgpt.com/docs/enterprise/dots-admin-guide): Manage dots access, communication, computers, and custom rules.
 
 - [Manage Space sharing and access](https://learn.chatgpt.com/docs/space/collaboration#for-workspace-admins): Control Library sharing permissions and help members share pages.
 
@@ -48687,6 +50094,14 @@ Deploy apps and configure updates, runtime settings, remote connections, and mod
 - [Gateway compatibility](https://learn.chatgpt.com/docs/enterprise/gateway-compatibility): Check the Responses API behavior required for model requests, streaming, and tool calls.
 
 - [Bedrock through LiteLLM](https://learn.chatgpt.com/docs/enterprise/bedrock-through-litellm): Configure a LiteLLM gateway to route Codex model requests to Amazon Bedrock.
+
+#### ChatGPT EDU
+
+Compare education plans and configure access for your institution.
+
+- [Education plans](https://learn.chatgpt.com/docs/enterprise/education-plans): Compare plans, help members get access, and manage multiple workspaces.
+
+- [Higher education setup](https://learn.chatgpt.com/docs/enterprise/higher-education-roles-and-permissions): Choose campus roles, compare recommended permissions, and verify access.
 
 #### ChatGPT Work
 
