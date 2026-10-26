@@ -4,8 +4,8 @@ Report to me telegraphically: fragments over sentences, brevity over grammar.
 
 ## Documents
 
-Before writing a document for people (a spec, update, plan, memo or release notes), load
-the `house-style` skill and follow it.
+Before writing a document for people (such as a spec, update, plan, memo or release
+notes), load the `house-style` skill and follow it.
 
 ## Subagents
 
