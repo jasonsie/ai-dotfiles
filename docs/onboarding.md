@@ -127,13 +127,13 @@ cron ──▶ sync job ──▶ docs mirror ──▶ mirror files ──▶ u
 ```
 
 - cron (GitHub): Monday 01:00 UTC, or on demand — `.github/workflows/sync-cli-docs.yml:6`
-- sync job (GitHub): runs the mirror, the catalog update, then the report — `.github/workflows/sync-cli-docs.yml:42`, `:43`, `:55`
-- docs mirror (repo): fetches every page each docs index lists; a source below its page floor keeps the previous copy — `scripts/upstream/sync-cli-docs.sh:134`, `:168`, `:107`
-- docs sites (outside): the Claude Code, Codex, Pi and Antigravity documentation — `scripts/upstream/sync-cli-docs.sh:3`
-- mirror files (repo): `docs/upstream/`, Markdown pages and skill catalogs, never edited by hand — `scripts/upstream/sync-cli-docs.sh:74`
+- sync job (GitHub): runs the mirror, the catalog update, then the report — `.github/workflows/sync-cli-docs.yml:46`, `:47`, `:59`
+- docs mirror (repo): fetches every page each docs index lists, and the GitHub files the config names; a source below its page floor keeps the previous copy — `scripts/upstream/sync-upstream.py:266`, `:327`, `:420`
+- docs sources (outside): the Claude Code, Codex, Pi and Antigravity documentation, Google's and Meta's style and docs-writing guides on GitHub — `config/upstream-docs.json`
+- mirror files (repo): `docs/upstream/`, Markdown pages with their indexes and skill catalogs, never edited by hand — `scripts/upstream/sync-upstream.py:188`
 - upstream report (repo): reads the mirror, `skills.lock` and `cli-settings.json`; fetches each pinned file at its commit and on the default branch; writes the PR body — `scripts/upstream/report-upstream.py:169`, `:160`, `:139`
 - GitHub API (outside): pinned files and each collection's tree — `scripts/upstream/report-upstream.py:139`, `:104`
-- PR (GitHub): `upstream-sync` force-pushed, the PR opened or edited — `.github/workflows/sync-cli-docs.yml:63`, `:66`, `:68`
+- PR (GitHub): `upstream-sync` force-pushed, the PR opened or edited — `.github/workflows/sync-cli-docs.yml:67`, `:70`, `:72`
 
 #### skill use — `/which-skill` or any skill, in a CLI session
 
@@ -172,5 +172,5 @@ session ──▶ skill link ──▶ skill folder ──▶ the repo that is o
 | add an MCP server | `config/mcp-servers.json` |
 | add or update a skill | `skills/<name>/`, `skills/skills.lock`, `skills/which-skill/SKILL.md` |
 | change how a step writes files | `scripts/install/installer.py` |
-| change the weekly docs mirror | `scripts/upstream/sync-cli-docs.sh`, `.github/workflows/sync-cli-docs.yml` |
+| change the weekly docs mirror | `config/upstream-docs.json` (the sources), `scripts/upstream/sync-upstream.py`, `.github/workflows/sync-cli-docs.yml` |
 | see why a check fails | `scripts/healthcheck.sh` |

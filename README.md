@@ -15,7 +15,8 @@ emulated. How it works: [docs/how-it-works.md](docs/how-it-works.md). Forked fro
 | `config/cli-settings.json` | `enforce`: safety settings, put back on every install. `default`: model choices, set only while a CLI has none | Each CLI's settings file, merged (never linked) |
 | `config/mcp-servers.json` | Shared MCP servers (today: context7, library docs) | `claude`, `codex` and `pi mcp add`; merged into `~/.gemini/config/mcp_config.json` for Antigravity |
 | `skills/<name>/` | Shared skills; adapted ones are pinned in `skills/skills.lock` | `~/.claude/skills`, `~/.agents/skills` (Codex and Pi), `~/.gemini/config/skills` (Antigravity) |
-| `docs/upstream/` | A weekly mirror of each CLI's official docs and the watched skill catalogs | Read on demand; never installed |
+| `config/upstream-docs.json` | The documentation sources behind `docs/upstream/` | `scripts/upstream/sync-upstream.py`, weekly |
+| `docs/upstream/` | A weekly mirror of each CLI's official docs and of Google's and Meta's style and docs-writing guides, indexed, plus the watched skill catalogs | Read through the `upstream-docs` skill; never installed |
 
 Not managed: credentials, sessions, plugin choices, local approvals and trust, and
 per-project rules (each project keeps its own `AGENTS.md`).

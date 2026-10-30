@@ -32,14 +32,18 @@ jobs:
         with:
           python-version: "3.12"
 
-      # A source whose index or fetches fall below its page floor keeps last week's
-      # copy and makes this step's status non-zero; the review PR says so. The skill
-      # catalogs record which skills each watched collection has, so the report can
-      # list new ones.
+      # The sources are config/upstream-docs.json. A source whose index or fetches
+      # fall below its page floor keeps last week's copy and makes this step's status
+      # non-zero; the review PR says so. pandoc converts the HTML and reStructuredText
+      # guides. The skill catalogs record which skills each watched collection has, so
+      # the report can list new ones.
+      - name: Install pandoc
+        run: sudo apt-get update -qq && sudo apt-get install -y pandoc
+
       - name: Refresh mirrors and skill catalogs
         run: |
           status=0
-          bash scripts/upstream/sync-cli-docs.sh || status=$?
+          python scripts/upstream/sync-upstream.py || status=$?
           python scripts/upstream/report-upstream.py --update-catalogs || status=1
           echo "SYNC_STATUS=$status" >> "$GITHUB_ENV"
 

@@ -13,10 +13,11 @@ Codex CLI, Pi, and Antigravity. The mechanism and layout are in
 | `config/global-agents.md` | Global rules for every CLI, live through links | `scripts/install/instructions.py` |
 | `config/cli-settings.json` | Per-CLI `enforce` and `default` keys | `scripts/install/settings.py` |
 | `config/mcp-servers.json` | Shared MCP servers | `scripts/install/mcp.py` |
+| `config/upstream-docs.json` | The documentation sources mirrored for agents: each CLI's docs, Google's and Meta's style and docs-writing guides, a `when` label per page | `scripts/upstream/sync-upstream.py` (weekly workflow) |
 | `skills/` | Shared skills; `skills.lock` pins adapted upstream skills | `scripts/install/skills.py` |
 | `scripts/ai-dotfiles` | Global command: `install`, `update`, `uninstall`, `check` | `scripts/install/skills.py` |
 | `scripts/install/installer.py` | What every step shares: reading `ai-clis.json`, safe writes | — |
-| `docs/upstream/` | Machine-written docs mirrors and skill catalogs | `scripts/upstream/` (weekly workflow) |
+| `docs/upstream/` | Machine-written docs mirrors with their indexes (`INDEX.md`, `MIRROR-INDEX.*`), and skill catalogs | `scripts/upstream/` (weekly workflow) |
 | `docs/onboarding.md` | This repo's onboarding report | `skills/onboard/` (`/onboard`) |
 | `scripts/tests/` | Unit tests for the scripts and the skills' helpers | — |
 
@@ -31,9 +32,10 @@ Codex CLI, Pi, and Antigravity. The mechanism and layout are in
   Keep it free of `@` imports and HTML comments: Claude parses them, the other CLIs do not.
 - Never symlink a CLI's settings file (the CLIs write back to them); add keys to
   `cli-settings.json`, under `enforce` for safety settings or `default` for model choices.
-- CLI lists and paths live only in `config/ai-clis.json`; scripts keep only how each CLI's
-  files are edited.
-- Never edit `docs/upstream/` by hand; the weekly sync rebuilds it.
+- Lists live in `config/`: CLIs and their paths in `ai-clis.json`, documentation sources in
+  `upstream-docs.json`; scripts keep only how each is applied.
+- Never edit `docs/upstream/` by hand; the weekly sync rebuilds it. Agents read it through
+  the `upstream-docs` skill; `collect-docs` adds a source.
 - A newer upstream version of a pinned skill replaces ours: remove it, add theirs, re-apply
   its `local_edits` from `skills/skills.lock`, and update `which-skill` (a test checks it).
 - Keep `config/` and `scripts/` free of machine paths (`/Users/<name>`, `/opt/homebrew`);
@@ -47,7 +49,7 @@ Codex CLI, Pi, and Antigravity. The mechanism and layout are in
 
 ```bash
 python3 -m unittest discover -s scripts/tests      # Python 3.11+
-shellcheck scripts/*.sh scripts/upstream/*.sh scripts/ai-dotfiles
+shellcheck scripts/*.sh scripts/ai-dotfiles
 bash scripts/install.sh --dry-run                  # expect 0 changes on a configured Mac
 bash scripts/healthcheck.sh
 ```
