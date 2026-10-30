@@ -62,6 +62,11 @@ class InstallSkillsTest(unittest.TestCase):
             text = (folder / 'SKILL.md').read_text()
             self.assertTrue(text.startswith(f'---\nname: {name}\n'), name)
             self.assertNotRegex(text, r'/Users/|/opt/homebrew')
+            # Strict YAML (Pi) rejects ': ' or ' #' inside an unquoted value.
+            for line in text.split('---', 2)[1].strip().splitlines():
+                key, _, value = line.partition(': ')
+                if value[:1] not in ('"', "'", '|', '>'):
+                    self.assertNotRegex(value, r': | #|:$', f'{name}: quote {key}')
 
     def test_dry_run_then_apply_links_every_root_once(self):
         self.assertEqual(self.install(), 9)  # six skill links, the two commands, and the receipt

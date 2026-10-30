@@ -1,6 +1,6 @@
 ---
 name: onboard
-description: Get to know an unfamiliar repository. Writes one report: its goal (what it does and how), its system design (tech stack, folder structure, a layer map of the whole app, workflow graphs of its flows), conventions, common tasks and where to look; a starter AGENTS.md when the repo has none; then lets the user dive into any folder, layer or workflow, or name a task. Use when the user says "onboard me", "onboard this repo", "help me understand this codebase", "map this codebase", "give me an overview of this repo", "how does this repo fit together", or opens a repository they have not worked in before.
+description: Get to know an unfamiliar repository. Writes one report covering its goal (what it does and how), its system design (tech stack, folder structure, a layer map of the whole app, workflow graphs of its flows), conventions, common tasks and where to look; a starter AGENTS.md when the repo has none; then lets the user dive into any folder, layer or workflow, or name a task. Use when the user says "onboard me", "onboard this repo", "help me understand this codebase", "map this codebase", "give me an overview of this repo", "how does this repo fit together", or opens a repository they have not worked in before.
 ---
 
 Write one report a reader takes in at a glance: the repo's **goal** (what it does, how
