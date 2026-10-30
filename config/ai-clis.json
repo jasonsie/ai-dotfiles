@@ -7,7 +7,8 @@
       "instructions": "~/.claude/CLAUDE.md",
       "settings": "~/.claude/settings.json",
       "mcp": "~/.claude.json",
-      "skills": "~/.claude/skills"
+      "skills": "~/.claude/skills",
+      "hooks": "~/.claude/settings.json"
     },
     "codex": {
       "name": "Codex CLI",
@@ -15,7 +16,8 @@
       "instructions": "~/.codex/AGENTS.md",
       "settings": "~/.codex/config.toml",
       "mcp": "~/.codex/config.toml",
-      "skills": "~/.agents/skills"
+      "skills": "~/.agents/skills",
+      "hooks": "~/.codex/hooks.json"
     },
     "pi": {
       "name": "Pi",
@@ -23,7 +25,8 @@
       "instructions": "~/.pi/agent/AGENTS.md",
       "settings": "~/.pi/agent/settings.json",
       "mcp": "~/.pi/agent/mcp.json",
-      "skills": "~/.agents/skills"
+      "skills": "~/.agents/skills",
+      "extensions": "~/.pi/agent/extensions"
     },
     "agy": {
       "name": "Antigravity",
@@ -31,7 +34,8 @@
       "instructions": "~/.gemini/GEMINI.md",
       "settings": "~/.gemini/antigravity-cli/settings.json",
       "mcp": "~/.gemini/config/mcp_config.json",
-      "skills": "~/.gemini/config/skills"
+      "skills": "~/.gemini/config/skills",
+      "hooks": "~/.gemini/config/hooks.json"
     }
   }
 }

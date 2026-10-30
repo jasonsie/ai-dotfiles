@@ -1,0 +1,103 @@
+# Week Goal
+------------
+# Thought
+
+# Week of 2026-10-19 — DSA
+<!-- weekly-report:start -->
+legend:  █ solved/retired   ▓ tutored   ▒ weak(shaky)   ░ new/untouched
+         ⚠ struggling
+
+[[Arrays & Hashing]]        │██████████████████│    8/8 ⚠ overdue
+[[Two Pointers]]            │██████████████████│    5/5
+[[Sliding Window]]          │████████████░░░░░░│    4/6
+[[Stack]]                   │█████████████▓▓▓░░│    5/7 ⚠ 1 tutored, overdue
+[[Binary Search]]           │█████████████▒▒▒░░│    5/7 ⚠ 1 weak, overdue
+[[Linked List]]             │███████████████▓▓░│   9/11 ⚠ 1 tutored, overdue
+[[Trees]]                   │████████████████▓▓│  13/15 ⚠ 2 tutored, overdue
+[[Tries]]                   │██████████████████│    3/3
+[[Heap / Priority Queue]]   │█████████████▓▓▓░░│    5/7 ⚠ 1 tutored, overdue
+[[Backtracking]]            │████████████████░░│    8/9
+[[Graphs]]                  │████████████████▓▓│   9/10 ⚠ 1 tutored, overdue
+[[Advanced Graphs]]         │▓▓▓▓▓▓▓▓▓▓▓░░░░░░░│    0/5 ⚠ 3 tutored, overdue
+[[1-D DP]]                  │█████████████████▓│  11/12 ⚠ 1 tutored, overdue
+[[2-D DP]]                  │███████▓▓▓░░░░░░░░│   4/11 ⚠ 2 tutored, overdue
+[[Greedy]]                  │█████▓▓▓▓░░░░░░░░░│    2/8 ⚠ 2 tutored, overdue
+[[Intervals]]               │██████████████░░░░│    3/4
+[[Bit Manipulation]]        │█████░░░░░░░░░░░░░│    2/7
+[[Math & Geometry]]         │███████░░░░░░░░░░░│    3/8
+──────────────────────────────────────────────────────────
+TOTAL                       │████████████▓▓░░░░│ 99/143 solved 69%
+Weak: 1 — Binary Search
+Tutored: 14 — Advanced Graphs ×3, Trees ×2, 2-D DP ×2, Greedy ×2, Stack, Linked List, Heap / Priority Queue, Graphs, 1-D DP
+Overdue: 25 — Binary Search ×4, 2-D DP ×4, Trees ×3, Advanced Graphs ×3, 1-D DP ×3, Linked List ×2, Greedy ×2, Arrays & Hashing, Stack, Heap / Priority Queue, Graphs
+<!-- weekly-report:end -->
+
+------------------------------------------------------------------------------------
+
+
+# 10/19 (Mon)
+------------
+- [] leetcode
+	- [ ] 72-Edit Distance(new)
+	- [ ] 981-Time Based Key-Value Store(weak)
+	- [ ] 355-Design Twitter(weak)
+
+
+------------------------------------------------------------------------------------
+
+# 10/20 (Tue)
+------------
+- [] leetcode
+	- [ ] 72-Edit Distance(new)
+	- [ ] 981-Time Based Key-Value Store(weak)
+	- [ ] 355-Design Twitter(weak)
+
+
+------------------------------------------------------------------------------------
+
+# 10/21 (Wed)
+------------
+- [] leetcode
+	- [ ] 72-Edit Distance(new)
+	- [ ] 981-Time Based Key-Value Store(weak)
+	- [ ] 355-Design Twitter(weak)
+
+
+------------------------------------------------------------------------------------
+
+# 10/22 (Thu)
+------------
+- [] leetcode
+	- [ ] 72-Edit Distance(new)
+	- [ ] 981-Time Based Key-Value Store(weak)
+	- [ ] 355-Design Twitter(weak)
+
+
+------------------------------------------------------------------------------------
+
+# 10/23 (Fri)
+------------
+- [] leetcode
+	- [ ] 72-Edit Distance(new)
+	- [ ] 981-Time Based Key-Value Store(weak)
+	- [ ] 355-Design Twitter(weak)
+
+- [] /house-style skill
+	- to-do: 
+	- /web-clipper -> g-foc
+	- Template: using this skill to generate 
+	- STYLE.md: capture from  
+
+- [X] /obnoard skill
+
+- [] G-DOC extracter: Obsidian-web-clipper
+
+
+------------------------------------------------------------------------------------
+
+# 10/24 (Sat)
+------------
+- [] leetcode
+
+
+------------------------------------------------------------------------------------

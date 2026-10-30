@@ -14,7 +14,8 @@ config/              the sources the installers apply
   cli-settings.json    per-CLI `enforce` and `default` settings keys
   mcp-servers.json     MCP servers shared by the CLIs
   upstream-docs.json   the documentation sources mirrored into docs/upstream/
-skills/              shared skills; skills.lock pins adapted ones
+skills/              shared skills; skills.lock pins adapted ones; daily-log/ holds the
+                     daily-log command, its hook and Pi's extension
 scripts/             ai-dotfiles, install.sh, uninstall.sh, healthcheck.sh (entry points)
   install/             installer.py (shared by every step) and one file per step
   upstream/            the weekly docs sync and its pull request report
@@ -35,6 +36,8 @@ config/cli-settings.json      ─►  settings.py (merges listed keys)         �
 config/mcp-servers.json       ─►  mcp.py (native `mcp add`, or a merge)    ─►  Claude Code, Codex, Pi, Antigravity
 skills/<name>/                ─►  skills.py (links)                        ─►  every CLI's skill folder
 scripts/ai-dotfiles           ─►  skills.py (link)                         ─►  ~/.local/bin
+skills/daily-log/scripts/     ─►  skills.py (link); hooks.py (merge)       ─►  ~/.local/bin/daily-log; each CLI's hook file
+skills/daily-log/hooks/       ─►  skills.py (link)                         ─►  Pi's extension folder
                                   installer.py: reads ai-clis.json; the safe writes every step shares
                                   scripts/healthcheck.sh checks the live state
 
@@ -50,24 +53,26 @@ changes. `ai-dotfiles` (linked on the first run) wraps the entry points from any
 ## Which CLIs: config/ai-clis.json
 
 Each entry names a CLI, switches it `on` or off, and says where it reads its global
-instructions, settings, MCP servers and skills. Paths start with `~/`. The file is checked strictly: a
+instructions, settings, MCP servers, skills and, where it has them, hooks (`hooks`) or
+extensions (`extensions`, Pi). Paths start with `~/`. The file is checked strictly: a
 missing or unknown key, an `on` that is not `true` or `false`, or a CLI the steps have no
 code for stops the run.
 
 - **The file is the desired state.** A run installs for each CLI switched on and takes out
   of each CLI switched off what this repo put there: the instruction link (the original
-  comes back) and skill links. Settings keys and MCP servers stay, as with any uninstall.
+  comes back), skill links, hook entries and Pi's extension. Settings keys and MCP servers
+  stay, as with any uninstall.
   A CLI switched off gets no folders created.
 - **A shared folder stays while any CLI that is on reads it** (`~/.agents/skills`, for
   Codex and Pi).
 - **`--target` only narrows a run** to one CLI; `all` means every CLI in the file, on or
   off. `uninstall` removes for every selected CLI whatever its switch.
-- **How each CLI's files are edited stays in code:** Codex settings are TOML, and each CLI
-  has its own `mcp add`.
+- **How each CLI's files are edited stays in code:** Codex settings are TOML, each CLI
+  has its own `mcp add`, hook events differ, and Pi takes an extension.
 
 `uninstall.sh` runs each step's `--uninstall` in reverse order and removes whatever points
 into this repo: instruction links (restoring the file from before the first install),
-skill links and the command link. Settings keys and MCP
+skill links, hook entries, Pi's extension and the command links. Settings keys and MCP
 servers stay and are listed, because they hold no repo paths and could be the user's own.
 After it, deleting the repo breaks nothing.
 
@@ -80,10 +85,11 @@ After it, deleting the repo breaks nothing.
 | User skills | `~/.claude/skills` | `~/.agents/skills` | `~/.agents/skills`, `~/.pi/agent/skills` | `~/.gemini/config/skills` |
 | Settings file | `~/.claude/settings.json` | `~/.codex/config.toml` | `~/.pi/agent/settings.json` | `~/.gemini/antigravity-cli/settings.json` |
 | MCP servers | `~/.claude.json` via `claude mcp add` | `config.toml` via `codex mcp add` | `~/.pi/agent/mcp.json` via `pi mcp add` | `~/.gemini/config/mcp_config.json`, merged (no `mcp add`) |
+| Hooks | `~/.claude/settings.json` (`hooks`) | `~/.codex/hooks.json`, run after approval in `/hooks` | none; `~/.pi/agent/extensions/*.ts` | `~/.gemini/config/hooks.json` |
 | MCP server guidance | server instructions | server instructions | only the `description` in `mcp-servers.json` | not documented |
 | Explicit-only skill | `disable-model-invocation: true` | `agents/openai.yaml`: `policy.allow_implicit_invocation: false` | `disable-model-invocation: true` | none documented; may load implicitly |
 
-The installers read the paths in the first five rows from `config/ai-clis.json`. To move
+The installers read the paths in the first six rows from `config/ai-clis.json`. To move
 a CLI's folder, edit its paths there; `CLAUDE_CONFIG_DIR`, `CODEX_HOME` and
 `PI_CODING_AGENT_DIR` are never read for paths, and a run warns when one is set and
 disagrees with the file.
@@ -131,6 +137,34 @@ healthcheck report it as a "local choice kept".
   project also has a `CLAUDE.md`, it links to `AGENTS.md` or imports it with `@AGENTS.md`.
 - **Claude's auto memory** stays on as a per-machine, Claude-only scratchpad.
 
+## Daily log
+
+The daily logger (`~/Documents/Claude/Projects/daily-logger/<yyyy>/<Mon>/week-N`) is the
+one journal: hand-written entries, the learning-tutor's study block, and what a CLI
+session got done. The `daily-log` skill owns its grammar (`skills/daily-log/LOG-FORMAT.md`)
+and the one writer, `daily-log` (`skills/daily-log/scripts/daily_log.py`, linked into
+`~/.local/bin`). The engine in `~/Documents/Claude/Projects/learning-tutor` writes its day
+block through it (its `vendor/daily_log.py` is a byte-identical copy, the last resort for
+Cowork's sandboxed runs, refreshed by `scripts/vendor_daily_log.py` and checked by a test),
+and every `<key>-tutor-daily` Cowork task is `TUTOR-DAILY.md` rendered for one key
+(`daily-log tutor-daily`).
+
+```text
+PostToolUse (an edit) ─► hook tool: count it ─► Stop: files changed, nothing logged? ─► continue the
+turn once: "record it with daily-log add" ─► the model writes the entry; --session <id> marks it logged
+```
+
+- **Native per CLI:** Claude Code `PostToolUse` and `Stop` in `~/.claude/settings.json`;
+  Codex the same in `~/.codex/hooks.json`, run only after approval in `/hooks`;
+  Antigravity named entries in `~/.gemini/config/hooks.json`; Pi has no hooks, so
+  `skills/daily-log/hooks/daily-log.ts` is linked as an extension. `scripts/install/hooks.py`
+  merges one entry per event and removes only those.
+- **Loop safety:** state per session in `~/.local/state/ai-dotfiles/daily-log/`; at most two
+  nudges per session, never while the hook's own continuation runs, none once an entry
+  was written with `--session`. Only file edits count: a session that only ran commands
+  is never nudged. Antigravity's `Stop` also fires on errors and step caps; the hook
+  nudges only after a normal stop (`terminationReason` = `model_stop`), as Claude Code does.
+
 ## Upstream updates
 
 - `scripts/upstream/sync-upstream.py` mirrors every source in `config/upstream-docs.json`
@@ -160,9 +194,10 @@ healthcheck report it as a "local choice kept".
 | Step | Record | Rollback |
 |---|---|---|
 | Instructions | `~/.local/state/ai-dotfiles/global-instructions/backup-*/manifest.json` | `python3 scripts/install/instructions.py --uninstall` (restores the earliest backup) |
+| Hooks | `~/.local/state/ai-dotfiles/settings/backup-*`; entries found by their command | `python3 scripts/install/hooks.py --uninstall` |
 | Settings | `~/.local/state/ai-dotfiles/settings/backup-*` | Copy the backed-up file back |
 | MCP (Antigravity's file) | `~/.local/state/ai-dotfiles/mcp/backup-*` | Copy the backed-up file back |
-| Skills, command | `~/.local/state/ai-dotfiles/skills.json` (links this repo created) | `python3 scripts/install/skills.py --uninstall` |
+| Skills, commands, Pi extension | `~/.local/state/ai-dotfiles/skills.json` (links this repo created) | `python3 scripts/install/skills.py --uninstall` |
 | Everything | the records above | `ai-dotfiles uninstall` |
 
 ## Glossary

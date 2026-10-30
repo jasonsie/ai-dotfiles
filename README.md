@@ -16,6 +16,7 @@ emulated. How it works: [docs/how-it-works.md](docs/how-it-works.md). Forked fro
 | `config/mcp-servers.json` | Shared MCP servers (today: context7, library docs) | `claude`, `codex` and `pi mcp add`; merged into `~/.gemini/config/mcp_config.json` for Antigravity |
 | `skills/<name>/` | Shared skills; adapted ones are pinned in `skills/skills.lock` | `~/.claude/skills`, `~/.agents/skills` (Codex and Pi), `~/.gemini/config/skills` (Antigravity) |
 | `config/upstream-docs.json` | The documentation sources behind `docs/upstream/` | `scripts/upstream/sync-upstream.py`, weekly |
+| `skills/daily-log/` | The `daily-log` command (the daily logger's grammar and writer) and its Stop hook | `~/.local/bin/daily-log`; hook entries in `~/.claude/settings.json`, `~/.codex/hooks.json`, `~/.gemini/config/hooks.json`; Pi's `~/.pi/agent/extensions` |
 | `docs/upstream/` | A weekly mirror of each CLI's official docs and of Google's and Meta's style and docs-writing guides, indexed, plus the watched skill catalogs | Read through the `upstream-docs` skill; never installed |
 
 Not managed: credentials, sessions, plugin choices, local approvals and trust, and
@@ -31,7 +32,7 @@ bash scripts/install.sh            # install (backs up first); --dry-run preview
 ai-dotfiles check                  # verify live state; works from any folder now
 ```
 
-The first run links `ai-dotfiles` into `~/.local/bin`:
+The first run links `ai-dotfiles` and `daily-log` into `~/.local/bin`:
 
 ```bash
 ai-dotfiles [install]    # apply the setup
@@ -69,6 +70,9 @@ done
 - **The weekly upstream pull request:** every Monday a GitHub Action refreshes `docs/upstream/`
   and opens or refreshes a pull request from the `upstream-sync` branch. Read its "Changes
   that touch this setup" and "Skills" sections, then merge or close it.
+- **The daily log:** `daily-log add --done "<label>" "<line>"` records finished work in
+  `~/Documents/Claude/Projects/daily-logger`; the Stop hook asks for it once in a session that
+  changed files but logged nothing. Codex runs the hook only after approval in `/hooks`.
 - **Anything machine-specific:** change it in the CLI itself; the installer leaves it alone.
 
 How it all fits together: [docs/how-it-works.md](docs/how-it-works.md). Maintainer notes

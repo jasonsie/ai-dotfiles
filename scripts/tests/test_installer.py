@@ -132,6 +132,12 @@ class InstallerTest(unittest.TestCase):
         self.assertTrue(all(entry['on'] for entry in entries.values()))
         self.assertEqual(entries['codex']['skills'], entries['pi']['skills'])  # Codex and Pi share one
         self.assertEqual(installer.path(self.home, 'claude', 'skills'), self.home / '.claude/skills')
+        self.assertEqual(installer.path(self.home, 'claude', 'hooks'), self.home / '.claude/settings.json')
+        self.assertEqual(installer.path(self.home, 'codex', 'hooks'), self.home / '.codex/hooks.json')
+        self.assertEqual(installer.path(self.home, 'agy', 'hooks'), self.home / '.gemini/config/hooks.json')
+        self.assertEqual(installer.path(self.home, 'pi', 'extensions'), self.home / '.pi/agent/extensions')
+        self.assertIsNone(installer.path(self.home, 'pi', 'hooks'))  # Pi takes an extension instead
+        self.assertIsNone(installer.path(self.home, 'claude', 'extensions'))
 
     def registry(self, change):
         """Point installer at a copy of the repo's registry, edited by change(data)."""
@@ -147,12 +153,29 @@ class InstallerTest(unittest.TestCase):
             'unknown key "colour"': lambda d: d['clis']['claude'].update(colour='blue'),
             '"on": true or false': lambda d: d['clis']['claude'].update(on='yes'),
             'starting with ~/': lambda d: d['clis']['claude'].update(skills='/abs/skills'),
+            '"hooks" must be a path starting with ~/': lambda d: d['clis']['claude'].update(hooks='/abs/hooks.json'),
+            '"hooks" must be a path': lambda d: d['clis']['codex'].update(hooks=['~/.codex/hooks.json']),
+            '"extensions" must be a path starting with ~/': lambda d: d['clis']['pi'].update(extensions='extensions'),
             "no installer support for 'gemini'": lambda d: d['clis'].update(gemini=d['clis']['claude']),
             '"version": 1': lambda d: d.update(version=2),
         }
         for message, change in broken.items():
             with self.subTest(message), self.registry(change), self.assertRaisesRegex(ValueError, message):
                 installer.clis()
+
+    def test_hooks_and_extensions_are_optional_and_nothing_else_is(self):
+        def drop(data):
+            for cli, key in (('claude', 'hooks'), ('codex', 'hooks'), ('pi', 'extensions')):
+                del data['clis'][cli][key]
+
+        with self.registry(drop):
+            self.assertIsNone(installer.path(self.home, 'claude', 'hooks'))
+            self.assertIsNone(installer.path(self.home, 'pi', 'extensions'))
+        with self.registry(lambda d: d['clis']['pi'].update(hooks='~/.pi/agent/hooks.json')):
+            self.assertEqual(installer.path(self.home, 'pi', 'hooks'), self.home / '.pi/agent/hooks.json')
+        with self.registry(lambda d: d['clis']['claude'].update(plugins='~/.claude/plugins')), \
+                self.assertRaisesRegex(ValueError, 'unknown key "plugins"'):
+            installer.clis()
 
     def test_scope_and_switches(self):
         with self.registry(lambda d: d['clis']['agy'].update(on=False)):

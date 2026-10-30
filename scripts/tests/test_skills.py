@@ -25,7 +25,9 @@ class InstallSkillsTest(unittest.TestCase):
             (self.repo / 'skills' / name).mkdir(parents=True)
             (self.repo / 'skills' / name / 'SKILL.md').write_text(f'---\nname: {name}\n---\n')
         (self.repo / 'skills/notes').mkdir()  # no SKILL.md, so not a skill
-        self.command = self.home / skills.COMMAND
+        self.command = self.home / skills.BIN / 'ai-dotfiles'
+        self.daily_log = self.home / skills.BIN / 'daily-log'
+        self.extension = self.home / where('pi', 'extensions') / skills.PI_EXTENSION
 
     def tearDown(self):
         self.temp.cleanup()
@@ -40,7 +42,7 @@ class InstallSkillsTest(unittest.TestCase):
     def links(self):
         """{path below home: target} of every link in the folders this step writes."""
         found = {}
-        for folder in (*ROOTS, '.local/bin'):
+        for folder in (*ROOTS, skills.BIN, where('pi', 'extensions')):
             if (self.home / folder).is_dir():
                 found.update({str(p.relative_to(self.home)): os.readlink(p)
                               for p in (self.home / folder).iterdir() if p.is_symlink()})
@@ -48,6 +50,10 @@ class InstallSkillsTest(unittest.TestCase):
 
     def skill_links(self):
         return {path: target for path, target in self.links().items() if '/skills/' in path}
+
+    def test_the_repo_has_what_the_links_point_at(self):
+        for target in (*skills.COMMANDS.values(), skills.PI_EXTENSION_TARGET):
+            self.assertTrue((skills.WORKSPACE / target).is_file(), target)
 
     def test_repo_skills_are_valid(self):
         names = skills.skills(skills.WORKSPACE / 'skills')
@@ -58,7 +64,7 @@ class InstallSkillsTest(unittest.TestCase):
             self.assertNotRegex(text, r'/Users/|/opt/homebrew')
 
     def test_dry_run_then_apply_links_every_root_once(self):
-        self.assertEqual(self.install(), 8)  # six skill links, the command, and the receipt
+        self.assertEqual(self.install(), 9)  # six skill links, the two commands, and the receipt
         self.assertEqual(self.links(), {})
         self.assertFalse((self.home / '.local').exists())
         self.install(apply=True)
@@ -67,6 +73,9 @@ class InstallSkillsTest(unittest.TestCase):
             self.assertEqual((self.home / root / 'alpha').resolve(), self.repo / 'skills/alpha')
             self.assertFalse((self.home / root / 'notes').exists())
         self.assertEqual(os.readlink(self.command), str(self.repo / 'scripts/ai-dotfiles'))
+        # The test repo has no daily-log skill: a link does not need its target to exist.
+        self.assertEqual(os.readlink(self.daily_log), str(self.repo / 'skills/daily-log/scripts/daily_log.py'))
+        self.assertFalse(self.extension.is_symlink())  # Pi is not set up here
         self.assertEqual(self.install(), 0)
 
     def test_refuses_an_entry_it_did_not_create(self):
@@ -75,10 +84,14 @@ class InstallSkillsTest(unittest.TestCase):
             self.install(apply=True)
         self.assertEqual(self.links(), {})
         (self.home / '.agents/skills/beta').rmdir()
-        self.command.parent.mkdir(parents=True)
-        self.command.symlink_to(self.root / 'elsewhere')
-        with self.assertRaisesRegex(ValueError, 'refusing'):
-            self.install(apply=True)
+        for command in (self.command, self.daily_log):
+            with self.subTest(command.name):
+                command.parent.mkdir(parents=True, exist_ok=True)
+                command.symlink_to(self.root / 'elsewhere')
+                with self.assertRaisesRegex(ValueError, 'refusing'):
+                    self.install(apply=True)
+                self.assertEqual(self.skill_links(), {})
+                command.unlink()
 
     def test_removed_skill_link_goes_but_a_user_change_stays(self):
         self.install(apply=True)
@@ -109,7 +122,7 @@ class InstallSkillsTest(unittest.TestCase):
         mine.unlink()
         mine.symlink_to(elsewhere, target_is_directory=True)
         (self.home / '.agents/skills/user-skill').mkdir()
-        self.assertEqual(self.install(uninstall=True), 7)  # five skill links, the command, the receipt
+        self.assertEqual(self.install(uninstall=True), 8)  # five skill links, the two commands, the receipt
         self.assertEqual(len(self.skill_links()), 6)  # dry-run removed nothing
         self.install(apply=True, uninstall=True)
         self.assertEqual(self.links(), {'.claude/skills/alpha': str(elsewhere)})
@@ -121,22 +134,25 @@ class InstallSkillsTest(unittest.TestCase):
         self.install(('claude',), apply=True, uninstall=True)
         self.assertEqual(len(self.skill_links()), 4)
         self.assertNotIn('.claude/skills/alpha', self.links())
-        self.assertTrue(self.command.is_symlink())  # it serves the other CLIs
+        self.assertTrue(self.command.is_symlink())  # the commands serve the other CLIs
+        self.assertTrue(self.daily_log.is_symlink())
         self.assertEqual(self.install(), 3)  # reinstall relinks claude and records them
         self.install(apply=True)
         self.install(apply=True, uninstall=True)
         self.assertEqual(self.links(), {})
 
-    def test_a_matching_command_link_is_adopted_and_the_old_receipt_goes(self):
-        # As install-command.py left them before this step linked the command.
+    def test_matching_command_links_are_adopted_and_the_old_receipt_goes(self):
+        # As install-command.py left the first one before this step linked the commands.
         self.command.parent.mkdir(parents=True)
         self.command.symlink_to(self.repo / 'scripts/ai-dotfiles')
         old = self.home / skills.COMMAND_RECEIPT
         old.parent.mkdir(parents=True)
         old.write_text(json.dumps({'version': 1, 'link': str(self.command), 'target': os.readlink(self.command)}))
+        self.daily_log.symlink_to(self.repo / 'skills/daily-log/scripts/daily_log.py')
         self.assertEqual(self.install(('claude',), apply=True), 4)  # alpha, beta, both receipts
         owned = json.loads((self.home / skills.RECEIPT).read_text())['links']
         self.assertEqual(owned[str(self.command)], str(self.repo / 'scripts/ai-dotfiles'))
+        self.assertEqual(owned[str(self.daily_log)], str(self.repo / 'skills/daily-log/scripts/daily_log.py'))
         self.assertFalse(old.exists())
         self.install(apply=True, uninstall=True)
         self.assertEqual(self.links(), {})
@@ -159,26 +175,48 @@ class InstallSkillsTest(unittest.TestCase):
     def test_command_path_hint_and_moved_repo(self):
         self.install()
         self.assertIn('Hint: add', self.output)
+        self.assertIn('ai-dotfiles and daily-log', self.output)
         self.install(path_env=f'/usr/bin{os.pathsep}{self.command.parent}/')
         self.assertNotIn('Hint', self.output)
         self.install(apply=True)
         moved = self.root / 'moved'
         self.repo.rename(moved)
-        self.assertEqual(self.install(('claude',), apply=True, repo=moved), 4)  # alpha, beta, command, receipt
+        self.assertEqual(self.install(('claude',), apply=True, repo=moved), 5)  # alpha, beta, the commands, receipt
         self.assertEqual(os.readlink(self.command), str(moved / 'scripts/ai-dotfiles'))
+        self.assertEqual(os.readlink(self.daily_log), str(moved / 'skills/daily-log/scripts/daily_log.py'))
+
+    def test_pi_extension_follows_pi(self):
+        self.install(('pi',), apply=True)
+        self.assertFalse(self.extension.is_symlink())  # Pi is not set up here yet
+        (self.home / '.pi/agent').mkdir(parents=True)
+        self.install(('claude',), apply=True)
+        self.assertFalse(self.extension.is_symlink())
+        self.install(('pi',), apply=True)
+        self.assertEqual(os.readlink(self.extension), str(self.repo / 'skills/daily-log/hooks/daily-log.ts'))
+        self.install(('claude',), apply=True, uninstall=True)
+        self.assertTrue(self.extension.is_symlink())
+        self.install(('pi',), apply=True, uninstall=True)
+        self.assertFalse(self.extension.is_symlink())
+        self.extension.write_text('// mine')
+        with self.assertRaisesRegex(ValueError, 'refusing'):
+            self.install(('pi',))
 
     def folder(self, root):
         return sorted(path for path in self.skill_links() if path.startswith(root))
 
     def test_a_cli_switched_off_loses_its_links_but_a_shared_folder_stays(self):
+        (self.home / '.pi/agent').mkdir(parents=True)
         self.install(apply=True)
+        self.assertTrue(self.extension.is_symlink())
         with patch.object(installer, 'REGISTRY', registry(self.root, agy=False, codex=False)):
             self.install(apply=True)
+            self.assertTrue(self.extension.is_symlink())  # Pi is still on
             self.assertEqual(self.folder('.gemini/'), [])
             self.assertEqual(len(self.folder('.agents/')), 2)  # Pi, still on, reads it too
             self.assertEqual(self.install(), 0)
         with patch.object(installer, 'REGISTRY', registry(self.root, pi=False)):
             self.install(apply=True)
+            self.assertFalse(self.extension.is_symlink())
             self.assertEqual(len(self.folder('.agents/')), 2)  # Codex, on again, reads it
             self.install(('codex',), apply=True, uninstall=True)
             self.assertEqual(self.folder('.agents/'), [])  # no CLI that is on reads it now

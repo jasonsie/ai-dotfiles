@@ -15,13 +15,15 @@ Codex CLI, Pi, and Antigravity. The mechanism and layout are in
 | `config/mcp-servers.json` | Shared MCP servers | `scripts/install/mcp.py` |
 | `config/upstream-docs.json` | The documentation sources mirrored for agents: each CLI's docs, Google's and Meta's style and docs-writing guides, a `when` label per page | `scripts/upstream/sync-upstream.py` (weekly workflow) |
 | `skills/` | Shared skills; `skills.lock` pins adapted upstream skills | `scripts/install/skills.py` |
+| `skills/daily-log/` | The `daily-log` command (the daily logger's grammar and writer), its hook, Pi's extension | `scripts/install/skills.py` (links), `scripts/install/hooks.py` (hook entries) |
 | `scripts/ai-dotfiles` | Global command: `install`, `update`, `uninstall`, `check` | `scripts/install/skills.py` |
 | `scripts/install/installer.py` | What every step shares: reading `ai-clis.json`, safe writes | — |
+| `scripts/install/hooks.py` | One hook entry per event in each CLI's native hook file; ours are found by their command | — |
 | `docs/upstream/` | Machine-written docs mirrors with their indexes (`INDEX.md`, `MIRROR-INDEX.*`), and skill catalogs | `scripts/upstream/` (weekly workflow) |
 | `docs/onboarding.md` | This repo's onboarding report | `skills/onboard/` (`/onboard`) |
 | `scripts/tests/` | Unit tests for the scripts and the skills' helpers | — |
 
-`scripts/install.sh` runs the four install steps, `scripts/uninstall.sh` reverses them;
+`scripts/install.sh` runs the five install steps, `scripts/uninstall.sh` reverses them;
 `scripts/healthcheck.sh` verifies live state. `docs/` holds `how-it-works.md`, the mirror, and
 `onboarding.md`, this repo's report from `/onboard`.
 

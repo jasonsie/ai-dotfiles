@@ -1,0 +1,3 @@
+interface:
+  display_name: "Daily Log"
+  short_description: "Record finished work in the daily logger"

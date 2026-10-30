@@ -3,7 +3,7 @@
 config/ai-clis.json lists each CLI: whether it is on, and where it reads things. The file is
 the desired state: a run installs for the CLIs switched on and removes what this repo put
 in place for those switched off. --target only narrows a run to one listed CLI. How each
-CLI's files are edited (TOML or JSON, `mcp add`) stays in the steps.
+CLI's files are edited (TOML or JSON, `mcp add`, hook events) stays in the steps.
 
 A step plans changes as (path, before, after). A state is ('absent',), ('link', target),
 ('file', data, mode), or ('other',) for anything else, which is never replaced. apply()
@@ -25,6 +25,7 @@ import tempfile
 
 REGISTRY = Path(__file__).resolve().parents[2] / 'config/ai-clis.json'
 REQUIRED = ('instructions', 'settings', 'mcp', 'skills')
+OPTIONAL = ('hooks', 'extensions')  # a CLI lists the ones it has: a hook file, or an extension folder
 SUPPORTED = ('claude', 'codex', 'pi', 'agy')  # the CLIs whose formats the steps know
 OVERRIDES = {'claude': 'CLAUDE_CONFIG_DIR', 'codex': 'CODEX_HOME', 'pi': 'PI_CODING_AGENT_DIR'}
 STATE = '.local/state/ai-dotfiles'  # receipts and backups
@@ -41,11 +42,11 @@ def clis():
         if not isinstance(entry, dict) or not isinstance(entry.get('on'), bool):
             raise ValueError(f'{REGISTRY}: {cli} needs "on": true or false')
         missing = [key for key in REQUIRED if key not in entry]
-        unknown = sorted(set(entry) - {'name', 'on', *REQUIRED})
+        unknown = sorted(set(entry) - {'name', 'on', *REQUIRED, *OPTIONAL})
         if missing or unknown:
             raise ValueError(f'{REGISTRY}: {cli} ' + ', '.join(
                 [f'is missing "{key}"' for key in missing] + [f'has unknown key "{key}"' for key in unknown]))
-        for key in REQUIRED:
+        for key in (*REQUIRED, *OPTIONAL):
             if key in entry and not (isinstance(entry[key], str) and entry[key].startswith('~/')):
                 raise ValueError(f'{REGISTRY}: {cli} "{key}" must be a path starting with ~/')
     return data['clis']

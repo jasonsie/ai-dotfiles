@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
-"""Link skills and the ai-dotfiles command; writes unless --dry-run.
+"""Link skills, the ai-dotfiles and daily-log commands, and Pi's daily-log extension; writes unless --dry-run.
 
-Every folder under skills/ that has a SKILL.md is linked by name into the skill folder of each CLI that config/ai-clis.json switches on. A folder several CLIs
-read (~/.agents/skills, for Codex and Pi) stays linked while any of them is on; a folder
-only switched-off CLIs read loses its links. scripts/ai-dotfiles is linked as
-~/.local/bin/ai-dotfiles, so the command works from any folder; shell files are never
-edited, and a hint is printed when that folder is not on PATH.
+Every folder under skills/ that has a SKILL.md is linked by name into the skill folder of
+each CLI that config/ai-clis.json switches on. A folder several CLIs read
+(~/.agents/skills, for Codex and Pi) stays linked while any of them is on; a folder only
+switched-off CLIs read loses its links. scripts/ai-dotfiles and the daily-log skill's
+script are linked as ~/.local/bin/ai-dotfiles and ~/.local/bin/daily-log, so both commands
+work from any folder; shell files are never edited, and a hint is printed when that folder
+is not on PATH. Pi has no hooks, so while it is on and set up it gets
+skills/daily-log/hooks/daily-log.ts in its extensions folder.
 
 An existing entry this script did not create is refused, unless it already is the wanted
 link. A link it created that is no longer wanted is removed; a link the user changed is
 left alone. A receipt records what it owns, and a failed run restores every link it
 changed. --uninstall removes the links it owns for the selected CLIs, keeping a shared
-folder another CLI still reads; the command, which serves them all, goes only with
+folder another CLI still reads; the commands, which serve them all, go only with
 --target=all.
 """
 import json
@@ -23,8 +26,14 @@ import installer
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 RECEIPT = installer.STATE + '/skills.json'
-COMMAND = '.local/bin/ai-dotfiles'
+BIN = '.local/bin'
+COMMANDS = {  # name in BIN -> its target in this repo
+    'ai-dotfiles': 'scripts/ai-dotfiles',
+    'daily-log': 'skills/daily-log/scripts/daily_log.py',
+}
 COMMAND_RECEIPT = installer.STATE + '/command.json'  # left by install-command.py, which this replaced
+PI_EXTENSION = 'ai-dotfiles-daily-log.ts'
+PI_EXTENSION_TARGET = 'skills/daily-log/hooks/daily-log.ts'
 
 
 def skills(source):
@@ -32,8 +41,8 @@ def skills(source):
     return {p.name: p for p in sorted(source.iterdir()) if (p / 'SKILL.md').is_file()} if source.is_dir() else {}
 
 
-def owns_command(selected, uninstall):
-    """The command serves every CLI: each install links it; only a full uninstall removes it."""
+def owns_commands(selected, uninstall):
+    """The commands serve every CLI: each install links them; only a full uninstall removes them."""
     return not uninstall or set(selected) == set(installer.clis())
 
 
@@ -46,15 +55,21 @@ def plan(home, selected, workspace, owned, uninstall=False):
             if entry['on'] and not (uninstall and cli in selected)}
     link_roots = set() if uninstall else roots & keep
     managed_roots = link_roots | (roots - keep)
-    command = str(home / COMMAND)
-    others = {command} if owns_command(selected, uninstall) else set()
+    commands = {str(home / BIN / name): str(workspace / target) for name, target in COMMANDS.items()}
+    others = set(commands) if owns_commands(selected, uninstall) else set()
+    extensions = installer.path(home, 'pi', 'extensions') if 'pi' in selected else None
+    extension = str(extensions / PI_EXTENSION) if extensions else None
+    if extension:
+        others.add(extension)
     chosen = lambda path: Path(path).parent in managed_roots or path in others  # noqa: E731
     desired = {}
     if link_roots:
         found = skills(workspace / 'skills')
         desired = {str(root / name): str(folder) for root in sorted(link_roots) for name, folder in found.items()}
     if not uninstall:
-        desired[command] = str(workspace / 'scripts/ai-dotfiles')
+        desired.update(commands)
+        if extension and entries['pi']['on'] and Path(extension).parent.parent.is_dir():
+            desired[extension] = str(workspace / PI_EXTENSION_TARGET)
     changes = []
     for path, target in desired.items():
         current = installer.state(Path(path))
@@ -78,15 +93,15 @@ def install(home, selected, workspace=WORKSPACE, apply=False, uninstall=False, p
     if links != owned:
         changes.append((receipt, installer.state(receipt), installer.receipt({'version': 1, 'links': links})))
     old = home / COMMAND_RECEIPT
-    if old.exists() and owns_command(selected, uninstall):
+    if old.exists() and owns_commands(selected, uninstall):
         changes.append((old, installer.state(old), ('absent',)))
     installer.show(changes, apply)
     if apply and changes:
         installer.apply(home, changes)
-    folder = str((home / COMMAND).parent)
+    folder = str(home / BIN)
     entries = (os.environ.get('PATH', '') if path_env is None else path_env).split(os.pathsep)
     if not uninstall and folder not in (e.rstrip('/') for e in entries):
-        print(f'Hint: add {folder} to PATH to run ai-dotfiles from any folder.')
+        print(f'Hint: add {folder} to PATH to run {" and ".join(COMMANDS)} from any folder.')
     return len(changes)
 
 
