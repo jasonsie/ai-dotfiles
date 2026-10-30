@@ -3,6 +3,8 @@
 
 # Permissions command (/permissions)
 
+Available on: Antigravity CLI
+
 Manage your fine-grained agent permission rules interactively within the TUI.
 
 ## Overview
@@ -18,7 +20,7 @@ To open the Permissions Manager, follow these steps:
 1.  Type `/permissions` in the prompt box.
 2.  Press Enter.
 
-```
+```text
 /permissions
 ```
 

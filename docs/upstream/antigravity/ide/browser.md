@@ -3,6 +3,8 @@
 
 # Browser overview
 
+Available on: Antigravity IDE
+
 Google Antigravity can open, read, and actuate a local Chrome browser, enabling you to test development websites, read documentation sources, and automate a variety of browser tasks.
 
 * * *

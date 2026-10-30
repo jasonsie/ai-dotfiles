@@ -3,6 +3,8 @@
 
 # Vim editor mode
 
+Available on: Antigravity CLI
+
 Edit prompts with modal Vim keybindings instead of the default flat text editor.
 
 Vim editor mode replaces the editing model in every multi-line input surface of the CLI:
@@ -33,7 +35,7 @@ To enable Vim editor mode in the settings panel, follow these steps:
 
 Set `editorMode` in your configuration profile:
 
-```
+```json
 {
     "editorMode": "vim",
     "vimInsertFirst": false
@@ -89,7 +91,7 @@ Enter behaves differently in each mode, so you can compose multi-line prompts wi
 
 Set `vimInsertFirst` when you want each new prompt to begin in INSERT mode with a bare `Enter` that submits. This keeps the default typing experience while leaving NORMAL mode one `Esc` away.
 
-```
+```json
 {
     "editorMode": "vim",
     "vimInsertFirst": true
@@ -146,7 +148,7 @@ Combine an operator with any motion to act on the span it covers.
 | `c` | Change (delete, then enter INSERT mode) | `cw` `ce` `cb` | `cc` |
 | `y` | Yank | `yw` `ye` `yb` | `yy` |
 
-```
+```text
 dw     Delete to the start of the next word
 d$     Delete to the end of the line
 c^     Change back to the first non-blank character
@@ -171,7 +173,7 @@ Pair an operator with `i` (inside) or `a` (around) and a delimiter.
 
 Backticks work the same way: pair `i` or `a` with a backtick to select inline code.
 
-```
+```text
 ci"    Change the text inside the nearest quotes
 da(    Delete a parenthesized group, parentheses included
 yiw    Yank the word under the cursor
@@ -196,7 +198,7 @@ Press `v` or `V` to select, move with any motion, then apply a command. Press `v
 
 Press `/` or `!` in NORMAL mode. The CLI inserts the character and switches to INSERT mode, so slash commands and shell commands work without pressing `i` first.
 
-```
+```text
 /settings     Open the settings panel from NORMAL mode
 !ls -la       Run a shell command from NORMAL mode
 ```
@@ -205,7 +207,7 @@ Press `/` or `!` in NORMAL mode. The CLI inserts the character and switches to I
 
 Three Vim actions are remappable in `~/.gemini/antigravity-cli/keybindings.json`. These are the defaults:
 
-```
+```json
 {
     "vim.insert.insert_newline": ["alt+enter", "ctrl+j", "enter", "shift+enter"],
     "vim.insert.submit": ["ctrl+enter", "ctrl+s"],
@@ -219,7 +221,7 @@ Motions, operators, and text objects are fixed and can’t be remapped.
 
 This is the default. `Enter` submits from NORMAL mode and inserts a newline in INSERT mode, so you can type freely and submit with a single `Esc` `Enter`. No configuration is needed. Leave `vimInsertFirst` off:
 
-```
+```json
 {
     "editorMode": "vim",
     "vimInsertFirst": false
@@ -230,7 +232,7 @@ This is the default. `Enter` submits from NORMAL mode and inserts a newline in I
 
 Move `enter` out of `vim.insert.insert_newline` and into `vim.insert.submit`. `Shift+Enter`, `Alt+Enter`, and `Ctrl+J` still insert newlines:
 
-```
+```json
 {
     "vim.insert.insert_newline": ["alt+enter", "ctrl+j", "shift+enter"],
     "vim.insert.submit": ["ctrl+enter", "ctrl+s", "enter"]
@@ -247,7 +249,7 @@ A [custom status line](/docs/cli/statusline) replaces the built-in one, and the 
 
 Keep the built-in line and stack your script underneath it:
 
-```
+```json
 {
     "statusLine": {
         "type": "command",
@@ -259,7 +261,7 @@ Keep the built-in line and stack your script underneath it:
 
 Or render the mode yourself. When `editorMode` is `"vim"`, the JSON payload piped to your script carries a `vim` object:
 
-```
+```json
 {
     "vim": {
         "mode": "INSERT"
@@ -269,7 +271,7 @@ Or render the mode yourself. When `editorMode` is `"vim"`, the JSON payload pipe
 
 `mode` is `NORMAL`, `INSERT`, `VISUAL`, or `VISUAL LINE`. The field is absent entirely when Vim editor mode is off, so a script can use its presence as the enablement check:
 
-```
+```bash
 #!/bin/bash
 input=$(cat)
 mode=$(echo "$input" | jq -r '.vim.mode // empty')

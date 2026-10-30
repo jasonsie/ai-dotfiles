@@ -3,6 +3,8 @@
 
 # Diff command (/diff)
 
+Available on: Antigravity CLI
+
 View and review workspace changes, commit history, and agent turn diffs interactively within the TUI.
 
 ## Overview
@@ -16,7 +18,7 @@ To open the diff viewer, follow these steps:
 1.  Type `/diff` in the prompt box.
 2.  Press Enter.
 
-```
+```text
 /diff
 ```
 

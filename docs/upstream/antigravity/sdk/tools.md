@@ -33,7 +33,7 @@ In some cases you may want to restrict the tools that your agent can access. You
 
 For example, you can configure your agent to only have access to `read_only` built-in tools:
 
-```
+```python
 from google.antigravity import LocalAgentConfig, CapabilitiesConfig
 from google.antigravity.types import BuiltinTools
 
@@ -50,7 +50,7 @@ In some cases you may want to create custom Python functions that your agent can
 
 For example, you can configure your agent to leverage a custom `get_weather` function:
 
-```
+```python
 from google.antigravity import Agent, LocalAgentConfig
 
 def get_weather(city: str) -> str:
@@ -70,7 +70,7 @@ Web search (`SEARCH_WEB`) and URL fetching (`READ_URL_CONTENT`) tools are enable
 
 For example, you can ask your agent to perform Google searches or read web pages:
 
-```
+```python
 from google.antigravity import Agent, LocalAgentConfig
 
 config = LocalAgentConfig()
@@ -86,7 +86,7 @@ In `LocalAgentConfig`, `skills_paths` accepts paths to individual skill director
 
 For example, you can configure your agent to leverage a custom `code-review` skill:
 
-```
+```python
 from google.antigravity import Agent, LocalAgentConfig
 
 config = LocalAgentConfig(

@@ -3,6 +3,8 @@
 
 # Side question command (/btw)
 
+Available on: Antigravity App, Antigravity CLI
+
 Ask a quick contextual question without interrupting an in-progress agent turn or adding messages to your main conversation history.
 
 ## Overview
@@ -24,7 +26,7 @@ You can ask a side question across Antigravity surfaces.
 
 Once a conversation is active (that is, after you’ve sent your first message), type `/btw` followed by your question in the composer:
 
-```
+```text
 /btw Which file did you say defines the UserSession interface?
 ```
 
@@ -39,7 +41,7 @@ The answer opens in a floating **Side Question** panel above the composer and is
 
 Type `/btw` followed by your question in the prompt box. If you haven’t started a conversation yet, the CLI creates one for you:
 
-```
+```text
 /btw Which file did you say defines the UserSession interface?
 ```
 
@@ -57,7 +59,7 @@ In the Antigravity CLI, `/btw` responses are stored in an ephemeral session hist
 
 To reopen the most recent `/btw` card without asking a new question, run `/btw` with no arguments:
 
-```
+```text
 /btw
 ```
 
@@ -84,7 +86,7 @@ In the Antigravity CLI, you can copy the most recent `/btw` answer directly to y
 
 Run the `/copy` command with the `btw` argument:
 
-```
+```text
 /copy btw
 ```
 

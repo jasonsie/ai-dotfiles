@@ -3,6 +3,8 @@
 
 # Sidecars
 
+Available on: Antigravity App
+
 Sidecars are background processes that run alongside Antigravity. Antigravity manages the lifecycle of sidecars, automatically launching them and restarting them if they crash or error.  
 They are useful for persistent background scripts, scheduled recurring tasks, and reacting to events.
 
@@ -19,7 +21,7 @@ The sidecar’s directory must contain a `sidecar.json` file and may also contai
 
 The following example illustrates the directory structure:
 
-```
+```text
 ~/.gemini/config/sidecars/
 ├── sidecar1/
 │   ├── sidecar.json
@@ -50,7 +52,7 @@ One of `command` or `builtin` must be set.
 
 The following examples demonstrate `sidecar.json` configurations:
 
-```
+```json
 {
   "description": "Background worker",
   "command": "python3",
@@ -59,7 +61,7 @@ The following examples demonstrate `sidecar.json` configurations:
 }
 ```
 
-```
+```json
 {
   "description": "Hourly agent to triage review requests.",
   "builtin": "schedule",
@@ -81,7 +83,7 @@ Sidecars are disabled unless you explicitly enable them in the global configurat
 
 The following example enables both a global sidecar and a plugin sidecar:
 
-```
+```json
 {
   "sidecars": {
     "sidecar1": {
@@ -109,7 +111,7 @@ This directory includes the following subdirectories:
 
 `schedule` is a built-in scheduler for running recurring commands:
 
-```
+```json
 {
   "builtin": "schedule",
   "args": [

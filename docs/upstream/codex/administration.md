@@ -49,7 +49,7 @@
           title: "Configure dots permissions",
           description:
             "Manage dots access, communication, computers, and custom rules.",
-          href: "/codex/dots/controls#for-workspace-admins",
+          href: "/codex/enterprise/dots-admin-guide",
           icon: "shieldCheck",
         },
         {
@@ -244,6 +244,27 @@
             "Configure a LiteLLM gateway to route Codex model requests to Amazon Bedrock.",
           href: "/codex/enterprise/bedrock-through-litellm",
           icon: "storage",
+        },
+      ],
+    },
+    {
+      title: "ChatGPT EDU",
+      description:
+        "Compare education plans and configure access for your institution.",
+      pages: [
+        {
+          title: "Education plans",
+          description:
+            "Compare plans, help members get access, and manage multiple workspaces.",
+          href: "/codex/enterprise/education-plans",
+          icon: "users",
+        },
+        {
+          title: "Higher education setup",
+          description:
+            "Choose campus roles, compare recommended permissions, and verify access.",
+          href: "/codex/enterprise/higher-education-roles-and-permissions",
+          icon: "userLock",
         },
       ],
     },

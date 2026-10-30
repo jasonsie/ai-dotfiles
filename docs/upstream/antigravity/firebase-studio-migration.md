@@ -61,7 +61,7 @@ This workflow uses the Antigravity agent to autonomously handle project transfor
     
 4.  In the Agent pane within Antigravity, enter the following prompt. To optimize your workflow and conserve tokens, we recommend selecting the **Gemini Flash** model, which is designed for speed and efficiency in high-volume transformation tasks like file conversion:
     
-    ```
+    ```text
     @fbs-to-agy-export
     ```
     
@@ -78,7 +78,7 @@ If you prefer to manage the migration yourself without using AI tokens, you can 
 
 Open your terminal and run the following command, replacing `<path>` with the file path to your extracted project folder or the original `.zip` file:
 
-```
+```bash
 npx firebase-tools@latest studio:export <path>
 ```
 
@@ -104,7 +104,7 @@ Antigravity uses agent skills to publish your app using Firebase best practices:
 
 1.  In the chat panel, enter the following prompt:
     
-    ```
+    ```text
     Publish my app
     ```
     

@@ -3,6 +3,8 @@
 
 # Agents command (/agents)
 
+Available on: Antigravity CLI
+
 Browse, select, and switch between custom agents, or monitor active and completed background subagents directly inside an interactive TUI panel.
 
 ## Before you begin
@@ -25,7 +27,7 @@ Note
 
 To open the panel inside the TUI, type `/agents` and press Enter:
 
-```
+```bash
 /agents
 ```
 
@@ -53,7 +55,7 @@ If you’re currently inside an active conversation, switching custom agents aut
 
 The header of the `/agents` panel displays template locations for creating new custom agents:
 
-```
+```text
 Create New Agents
   Workspace: {workspace}/.agents/agents/{agent_name}/agent.md
   Global: ~/.gemini/config/agents/{agent_name}/agent.md
@@ -61,7 +63,7 @@ Create New Agents
 
 To create a custom agent that is available across all your workspaces and projects, place it under your global customization directory (`~/.gemini/config/agents/`). Create a directory matching your agent name and add an `agent.md` file with YAML frontmatter:
 
-```
+```bash
 mkdir -p ~/.gemini/config/agents/code-reviewer
 cat << 'EOF' > ~/.gemini/config/agents/code-reviewer/agent.md
 ---

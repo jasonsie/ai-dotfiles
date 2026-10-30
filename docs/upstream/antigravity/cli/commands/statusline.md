@@ -3,6 +3,8 @@
 
 # Status line command (/statusline)
 
+Available on: Antigravity CLI
+
 Toggle the TUI status line or configure a custom rendering command.
 
 ## Overview
@@ -19,7 +21,7 @@ Run the `/statusline` command with the following arguments to control its behavi
 
 Type `/statusline` with no arguments to toggle the status line on and off:
 
-```
+```text
 /statusline
 ```
 
@@ -30,7 +32,7 @@ You can explicitly enable or disable the status line:
 *   **Enable**: `/statusline on` or `/statusline enable`
 *   **Disable**: `/statusline off` or `/statusline disable`
 
-```
+```bash
 /statusline off
 ```
 
@@ -38,7 +40,7 @@ You can explicitly enable or disable the status line:
 
 To route the agent state JSON payload to a custom script and render its output in the status line, pass the command as an argument:
 
-```
+```bash
 /statusline ~/.gemini/antigravity-cli/statusline.sh
 ```
 
@@ -48,7 +50,7 @@ This immediately updates your settings and starts running the script to render t
 
 To delete your custom command configuration and revert to the built-in default status line, run the following command:
 
-```
+```bash
 /statusline delete
 ```
 
@@ -58,7 +60,7 @@ _(Note: `/statusline reset` is also supported.)_
 
 To view the quick command reference, run the following command:
 
-```
+```bash
 /statusline help
 ```
 

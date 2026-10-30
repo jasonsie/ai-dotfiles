@@ -11,7 +11,7 @@ You can intercept agent turns, handle tool errors, and audit token usage using l
 
 For example, you can configure hooks that log user prompts before execution, intercept or modify messages, or handle exceptions gracefully without crashing the agent:
 
-```
+```python
 from google.antigravity import Agent, LocalAgentConfig, hooks, types
 
 @hooks.pre_turn
@@ -40,7 +40,7 @@ Triggers allow you to run tasks automatically based on specific schedules or eve
 
 For example, you can configure a trigger to monitor service status every 60 seconds:
 
-```
+```python
 import asyncio
 from google.antigravity import Agent, LocalAgentConfig
 from google.antigravity.triggers import every
@@ -65,7 +65,7 @@ Session persistence allows you to persist and restore stateful sessions across a
 
 To configure storage directories and session identifiers for saving or loading a session:
 
-```
+```python
 from google.antigravity import LocalAgentConfig
 
 # conversation_id persists or restores an existing session

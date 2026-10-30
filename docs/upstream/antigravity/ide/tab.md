@@ -3,6 +3,8 @@
 
 # Antigravity IDE: Tab and navigation
 
+Available on: Antigravity IDE
+
 This guide covers the core navigation and completion tools: **Supercomplete**, **Tab-to-Jump**, and **Tab-to-Import**.
 
 ## Supercomplete
