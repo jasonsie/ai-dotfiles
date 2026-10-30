@@ -7,7 +7,7 @@ The style lives in [`STYLE.md`](STYLE.md), beside this file. This folder links i
 
 ## Apply
 
-When writing a document for people, follow `STYLE.md`; its templates replace a skill's default structure. While it says "None captured yet", use the default format.
+When writing a document for people, follow `STYLE.md`; its templates replace a skill's default structure, and a cover item it marks "none captured yet" means the default format.
 
 ## Capture
 
@@ -20,7 +20,7 @@ When writing a document for people, follow `STYLE.md`; its templates replace a s
    - Branding: colors, fonts.
    - Audience defaults: one entry per audience, since an exec memo and a team update follow different rules.
 3. **Confirm.** Show the draft. A rule seen once is an *assumption* until a second sighting or the user's word makes it a convention; list assumptions for the user to settle.
-4. **Write** `STYLE.md` at this folder's real path in the ai-dotfiles repo, on a new branch there, replacing the whole file with one section per cover item above. Rules only, a screen or two, with codenames under "never in customer-facing docs". Every section is filled or says "none seen". Done when the file is written; it goes live once merged.
+4. **Write** `STYLE.md` at this folder's real path in the ai-dotfiles repo, on a new branch there, replacing the cover sections with one section per cover item above and keeping the sections a skill contributed (`Plain words`, each template under `Templates` that names a skill). Rules only, a screen or two, with codenames under "never in customer-facing docs". Every section is filled or says "none seen". Done when the file is written; it goes live once merged.
 
 Reply with:
 

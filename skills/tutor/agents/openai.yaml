@@ -1,0 +1,5 @@
+interface:
+  display_name: "Tutor"
+  short_description: "Teach the answer to a question about one source"
+policy:
+  allow_implicit_invocation: false

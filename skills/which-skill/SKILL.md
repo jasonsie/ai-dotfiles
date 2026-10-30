@@ -89,6 +89,9 @@ has the reasoning and each CLI's commands.
   one-off migration) as an interactive bash script.
 - **`wait-what`**: the last message didn't land; the agent re-pitches it plainly.
 - **`teach`**: learn a concept over several sessions in a workspace folder.
+- **`tutor`**: one question about one source, taught in four moves (locate, gap, build,
+  check) in plain words; reads a `teach` workspace and today's day block when in reach,
+  writes nothing.
 - **`house-style`**: learn the company's document format from a sample, once;
   every CLI then writes documents in it.
 - **`web-clipper`**: clip a web page into an Obsidian vault the way Obsidian Web
