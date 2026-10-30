@@ -4,8 +4,8 @@ import unittest
 from support import ROOT
 
 TUTOR = ROOT / 'skills' / 'tutor' / 'SKILL.md'
-STYLE = ROOT / 'skills' / 'house-style' / 'STYLE.md'
-TEMPLATE = re.compile(r'"([^"]+)" template')
+TEMPLATES = ROOT / 'skills' / 'house-style' / 'templates'
+TEMPLATE = re.compile(r'`([a-z][a-z0-9-]*)` template')
 
 
 def frontmatter(text):
@@ -16,11 +16,11 @@ def frontmatter(text):
 class TutorTest(unittest.TestCase):
     """The tutor skill stays hand-invoked and its template stays in house-style."""
 
-    def test_template_is_a_house_style_heading(self):
+    def test_template_is_a_house_style_template(self):
         names = TEMPLATE.findall(TUTOR.read_text())
         self.assertTrue(names, 'tutor names no house-style template')
-        headings = {line[4:] for line in STYLE.read_text().splitlines() if line.startswith('### ')}
-        self.assertEqual(sorted(set(names) - headings), [], 'templates missing from STYLE.md')
+        have = {p.stem for p in TEMPLATES.glob('*.md')}
+        self.assertEqual(sorted(set(names) - have), [], 'templates missing from house-style/templates/')
 
     def test_hand_invoked_with_argument_hint(self):
         fm = frontmatter(TUTOR.read_text())

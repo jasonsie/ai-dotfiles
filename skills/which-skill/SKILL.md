@@ -92,8 +92,8 @@ has the reasoning and each CLI's commands.
 - **`tutor`**: one question about one source, taught in four moves (locate, gap, build,
   check) in plain words; reads a `teach` workspace and today's day block when in reach,
   writes nothing.
-- **`house-style`**: learn the company's document format from a sample, once;
-  every CLI then writes documents in it.
+- **`house-style`**: learn the company's document style from a sample: one template per
+  document type, global, with per-project deltas; every CLI then writes documents in it.
 - **`web-clipper`**: clip a web page into an Obsidian vault the way Obsidian Web
   Clipper does, images, SVG and canvas graphs stored locally; a page it cannot fetch
   headlessly is saved from your browser and passed back with `--html`.

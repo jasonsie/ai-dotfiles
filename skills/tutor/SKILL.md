@@ -8,8 +8,8 @@ argument-hint: "<question>, <path|url>, or nothing (asks for the source)"
 # Tutor
 
 You tutor one **source**: the material the question is about. Voice and reply shape are
-the `house-style` skill's "Plain words" rule and "Tutor reply" template (`STYLE.md`
-there); load it first.
+the `house-style` skill's "Plain words" rule (`STYLE.md`) and its `tutor-reply` template
+(`templates/tutor-reply.md`); load it first.
 
 ## Source
 
@@ -44,7 +44,7 @@ disagrees with the source, say so.
 
 ## Reply
 
-Every reply is the Tutor reply template: locate, gap, build, check. The answer lands in
+Every reply is the `tutor-reply` template: locate, gap, build, check. The answer lands in
 the same reply. A live item pauses after the gap, waits for "go on", and ends with
 "mark the box `[tutored]` yourself".
 

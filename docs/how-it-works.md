@@ -105,8 +105,9 @@ without a model call: `codex debug prompt-input "hi"` prints what it would send.
   `AGENTS.md` or in a skill, which loads on demand.
 - **Never write through a link.** A CLI's memory or rule-saving feature must not edit the
   shared file; `~/.gemini/config/AGENTS.md`, where Antigravity appends rules, is never linked.
-  The one deliberate exception is the `house-style` skill, which rewrites its `STYLE.md`
-  in this repo on a branch, for review before merge.
+  The one deliberate exception is the `house-style` skill, which writes its `STYLE.md` and
+  `templates/` in this repo on a branch: live in every CLI at once through the links; the
+  merge keeps them.
 - **Portable across Macs.** No usernames, checkout paths, or Homebrew prefixes in `config/`
   or `scripts/`; scripts resolve their own location. The healthcheck enforces this.
 - **Safe by default.** `--dry-run` previews, idempotent, back up before writing,
