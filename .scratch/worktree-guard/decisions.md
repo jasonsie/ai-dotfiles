@@ -165,8 +165,11 @@ a history question.
 - Names: feature `worktree-guard`, shared module `scripts/agent_hooks/`.
 
 ## Open risks (verify first when building)
-- Codex hooks may run inside the sandbox; then the hook cannot `git worktree add` without an
-  approval, breaking priority 1 for Codex. Fallback to decide with the owner if so.
+- RESOLVED 2026-11-02: Codex runs hooks outside its sandbox. Probe: `codex exec -s
+  workspace-write` (sandbox: workdir, /tmp, $TMPDIR) with a PreToolUse hook passed inline as
+  `-c 'hooks.PreToolUse=[...]'` plus `--dangerously-bypass-hook-trust`; the hook's `git worktree
+  add` (writes .git) and a write to $HOME both succeeded. The redirect needs no approval.
+  The inline `-c hooks...` form is a way to test Codex hooks without touching ~/.codex.
 - Rewriting edge cases: shell commands naming the main worktree by absolute path, `cd ..`,
   `git -C`; Codex `apply_patch` paths live in the patch headers.
 
