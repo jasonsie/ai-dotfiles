@@ -24,6 +24,7 @@ Codex CLI, Pi, and Antigravity. The mechanism and layout are in
 | `docs/upstream/` | Machine-written docs mirrors with their indexes (`INDEX.md`, `MIRROR-INDEX.*`), and skill catalogs | `scripts/upstream/` (weekly workflow) |
 | `docs/onboarding.md` | This repo's onboarding report | `skills/onboard/` (`/onboard`) |
 | `scripts/tests/` | Unit tests for the scripts and the skills' helpers | — |
+| `LICENSE`, `THIRD-PARTY-NOTICES.md`, `LICENSES/` | This repo's MIT license; every other author's license (adapted skills, docs mirrors) and the license texts | — |
 
 `scripts/install.sh` runs the five install steps, `scripts/uninstall.sh` reverses them;
 `scripts/healthcheck.sh` verifies live state. `docs/` holds `how-it-works.md`, the mirror, and
@@ -45,6 +46,8 @@ Codex CLI, Pi, and Antigravity. The mechanism and layout are in
 - Keep `config/` and `scripts/` free of machine paths (`/Users/<name>`, `/opt/homebrew`);
   the healthcheck enforces this.
 - No credentials in this repo. Per-project rules belong to each project, not here.
+- A new adapted skill or docs source gets a row in `THIRD-PARTY-NOTICES.md` and, for a new
+  license, its text in `LICENSES/`.
 - Every installer writes by default, previews with `--dry-run`, has `--uninstall`, is
   idempotent, backs up before writing, refuses to overwrite what it did not create, and
   rolls back on failure. Keep it that way and test it.

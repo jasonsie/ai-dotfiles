@@ -1,83 +1,113 @@
-# AI Dotfiles
+# ai-dotfiles
 
-The single source for my global AI coding setup on macOS: Claude Code, Codex CLI, Pi, and
-Antigravity (CLI and IDE). Each CLI gets the same shared rules and skills through its own
-native folders and keeps its native differences; missing features are documented, not
-emulated. How it works: [docs/how-it-works.md](docs/how-it-works.md). Forked from
-[zeuikli/claude-code-workspace](https://github.com/zeuikli/claude-code-workspace).
+One repository that configures four AI coding CLIs on a Mac the same way: **Claude Code**,
+**Codex CLI**, **Pi**, and **Antigravity** (CLI and IDE). You edit one set of rules, skills,
+settings and MCP servers here; an installer links or merges them into each CLI's own folders.
+Each CLI keeps its native format and features. Nothing is emulated: a feature one CLI lacks is
+documented, not faked.
+
+It is an opinionated personal setup, published so others can fork it. Expect to change the
+rules in `config/global-agents.md`, the model defaults in `config/cli-settings.json`, and the
+skill list to taste.
+
+- How the pieces fit: [docs/how-it-works.md](docs/how-it-works.md)
+- Notes for AI agents editing this repo: [AGENTS.md](AGENTS.md)
+- Third-party code and docs it ships: [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)
 
 ## What it manages
 
-| Source | What it holds | Lands in |
+| Source in this repo | What it holds | Where it lands |
 |---|---|---|
-| `config/ai-clis.json` | Which CLIs are on, and where each reads things | Decides what every step below sets up; a CLI switched off is taken out |
-| `config/global-agents.md` | Rules for every project in every CLI | Linked as `~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, `~/.gemini/GEMINI.md` (read by Antigravity), `~/.pi/agent/AGENTS.md` |
-| `config/cli-settings.json` | `enforce`: safety settings, put back on every install. `default`: model choices, set only while a CLI has none | Each CLI's settings file, merged (never linked) |
-| `config/mcp-servers.json` | Shared MCP servers (today: context7, library docs) | `claude`, `codex` and `pi mcp add`; merged into `~/.gemini/config/mcp_config.json` for Antigravity |
-| `skills/<name>/` | Shared skills; adapted ones are pinned in `skills/skills.lock` | `~/.claude/skills`, `~/.agents/skills` (Codex and Pi), `~/.gemini/config/skills` (Antigravity) |
-| `config/upstream-docs.json` | The documentation sources behind `docs/upstream/` | `scripts/upstream/sync-upstream.py`, weekly |
-| `skills/daily-log/` | The `daily-log` command (the daily logger's grammar and writer) and its Stop hook | `~/.local/bin/daily-log`; hook entries in `~/.claude/settings.json`, `~/.codex/hooks.json`, `~/.gemini/config/hooks.json`; Pi's `~/.pi/agent/extensions` |
-| `docs/upstream/` | A weekly mirror of each CLI's official docs and of Google's and Meta's style and docs-writing guides, indexed, plus the watched skill catalogs | Read through the `upstream-docs` skill; never installed |
+| `config/ai-clis.json` | Which CLIs are on, and the path each one reads for instructions, settings, MCP, skills and hooks | Drives every step below; a CLI switched off is cleaned out |
+| `config/global-agents.md` | Rules loaded in every project by every CLI | Symlinked as `~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, `~/.pi/agent/AGENTS.md`, `~/.gemini/GEMINI.md` |
+| `config/cli-settings.json` | `enforce`: safety settings, restored on every install. `default`: model choices, written only when the CLI has none | Merged into each CLI's settings file (never symlinked, because CLIs write to these files) |
+| `config/mcp-servers.json` | MCP servers every CLI should have (today: context7 for library docs) | `claude`, `codex` and `pi mcp add`; merged into Antigravity's `mcp_config.json` |
+| `skills/<name>/` | Shared skills. Skills adapted from other repos are pinned in `skills/skills.lock` with source, commit and license | Symlinked into `~/.claude/skills`, `~/.agents/skills` (Codex and Pi), `~/.gemini/config/skills` |
+| `skills/daily-log/` | The `daily-log` command, which writes a daily work journal, and the Stop hook that reminds a session to log | `~/.local/bin/daily-log`; hook entries in each CLI's hook file; a Pi extension |
+| `skills/worktree-guard/` | A hook that moves a second session working in the same checkout into its own git worktree | Hook entries in each CLI's hook file; `ai-dotfiles worktree` commands |
+| `config/upstream-docs.json` | The documentation sources mirrored into `docs/upstream/` | Refreshed weekly by a GitHub Action |
+| `docs/upstream/` | Machine-written mirrors of each CLI's official docs and of Google's and Meta's style guides, with indexes | Read by agents through the `upstream-docs` skill; never installed |
 
-Not managed: credentials, sessions, plugin choices, local approvals and trust, and
-per-project rules (each project keeps its own `AGENTS.md`).
+Not managed, on purpose: credentials, sessions, plugin choices, local approvals and trust
+decisions, and per-project rules. Each project keeps its own `AGENTS.md`.
 
-## Set up a Mac
+## Requirements
 
-Requires Python 3.11+ (stock `/usr/bin/python3` is too old: `brew install python`).
+- macOS. The paths in `config/ai-clis.json` are the CLIs' macOS defaults.
+- Python 3.11 or newer. The stock `/usr/bin/python3` is too old; `brew install python`.
+- Any subset of the four CLIs. Switch the others off in `config/ai-clis.json`.
 
-```bash
-git clone <this repo>
-bash scripts/install.sh            # install (backs up first); --dry-run previews
-ai-dotfiles check                  # verify live state; works from any folder now
-```
-
-The first run links `ai-dotfiles` and `daily-log` into `~/.local/bin`:
+## Install
 
 ```bash
-ai-dotfiles [install]    # apply the setup
-ai-dotfiles update       # pull this repo (clean tree on main), then install
-ai-dotfiles uninstall    # remove what points into this repo; settings keys and MCP servers stay
-ai-dotfiles check        # healthcheck
+git clone https://github.com/jasonsie/ai-dotfiles.git
+cd ai-dotfiles
+bash scripts/install.sh --dry-run   # preview: what would change, nothing written
+bash scripts/install.sh             # apply; every file it touches is backed up first
+ai-dotfiles check                   # read the live state back
 ```
 
-`--dry-run` previews any of them; `--target=<cli>` limits a run to one CLI in
-`config/ai-clis.json`; `--instructions-only` links the instructions only. Existing
-instruction files the installer does not recognize are refused until you review them
-(`--replace-instructions`). Backups go to `~/.local/state/ai-dotfiles/`.
-
-Claude plugins are a per-machine choice, not managed here. The current set:
+The first run links `ai-dotfiles` and `daily-log` into `~/.local/bin`. From then on:
 
 ```bash
-claude plugin marketplace add https://github.com/jasonsie/zkfy.git
-for p in zkfy@zkfy-marketplace pyright-lsp@claude-plugins-official typescript-lsp@claude-plugins-official; do
-  claude plugin install "$p"
-done
+ai-dotfiles [install]     # apply the setup (idempotent: a second run reports 0 changes)
+ai-dotfiles update        # fast-forward this repo on main, then install
+ai-dotfiles uninstall     # remove every link and hook that points into this repo
+ai-dotfiles check         # healthcheck
+ai-dotfiles worktree ...  # list, merge or remove agents' linked worktrees
 ```
 
-## Everyday changes
+Flags for `install`: `--dry-run` previews, `--target=<cli>` limits a run to one CLI,
+`--instructions-only` links only the instruction files. An existing global instruction file
+the installer did not create is left alone until you pass `--replace-instructions`.
+Backups go to `~/.local/state/ai-dotfiles/`.
 
-- **A CLI on or off:** set its `on` in `config/ai-clis.json`, then run `ai-dotfiles`. Off
-  takes out this repo's links for it; on sets it up again.
-- **A rule for every project:** edit `config/global-agents.md`; it is live at once
-  through the links. Keep only rules that apply in every repository and every CLI; anything
-  narrower belongs in a project's `AGENTS.md` or in a skill.
-- **A setting:** add it to `config/cli-settings.json` under `enforce` (always put back)
-  or `default` (first run only), then run `ai-dotfiles`.
-- **A skill:** add `skills/<name>/SKILL.md`, then run `ai-dotfiles`.
-  For a skill adapted from another repository, record its source, commit, and license in
-  `skills/skills.lock` and keep its LICENSE file in the skill folder.
-- **The weekly upstream pull request:** every Monday a GitHub Action refreshes `docs/upstream/`
-  and opens or refreshes a pull request from the `upstream-sync` branch. Read its "Changes
-  that touch this setup" and "Skills" sections, then merge or close it.
-- **The daily log:** `daily-log add --done "<label>" "<line>"` records finished work in
-  `~/Documents/Claude/Projects/daily-logger`; the Stop hook asks for it once in a session that
-  changed files but logged nothing. Codex runs the hook only after approval in `/hooks`.
-- **Anything machine-specific:** change it in the CLI itself; the installer leaves it alone.
+Uninstall restores the instruction files from before the first install and removes links,
+hook entries and Pi's extension. Settings keys and MCP servers stay, because they could be
+yours. After an uninstall, deleting the clone breaks nothing.
 
-How it all fits together: [docs/how-it-works.md](docs/how-it-works.md). Maintainer notes
-for AI tools: [AGENTS.md](AGENTS.md).
+## Make it yours
+
+- **Switch a CLI on or off.** Set `on` in `config/ai-clis.json`, then run `ai-dotfiles`.
+- **Change a global rule.** Edit `config/global-agents.md`. It is live in every CLI at once,
+  through the symlinks. Keep only rules that hold in every repository and every CLI.
+- **Change a setting.** Add the key to `config/cli-settings.json` under `enforce` (always
+  restored) or `default` (first install only), then run `ai-dotfiles`.
+- **Add a skill.** Create `skills/<name>/SKILL.md`, then run `ai-dotfiles`. For a skill
+  adapted from another repository, add its source, commit and license to `skills/skills.lock`
+  and keep its LICENSE file in the skill folder.
+- **Change the journal location.** `daily-log` writes to `~/Documents/Claude/Projects/daily-logger`
+  unless `DAILY_LOGGER_ROOT` is set.
+- **Review the weekly upstream pull request.** Every Monday a GitHub Action refreshes
+  `docs/upstream/` and opens a pull request from the `upstream-sync` branch. Its description
+  lists which mirrored pages changed, which changes touch this setup, and which pinned skills
+  changed upstream.
+- **Anything machine-specific** lives in the CLI itself. The installer leaves it alone.
+
+## Skills included
+
+Thirty-seven skills install into every CLI. Most come from
+[mattpocock/skills](https://github.com/mattpocock/skills) (MIT), lightly adapted so the same
+file works in all four CLIs, and one from [affaan-m/ECC](https://github.com/affaan-m/ECC)
+(MIT). `skills/skills.lock` records each adaptation. The `which-skill` skill routes between
+them. Skills written for this repo include `daily-log`, `worktree-guard`, `upstream-docs`,
+`collect-docs`, `house-style`, `tutor` and `web-clipper`.
+
+## Verify a change
+
+```bash
+python3 -m unittest discover -s scripts/tests
+shellcheck scripts/*.sh scripts/ai-dotfiles
+bash scripts/install.sh --dry-run        # expect 0 changes on a configured Mac
+bash scripts/healthcheck.sh
+```
+
+CI runs the first two on every push.
 
 ## License
 
-MIT License
+MIT. See [LICENSE](LICENSE). Adapted skills keep their authors' licenses in their folders, and
+the docs mirrors under `docs/upstream/` keep their sources' terms; both are listed in
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md). The repository began as a fork of
+[zeuikli/claude-code-workspace](https://github.com/zeuikli/claude-code-workspace) (MIT); no
+files from it remain.
