@@ -24,14 +24,13 @@ import sys
 import installer
 
 WORKSPACE = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(WORKSPACE / 'scripts'))
+import agent_hooks  # noqa: E402  (the CLIs' hook formats)
+
 HOOK = WORKSPACE / 'skills/daily-log/scripts/daily_log.py'
 MARK = 'skills/daily-log/scripts/daily_log.py'
-EVENTS = {  # per CLI: (event, mode, tool-name matcher or None)
-    'claude': (('PostToolUse', 'tool', 'Edit|Write|NotebookEdit'), ('Stop', 'stop', None)),
-    'codex': (('PostToolUse', 'tool', 'Edit|Write'), ('Stop', 'stop', None)),
-    'agy': (('PostToolUse', 'tool', 'write_to_file|replace_file_content|multi_replace_file_content'),
-            ('Stop', 'stop', None)),
-}
+WANTS = (('tool', 'edit'), ('stop', None))  # daily-log: after every edit, and when a turn ends
+EVENTS = {cli: agent_hooks.native_events(cli, WANTS) for cli in agent_hooks.HOOK_FILE_CLIS}
 AGY_NAMES = {'tool': 'ai-dotfiles-daily-log-tool', 'stop': 'ai-dotfiles-daily-log-stop'}
 TOOL_EVENTS = ('PreToolUse', 'PostToolUse')  # Antigravity: these take matcher groups, the rest bare handlers
 TIMEOUT = 10

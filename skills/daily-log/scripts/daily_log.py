@@ -13,7 +13,8 @@ The grammar is LOG-FORMAT.md in this skill's folder. The journal root is --root,
 $DAILY_LOGGER_ROOT, else ~/Documents/Claude/Projects/daily-logger; year and month folders
 are created, the root never is. Hook state is one file per session under $DAILY_LOG_STATE,
 else ~/.local/state/ai-dotfiles/daily-log/, deleted after 7 days. A hook call never exits
-non-zero and prints nothing but JSON, so a broken hook cannot block a session.
+non-zero and prints nothing but JSON, so a broken hook cannot block a session. The CLIs'
+hook formats live in the repo's scripts/agent_hooks.py, shared with other hooks.
 Python 3.11+, stdlib only.
 """
 from __future__ import annotations
@@ -23,15 +24,16 @@ import calendar
 import contextlib
 from datetime import date
 import io
-import json
 import os
 from pathlib import Path
 import re
 import sys
 import tempfile
-import time
 
 SKILL = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(SKILL.parents[1] / 'scripts'))
+import agent_hooks  # noqa: E402  (the CLIs' hook formats, in the repo's scripts folder)
+
 DEFAULT_ROOT = '~/Documents/Claude/Projects/daily-logger'
 DEFAULT_STATE = '~/.local/state/ai-dotfiles/daily-log'
 DAYS = ('Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun')
@@ -40,13 +42,6 @@ RULE = '-' * 12
 HEADING = re.compile(r'^#\s*(\d{1,2})/(\d{1,2})\s*\(')
 ENTRY = re.compile(r'^-\s*\[(?P<mark>[^\]]*)\]\s*(?P<label>.+?)\s*$')
 DONE_MARKS = {'x', 'ｘ'}
-CLIS = ('claude', 'codex', 'agy', 'pi')
-EDIT_TOOLS = {
-    'claude': {'Edit', 'Write', 'NotebookEdit'},
-    'codex': {'apply_patch', 'Edit', 'Write'},
-    'agy': {'write_to_file', 'replace_file_content', 'multi_replace_file_content'},
-    'pi': {'edit', 'write'},
-}
 MAX_NUDGES = 2
 KEEP_SECONDS = 7 * 24 * 3600
 NUDGE = (
@@ -245,94 +240,24 @@ def cmd_tutor_daily(args):
 
 # --- the hook ---------------------------------------------------------------------------
 
-def state_dir():
-    return Path(os.environ.get('DAILY_LOG_STATE') or DEFAULT_STATE).expanduser()
-
-
-def state_file(session):
-    return state_dir() / (re.sub(r'[^A-Za-z0-9_.-]', '_', str(session))[:128] + '.json')
-
-
-def load_state(path):
-    try:
-        state = json.loads(path.read_text())
-    except (OSError, ValueError):
-        return {}
-    return state if isinstance(state, dict) else {}
-
-
-def save_state(path, state):
-    path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-    with tempfile.NamedTemporaryFile('w', dir=path.parent, delete=False) as handle:
-        json.dump(state, handle, ensure_ascii=False, sort_keys=True)
-    os.chmod(handle.name, 0o600)
-    os.replace(handle.name, path)
-
-
-def prune(now):
-    for path in state_dir().glob('*.json'):
-        try:
-            if now - path.stat().st_mtime > KEEP_SECONDS:
-                path.unlink()
-        except OSError:
-            pass
+STORE = agent_hooks.Store('DAILY_LOG_STATE', DEFAULT_STATE, KEEP_SECONDS)
 
 
 def mark_logged(session):
-    path = state_file(session)
-    state = load_state(path)
+    state = STORE.load(session)
     state['logged'] = True
-    save_state(path, state)
+    STORE.save(session, state)
 
 
-def session_of(cli, data):
-    """(session id, working folder) from the CLI's hook input."""
-    if cli == 'agy':
-        paths = data.get('workspacePaths') or []
-        return data.get('conversationId'), (paths[0] if paths else None)
-    return data.get('session_id'), data.get('cwd')
-
-
-def tool_of(cli, data):
-    if cli == 'agy':
-        call = data.get('toolCall') or {}
-        return str(call.get('name') or '')
-    return str(data.get('tool_name') or '')
-
-
-def proceed(cli, text):
-    """The reply that continues the turn with `text` as the model's next instruction."""
-    if cli == 'claude':
-        return {'hookSpecificOutput': {'hookEventName': 'Stop', 'additionalContext': text}}
-    if cli == 'codex':
-        return {'decision': 'block', 'reason': text}
-    if cli == 'agy':
-        return {'decision': 'continue', 'reason': text}
-    return {'continue': text}
-
-
-def quiet(cli, mode):
-    """The no-op reply: Codex wants JSON from Stop, Antigravity wants a decision or an object."""
-    if cli == 'codex' and mode == 'stop':
-        return {}
-    if cli == 'agy':
-        return {'decision': 'stop'} if mode == 'stop' else {}
-    return None
-
-
-def on_tool(cli, data, state):
-    if tool_of(cli, data) in EDIT_TOOLS[cli]:
+def on_tool(event, state):
+    if event.edit:
         state['edits'] = state.get('edits', 0) + 1
     return None
 
 
-def on_stop(cli, data, state, session):
-    if data.get('stop_hook_active'):
-        return None
-    if state.pop('pending', False):  # the turn our own continuation started (Antigravity, Pi)
-        return None
-    if cli == 'agy' and data.get('terminationReason', 'model_stop') != 'model_stop':
-        return None  # an error or step-cap stop; Claude Code fires Stop only on a normal finish
+def on_stop(event, state):
+    if event.continuation or not event.model_stopped:
+        return None  # our own continuation; or an error or step-cap stop (Antigravity)
     edits = state.get('edits', 0)
     if not edits or state.get('logged') or state.get('nudges', 0) >= MAX_NUDGES:
         return None
@@ -340,33 +265,20 @@ def on_stop(cli, data, state, session):
         return None
     state['nudges'] = state.get('nudges', 0) + 1
     state['edits_at_nudge'] = edits
-    if cli in ('agy', 'pi'):
-        state['pending'] = True
-    return proceed(cli, NUDGE.format(edits=edits, session=session))
+    return agent_hooks.Continue(NUDGE.format(edits=edits, session=event.session))
+
+
+def decide(event, state):
+    return on_tool(event, state) if event.kind == 'tool' else on_stop(event, state)
 
 
 def hook(mode, cli, data, now=None):
     """The reply for one hook call, or None; the session's state is read and written around it."""
-    session, _ = session_of(cli, data)
-    if not session:
-        return quiet(cli, mode)
-    prune(time.time() if now is None else now)
-    path = state_file(session)
-    state = load_state(path)
-    reply = on_tool(cli, data, state) if mode == 'tool' else on_stop(cli, data, state, session)
-    save_state(path, state)
-    return reply if reply is not None else quiet(cli, mode)
+    return agent_hooks.call(cli, mode, data, decide, STORE, now)
 
 
 def cmd_hook(args):
-    try:
-        data = json.loads(sys.stdin.read() or '{}')
-        reply = hook(args.mode, args.cli, data if isinstance(data, dict) else {})
-    except Exception:  # never block a session over a hook problem
-        reply = quiet(args.cli, args.mode)
-    if reply is not None:
-        print(json.dumps(reply, ensure_ascii=False))
-    return 0
+    return agent_hooks.serve(args.cli, args.mode, lambda data: hook(args.mode, args.cli, data))
 
 
 # --- the command ------------------------------------------------------------------------
@@ -412,7 +324,7 @@ def parser():
 
     hook_parser = sub.add_parser('hook', help='the CLI hook: JSON on stdin')
     hook_parser.add_argument('mode', choices=('tool', 'stop'))
-    hook_parser.add_argument('--cli', choices=CLIS, required=True)
+    hook_parser.add_argument('--cli', choices=agent_hooks.CLIS, required=True)
     hook_parser.set_defaults(run=cmd_hook)
     return top
 
