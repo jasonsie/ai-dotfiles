@@ -59,6 +59,39 @@ class RenderTest(unittest.TestCase):
                                  ('pi', 'tool'): None, ('pi', 'stop'): None})
 
 
+class PreReplyTest(unittest.TestCase):
+    def test_deny_note_and_rewrite_in_each_cli_shape(self):
+        Deny, Note, Rewrite = agent_hooks.Deny, agent_hooks.Note, agent_hooks.Rewrite
+        for cli in ('claude', 'codex'):
+            self.assertEqual(agent_hooks.render(cli, 'pre', Deny('busy'))['hookSpecificOutput'],
+                             {'hookEventName': 'PreToolUse', 'permissionDecision': 'deny',
+                              'permissionDecisionReason': 'busy'})
+            self.assertEqual(agent_hooks.render(cli, 'pre', Note('n'))['hookSpecificOutput'],
+                             {'hookEventName': 'PreToolUse', 'additionalContext': 'n'})
+            self.assertEqual(agent_hooks.render(cli, 'pre', Rewrite({'command': 'x'}, 'moved'))['hookSpecificOutput'],
+                             {'hookEventName': 'PreToolUse', 'permissionDecision': 'allow',
+                              'updatedInput': {'command': 'x'}, 'additionalContext': 'moved'})
+            self.assertIsNone(agent_hooks.render(cli, 'pre', None))
+        self.assertEqual(agent_hooks.render('agy', 'pre', None), {'decision': 'allow'})
+        self.assertEqual(agent_hooks.render('agy', 'pre', Deny('busy')), {'decision': 'deny', 'reason': 'busy'})
+        self.assertEqual(agent_hooks.render('agy', 'pre', Rewrite({'Cwd': '/l'}, 'moved')),
+                         {'decision': 'allow', 'overwrite': {'Cwd': '/l'}, 'reason': 'moved'})
+        self.assertEqual(agent_hooks.render('pi', 'pre', Deny('busy')), {'block': True, 'reason': 'busy'})
+        self.assertEqual(agent_hooks.render('pi', 'pre', Rewrite({'path': '/l/a'})), {'input': {'path': '/l/a'}})
+        self.assertEqual(agent_hooks.render('pi', 'pre', Note('n')), {'note': 'n'})
+        self.assertIsNone(agent_hooks.render('codex', 'end', Note('ignored')))
+
+    def test_a_pre_event_carries_the_action_input_and_pid(self):
+        event = agent_hooks.read('claude', 'pre', {'session_id': 's', 'tool_name': 'Bash',
+                                                    'tool_input': {'command': 'ls'}})
+        self.assertEqual((event.action, event.tool_input, event.pid), ('shell', {'command': 'ls'}, None))
+        event = agent_hooks.read('agy', 'pre', {'conversationId': 'a', 'toolCall': {'name': 'view_file',
+                                                'args': {'AbsolutePath': '/w/x'}}})
+        self.assertEqual((event.action, event.tool_input), ('read', {'AbsolutePath': '/w/x'}))
+        self.assertEqual(agent_hooks.read('pi', 'pre', {'session_id': 'p', 'tool_name': 'write', 'pid': 42}).pid, 42)
+        self.assertIsNone(agent_hooks.read('pi', 'pre', {'pid': True}).pid)
+
+
 class CallTest(unittest.TestCase):
     def setUp(self):
         temp = tempfile.TemporaryDirectory(prefix='agent hooks 空間 ')
@@ -121,6 +154,17 @@ class ServeTest(unittest.TestCase):
         self.assertEqual(self.serve('{"a": 1}', lambda data: {'got': data['a']}), (0, '{"got": 1}\n'))
         self.assertEqual(self.serve('{}', lambda data: None), (0, ''))
 
+    def test_on_error_says_what_failed(self):
+        def broken(data):
+            raise RuntimeError('bug')
+        status, out = self.serve('{}', broken, cli='claude', kind='pre')
+        self.assertEqual(status, 0)
+        self.assertEqual(out, '')
+        out = io.StringIO()
+        agent_hooks.serve('claude', 'pre', broken, io.StringIO('{}'), out,
+                          on_error=lambda error: agent_hooks.Note(f'guard failed: {error}'))
+        self.assertIn('guard failed: bug', json.loads(out.getvalue())['hookSpecificOutput']['additionalContext'])
+
     def test_fails_open_with_the_quiet_reply(self):
         def broken(data):
             raise RuntimeError('bug')
@@ -138,9 +182,19 @@ class InstallTableTest(unittest.TestCase):
         self.assertEqual(agent_hooks.native_events('pi', wants), ())
 
     def test_every_cli_with_a_matcher_knows_its_edit_tools(self):
-        self.assertEqual(set(agent_hooks.EDIT_MATCHERS), set(agent_hooks.HOOK_FILE_CLIS))
-        self.assertEqual(set(agent_hooks.EDIT_TOOLS), set(agent_hooks.CLIS))
-        json.dumps(agent_hooks.EDIT_MATCHERS)
+        self.assertEqual(set(agent_hooks.MATCHERS), set(agent_hooks.HOOK_FILE_CLIS))
+        self.assertEqual(set(agent_hooks.TOOLS), set(agent_hooks.CLIS))
+        for cli, matchers in agent_hooks.MATCHERS.items():
+            for action, matcher in matchers.items():
+                named = agent_hooks.TOOLS[cli][action]
+                self.assertTrue(set(matcher.split('|')) <= named | {'Edit', 'Write'}, (cli, action))
+        json.dumps(agent_hooks.MATCHERS)
+
+    def test_guard_events_and_a_cli_without_session_end(self):
+        wants = (('pre', ('edit', 'shell', 'read')), ('end', None))
+        self.assertEqual(agent_hooks.native_events('codex', wants),
+                         (('PreToolUse', 'pre', 'Edit|Write|Bash'), ('SessionEnd', 'end', None)))
+        self.assertEqual([e for e, _, _ in agent_hooks.native_events('agy', wants)], ['PreToolUse'])
 
 
 if __name__ == '__main__':

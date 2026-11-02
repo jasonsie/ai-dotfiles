@@ -5,18 +5,21 @@ module reads each CLI's hook input into that Event, writes the reply back in the
 shape, keeps the feature's state per session, and tells the installer which native events and
 matchers a feature needs. Everything that differs between the CLIs lives here.
 
-  call(cli, kind, data, handle, store)   one hook call: handle(event, state) -> None | Continue
-  serve(cli, kind, answer)               a call on stdin/stdout; exits 0, fails open, silently
+  call(cli, kind, data, handle, store)   one hook call: handle(event, state) -> a reply or None
+  serve(cli, kind, answer)               a call on stdin/stdout; exits 0 and fails open
   Store(env, default, keep)              one JSON file per session, pruned after `keep` seconds
   native_events(cli, wants)              ((native event, kind, matcher), ...) for the installer
 
-Kinds: 'tool' (after a tool call) and 'stop' (a turn ends). Pi has no hook file: a feature's
-Pi extension sends {session_id, cwd, tool_name} and reads {continue: text}. Features import
-this file from the repo's scripts/ folder. Python 3.11+, stdlib only.
+Kinds: 'pre' (before a tool call), 'tool' (after one), 'stop' (a turn ends), 'end' (the
+session ends). An Event names what the tool does (action: edit, shell, read or other) and
+carries its input. Replies: Continue (a 'stop'), Note, Deny and Rewrite (a 'pre').
+Pi has no hook file: a feature's Pi extension sends {session_id, cwd, tool_name, tool_input,
+pid} and applies {continue}, {block, reason}, {input, note} or {note}. Features import this
+file from the repo's scripts/ folder. Python 3.11+, stdlib only.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 import json
 import os
 from pathlib import Path
@@ -27,19 +30,23 @@ import time
 
 CLIS = ('claude', 'codex', 'agy', 'pi')
 HOOK_FILE_CLIS = ('claude', 'codex', 'agy')  # Pi loads an extension instead
-EDIT_TOOLS = {
-    'claude': {'Edit', 'Write', 'NotebookEdit'},
-    'codex': {'apply_patch', 'Edit', 'Write'},
-    'agy': {'write_to_file', 'replace_file_content', 'multi_replace_file_content'},
-    'pi': {'edit', 'write'},
+TOOLS = {  # what each CLI's tools do; Codex reads through its shell
+    'claude': {'edit': {'Edit', 'Write', 'NotebookEdit'}, 'shell': {'Bash'}, 'read': {'Read', 'Glob', 'Grep'}},
+    'codex': {'edit': {'apply_patch', 'Edit', 'Write'}, 'shell': {'Bash'}, 'read': set()},
+    'agy': {'edit': {'write_to_file', 'replace_file_content', 'multi_replace_file_content'},
+            'shell': {'run_command'}, 'read': {'view_file', 'list_dir', 'find_by_name', 'grep_search'}},
+    'pi': {'edit': {'edit', 'write'}, 'shell': {'bash'}, 'read': {'read', 'grep', 'find', 'ls'}},
 }
-# The installer's matcher for "an edit tool"; Codex matches apply_patch as Edit or Write.
-EDIT_MATCHERS = {
-    'claude': 'Edit|Write|NotebookEdit',
-    'codex': 'Edit|Write',
-    'agy': 'write_to_file|replace_file_content|multi_replace_file_content',
+EDIT_TOOLS = {cli: tools['edit'] for cli, tools in TOOLS.items()}
+# The installer's matchers per action; Codex matches apply_patch as Edit or Write.
+MATCHERS = {
+    'claude': {'edit': 'Edit|Write|NotebookEdit', 'shell': 'Bash', 'read': 'Read|Glob|Grep'},
+    'codex': {'edit': 'Edit|Write', 'shell': 'Bash'},
+    'agy': {'edit': 'write_to_file|replace_file_content|multi_replace_file_content', 'shell': 'run_command',
+            'read': 'view_file|list_dir|find_by_name|grep_search'},
 }
-NATIVE = {'tool': 'PostToolUse', 'stop': 'Stop'}  # the same names in all three hook files
+NATIVE = {'pre': 'PreToolUse', 'tool': 'PostToolUse', 'stop': 'Stop', 'end': 'SessionEnd'}
+NO_SESSION_END = ('agy',)  # Antigravity's hooks have no end-of-session event
 # CLIs that do not flag the turn a hook's own Continue started; the store remembers it for them.
 UNFLAGGED_CONTINUATION = ('agy', 'pi')
 CONTINUED = 'pending'
@@ -55,12 +62,41 @@ class Event:
     edit: bool = False           # the tool changes files
     continuation: bool = False   # this turn was started by a hook's own Continue
     model_stopped: bool = True   # the turn ended because the model finished, not on an error or cap
+    action: str = 'other'        # what the tool does: edit, shell, read or other
+    tool_input: dict = field(default_factory=dict)  # the tool's arguments, in the CLI's own names
+    pid: int | None = None       # the CLI's process, when its extension says (Pi)
 
 
 @dataclass(frozen=True)
 class Continue:
     """Keep the turn going, with `text` as the model's next instruction (a 'stop' reply)."""
     text: str
+
+
+@dataclass(frozen=True)
+class Note:
+    """Let the tool call run and tell the model `text` (a 'pre' reply)."""
+    text: str
+
+
+@dataclass(frozen=True)
+class Deny:
+    """Block the tool call; the model sees `reason` (a 'pre' reply)."""
+    reason: str
+
+
+@dataclass(frozen=True)
+class Rewrite:
+    """Run the tool call with `tool_input` instead, and tell the model `note` (a 'pre' reply)."""
+    tool_input: dict
+    note: str = ''
+
+
+def action_of(cli, tool):
+    for action, names in TOOLS.get(cli, {}).items():
+        if tool in names:
+            return action
+    return 'other'
 
 
 def read(cli, kind, data):
@@ -70,18 +106,57 @@ def read(cli, kind, data):
         paths = data.get('workspacePaths') or []
         call = data.get('toolCall') if isinstance(data.get('toolCall'), dict) else {}
         session, folder = data.get('conversationId'), (paths[0] if paths else None)
-        tool = str(call.get('name') or '')
+        tool, tool_input = str(call.get('name') or ''), call.get('args')
         model_stopped = data.get('terminationReason', 'model_stop') == 'model_stop'
     else:
         session, folder = data.get('session_id'), data.get('cwd')
-        tool = str(data.get('tool_name') or '')
+        tool, tool_input = str(data.get('tool_name') or ''), data.get('tool_input')
         model_stopped = True
-    return Event(cli, kind, session, folder, tool, tool in EDIT_TOOLS.get(cli, ()),
-                 bool(data.get('stop_hook_active')), model_stopped)
+    pid = data.get('pid')
+    action = action_of(cli, tool)
+    return Event(cli, kind, session, folder, tool, action == 'edit', bool(data.get('stop_hook_active')),
+                 model_stopped, action, tool_input if isinstance(tool_input, dict) else {},
+                 pid if isinstance(pid, int) and not isinstance(pid, bool) else None)
+
+
+def render_pre(cli, reply):
+    """A 'pre' reply: Claude Code and Codex share hookSpecificOutput; Antigravity always wants
+    a decision; Pi's extension applies block, input and note itself."""
+    if cli in ('claude', 'codex'):
+        if reply is None:
+            return None
+        out = {'hookEventName': 'PreToolUse'}
+        if isinstance(reply, Deny):
+            out.update(permissionDecision='deny', permissionDecisionReason=reply.reason)
+        elif isinstance(reply, Rewrite):
+            out.update(permissionDecision='allow', updatedInput=reply.tool_input)
+        text = reply.text if isinstance(reply, Note) else getattr(reply, 'note', '')
+        if text:
+            out['additionalContext'] = text
+        return {'hookSpecificOutput': out}
+    if cli == 'agy':
+        if isinstance(reply, Deny):
+            return {'decision': 'deny', 'reason': reply.reason}
+        out = {'decision': 'allow'}
+        if isinstance(reply, Rewrite):
+            out['overwrite'] = reply.tool_input
+        text = reply.text if isinstance(reply, Note) else getattr(reply, 'note', '')
+        return {**out, 'reason': text} if text else out
+    if isinstance(reply, Deny):
+        return {'block': True, 'reason': reply.reason}
+    if isinstance(reply, Rewrite):
+        return {'input': reply.tool_input, **({'note': reply.note} if reply.note else {})}
+    if isinstance(reply, Note):
+        return {'note': reply.text}
+    return None
 
 
 def render(cli, kind, reply):
     """The JSON a CLI expects for `reply`, or None to print nothing."""
+    if kind == 'pre':
+        return render_pre(cli, reply)
+    if kind == 'end':
+        return None
     if isinstance(reply, Continue):
         if cli == 'claude':
             return {'hookSpecificOutput': {'hookEventName': 'Stop', 'additionalContext': reply.text}}
@@ -101,12 +176,12 @@ def render(cli, kind, reply):
 class Store:
     """A feature's state: one JSON object per session under $<env>, else `default`."""
 
-    def __init__(self, env, default, keep):
-        self.env, self.default, self.keep = env, default, keep
+    def __init__(self, env, default, keep, sub=''):
+        self.env, self.default, self.keep, self.sub = env, default, keep, sub
 
     @property
     def folder(self):
-        return Path(os.environ.get(self.env) or self.default).expanduser()
+        return Path(os.environ.get(self.env) or self.default).expanduser() / self.sub
 
     def file(self, session):
         return self.folder / (re.sub(r'[^A-Za-z0-9_.-]', '_', str(session))[:128] + '.json')
@@ -152,14 +227,15 @@ def call(cli, kind, data, handle, store, now=None):
     return render(cli, kind, reply)
 
 
-def serve(cli, kind, answer, stdin=None, stdout=None):
-    """Run answer(data) on the JSON from stdin and print its reply. Always returns 0, and any
-    failure prints only the quiet reply: a broken hook must not block or steer a session."""
+def serve(cli, kind, answer, stdin=None, stdout=None, on_error=None):
+    """Run answer(data) on the JSON from stdin and print its reply. Always returns 0, and a
+    failure never blocks: it prints the quiet reply, or the reply on_error(error) gives (a
+    Note that says protection lapsed, say)."""
     stdin, stdout = stdin or sys.stdin, stdout or sys.stdout
     try:
         out = answer(json.loads(stdin.read() or '{}'))
-    except Exception:  # fail open
-        out = render(cli, kind, None)
+    except Exception as error:  # fail open
+        out = render(cli, kind, on_error(error) if on_error else None)
     if out is not None:
         stdout.write(json.dumps(out, ensure_ascii=False) + '\n')
     return 0
@@ -167,7 +243,15 @@ def serve(cli, kind, answer, stdin=None, stdout=None):
 
 def native_events(cli, wants):
     """((native event, kind, matcher), ...) in `cli`'s hook file for a feature's wants, e.g.
-    (('tool', 'edit'), ('stop', None)); () for a CLI without a hook file."""
+    (('tool', 'edit'), ('stop', None)) or (('pre', ('edit', 'shell')), ('end', None)); () for a
+    CLI without a hook file. An event the CLI lacks is left out."""
     if cli not in HOOK_FILE_CLIS:
         return ()
-    return tuple((NATIVE[kind], kind, EDIT_MATCHERS[cli] if tools == 'edit' else None) for kind, tools in wants)
+    found = []
+    for kind, actions in wants:
+        if kind == 'end' and cli in NO_SESSION_END:
+            continue
+        actions = (actions,) if isinstance(actions, str) else actions or ()
+        matcher = '|'.join(MATCHERS[cli][a] for a in actions if a in MATCHERS[cli]) or None
+        found.append((NATIVE[kind], kind, matcher))
+    return tuple(found)
