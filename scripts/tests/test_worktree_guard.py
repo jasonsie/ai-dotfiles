@@ -2,13 +2,16 @@
 
 Run: python3 -m unittest discover -s scripts/tests -p 'test_worktree_guard.py' -v
 """
+from contextlib import redirect_stderr, redirect_stdout
 import importlib.util
+import io
 import json
 import os
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from unittest.mock import patch
 
@@ -41,7 +44,9 @@ class GitChangesTest(unittest.TestCase):
         self.assertEqual(guard.git_changes('git status; git log | head; git stash list; git worktree add z'), [])
 
 
-class GuardTest(unittest.TestCase):
+class Repo(unittest.TestCase):
+    """A temp repo with one commit, guard state of its own, and each CLI's hook input."""
+
     def setUp(self):
         temp = tempfile.TemporaryDirectory(prefix='worktree guard 空間 ')
         self.addCleanup(temp.cleanup)
@@ -85,6 +90,8 @@ class GuardTest(unittest.TestCase):
     def linked(self, name):
         return self.repo / '.claude/worktrees' / name
 
+
+class GuardTest(Repo):
     def test_a_lone_session_claims_its_worktree_and_is_left_alone(self):
         self.assertIsNone(self.edit('claude', 'aaaa1111', ME))
         self.assertIsNone(self.edit('claude', 'aaaa1111', ME))
@@ -112,7 +119,12 @@ class GuardTest(unittest.TestCase):
         steered = command['hookSpecificOutput']['updatedInput']['command']
         self.assertTrue(steered.startswith(f"cd '{linked}' && git commit"), steered)
         self.assertIn(f'cat {linked}/a.txt', steered)
-        self.assertEqual(sorted(p.name for p in (self.repo / '.claude/worktrees').iterdir()), ['codex-bbbb2222'])
+        self.assertEqual(sorted(p.name for p in (self.repo / '.claude/worktrees').iterdir()),
+                         ['codex-bbbb2222', 'codex-bbbb2222.json'])
+        meta = json.loads((self.repo / '.claude/worktrees/codex-bbbb2222.json').read_text())
+        self.assertEqual({k: meta[k] for k in ('branch', 'from', 'base', 'cli', 'session')},
+                         {'branch': 'agent/codex-bbbb2222', 'from': 'main', 'base': self.base, 'cli': 'codex',
+                          'session': 'bbbb2222'})
 
     def test_claude_is_told_to_enter_the_linked_worktree(self):
         self.edit('codex', 'aaaa1111', ME)
@@ -197,6 +209,94 @@ class GuardTest(unittest.TestCase):
             self.assertEqual((run.returncode, run.stderr), (0, ''), args)
             if run.stdout.strip():
                 json.loads(run.stdout)
+
+
+class CommandsTest(Repo):
+    """list, done, rm, prune, release and share, on a repo where codex-bbbb2222 was moved aside."""
+
+    def setUp(self):
+        super().setUp()
+        self.edit('claude', 'aaaa1111', ME)
+        self.edit('codex', 'bbbb2222', PARENT)
+        self.wt = self.linked('codex-bbbb2222')
+
+    def cli(self, *args):
+        out, err = io.StringIO(), io.StringIO()
+        with redirect_stdout(out), redirect_stderr(err):
+            status = guard.main(list(args))
+        return status, out.getvalue() + err.getvalue()
+
+    def work(self, text='two\n'):
+        (self.wt / 'a.txt').write_text(text)
+        git(self.wt, 'commit', '-q', '-am', 'change a')
+
+    def end(self, session='bbbb2222'):
+        self.run_hook('codex', {'session_id': session}, kind='end')
+
+    def test_list_names_branch_owner_and_merge_state(self):
+        status, out = self.cli('list', '--repo', str(self.repo))
+        self.assertEqual(status, 0)
+        self.assertIn('codex-bbbb2222  agent/codex-bbbb2222  from main  no commits yet  owner: codex session bbbb2222', out)
+        self.work()
+        self.assertIn('from main  not merged  owner:', self.cli('list', '--repo', str(self.repo))[1])
+
+    def test_done_then_rm_waits_for_the_owner_and_the_merge_then_archives(self):
+        self.work()
+        self.assertEqual(self.cli('done', 'make a.txt say two', '--path', str(self.wt))[0], 0)
+        status, out = self.cli('rm', 'codex-bbbb2222', '--repo', str(self.repo))
+        self.assertEqual(status, 1)
+        self.assertIn('codex session bbbb2222 still works there', out)
+        self.assertIn('neither merged into main nor pushed', out)
+        self.end()
+        git(self.repo, 'merge', '-q', '--no-ff', '-m', 'merge', 'agent/codex-bbbb2222')
+        status, out = self.cli('rm', 'codex-bbbb2222', '--repo', str(self.repo))
+        self.assertEqual(status, 0, out)
+        self.assertIn('archived as archive/codex-bbbb2222', out)
+        message = git(self.repo, 'tag', '-l', '--format=%(contents)', 'archive/codex-bbbb2222')
+        today = time.strftime('%b ') + str(time.localtime().tm_mday) + time.strftime(', %Y')
+        self.assertTrue(message.startswith(f'Archive of branch agent/codex-bbbb2222 ({today}; make a.txt say two), '
+                                           'kept before the branch was merged and deleted.'), message)
+        self.assertIn('Agent: codex, session bbbb2222; redirected from branch main.', message)
+        self.assertFalse(self.wt.exists())
+        self.assertEqual(git(self.repo, 'branch', '--list', 'agent/*'), '')
+        self.assertFalse((self.repo / '.claude/worktrees/codex-bbbb2222.json').exists())
+
+    def test_rm_keeps_uncommitted_work_unless_forced(self):
+        self.work()
+        (self.wt / 'b.txt').write_text('new\n')
+        self.end()
+        status, out = self.cli('rm', 'codex-bbbb2222', '--repo', str(self.repo))
+        self.assertEqual(status, 1)
+        self.assertIn('1 uncommitted change(s)', out)
+        self.assertTrue(self.wt.exists())
+        git(self.repo, 'tag', 'archive/codex-bbbb2222')  # the plain name is taken: a date goes on
+        status, out = self.cli('rm', 'codex-bbbb2222', '--force', '--repo', str(self.repo))
+        self.assertEqual(status, 0, out)
+        tag = 'archive/codex-bbbb2222-' + time.strftime('%Y-%m-%d')
+        self.assertIn(tag, out)
+        self.assertIn('kept before the branch was deleted unmerged.', git(self.repo, 'tag', '-l', '--format=%(contents)', tag))
+        self.assertFalse(self.wt.exists())
+
+    def test_prune_removes_only_merged_clean_unowned_worktrees(self):
+        self.work()
+        git(self.repo, 'merge', '-q', '--no-ff', '-m', 'merge', 'agent/codex-bbbb2222')
+        self.assertIn('nothing to prune', self.cli('prune', '--repo', str(self.repo))[1])  # still owned
+        self.end()
+        status, out = self.cli('prune', '--repo', str(self.repo))
+        self.assertIn('removed codex-bbbb2222', out)
+        self.assertFalse(self.wt.exists())
+
+    def test_release_and_share(self):
+        self.assertIn('released', self.cli('release', str(self.repo))[1])
+        self.assertIn('nobody owns', self.cli('release', str(self.repo))[1])
+        self.edit('claude', 'aaaa1111', ME)
+        self.assertIn('any session may edit', self.cli('share', str(self.repo))[1])
+        self.assertIsNone(self.edit('pi', 'ffff6666', PARENT))  # shared: no move
+
+    def test_done_only_inside_a_linked_worktree(self):
+        status, out = self.cli('done', 'x', '--path', str(self.repo))
+        self.assertEqual(status, 1)
+        self.assertIn('inside a linked worktree', out)
 
 
 if __name__ == '__main__':

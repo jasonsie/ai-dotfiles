@@ -65,6 +65,7 @@ class Event:
     action: str = 'other'        # what the tool does: edit, shell, read or other
     tool_input: dict = field(default_factory=dict)  # the tool's arguments, in the CLI's own names
     pid: int | None = None       # the CLI's process, when its extension says (Pi)
+    model: str = ''              # the model, when the CLI says
 
 
 @dataclass(frozen=True)
@@ -112,11 +113,12 @@ def read(cli, kind, data):
         session, folder = data.get('session_id'), data.get('cwd')
         tool, tool_input = str(data.get('tool_name') or ''), data.get('tool_input')
         model_stopped = True
-    pid = data.get('pid')
+    pid, model = data.get('pid'), data.get('model') or data.get('modelName')
     action = action_of(cli, tool)
     return Event(cli, kind, session, folder, tool, action == 'edit', bool(data.get('stop_hook_active')),
                  model_stopped, action, tool_input if isinstance(tool_input, dict) else {},
-                 pid if isinstance(pid, int) and not isinstance(pid, bool) else None)
+                 pid if isinstance(pid, int) and not isinstance(pid, bool) else None,
+                 model if isinstance(model, str) else '')
 
 
 def render_pre(cli, reply):

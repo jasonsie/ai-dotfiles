@@ -2,6 +2,12 @@
 """worktree-guard: keep agent sessions that share a checkout out of each other's changes.
 
   worktree-guard hook (pre|end) --cli (claude|codex|agy|pi)   JSON in; JSON or nothing out
+  worktree-guard list   [--repo DIR]                  linked worktrees: owner, branch, merged
+  worktree-guard done   DESCRIPTION [--path DIR]      a linked worktree's one-line summary
+  worktree-guard rm     NAME [--force] [--repo DIR]   archive tag, then remove worktree and branch
+  worktree-guard prune  [--repo DIR]                  rm every merged, clean, unowned one
+  worktree-guard release [PATH]                       clear a worktree's owner (people only)
+  worktree-guard share   [PATH]                       let any session edit it (people only)
 
 A session owns a worktree from its first edit until it ends or its process is gone. When a
 second live session's first edit lands in a worktree another session owns, the guard makes a
@@ -425,6 +431,9 @@ def clash(event, state, busy, claim, me, table):
              'from': branch or base[:12], 'base': base, 'default': default_ref(busy),
              'owner': {k: claim.get(k) for k in ('cli', 'session')}}
     state['moved'] = moved
+    write_meta(main, name, {'name': name, 'branch': moved['branch'], 'from': moved['from'], 'base': base,
+                            'busy': str(busy), 'cli': event.cli, 'session': str(event.session),
+                            'model': event.model, 'created': int(time.time())})
     take(linked, me, table)
     text = moved_text(event, moved, claim)
     if event.cli == 'claude':
@@ -495,6 +504,228 @@ def cmd_hook(args):
                              on_error=failed if args.kind == 'pre' else None)
 
 
+# --- linked worktrees: metadata, listing, removal --------------------------------------
+
+def meta_file(main, name):
+    return main / LINKED / f'{name}.json'
+
+
+def write_meta(main, name, meta):
+    path = meta_file(main, name)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(meta, indent=2, ensure_ascii=False) + '\n')
+
+
+def read_meta(main, name):
+    try:
+        meta = json.loads(meta_file(main, name).read_text())
+    except (OSError, ValueError):
+        return None
+    return meta if isinstance(meta, dict) else None
+
+
+def repo_main(where):
+    worktree = worktree_of(Path(where or os.getcwd()).resolve())
+    if not worktree:
+        raise SystemExit(f'worktree-guard: not in a git repository: {where or os.getcwd()}')
+    return main_of(worktree)
+
+
+def linked_worktrees(main):
+    """{name: metadata} of the linked worktrees this guard made in the repo."""
+    folder = main / LINKED
+    found = {}
+    for path in sorted(folder.glob('*.json')) if folder.is_dir() else ():
+        meta = read_meta(main, path.stem)
+        if meta:
+            found[path.stem] = meta
+    return found
+
+
+def branch_of(main, name, meta):
+    linked = main / LINKED / name
+    current = git(linked, 'symbolic-ref', '-q', '--short', 'HEAD', check=False) if linked.is_dir() else None
+    return current or meta.get('branch')
+
+
+def target_of(main, meta):
+    source = meta.get('from')
+    if source and git(main, 'rev-parse', '-q', '--verify', f'refs/heads/{source}', check=False):
+        return source
+    return default_ref(main)
+
+
+def merged(main, branch, meta):
+    target = target_of(main, meta)
+    return bool(target) and git(main, 'merge-base', '--is-ancestor', branch, target, check=False) is not None
+
+
+def pushed(main, branch):
+    ahead = git(main, 'rev-list', '--count', f'{branch}@{{upstream}}..{branch}', check=False)
+    return ahead == '0'
+
+
+def owner_of(worktree):
+    claim = read_claim(claim_file(worktree))
+    return claim if claim and alive(claim) else None
+
+
+def day(text):
+    stamp = time.strptime(text, '%Y-%m-%d')
+    return time.strftime('%b', stamp) + f' {stamp.tm_mday}', stamp.tm_year
+
+
+def span(main, base, branch):
+    """'Oct 26, 2026' or 'Jul 31 to Oct 5, 2026' for the branch's own commits; '' for none."""
+    dates = (git(main, 'log', '--format=%ad', '--date=format:%Y-%m-%d', f'{base}..{branch}', check=False) or '').split()
+    if not dates:
+        return ''
+    (last, last_year), (first, first_year) = day(dates[0]), day(dates[-1])
+    if (first, first_year) == (last, last_year):
+        return f'{first}, {first_year}'
+    if first_year == last_year:
+        return f'{first} to {last}, {last_year}'
+    return f'{first}, {first_year} to {last}, {last_year}'
+
+
+def tag_name(main, branch):
+    stem = 'archive/' + (branch.split('/', 1)[1] if '/' in branch else branch)
+    name, n = stem, 1
+    if git(main, 'rev-parse', '-q', '--verify', f'refs/tags/{name}', check=False):
+        name = f"{stem}-{time.strftime('%Y-%m-%d')}"
+    while git(main, 'rev-parse', '-q', '--verify', f'refs/tags/{name}', check=False):
+        n += 1
+        name = f"{stem}-{time.strftime('%Y-%m-%d')}-{n}"
+    return name
+
+
+def archive(main, name, meta, branch, was_merged):
+    """Tag the branch tip in the owner's archive format; None when it has no commits of its own."""
+    when = span(main, meta.get('base', ''), branch)
+    if not when:
+        return None
+    description = meta.get('description') or git(main, 'log', '-1', '--format=%s', branch)
+    agent = ' '.join(x for x in (meta.get('cli', 'agent'), meta.get('model', '')) if x)
+    message = (f"Archive of branch {branch} ({when}; {description}), kept before the branch was "
+               f"{'merged and ' if was_merged else ''}deleted{'' if was_merged else ' unmerged'}.\n\n"
+               f"Agent: {agent}, session {meta.get('session', '?')}; redirected from branch {meta.get('from', '?')}.")
+    tag = tag_name(main, branch)
+    git(main, 'tag', '-a', tag, '-m', message, branch)
+    return tag
+
+
+def remove(main, name, force=False, quiet_refusal=False):
+    """Archive and remove one linked worktree; (done, lines to print)."""
+    meta = read_meta(main, name)
+    if meta is None:
+        return False, [f'worktree-guard: no linked worktree named {name} in {main}']
+    linked = main / LINKED / name
+    branch = branch_of(main, name, meta)
+    was_merged = merged(main, branch, meta)
+    problems = []
+    claim = owner_of(linked) if linked.is_dir() else None
+    if claim:
+        problems.append(f'{who(claim)} still works there')
+    count = changes_in(linked) if linked.is_dir() else 0
+    if count:
+        problems.append(f'{count} uncommitted change(s)')
+    if not was_merged and not pushed(main, branch):
+        problems.append(f'{branch} is neither merged into {target_of(main, meta)} nor pushed')
+    if problems and not force:
+        return False, [] if quiet_refusal else [f"worktree-guard: kept {name}: {'; '.join(problems)}. "
+                                               f"--force removes it anyway."]
+    tag = archive(main, name, meta, branch, was_merged)
+    if linked.is_dir():
+        git(main, 'worktree', 'remove', *(['--force'] if force else []), str(linked))
+    git(main, 'branch', '-D', branch, check=False)
+    meta_file(main, name).unlink(missing_ok=True)
+    claim_file(linked).unlink(missing_ok=True)
+    lines = [f'worktree-guard: removed {name} and branch {branch}' + (f'; archived as {tag}' if tag else
+                                                                       '; no commits of its own, no tag')]
+    if tag and git(main, 'remote', 'get-url', 'origin', check=False):
+        push = subprocess.run(['git', '-C', str(main), 'push', '-q', 'origin', f'refs/tags/{tag}'],
+                              capture_output=True, text=True)
+        lines.append(f'pushed {tag} to origin' if push.returncode == 0 else
+                     f'could not push {tag}: {push.stderr.strip()}; run: git push origin {tag}')
+    return True, lines
+
+
+def cmd_list(args):
+    main = repo_main(args.repo)
+    found = linked_worktrees(main)
+    if not found:
+        print(f'worktree-guard: no linked worktrees in {main}')
+    for name, meta in found.items():
+        linked = main / LINKED / name
+        branch = branch_of(main, name, meta)
+        claim = owner_of(linked) if linked.is_dir() else None
+        state = ('no commits yet' if not span(main, meta.get('base', ''), branch) else
+                 'merged' if merged(main, branch, meta) else 'not merged')
+        count = changes_in(linked) if linked.is_dir() else 0
+        print(f"{name}  {branch}  from {meta.get('from')}  {state}"
+              f"{f', {count} uncommitted' if count else ''}  owner: {who(claim) if claim else 'none'}"
+              f"{'  - ' + meta['description'] if meta.get('description') else ''}")
+    return 0
+
+
+def cmd_done(args):
+    worktree = worktree_of(Path(args.path or os.getcwd()).resolve())
+    main = main_of(worktree) if worktree else None
+    if not worktree or worktree.parent != main / LINKED or read_meta(main, worktree.name) is None:
+        print('worktree-guard: run this inside a linked worktree that worktree-guard made', file=sys.stderr)
+        return 1
+    meta = read_meta(main, worktree.name)
+    meta['description'] = ' '.join(args.description.split())
+    write_meta(main, worktree.name, meta)
+    print(f'worktree-guard: noted for {worktree.name}: {meta["description"]}')
+    return 0
+
+
+def cmd_rm(args):
+    done, lines = remove(repo_main(args.repo), args.name, args.force)
+    print('\n'.join(lines), file=sys.stdout if done else sys.stderr)
+    return 0 if done else 1
+
+
+def cmd_prune(args):
+    main = repo_main(args.repo)
+    removed = 0
+    for name in linked_worktrees(main):
+        done, lines = remove(main, name, quiet_refusal=True)
+        removed += done
+        if lines:
+            print('\n'.join(lines))
+    if not removed:
+        print('worktree-guard: nothing to prune (every linked worktree is owned, changed or unmerged)')
+    return 0
+
+
+def cmd_release(args):
+    worktree = worktree_of(Path(args.path or os.getcwd()).resolve())
+    path = claim_file(worktree) if worktree else None
+    with locked(path) if path else contextlib.nullcontext():
+        claim = read_claim(path) if path else None
+        if not claim:
+            print(f'worktree-guard: nobody owns {worktree or args.path}')
+            return 0
+        path.unlink(missing_ok=True)
+    print(f'worktree-guard: released {worktree} from {who(claim)}')
+    return 0
+
+
+def cmd_share(args):
+    worktree = worktree_of(Path(args.path or os.getcwd()).resolve())
+    path = claim_file(worktree) if worktree else None
+    with locked(path) if path else contextlib.nullcontext():
+        claim = read_claim(path) if path else None
+        if not claim:
+            print(f'worktree-guard: nobody owns {worktree or args.path}; nothing to share')
+            return 0
+        write_claim(path, {**claim, 'shared': True})
+    print(f'worktree-guard: any session may edit {worktree} until {who(claim)} ends')
+    return 0
+
+
 # --- the command -------------------------------------------------------------------------
 
 def parser():
@@ -505,6 +736,25 @@ def parser():
     hook.add_argument('kind', choices=('pre', 'end'))
     hook.add_argument('--cli', choices=agent_hooks.CLIS, required=True)
     hook.set_defaults(run=cmd_hook)
+    for name, run, help_text in (('list', cmd_list, 'linked worktrees: owner, branch, merged'),
+                                 ('prune', cmd_prune, 'rm every merged, clean, unowned linked worktree')):
+        command = sub.add_parser(name, help=help_text)
+        command.add_argument('--repo', help='a folder in the repository (default: here)')
+        command.set_defaults(run=run)
+    done = sub.add_parser('done', help="note a linked worktree's one-line description, for its archive tag")
+    done.add_argument('description')
+    done.add_argument('--path', help='a folder in the linked worktree (default: here)')
+    done.set_defaults(run=cmd_done)
+    rm = sub.add_parser('rm', help='archive tag, then remove a linked worktree and its branch')
+    rm.add_argument('name')
+    rm.add_argument('--force', action='store_true', help='also when owned, changed or unmerged')
+    rm.add_argument('--repo', help='a folder in the repository (default: here)')
+    rm.set_defaults(run=cmd_rm)
+    for name, run, help_text in (('release', cmd_release, "clear a worktree's owner (for people)"),
+                                 ('share', cmd_share, 'let any session edit a worktree until its owner ends')):
+        command = sub.add_parser(name, help=help_text)
+        command.add_argument('path', nargs='?', help='a folder in the worktree (default: here)')
+        command.set_defaults(run=run)
     return top
 
 
