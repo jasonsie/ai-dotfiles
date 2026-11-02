@@ -190,6 +190,20 @@ class InstallSkillsTest(unittest.TestCase):
         self.assertEqual(os.readlink(self.command), str(moved / 'scripts/ai-dotfiles'))
         self.assertEqual(os.readlink(self.daily_log), str(moved / 'skills/daily-log/scripts/daily_log.py'))
 
+    def test_the_retired_daily_log_extension_is_removed(self):
+        (self.home / '.pi/agent').mkdir(parents=True)
+        self.install(('pi',), apply=True)
+        old = self.extension.parent / 'ai-dotfiles-daily-log.ts'
+        target = str(self.repo / 'skills/daily-log/hooks/daily-log.ts')
+        old.symlink_to(target)
+        receipt = self.home / skills.RECEIPT
+        data = json.loads(receipt.read_text())
+        data['links'][str(old)] = target
+        receipt.write_text(json.dumps(data))
+        self.assertEqual(self.install(('pi',), apply=True), 2)  # the old link, the receipt
+        self.assertFalse(old.is_symlink())
+        self.assertTrue(self.extension.is_symlink())
+
     def test_pi_extension_follows_pi(self):
         self.install(('pi',), apply=True)
         self.assertFalse(self.extension.is_symlink())  # Pi is not set up here yet
@@ -197,7 +211,7 @@ class InstallSkillsTest(unittest.TestCase):
         self.install(('claude',), apply=True)
         self.assertFalse(self.extension.is_symlink())
         self.install(('pi',), apply=True)
-        self.assertEqual(os.readlink(self.extension), str(self.repo / 'skills/daily-log/hooks/daily-log.ts'))
+        self.assertEqual(os.readlink(self.extension), str(self.repo / 'scripts/agent_hooks.ts'))
         self.install(('claude',), apply=True, uninstall=True)
         self.assertTrue(self.extension.is_symlink())
         self.install(('pi',), apply=True, uninstall=True)

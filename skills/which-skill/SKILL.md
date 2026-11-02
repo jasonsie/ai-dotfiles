@@ -105,6 +105,9 @@ has the reasoning and each CLI's commands.
 - **`daily-log`**: record finished work in the daily logger through the `daily-log`
   command; its grammar is what the learning-tutor and every `<subject>-tutor-daily`
   task write; its hook nudges a session that changed files but logged nothing.
+- **`worktree-guard`**: sessions sharing one checkout stay apart: a second session's first
+  edit moves it into a linked worktree; the skill is what a moved session does, and
+  `ai-dotfiles worktree` lists, archives and removes those worktrees.
 
 ## Repository setup
 

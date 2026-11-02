@@ -153,6 +153,18 @@ class GuardTest(Repo):
                                      'toolCall': {'name': 'run_command', 'args': {'CommandLine': 'ls', 'Cwd': str(self.repo)}}})
         self.assertEqual(view['overwrite']['Cwd'], str(self.linked('agy-eeee5555')))
 
+    def test_a_session_that_names_the_repo_through_a_symlink_is_steered_too(self):
+        alias = self.repo.parent / 'alias'
+        alias.symlink_to(self.repo)  # like /var -> /private/var on macOS, or a symlinked project folder
+        self.edit('claude', 'aaaa1111', ME)
+        reply = self.run_hook('pi', {'session_id': 'dddd4444', 'cwd': str(alias), 'pid': PARENT,
+                                     'tool_name': 'write', 'tool_input': {'path': 'a.txt', 'content': 'x'}})
+        self.assertEqual(reply['input']['path'], str(self.linked('pi-dddd4444') / 'a.txt'))
+        shell = self.run_hook('pi', {'session_id': 'dddd4444', 'cwd': str(alias), 'pid': PARENT,
+                                     'tool_name': 'bash', 'tool_input': {'command': f'cat {alias}/a.txt'}})
+        self.assertEqual(shell['input']['command'],
+                         f"cd '{self.linked('pi-dddd4444')}' && cat {self.linked('pi-dddd4444')}/a.txt")
+
     def test_a_dead_owner_is_replaced_and_its_leftovers_named_once(self):
         self.edit('claude', 'aaaa1111', dead_pid())
         (self.repo / 'a.txt').write_text('half done\n')

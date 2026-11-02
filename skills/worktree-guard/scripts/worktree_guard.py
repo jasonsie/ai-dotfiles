@@ -268,10 +268,11 @@ def targets(event):
 # --- steering a moved session -----------------------------------------------------------
 
 def into(path, moved):
-    """`path` (absolute) inside the busy worktree, as the same path in the linked one; else None."""
+    """`path` (absolute) inside the busy worktree, as the same path in the linked one; else None.
+    Symlinks are resolved first: git names worktrees by their real paths (/private/var on macOS)."""
     busy, linked = Path(moved['busy']), Path(moved['linked'])
     try:
-        rest = Path(path).relative_to(busy)
+        rest = Path(os.path.realpath(path)).relative_to(busy)
     except ValueError:
         return None
     if rest.parts[:2] == LINKED.parts:
@@ -279,10 +280,26 @@ def into(path, moved):
     return linked / rest
 
 
-def steer_text(text, moved):
+def aliases(moved, folder):
+    """The busy worktree's path as git gives it, and as the session's folder spells it when a
+    symlink stands in between."""
+    busy, names = moved['busy'], [moved['busy']]
+    real = os.path.realpath(folder) if folder else ''
+    if folder and (real == busy or real.startswith(busy + '/')):
+        rest = real[len(busy):]
+        spelled = folder.rstrip('/')
+        if spelled.endswith(rest) and spelled[:len(spelled) - len(rest)] not in names:
+            names.append(spelled[:len(spelled) - len(rest)])
+    return names
+
+
+def steer_text(text, moved, folder=None):
     """Absolute busy-worktree paths in a command line, pointed at the linked worktree."""
-    busy, linked = re.escape(moved['busy']), moved['linked']
-    return re.sub(busy + r'(?![\w.-])(?!/' + re.escape(LINKED.as_posix()) + r'/)', lambda _: linked, text)
+    linked = moved['linked']
+    for busy in aliases(moved, folder):
+        text = re.sub(re.escape(busy) + r'(?![\w.-])(?!/' + re.escape(LINKED.as_posix()) + r'/)',
+                      lambda _: linked, text)
+    return text
 
 
 def steer(event, moved):
@@ -292,7 +309,7 @@ def steer(event, moved):
     if event.action == 'shell':
         key = 'CommandLine' if event.cli == 'agy' else 'command'
         command = command_of(event)
-        steered = steer_text(command, moved)
+        steered = steer_text(command, moved, event.folder)
         here = into(os.path.normpath(shell_folder(event)), moved)
         if event.cli == 'agy':
             if here:
