@@ -157,7 +157,7 @@ turn once: "record it with daily-log add" ─► the model writes the entry; --s
 - **Native per CLI:** Claude Code `PostToolUse` and `Stop` in `~/.claude/settings.json`;
   Codex the same in `~/.codex/hooks.json`, run only after approval in `/hooks`;
   Antigravity named entries in `~/.gemini/config/hooks.json`; Pi has no hooks, so
-  `skills/daily-log/hooks/daily-log.ts` is linked as an extension. `scripts/install/hooks.py`
+  `scripts/agent_hooks.ts` (every skill's hooks) is linked as an extension. `scripts/install/hooks.py`
   merges one entry per event and removes only those.
 - **Loop safety:** state per session in `~/.local/state/ai-dotfiles/daily-log/`; at most two
   nudges per session, never while the hook's own continuation runs, none once an entry

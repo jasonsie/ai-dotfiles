@@ -19,7 +19,7 @@
 |---|---|---|---|
 | Language | Python, standard library only | 3.11+; CI runs 3.12 | `scripts/install.sh:80`, `.github/workflows/ci.yml:35` |
 | Language | Bash | — | `scripts/*.sh`, `scripts/ai-dotfiles` |
-| Language | TypeScript, one file, no build (Pi's extension) | — | `skills/daily-log/hooks/daily-log.ts` |
+| Language | TypeScript, one file, no build (Pi's extension) | — | `scripts/agent_hooks.ts` |
 | Config | JSON for the desired state, Markdown for rules and skills | — | `config/`, `skills/` |
 | Tests | unittest, against a temporary `HOME` | — | `scripts/tests/`, `.github/workflows/ci.yml:38` |
 | Lint | shellcheck (warning level); pyright paths | — | `.github/workflows/ci.yml:23`, `pyrightconfig.json` |
@@ -42,8 +42,7 @@ ai_dotfiles/
 │   ├── daily-log/            this branch: journal grammar, writer, hook
 │   │   ├── scripts/daily_log.py   ★ the command and the hook logic
 │   │   ├── LOG-FORMAT.md     the journal grammar
-│   │   ├── TUTOR-DAILY.md    template for each <key>-tutor-daily task
-│   │   └── hooks/daily-log.ts     Pi's extension
+│   │   └── TUTOR-DAILY.md    template for each <key>-tutor-daily task
 │   ├── onboard/              this report's skill; facts.py is its scanner
 │   └── skills.lock           upstream pin and local edits for 29 adapted skills
 ├── scripts/
@@ -124,7 +123,7 @@ edit ──▶ hook tool ──▶ session file ──▶ hook stop ──▶ nu
                                                         └──▶ daily-log add ──▶ journal
 ```
 
-- edit (CLIs): a file tool finishes; PostToolUse fires with the tool name; Pi's extension forwards `tool_result` — `scripts/install/hooks.py:30`, `skills/daily-log/hooks/daily-log.ts:32`
+- edit (CLIs): a file tool finishes; PostToolUse fires with the tool name; Pi's extension forwards `tool_result` — `scripts/install/hooks.py:30`, `scripts/agent_hooks.ts:45`
 - hook tool (repo): `daily_log.py hook tool` counts the call if its tool is in that CLI's edit set — `skills/daily-log/scripts/daily_log.py:323`, `:44`
 - session file (home): `edits`, `nudges`, `logged`, `pending` per session under `~/.local/state/ai-dotfiles/daily-log/`; pruned after 7 days — `skills/daily-log/scripts/daily_log.py:248`, `:272`
 - hook stop (repo): at turn end, if edits exist, nothing logged, under 2 nudges, new edits since the last, and not its own continuation, it replies once with the nudge in the CLI's own shape — `skills/daily-log/scripts/daily_log.py:329`, `:303`
@@ -170,7 +169,7 @@ cron ──▶ sync job ──▶ docs mirror ──▶ mirror files ──▶ u
 
 - Files: Python modules and tests in snake_case, one `test_<script>.py` per script; shell scripts and config files in kebab-case; every skill is a folder with a `SKILL.md`.
 - Code: direct imports, no injection; each step imports `installer.py` from its own folder; subprocesses run synchronously through `subprocess.run` (`scripts/install/mcp.py:99`). Steps follow one shape: plan `(path, before, after)` changes, `installer.show`, then `installer.apply` (`scripts/install/hooks.py:184`).
-- Errors: shell scripts run under `set -euo pipefail` (`scripts/install.sh:24`); install steps raise `ValueError` naming the path and refuse to guess (`scripts/install/instructions.py:124`); writes are backed up, atomic, and rolled back on failure (`scripts/install/installer.py:136`). The hook is the opposite: swallow everything and stay silent so a session is never blocked (`skills/daily-log/scripts/daily_log.py:365`, `hooks/daily-log.ts:22`).
+- Errors: shell scripts run under `set -euo pipefail` (`scripts/install.sh:24`); install steps raise `ValueError` naming the path and refuse to guess (`scripts/install/instructions.py:124`); writes are backed up, atomic, and rolled back on failure (`scripts/install/installer.py:136`). The hook is the opposite: swallow everything and stay silent so a session is never blocked (`skills/daily-log/scripts/daily_log.py:365`, `scripts/agent_hooks.ts:25`).
 - Tests: load each script by path and run against a temporary `HOME`, never the real one (`scripts/tests/support.py:11`, `scripts/tests/test_entrypoints.py:17`); `test_daily_log.py` runs against `scripts/tests/fixtures/daily-log/week-4`.
 - Git: conventional-commit subjects (`feat(skills): …`, `refactor: …`); earlier work squash-merged as PRs ending in `(#N)`, the latest feature branches merged locally with merge commits (`Merge branch 'feat/…'`). `main` is the only long-lived branch, plus `upstream-sync`, force-pushed by the weekly job. Feature branches are named `feat/<name>`.
 
@@ -197,7 +196,7 @@ cron ──▶ sync job ──▶ docs mirror ──▶ mirror files ──▶ u
 | support a new CLI's hooks | `EVENTS` in `scripts/install/hooks.py`, `EDIT_TOOLS` and `proceed()` in `skills/daily-log/scripts/daily_log.py` |
 | change the nudge rules or its text | `on_stop()` and `NUDGE` in `skills/daily-log/scripts/daily_log.py` |
 | change the journal grammar | `skills/daily-log/LOG-FORMAT.md`, then `add_entry()` |
-| change Pi's hook behavior | `skills/daily-log/hooks/daily-log.ts` |
+| change Pi's hook behavior | `scripts/agent_hooks.ts` |
 | add or change a docs source | `config/upstream-docs.json`, `scripts/upstream/sync-upstream.py`, the `collect-docs` skill |
 | change the weekly PR report | `scripts/upstream/report-upstream.py`, `.github/workflows/sync-cli-docs.yml` |
 | see why a check fails | `scripts/healthcheck.sh` |

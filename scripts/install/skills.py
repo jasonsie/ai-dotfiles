@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Link skills, the ai-dotfiles and daily-log commands, and Pi's daily-log extension; writes unless --dry-run.
+"""Link skills, the ai-dotfiles and daily-log commands, and Pi's hooks extension; writes unless --dry-run.
 
 Every folder under skills/ that has a SKILL.md is linked by name into the skill folder of
 each CLI that config/ai-clis.json switches on. A folder several CLIs read
@@ -7,8 +7,9 @@ each CLI that config/ai-clis.json switches on. A folder several CLIs read
 switched-off CLIs read loses its links. scripts/ai-dotfiles and the daily-log skill's
 script are linked as ~/.local/bin/ai-dotfiles and ~/.local/bin/daily-log, so both commands
 work from any folder; shell files are never edited, and a hint is printed when that folder
-is not on PATH. Pi has no hooks, so while it is on and set up it gets
-skills/daily-log/hooks/daily-log.ts in its extensions folder.
+is not on PATH. Pi has no hooks, so while it is on and set up it gets scripts/agent_hooks.ts
+(daily-log and worktree-guard) in its extensions folder; the daily-log-only extension it
+used to link is removed.
 
 An existing entry this script did not create is refused, unless it already is the wanted
 link. A link it created that is no longer wanted is removed; a link the user changed is
@@ -32,8 +33,9 @@ COMMANDS = {  # name in BIN -> its target in this repo
     'daily-log': 'skills/daily-log/scripts/daily_log.py',
 }
 COMMAND_RECEIPT = installer.STATE + '/command.json'  # left by install-command.py, which this replaced
-PI_EXTENSION = 'ai-dotfiles-daily-log.ts'
-PI_EXTENSION_TARGET = 'skills/daily-log/hooks/daily-log.ts'
+PI_EXTENSION = 'ai-dotfiles-hooks.ts'
+PI_EXTENSION_TARGET = 'scripts/agent_hooks.ts'
+PI_RETIRED = ('ai-dotfiles-daily-log.ts',)  # extensions this script linked before; removed when found
 
 
 def skills(source):
@@ -61,6 +63,7 @@ def plan(home, selected, workspace, owned, uninstall=False):
     extension = str(extensions / PI_EXTENSION) if extensions else None
     if extension:
         others.add(extension)
+        others.update(str(extensions / name) for name in PI_RETIRED)
     chosen = lambda path: Path(path).parent in managed_roots or path in others  # noqa: E731
     desired = {}
     if link_roots:

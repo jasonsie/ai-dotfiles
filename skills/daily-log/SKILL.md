@@ -47,6 +47,7 @@ folder); the file on disk only holds the prompt.
 `daily-log hook tool|stop --cli <cli>` counts the session's edits (PostToolUse) and, at
 Stop, continues the turn once with the nudge above when files changed and nothing was
 logged: at most twice per session, never during its own continuation. ai-dotfiles installs
-it into each CLI's hook file (`scripts/install/hooks.py`); Pi, which has no hooks, loads
-[hooks/daily-log.ts](hooks/daily-log.ts) as an extension. State:
+it into each CLI's hook file (`scripts/install/hooks.py`); Pi, which has no hooks, loads the
+repo's `scripts/agent_hooks.ts` as an extension. The CLIs' hook formats live in
+`scripts/agent_hooks.py`. State:
 `~/.local/state/ai-dotfiles/daily-log/`, one file per session, kept 7 days.

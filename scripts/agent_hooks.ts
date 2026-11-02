@@ -1,0 +1,68 @@
+// Pi extension for ai-dotfiles' hooks. Pi has no hook files, so this one extension plays them
+// all, handing each event to a feature's script in the shape scripts/agent_hooks.py reads:
+// worktree-guard before each tool call and when the session shuts down; daily-log after each
+// tool call and when the agent settles. Linked into ~/.pi/agent/extensions/ by
+// scripts/install/skills.py; the link resolves back to scripts/, so the repo is one folder up.
+// A failed call is ignored: the extension never blocks a session on its own.
+import { spawnSync } from "node:child_process";
+import { realpathSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const repo = dirname(dirname(realpathSync(fileURLToPath(import.meta.url))));
+const dailyLog = join(repo, "skills", "daily-log", "scripts", "daily_log.py");
+const guard = join(repo, "skills", "worktree-guard", "scripts", "worktree_guard.py");
+
+function ask(script: string, kind: string, payload: Record<string, unknown>, timeout = 10_000): Record<string, any> | undefined {
+  try {
+    const run = spawnSync("python3", [script, "hook", kind, "--cli", "pi"], {
+      input: JSON.stringify(payload),
+      encoding: "utf8",
+      timeout,
+    });
+    const out = run.status === 0 ? run.stdout.trim() : "";
+    return out ? JSON.parse(out) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function session(ctx: any): Record<string, unknown> {
+  return { session_id: ctx.sessionManager?.getSessionId?.(), cwd: ctx.cwd, pid: process.pid, model: ctx.model?.id };
+}
+
+export default function (pi: any) {
+  const notes = new Map<string, string>(); // worktree-guard's word to the model, shown with the tool's result
+
+  pi.on("tool_call", (event: any, ctx: any) => {
+    const reply = ask(guard, "pre", { ...session(ctx), tool_name: event.toolName ?? "", tool_input: event.input ?? {} }, 60_000);
+    if (!reply) return;
+    if (reply.block) return { block: true, reason: reply.reason };
+    if (reply.input && event.input) Object.assign(event.input, reply.input); // Pi: mutate the input in place
+    if (reply.note) notes.set(event.toolCallId, reply.note);
+  });
+
+  pi.on("tool_result", (event: any, ctx: any) => {
+    ask(dailyLog, "tool", { ...session(ctx), tool_name: event.toolName ?? "" });
+    const note = notes.get(event.toolCallId);
+    if (!note) return;
+    notes.delete(event.toolCallId);
+    return { content: [...(event.content ?? []), { type: "text", text: note }] };
+  });
+
+  pi.on("agent_before_settle", (event: any, ctx: any) => {
+    if (event.outcome !== "completed") return;
+    const reply = ask(dailyLog, "stop", session(ctx));
+    if (!reply?.continue) return;
+    // A bare `continue: true` is dropped when the assistant spoke last; the entry gives the
+    // model a user-role message to answer.
+    return {
+      continue: true,
+      entries: [{ type: "custom_message", customType: "daily-log", content: reply.continue, display: true }],
+    };
+  });
+
+  pi.on("session_shutdown", (_event: any, ctx: any) => {
+    ask(guard, "end", session(ctx));
+  });
+}

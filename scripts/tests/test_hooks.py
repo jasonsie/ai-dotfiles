@@ -315,10 +315,42 @@ class InstallHooksTest(unittest.TestCase):
         seeds = self.seed()
         self.install(apply=True)
         with patch.object(installer, 'REGISTRY', registry(self.home, agy=False)), redirect_stdout(io.StringIO()):
-            self.assertEqual(hooks.run(self.home, 'all', True, False, self.hook), 1)
+            self.assertEqual(hooks.run(self.home, 'all', True, False, self.hook), 3)  # + the guard; agy out
             self.assertEqual(hooks.run(self.home, 'all', False, False, self.hook), 0)
         self.assertEqual(self.read('agy'), seeds['agy'])
-        self.assertEqual(sorted(self.read('claude')['hooks']), ['PostToolUse', 'PreToolUse', 'Stop'])
+        self.assertEqual(sorted(self.read('claude')['hooks']), ['PostToolUse', 'PreToolUse', 'SessionEnd', 'Stop'])
+
+    def test_run_installs_the_guard_beside_daily_log_and_uninstall_takes_both(self):
+        guard = self.home / 'repo/skills/worktree-guard/scripts/worktree_guard.py'
+
+        def guard_command(cli, kind):
+            return shlex.join(['python3', str(guard), 'hook', kind, '--cli', cli]) + ' || true'
+
+        with redirect_stdout(io.StringIO()):
+            self.assertEqual(hooks.run(self.home, 'all', True, False, self.hook), 3)
+        claude = self.read('claude')['hooks']
+        self.assertEqual(claude['PreToolUse'], [{'matcher': 'Edit|Write|NotebookEdit|Bash', 'hooks': [
+            {'type': 'command', 'command': guard_command('claude', 'pre'), 'timeout': 60}]}])
+        self.assertEqual(claude['SessionEnd'], [{'hooks': [
+            {'type': 'command', 'command': guard_command('claude', 'end'), 'timeout': 60}]}])
+        self.assertEqual(claude['Stop'][0]['hooks'][0]['command'], self.command('claude', 'stop'))
+        self.assertEqual(self.read('codex')['hooks']['PreToolUse'][0]['matcher'], 'Edit|Write|Bash')
+        agy = self.read('agy')
+        self.assertEqual(sorted(agy), [AGY_STOP, AGY_TOOL, 'ai-dotfiles-worktree-guard-pre'])
+        pre = agy['ai-dotfiles-worktree-guard-pre']['PreToolUse'][0]
+        self.assertIn('run_command', pre['matcher'])
+        self.assertIn('view_file', pre['matcher'])
+        self.assertEqual(pre['hooks'][0]['command'], guard_command('agy', 'pre'))
+        with redirect_stdout(io.StringIO()):
+            self.assertEqual(hooks.run(self.home, 'all', False, False, self.hook), 0)
+            self.assertEqual(hooks.run(self.home, 'all', True, True, self.hook), 3)
+        for cli in hooks.EVENTS:
+            self.assertEqual(self.read(cli), {})
+
+    def test_every_feature_script_exists(self):
+        for feature in hooks.features():
+            self.assertTrue(feature.script.is_file(), feature.name)
+            self.assertEqual(feature.script, ROOT / feature.mark)
 
     def test_run_follows_the_target_and_uninstall_ignores_the_switches(self):
         with patch.object(installer, 'REGISTRY', registry(self.home, agy=False)), redirect_stdout(io.StringIO()):
