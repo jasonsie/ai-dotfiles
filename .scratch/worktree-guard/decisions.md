@@ -220,3 +220,18 @@ a history question.
 - Codex worktrees start from the chosen branch's HEAD, copy that branch's uncommitted changes
   (app), and are detached HEAD, no branch (codex/environments/git-worktrees.md:147). Whether
   `codex resume --worktree` copies uncommitted changes is unverified; `resume -C <dir>` exists.
+
+## Verification (2026-11-02, real CLIs, isolated configs)
+Another live session (a `sleep` process) owned a temp repo. Hooks were passed per run (Codex
+`-c hooks...`, Claude `--settings` with `--setting-sources project,local`), state in a temp dir.
+- Codex (`codex exec`, workspace-write): its `apply_patch` on `a.txt` was rewritten to
+  `.claude/worktrees/codex-01a19aa6/a.txt`; main `a.txt` unchanged. SessionEnd released it.
+- Claude Code (`claude -p`, haiku): `Write` denied with the move message; it loaded
+  `EnterWorktree`, entered `.claude/worktrees/claude-8c1304e4`, re-read, wrote there.
+- Pi: the bridge (`scripts/agent_hooks.ts`, driven by node) rewrote a `write` into the linked
+  worktree in place, appended the note to the tool result, released on `session_shutdown`.
+- `list` showed both, owners gone; `rm` kept the worktree with an uncommitted change.
+Found and fixed on the way: paths named through a symlink (macOS /var) were not steered.
+Side findings, not this feature: daily-log cannot write its journal from inside Codex's
+sandbox (PermissionError); Codex rejects the configured models gpt-6.1-sol and gpt-6-astra
+for a ChatGPT account.
