@@ -12,7 +12,7 @@ nudge arrived: record it. A question answered in chat is not work.
 daily-log add --done "<label>" "<line>" "<line>"
 ```
 
-- `label`: the project, skill or task as Jason writes it: `/onboard skill`,
+- `label`: the project, skill or task as you write it: `/onboard skill`,
   `ai-dotfiles: daily-log hook`, `learning-tutor: system-design key`.
 - Lines: up to 3, telegraphic fragments: what changed, what is next. No code.
 - `--open` for work still in progress; `--session <id>` when the nudge gave one (it ends
