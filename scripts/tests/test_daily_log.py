@@ -1,16 +1,15 @@
-"""daily-log: the journal grammar as one command, and the hook behind it.
+"""daily-log: the journal grammar as one command.
 
 Run: python3 -m unittest discover -s scripts/tests -p 'test_daily_log.py' -v
 """
+import ast
 from contextlib import redirect_stderr, redirect_stdout
 from datetime import date
 import importlib.util
 import io
-import json
 import os
 from pathlib import Path
 import shutil
-import subprocess
 import sys
 import tempfile
 import unittest
@@ -30,7 +29,7 @@ RULE = '-' * 12
 
 
 class JournalTest(unittest.TestCase):
-    """The `add`, `show`, `path` and `tutor-daily` commands against a copy of a real week file."""
+    """The `add`, `show`, `path`, `day` and `tutor-daily` commands against a copy of a real week file."""
 
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix='daily-log 空間 ')
@@ -39,8 +38,7 @@ class JournalTest(unittest.TestCase):
         (self.root / '2026/Oct').mkdir(parents=True)
         self.week4 = self.root / '2026/Oct/week-4'
         shutil.copy(FIXTURE, self.week4)
-        self.state = Path(self.temp.name).resolve() / 'state'
-        patcher = patch.dict(os.environ, {'DAILY_LOG_STATE': str(self.state), 'DAILY_LOGGER_ROOT': str(self.root)})
+        patcher = patch.dict(os.environ, {'DAILY_LOGGER_ROOT': str(self.root)})
         patcher.start()
         self.addCleanup(patcher.stop)
 
@@ -55,6 +53,15 @@ class JournalTest(unittest.TestCase):
         code, out, err = self.run_cli('add', *args, stdin=stdin)
         self.assertEqual(code, 0, err)
         return out
+
+    def test_the_writer_is_one_file_of_stdlib_imports(self):
+        """A copy of the script is a complete writer (the learning-tutor vendors one)."""
+        tree = ast.parse(SCRIPT.read_text())
+        names = {alias.name.split('.')[0] for node in ast.walk(tree) if isinstance(node, ast.Import)
+                 for alias in node.names}
+        names |= {node.module.split('.')[0] for node in ast.walk(tree)
+                  if isinstance(node, ast.ImportFrom) and node.module}
+        self.assertTrue(names <= sys.stdlib_module_names, names - sys.stdlib_module_names)
 
     def test_week_file_follows_the_days_own_month(self):
         self.assertEqual(daily_log.week_file('/r', date(2026, 10, 1)), Path('/r/2026/Oct/week-1'))
@@ -94,6 +101,49 @@ class JournalTest(unittest.TestCase):
         self.assertIn('- [X] ai-dotfiles: daily-log\n\t- skill + hook\n\t- docs\n', text)
         self.add('--date', '2026-10-23', '--open', '/obnoard skill', 'still done')  # --open never un-checks
         self.assertIn('- [X] /obnoard skill\n\t- still done\n', self.week4.read_text())
+
+    def test_the_project_is_the_text_before_the_colon(self):
+        self.assertEqual(daily_log.project('ai-dotfiles: daily-log'), 'ai-dotfiles')
+        self.assertEqual(daily_log.project('leetcode'), 'leetcode')
+        self.assertEqual(daily_log.project('/onboard skill'), '/onboard skill')
+        self.assertEqual(daily_log.key('AI_dotfiles: x'), daily_log.key('ai-dotfiles: y'))
+        self.assertEqual(daily_log.key('CS vault: x'), 'csvault')
+        self.assertNotEqual(daily_log.key('CS: x'), daily_log.key('CS vault: y'))
+
+    def test_another_label_for_the_same_project_is_refused_and_names_the_entry(self):
+        self.add('--date', '2026-10-23', '--done', 'ai-dotfiles: daily-log', 'keyword: hooks', 'description: nudge')
+        before = self.week4.read_bytes()
+        code, out, err = self.run_cli('add', '--date', '2026-10-23', '--done', 'ai_dotfiles: verify flow', 'keyword: tests')
+        self.assertEqual(code, 1)
+        self.assertIn('2026-10-23 already has an entry for this project: - [X] ai-dotfiles: daily-log', err)
+        self.assertIn('--rewrite', err)
+        self.assertEqual((out, self.week4.read_bytes()), ('', before))
+
+    def test_rewrite_replaces_the_projects_entry_whatever_its_label(self):
+        self.add('--date', '2026-10-23', '--done', 'ai-dotfiles: daily-log', 'keyword: hooks', 'description: old')
+        self.add('--date', '2026-10-23', '--done', '--rewrite', 'ai-dotfiles: daily-log and verify flow',
+                 'keyword: hooks, tests', 'description: new')
+        text = self.week4.read_text()
+        self.assertNotIn('description: old', text)
+        self.assertEqual(text.count('ai-dotfiles: daily-log'), 1)
+        self.assertIn('- [X] ai-dotfiles: daily-log and verify flow\n\t- keyword: hooks, tests\n\t- description: new\n\n', text)
+        self.add('--date', '2026-10-23', '--done', '--rewrite', 'ai-dotfiles: daily-log and verify flow',
+                 'keyword: hooks', 'description: newer')  # the same label: replaced too, no duplicate lines
+        text = self.week4.read_text()
+        self.assertEqual(text.count('keyword:'), 1)
+        self.assertIn('description: newer', text)
+        before = self.week4.read_bytes()
+        self.add('--date', '2026-10-23', '--done', '--rewrite', 'ai-dotfiles: daily-log and verify flow',
+                 'keyword: hooks', 'description: newer')  # identical: nothing written
+        self.assertEqual(self.week4.read_bytes(), before)
+        self.assertIn('- [] G-DOC extracter: Obsidian-web-clipper\n', text)  # the other entries stay
+
+    def test_other_projects_and_the_study_block_are_untouched_by_the_guard(self):
+        self.add('--date', '2026-10-24', '--open', 'leetcode', stdin='\t- [ ] 1-Two Sum(new)\n')
+        self.add('--date', '2026-10-24', '--done', 'reading: a book')
+        self.add('--date', '2026-10-24', '--done', 'ai-dotfiles: x')
+        self.assertIn('- [] leetcode\n\t- [ ] 1-Two Sum(new)\n\n- [X] reading: a book\n\n- [X] ai-dotfiles: x\n',
+                      self.week4.read_text())
 
     def test_if_absent_leaves_the_file_byte_identical(self):
         before = self.week4.read_bytes()
@@ -141,11 +191,15 @@ class JournalTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn('journal root not found', err)
 
-    def test_session_marks_the_hook_state_logged(self):
-        self.add('--date', '2026-10-23', '--done', '--session', 'abc/1', 'logged')
-        self.assertEqual(json.loads((self.state / 'abc_1.json').read_text()), {'logged': True})
-        self.add('--date', '2026-10-23', '--dry-run', '--session', 'dry', 'x')
-        self.assertFalse((self.state / 'dry.json').exists())
+    def test_day_runs_the_pass_script_beside_the_writer(self):
+        self.assertTrue(daily_log.DAY_PASS.is_file())
+        with patch.object(daily_log.subprocess, 'call', return_value=0) as call:
+            self.assertEqual(daily_log.main(['day', '--date', '2026-11-02', '--back', '0']), 0)
+        self.assertEqual(call.call_args[0][0][1:], [str(daily_log.DAY_PASS), '--date', '2026-11-02', '--back', '0'])
+        with patch.object(daily_log, 'DAY_PASS', self.root / 'missing.py'):
+            code, _, err = self.run_cli('day')
+        self.assertEqual(code, 1)
+        self.assertIn('this copy lacks', err)
 
     def test_tutor_daily_renders_one_key(self):
         code, out, _ = self.run_cli('tutor-daily', '--key', 'dsa', '--subject', 'DSA', '--item', 'problem',
@@ -162,91 +216,6 @@ class JournalTest(unittest.TestCase):
                                     '--item', 'concept', '--tutor', 'socratic', '--paste-hint', 'an explanation')
         self.assertTrue(out.endswith('- Keep the report concise.\n'))
         self.assertIn('Sat: weekend concluding session — no new concepts; 2 unlabeled', out)
-
-
-class HookTest(unittest.TestCase):
-    """One nudge per session once files changed, at most two, never on the hook's own continuation."""
-
-    def setUp(self):
-        self.temp = tempfile.TemporaryDirectory(prefix='daily-log hook 空間 ')
-        self.addCleanup(self.temp.cleanup)
-        self.state = Path(self.temp.name).resolve() / 'state'
-        patcher = patch.dict(os.environ, {'DAILY_LOG_STATE': str(self.state)})
-        patcher.start()
-        self.addCleanup(patcher.stop)
-
-    def tool(self, cli, name, session='s1'):
-        data = ({'conversationId': session, 'workspacePaths': ['/w'], 'toolCall': {'name': name}} if cli == 'agy'
-                else {'session_id': session, 'cwd': '/w', 'tool_name': name})
-        return daily_log.hook('tool', cli, data)
-
-    def stop(self, cli, session='s1', **extra):
-        data = {'conversationId': session, 'workspacePaths': ['/w']} if cli == 'agy' else {'session_id': session, 'cwd': '/w'}
-        return daily_log.hook('stop', cli, {**data, **extra})
-
-    def test_claude_nudges_after_an_edit_then_once_more_at_most(self):
-        self.assertIsNone(self.tool('claude', 'Read'))
-        self.assertIsNone(self.stop('claude'))  # no edits yet
-        self.tool('claude', 'Edit')
-        reply = self.stop('claude')
-        context = reply['hookSpecificOutput']['additionalContext']
-        self.assertEqual(reply['hookSpecificOutput']['hookEventName'], 'Stop')
-        self.assertIn('daily-log add --done --session s1', context)
-        self.assertIn('(1 edits)', context)
-        self.assertIsNone(self.stop('claude'))  # nothing new since the nudge
-        self.tool('claude', 'Write')
-        self.assertIsNone(self.stop('claude', stop_hook_active=True))  # our own continuation
-        self.assertIn('(2 edits)', self.stop('claude')['hookSpecificOutput']['additionalContext'])
-        self.tool('claude', 'NotebookEdit')
-        self.assertIsNone(self.stop('claude'))  # the cap
-        self.assertEqual(json.loads((self.state / 's1.json').read_text()), {'edits': 3, 'edits_at_nudge': 2, 'nudges': 2})
-
-    def test_a_logged_session_is_left_alone(self):
-        self.tool('claude', 'Edit')
-        daily_log.mark_logged('s1')
-        self.assertIsNone(self.stop('claude'))
-        self.tool('claude', 'Edit')
-        self.assertIsNone(self.stop('claude'))
-
-    def test_each_cli_counts_its_own_edit_tools_and_answers_in_its_own_shape(self):
-        self.assertEqual(self.stop('codex'), {})
-        self.assertIsNone(self.tool('codex', 'Bash'))
-        self.tool('codex', 'apply_patch')
-        self.assertEqual(self.stop('codex')['decision'], 'block')
-        self.assertEqual(self.tool('agy', 'view_file', 'a1'), {})
-        self.tool('agy', 'write_to_file', 'a1')
-        self.assertEqual(self.stop('agy', 'a1')['decision'], 'continue')
-        self.assertEqual(self.stop('agy', 'a1'), {'decision': 'stop'})  # the turn our continuation started
-        self.assertEqual(self.stop('agy', 'a1'), {'decision': 'stop'})  # nothing new since
-        self.tool('pi', 'edit', 'p1')
-        self.assertIn('--session p1', self.stop('pi', 'p1')['continue'])
-        self.assertIsNone(self.stop('pi', 'p1'))  # pending, then quiet
-
-    def test_agy_nudges_only_when_the_model_stopped(self):
-        self.tool('agy', 'replace_file_content', 'a2')
-        for reason in ('error', 'max_steps_exceeded'):
-            self.assertEqual(self.stop('agy', 'a2', terminationReason=reason), {'decision': 'stop'}, reason)
-        self.assertEqual(self.stop('agy', 'a2', terminationReason='model_stop')['decision'], 'continue')
-
-    def test_no_session_is_quiet_and_old_state_is_pruned(self):
-        self.assertIsNone(daily_log.hook('stop', 'claude', {}))
-        self.assertEqual(daily_log.hook('stop', 'agy', {}), {'decision': 'stop'})
-        self.state.mkdir(parents=True)
-        old = self.state / 'old.json'
-        old.write_text('{}')
-        os.utime(old, (0, 0))
-        self.tool('claude', 'Read')
-        self.assertFalse(old.exists())
-        self.assertTrue((self.state / 's1.json').exists())
-
-    def test_the_command_never_fails_or_speaks_outside_json(self):
-        for stdin, args in (('not json', ['hook', 'stop', '--cli', 'codex']), ('[]', ['hook', 'tool', '--cli', 'claude']),
-                            ('{}', ['hook', 'bogus', '--cli', 'claude']), ('{}', ['hook', 'stop'])):
-            run = subprocess.run([sys.executable, str(SCRIPT), *args], input=stdin, capture_output=True, text=True,
-                                 env={**os.environ, 'DAILY_LOG_STATE': str(self.state)})
-            self.assertEqual((run.returncode, run.stderr), (0, ''), args)
-            if run.stdout.strip():
-                json.loads(run.stdout)
 
 
 if __name__ == '__main__':

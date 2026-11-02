@@ -15,8 +15,10 @@ config/              the sources the installers apply
   mcp-servers.json     MCP servers shared by the CLIs
   upstream-docs.json   the documentation sources mirrored into docs/upstream/
 skills/              shared skills; skills.lock pins adapted ones; daily-log/ holds the
-                     daily-log command, its hook and Pi's extension
-scripts/             ai-dotfiles, install.sh, uninstall.sh, healthcheck.sh (entry points)
+                     daily-log command and the day pass; worktree-guard/ its hook
+scripts/             ai-dotfiles, install.sh, uninstall.sh, healthcheck.sh (entry points);
+                     agent_hooks.py and agent_sessions.py (the CLIs' hook formats and
+                     session stores behind one interface); agent_hooks.ts (Pi's extension)
   install/             installer.py (shared by every step) and one file per step
   upstream/            the weekly docs sync and its pull request report
   tests/               unit tests for all of the above
@@ -36,8 +38,9 @@ config/cli-settings.json      ─►  settings.py (merges listed keys)         �
 config/mcp-servers.json       ─►  mcp.py (native `mcp add`, or a merge)    ─►  Claude Code, Codex, Pi, Antigravity
 skills/<name>/                ─►  skills.py (links)                        ─►  every CLI's skill folder
 scripts/ai-dotfiles           ─►  skills.py (link)                         ─►  ~/.local/bin
-skills/daily-log/scripts/     ─►  skills.py (link); hooks.py (merge)       ─►  ~/.local/bin/daily-log; each CLI's hook file
-skills/daily-log/hooks/       ─►  skills.py (link)                         ─►  Pi's extension folder
+skills/daily-log/scripts/     ─►  skills.py (link); launchd.py (plist)     ─►  ~/.local/bin/daily-log; ~/Library/LaunchAgents (07:30)
+skills/worktree-guard/scripts/ ─► hooks.py (merge)                         ─►  each CLI's hook file
+scripts/agent_hooks.ts        ─►  skills.py (link)                         ─►  Pi's extension folder
                                   installer.py: reads ai-clis.json; the safe writes every step shares
                                   scripts/healthcheck.sh checks the live state
 
@@ -140,30 +143,33 @@ healthcheck report it as a "local choice kept".
 ## Daily log
 
 The daily logger (`~/Documents/Claude/Projects/daily-logger/<yyyy>/<Mon>/week-N`) is the
-one journal: hand-written entries, the learning-tutor's study block, and what a CLI
-session got done. The `daily-log` skill owns its grammar (`skills/daily-log/LOG-FORMAT.md`)
-and the one writer, `daily-log` (`skills/daily-log/scripts/daily_log.py`, linked into
-`~/.local/bin`). The engine in `~/Documents/Claude/Projects/learning-tutor` writes its day
-block through it (its `vendor/daily_log.py` is a byte-identical copy, the last resort for
-Cowork's sandboxed runs, refreshed by `scripts/vendor_daily_log.py` and checked by a test),
-and every `<key>-tutor-daily` Cowork task is `TUTOR-DAILY.md` rendered for one key
-(`daily-log tutor-daily`).
+one journal: hand-written entries, the learning-tutor's study block, and one work entry per
+project per day (`- [X] <project>: <what the day was about>`, `keyword:`, `description:`).
+The `daily-log` skill owns its grammar (`skills/daily-log/LOG-FORMAT.md`) and the one writer,
+`daily-log` (`skills/daily-log/scripts/daily_log.py`, linked into `~/.local/bin`; it imports
+nothing from the repo, so a copy is a complete writer). The engine in
+`~/Documents/Claude/Projects/learning-tutor` writes its day block through it (its
+`vendor/daily_log.py` is a byte-identical copy, the last resort for Cowork's sandboxed runs,
+refreshed by `scripts/vendor_daily_log.py` and checked by a test), and every
+`<key>-tutor-daily` Cowork task is `TUTOR-DAILY.md` rendered for one key (`daily-log tutor-daily`).
 
 ```text
-PostToolUse (an edit) ─► hook tool: count it ─► Stop: files changed, nothing logged? ─► continue the
-turn once: "record it with daily-log add" ─► the model writes the entry; --session <id> marks it logged
+07:30  launchd ─► claude -p "/daily-log day" (sonnet; Bash(daily-log *) and Read only)
+       ─► daily-log day: yesterday + 3 days back, 04:00 to 04:00; per day the existing block, the
+          keywords in use, then per working folder its git facts and its sessions (Claude Code, Codex,
+          Pi stores read by scripts/agent_sessions.py; temp folders dropped)
+       ─► the model names the projects from the content and writes the uncovered ones:
+          daily-log add --date D --done "<project>: ..." "keyword: ..." "description: ..."
 ```
 
-- **Native per CLI:** Claude Code `PostToolUse` and `Stop` in `~/.claude/settings.json`;
-  Codex the same in `~/.codex/hooks.json`, run only after approval in `/hooks`;
-  Antigravity named entries in `~/.gemini/config/hooks.json`; Pi has no hooks, so
-  `scripts/agent_hooks.ts` (every skill's hooks) is linked as an extension. `scripts/install/hooks.py`
-  merges one entry per event and removes only those.
-- **Loop safety:** state per session in `~/.local/state/ai-dotfiles/daily-log/`; at most two
-  nudges per session, never while the hook's own continuation runs, none once an entry
-  was written with `--session`. Only file edits count: a session that only ran commands
-  is never nudged. Antigravity's `Stop` also fires on errors and step caps; the hook
-  nudges only after a normal stop (`terminationReason` = `model_stop`), as Claude Code does.
+- **Fill gaps only:** an entry the block already has, by hand or by machine, is never
+  touched; `daily-log add` refuses a second label for the same project (`ai_dotfiles` and
+  `ai-dotfiles` are one) and `--rewrite` replaces it on purpose (`daily-log day --rewrite`).
+  A day the Mac was off is caught up by the next run; launchd runs a job missed in sleep at wake.
+- **Installed by `scripts/install/launchd.py`:** `~/Library/LaunchAgents/com.ai-dotfiles.daily-log-day.plist`,
+  the `claude` path and PATH rendered at install; log in `~/Library/Logs/ai-dotfiles/`. The
+  healthcheck checks the job is loaded. Before November 2026 a Stop hook nudged every session
+  that edited files; `hooks.py` takes its entries and state folder out when it finds them.
 
 ## Upstream updates
 
@@ -195,6 +201,7 @@ turn once: "record it with daily-log add" ─► the model writes the entry; --s
 |---|---|---|
 | Instructions | `~/.local/state/ai-dotfiles/global-instructions/backup-*/manifest.json` | `python3 scripts/install/instructions.py --uninstall` (restores the earliest backup) |
 | Hooks | `~/.local/state/ai-dotfiles/settings/backup-*`; entries found by their command | `python3 scripts/install/hooks.py --uninstall` |
+| Launchd (the daily-log pass) | `~/.local/state/ai-dotfiles/launchd/backup-*`; the plist found by its marker | `python3 scripts/install/launchd.py --uninstall` |
 | Settings | `~/.local/state/ai-dotfiles/settings/backup-*` | Copy the backed-up file back |
 | MCP (Antigravity's file) | `~/.local/state/ai-dotfiles/mcp/backup-*` | Copy the backed-up file back |
 | Skills, commands, Pi extension | `~/.local/state/ai-dotfiles/skills.json` (links this repo created) | `python3 scripts/install/skills.py --uninstall` |

@@ -15,8 +15,10 @@
 #   3. mcp           config/mcp-servers.json       → native `<cli> mcp add` when missing
 #   4. skills        skills/<name>/                → each CLI's skill folder (links); also
 #                    scripts/ai-dotfiles and the daily-log command → ~/.local/bin, and
-#                    Pi's daily-log extension
-#   5. hooks         daily-log's hook command      → merged into each CLI's hook file
+#                    Pi's hooks extension
+#   5. hooks         worktree-guard's hook command → merged into each CLI's hook file;
+#                    retired hooks (daily-log's old nudge) taken out
+#   6. launchd       the daily-log pass            → ~/Library/LaunchAgents, 07:30 each day
 #
 # Requires Python 3.11+ (macOS /usr/bin/python3 is older; use Homebrew/pyenv).
 # Steps live in scripts/install/. Undo with scripts/uninstall.sh. See docs/how-it-works.md.
@@ -33,7 +35,7 @@ INSTRUCTIONS_ONLY=0
 REPLACE_INSTRUCTIONS=0
 PASS=()
 
-usage() { sed -n '2,22p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,24p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
 
 for arg in "$@"; do
   case "$arg" in
@@ -105,5 +107,8 @@ echo "== skills"
 
 echo "== hooks"
 "$PYTHON" "$SCRIPT_DIR/install/hooks.py" --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
+
+echo "== launchd"
+"$PYTHON" "$SCRIPT_DIR/install/launchd.py" ${DRY[@]+"${DRY[@]}"}
 
 [ "$DRY_RUN" = "1" ] && echo "Preview only: nothing written. Run again without --dry-run to write." || echo "Done. Verify: ai-dotfiles check"

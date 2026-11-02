@@ -15,17 +15,19 @@ Codex CLI, Pi, and Antigravity. The mechanism and layout are in
 | `config/mcp-servers.json` | Shared MCP servers | `scripts/install/mcp.py` |
 | `config/upstream-docs.json` | The documentation sources mirrored for agents: each CLI's docs, Google's and Meta's style and docs-writing guides, a `when` label per page | `scripts/upstream/sync-upstream.py` (weekly workflow) |
 | `skills/` | Shared skills; `skills.lock` pins adapted upstream skills | `scripts/install/skills.py` |
-| `skills/daily-log/` | The `daily-log` command (the daily logger's grammar and writer) and its hook | `scripts/install/skills.py` (links), `scripts/install/hooks.py` (hook entries) |
+| `skills/daily-log/` | The `daily-log` command (the daily logger's grammar and writer) and `day_pass.py`, the evidence the morning pass reads | `scripts/install/skills.py` (links), `scripts/install/launchd.py` (the 07:30 LaunchAgent) |
+| `scripts/agent_sessions.py` | Every CLI's session store (transcripts) behind one interface, for the day pass | — |
 | `skills/worktree-guard/` | The hook that moves a session clashing with another in one worktree into a linked worktree, and the `ai-dotfiles worktree` commands | `scripts/install/hooks.py` (hook entries) |
 | `scripts/agent_hooks.py` | Every CLI's hook format behind one interface, for the skills' hooks; `agent_hooks.ts` is Pi's extension for all of them | `scripts/install/skills.py` (Pi's link) |
 | `scripts/ai-dotfiles` | Global command: `install`, `update`, `uninstall`, `check`, `worktree` | `scripts/install/skills.py` |
 | `scripts/install/installer.py` | What every step shares: reading `ai-clis.json`, safe writes | — |
-| `scripts/install/hooks.py` | One hook entry per event in each CLI's native hook file; ours are found by their command | — |
+| `scripts/install/hooks.py` | One hook entry per event in each CLI's native hook file; ours are found by their command; retired ones taken out | — |
+| `scripts/install/launchd.py` | The daily-log pass as a LaunchAgent, `claude` path and PATH rendered at install | — |
 | `docs/upstream/` | Machine-written docs mirrors with their indexes (`INDEX.md`, `MIRROR-INDEX.*`), and skill catalogs | `scripts/upstream/` (weekly workflow) |
 | `docs/onboarding.md` | This repo's onboarding report | `skills/onboard/` (`/onboard`) |
 | `scripts/tests/` | Unit tests for the scripts and the skills' helpers | — |
 
-`scripts/install.sh` runs the five install steps, `scripts/uninstall.sh` reverses them;
+`scripts/install.sh` runs the six install steps, `scripts/uninstall.sh` reverses them;
 `scripts/healthcheck.sh` verifies live state. `docs/` holds `how-it-works.md`, the mirror, and
 `onboarding.md`, this repo's report from `/onboard`.
 

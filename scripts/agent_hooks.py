@@ -1,6 +1,6 @@
 """agent_hooks: one interface over the hook formats of Claude Code, Codex, Antigravity and Pi.
 
-A feature (daily-log, worktree-guard) sees a plain Event and answers with a plain reply; this
+A feature (worktree-guard; daily-log's nudge before it) sees a plain Event and answers with a plain reply; this
 module reads each CLI's hook input into that Event, writes the reply back in the CLI's own
 shape, keeps the feature's state per session, and tells the installer which native events and
 matchers a feature needs. Everything that differs between the CLIs lives here.

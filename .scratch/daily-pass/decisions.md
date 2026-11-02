@@ -1,7 +1,24 @@
 # Daily-log pass: grilling state
 
-Status: interview finished; decisions 1-14 confirmed by the owner (2026-11-02). Next:
-`/to-spec`, `/to-tickets`, or "go" for the build on this branch (`feat/daily-pass`).
+Status: built on `feat/daily-pass` (2026-11-02) after the owner's go; every decision below
+landed as written. Owner's steps: merge, `ai-dotfiles install` (hooks step retires the nudge,
+launchd step schedules the pass), watch the first 07:30 run in `~/Library/Logs/ai-dotfiles/`
+(a LaunchAgent-started claude may be asked for access to ~/Documents the first time), approve
+the changed Codex hooks in `/hooks` if asked, and remove the two linked worktrees the guard made
+for the build's subagents (`claude-d7e93313`, `claude-ac7a33db`). Verified: 384 unit tests
+pass, shellcheck clean, `daily-log day --date today` ran on the real stores (166 lines, three
+folders, sessions with titles, prompts, replies, files, git facts).
+
+Built: `scripts/agent_sessions.py` (+46 tests), `skills/daily-log/scripts/day_pass.py` (+8),
+`daily_log.py` (guard, `--rewrite`, `day`, hook removed; vendor copy in learning-tutor
+refreshed), `scripts/install/launchd.py` (+24), `hooks.py` retiring the nudge, Pi extension
+trimmed, install/uninstall/healthcheck wired, docs (SKILL, LOG-FORMAT, how-it-works, README,
+AGENTS, the journal's README). Findings that changed details: Codex edits arrive as `exec`
+JavaScript carrying the patch text (no apply_patch items), 17 of 41 Codex rollouts are
+subagent threads (dropped), Codex day folders are local dates and a resumed session keeps
+writing under its first day (so every folder is scanned, the mtime check keeps it cheap),
+Claude compact summaries are not prompts, pyenv puts the version folder first on PATH (the
+plist uses the shims folder), `$HOME` can lie (the real home comes from the user database).
 
 Feature: the journal's work entries are written once a day by one pass over the day's
 evidence, one entry per project; the per-turn Stop nudge and its hooks go away.

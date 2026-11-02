@@ -8,8 +8,9 @@
 #
 # Steps, in reverse install order (each removes only what its installer created,
 # backs up before writing, and rolls back on failure):
-#   5. hooks         daily-log hook entries
-#   4. skills        links in the receipt: skills, Pi's daily-log extension, and the
+#   6. launchd       the daily-log pass's LaunchAgent
+#   5. hooks         worktree-guard's hook entries, and any retired ones
+#   4. skills        links in the receipt: skills, Pi's hooks extension, and the
 #                    ai-dotfiles and daily-log commands (those with --target=all only)
 #   3. mcp           left in place, listed: servers do not depend on this repo
 #   2. settings      left in place, listed: managed keys hold no repo paths
@@ -24,7 +25,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TARGET="all"
 DRY_RUN=0
 
-usage() { sed -n '2,18p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,19p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
 
 for arg in "$@"; do
   case "$arg" in
@@ -45,6 +46,9 @@ fi
 
 DRY=()
 [ "$DRY_RUN" = "1" ] && DRY=(--dry-run)
+
+echo "== launchd"
+"$PYTHON" "$SCRIPT_DIR/install/launchd.py" --uninstall ${DRY[@]+"${DRY[@]}"}
 
 echo "== hooks"
 "$PYTHON" "$SCRIPT_DIR/install/hooks.py" --uninstall --target "$TARGET" ${DRY[@]+"${DRY[@]}"}

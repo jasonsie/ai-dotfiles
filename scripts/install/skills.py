@@ -8,8 +8,8 @@ switched-off CLIs read loses its links. scripts/ai-dotfiles and the daily-log sk
 script are linked as ~/.local/bin/ai-dotfiles and ~/.local/bin/daily-log, so both commands
 work from any folder; shell files are never edited, and a hint is printed when that folder
 is not on PATH. Pi has no hooks, so while it is on and set up it gets scripts/agent_hooks.ts
-(daily-log and worktree-guard) in its extensions folder; the daily-log-only extension it
-used to link is removed.
+(worktree-guard) in its extensions folder; the daily-log-only extension it used to link is
+removed.
 
 An existing entry this script did not create is refused, unless it already is the wanted
 link. A link it created that is no longer wanted is removed; a link the user changed is

@@ -6,6 +6,7 @@
 #     and command link is in place, and every managed setting is applied
 #   - shared MCP servers are listed by each CLI's own `mcp list`
 #   - ~/.local/bin is on PATH, so `ai-dotfiles` runs from any folder
+#   - the daily-log pass's LaunchAgent is loaded (when claude is installed)
 #   - repo sources contain no machine-specific paths; unit tests pass
 
 set -uo pipefail
@@ -66,6 +67,18 @@ case ":$PATH:" in
   *":$HOME/.local/bin:"*|*":$HOME/.local/bin/:"*) pass "$HOME/.local/bin on PATH" ;;
   *) fail "$HOME/.local/bin is not on PATH; ai-dotfiles only runs by its full path" ;;
 esac
+
+echo "-- launchd (the daily-log pass, 07:30 each day)"
+PLIST="$HOME/Library/LaunchAgents/com.ai-dotfiles.daily-log-day.plist"
+if ! command -v claude >/dev/null 2>&1; then
+  skip "claude not on PATH: nothing to schedule"
+elif [ ! -f "$PLIST" ]; then
+  fail "not scheduled: $PLIST missing (run: ai-dotfiles)"
+elif launchctl print "gui/$(id -u)/com.ai-dotfiles.daily-log-day" >/dev/null 2>&1; then
+  pass "com.ai-dotfiles.daily-log-day loaded"
+else
+  fail "com.ai-dotfiles.daily-log-day not loaded (run: ai-dotfiles)"
+fi
 
 echo "-- portability"
 HITS="$(grep -rlIE --exclude=healthcheck.sh --exclude-dir=__pycache__ --exclude-dir=tests \

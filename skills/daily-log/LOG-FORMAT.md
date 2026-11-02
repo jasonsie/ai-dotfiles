@@ -50,11 +50,30 @@ reads by it.
 ## Entry
 
 - Label line, top level: `- [X] <label>` done, `- [] <label>` open. The label is free
-  text (`leetcode`, `/onboard skill`, `ai-dotfiles: daily-log hook`).
+  text (`leetcode`, `/onboard skill`, `ai-dotfiles: worktree-guard design, build and verify flow`).
 - Sub-bullets: one TAB, then `- ` (`	- tests green`). Notes under a sub-bullet: two
   TABs, then `↳ ` (`		↳ O(n)/O(1) — hash set`). TABs, never spaces.
 - Same day and same label is one entry: a second write merges, drops lines already
   present, and may flip the box to `[X]`; it never un-checks it or rewrites other lines.
+- The label's project is the text before `: `, else the whole label. One entry per project
+  and day: a second label for a project already in the block is refused by `daily-log add`
+  (`ai_dotfiles: verify` against `ai-dotfiles: build`; case, `_`, `-` and spaces do not
+  count), and `--rewrite` replaces that entry, label and lines.
+
+## Work entry
+
+```
+- [X] ai-dotfiles: worktree-guard design, build and verify flow
+	- keyword: hooks
+	- description: guard moves a clashing session to a linked worktree; merged, tagged, installed live
+```
+
+- Label: `<project>: <what the day was about>`, the project as its owner names it.
+- `keyword:` one to three lowercase tags, comma-separated, reused from the journal before
+  a new one is coined. `description:` one line, about 160 characters, what exists now and
+  its state (merged, installed, uncommitted, in review). Nothing else: no `next:`, counts
+  or hashes. Box `[X]`.
+- Written once a day by the day pass (`daily-log day`, the `daily-log` skill), or by hand.
 
 ## Study item line
 

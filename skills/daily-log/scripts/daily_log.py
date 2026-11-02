@@ -1,56 +1,53 @@
 #!/usr/bin/env python3
-"""daily-log: the daily logger's grammar as one command, and the hook that asks for an entry.
+"""daily-log: the daily logger's grammar as one command.
 
-  daily-log add  [--date D] [--done|--open] [--if-absent] [--session ID] [--root DIR]
+  daily-log add  [--date D] [--done|--open] [--if-absent|--rewrite] [--root DIR]
                  [--dry-run] [--show block|file] LABEL [LINE ...]   lines also on stdin
   daily-log show [--date D] [--root DIR]                             a day's block
   daily-log path [--date D] [--root DIR]                             a day's week file
+  daily-log day  [--date D] [--back N] [--rewrite] ...               a day's evidence (day_pass.py)
   daily-log tutor-daily --key K --subject S --item N --tutor T --paste-hint H
                  [--items Ns] [--weekend-day Sat] [--resolves 2] [--note TEXT ...]
-  daily-log hook (tool|stop) --cli (claude|codex|agy|pi)             JSON in; JSON or nothing out
 
 The grammar is LOG-FORMAT.md in this skill's folder. The journal root is --root, else
 $DAILY_LOGGER_ROOT, else ~/Documents/Claude/Projects/daily-logger; year and month folders
-are created, the root never is. Hook state is one file per session under $DAILY_LOG_STATE,
-else ~/.local/state/ai-dotfiles/daily-log/, deleted after 7 days. A hook call never exits
-non-zero and prints nothing but JSON, so a broken hook cannot block a session. The CLIs'
-hook formats live in the repo's scripts/agent_hooks.py, shared with other hooks.
-Python 3.11+, stdlib only.
+are created, the root never is. One entry per project and day: a label's project is the text
+before ': ', else the whole label. `add` merges into the entry with the same label, refuses a
+second entry for a project the block already holds, and replaces that entry with --rewrite.
+`day` runs day_pass.py beside this script: the evidence the daily pass reads before it writes
+the entries. This file imports nothing from the repo, so a copy of it is a complete writer
+(the learning-tutor vendors one). Python 3.11+, stdlib only.
 """
 from __future__ import annotations
 
 import argparse
 import calendar
-import contextlib
 from datetime import date
-import io
 import os
 from pathlib import Path
 import re
+import subprocess
 import sys
 import tempfile
 
 SKILL = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(SKILL.parents[1] / 'scripts'))
-import agent_hooks  # noqa: E402  (the CLIs' hook formats, in the repo's scripts folder)
-
+DAY_PASS = Path(__file__).resolve().parent / 'day_pass.py'
 DEFAULT_ROOT = '~/Documents/Claude/Projects/daily-logger'
-DEFAULT_STATE = '~/.local/state/ai-dotfiles/daily-log'
 DAYS = ('Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun')
 SEPARATOR = '-' * 84
 RULE = '-' * 12
 HEADING = re.compile(r'^#\s*(\d{1,2})/(\d{1,2})\s*\(')
 ENTRY = re.compile(r'^-\s*\[(?P<mark>[^\]]*)\]\s*(?P<label>.+?)\s*$')
 DONE_MARKS = {'x', 'ｘ'}
-MAX_NUDGES = 2
-KEEP_SECONDS = 7 * 24 * 3600
-NUDGE = (
-    'Files changed in this session ({edits} edits) and today\'s daily log has no entry from it. '
-    'If a unit of work is finished, record it now: '
-    'daily-log add --done --session {session} "<label>" "<line>" ... '
-    '(label = the project or skill; up to 3 terse sub-bullets, telegraphic). '
-    'If nothing is finished yet, say so in one line and stop.')
 TEMPLATE_FIELDS = ('key', 'subject', 'item', 'items', 'tutor', 'paste_hint', 'weekend_day', 'resolves', 'notes')
+
+
+class Duplicate(ValueError):
+    """A second entry for a project the day's block already holds."""
+
+    def __init__(self, existing):
+        super().__init__(existing)
+        self.existing = existing
 
 
 # --- the journal -------------------------------------------------------------------------
@@ -84,6 +81,17 @@ def normalize(line):
     return '\t- ' + line
 
 
+def project(label):
+    """The project a label names: the text before ': ', else the whole label."""
+    head, sep, _ = label.partition(': ')
+    return head.strip() if sep else label.strip()
+
+
+def key(label):
+    """What two labels for one project share: its name lowercased, without '_', '-' or spaces."""
+    return re.sub(r'[\s_-]+', '', project(label).lower())
+
+
 def find_day(lines, day):
     wanted = heading(day)
     return next((i for i, line in enumerate(lines) if line.strip() == wanted), None)
@@ -98,14 +106,26 @@ def block_end(lines, start):
     return len(lines)
 
 
-def find_entry(lines, start, end, label):
+def entries(lines, start, end):
+    """(index, label) of every entry in a day block."""
+    found = []
     for k in range(start + 1, end):
         if lines[k].startswith(('\t', ' ')):
             continue
         match = ENTRY.match(lines[k].strip())
-        if match and match.group('label').strip() == label.strip():
-            return k
-    return None
+        if match:
+            found.append((k, match.group('label').strip()))
+    return found
+
+
+def find_entry(lines, start, end, label):
+    return next((k for k, found in entries(lines, start, end) if found == label.strip()), None)
+
+
+def find_project(lines, start, end, label):
+    """The entry for the same project under another label, or None."""
+    wanted = key(label)
+    return next((k for k, found in entries(lines, start, end) if key(found) == wanted), None)
 
 
 def entry_end(lines, index, end):
@@ -115,8 +135,9 @@ def entry_end(lines, index, end):
     return j
 
 
-def add_entry(text, day, label, sub_lines, done=False, if_absent=False):
-    """(new text, changed): `label` and its sub-bullets in `day`'s block, merged if present."""
+def add_entry(text, day, label, sub_lines, done=False, if_absent=False, rewrite=False):
+    """(new text, changed): `label` and its sub-bullets in `day`'s block. The same label merges;
+    another label for a project already there raises Duplicate, or replaces it with `rewrite`."""
     lines = text.splitlines()
     label_line = f'- [{"X" if done else ""}] {label}'
     start = find_day(lines, day)
@@ -130,10 +151,20 @@ def add_entry(text, day, label, sub_lines, done=False, if_absent=False):
         return '\n'.join(lines) + '\n', True
     end = block_end(lines, start)
     index = find_entry(lines, start, end, label)
+    if index is None:
+        other = find_project(lines, start, end, label)
+        if other is not None and not rewrite:
+            raise Duplicate(lines[other].strip())
+        index = other
     if index is not None:
         if if_absent:
             return text if text.endswith('\n') else text + '\n', False
         last = entry_end(lines, index, end)
+        if rewrite:
+            wanted = [label_line, *sub_lines]
+            changed = lines[index:last] != wanted
+            lines = lines[:index] + wanted + lines[last:]
+            return '\n'.join(lines) + '\n', changed
         present = {line.rstrip() for line in lines[index + 1:last]}
         added = []
         for line in sub_lines:
@@ -195,11 +226,16 @@ def cmd_add(args):
     day = parse_day(args.date)
     path = week_file(root, day)
     text = path.read_text(encoding='utf-8') if path.exists() else ''
-    new_text, changed = add_entry(text, day, args.label, sub_lines, done=args.done, if_absent=args.if_absent)
+    try:
+        new_text, changed = add_entry(text, day, args.label, sub_lines, done=args.done,
+                                      if_absent=args.if_absent, rewrite=args.rewrite)
+    except Duplicate as duplicate:
+        print(f'daily-log: {day.isoformat()} already has an entry for this project: {duplicate.existing}\n'
+              '  the same work: use that label, and the lines merge into it;'
+              ' a replacement: add --rewrite.', file=sys.stderr)
+        return 1
     if changed and not args.dry_run:
         write_text(path, new_text)
-    if args.session and not args.dry_run:
-        mark_logged(args.session)
     print(new_text if args.show == 'file' else day_block(new_text, day), end='')
     return 0
 
@@ -238,47 +274,15 @@ def cmd_tutor_daily(args):
     return 0
 
 
-# --- the hook ---------------------------------------------------------------------------
+# --- the day pass -----------------------------------------------------------------------
 
-STORE = agent_hooks.Store('DAILY_LOG_STATE', DEFAULT_STATE, KEEP_SECONDS)
-
-
-def mark_logged(session):
-    state = STORE.load(session)
-    state['logged'] = True
-    STORE.save(session, state)
-
-
-def on_tool(event, state):
-    if event.edit:
-        state['edits'] = state.get('edits', 0) + 1
-    return None
-
-
-def on_stop(event, state):
-    if event.continuation or not event.model_stopped:
-        return None  # our own continuation; or an error or step-cap stop (Antigravity)
-    edits = state.get('edits', 0)
-    if not edits or state.get('logged') or state.get('nudges', 0) >= MAX_NUDGES:
-        return None
-    if edits <= state.get('edits_at_nudge', 0):
-        return None
-    state['nudges'] = state.get('nudges', 0) + 1
-    state['edits_at_nudge'] = edits
-    return agent_hooks.Continue(NUDGE.format(edits=edits, session=event.session))
-
-
-def decide(event, state):
-    return on_tool(event, state) if event.kind == 'tool' else on_stop(event, state)
-
-
-def hook(mode, cli, data, now=None):
-    """The reply for one hook call, or None; the session's state is read and written around it."""
-    return agent_hooks.call(cli, mode, data, decide, STORE, now)
-
-
-def cmd_hook(args):
-    return agent_hooks.serve(args.cli, args.mode, lambda data: hook(args.mode, args.cli, data))
+def run_day(rest):
+    """`daily-log day ...`: day_pass.py beside this script, with the rest of the arguments."""
+    if not DAY_PASS.is_file():
+        print(f'daily-log: day needs {DAY_PASS}, which this copy lacks; run the installed command',
+              file=sys.stderr)
+        return 1
+    return subprocess.call([sys.executable, str(DAY_PASS), *rest])
 
 
 # --- the command ------------------------------------------------------------------------
@@ -297,8 +301,10 @@ def parser():
     state = add.add_mutually_exclusive_group()
     state.add_argument('--done', action='store_true', help='mark the entry [X] (default for new entries: open)')
     state.add_argument('--open', action='store_true', help='leave the entry open: - [] label')
-    add.add_argument('--if-absent', action='store_true', help='change nothing when the label is already there')
-    add.add_argument('--session', help='hook session id: marks the session as logged')
+    repeat = add.add_mutually_exclusive_group()
+    repeat.add_argument('--if-absent', action='store_true', help='change nothing when the label is already there')
+    repeat.add_argument('--rewrite', action='store_true',
+                        help="replace the project's entry, label and lines, instead of merging or refusing")
     add.add_argument('--dry-run', action='store_true', help='print the result, write nothing')
     add.add_argument('--show', choices=('block', 'file'), default='block', help='what to print (default: block)')
     add.add_argument('label')
@@ -313,6 +319,9 @@ def parser():
     journal(where)
     where.set_defaults(run=cmd_path)
 
+    sub.add_parser('day', help="a day's evidence for the daily pass; `daily-log day --help` for its options",
+                   add_help=False)
+
     tutor = sub.add_parser('tutor-daily', help='render TUTOR-DAILY.md for one learning key')
     for field in ('key', 'subject', 'item', 'tutor', 'paste-hint'):
         tutor.add_argument('--' + field, required=True)
@@ -321,23 +330,14 @@ def parser():
     tutor.add_argument('--resolves', type=int, default=2)
     tutor.add_argument('--note', action='append', default=[], help='an extra Notes line; repeatable')
     tutor.set_defaults(run=cmd_tutor_daily)
-
-    hook_parser = sub.add_parser('hook', help='the CLI hook: JSON on stdin')
-    hook_parser.add_argument('mode', choices=('tool', 'stop'))
-    hook_parser.add_argument('--cli', choices=agent_hooks.CLIS, required=True)
-    hook_parser.set_defaults(run=cmd_hook)
     return top
 
 
 def main(argv=None):
     argv = sys.argv[1:] if argv is None else list(argv)
-    is_hook = argv[:1] == ['hook']
-    try:
-        # A bad hook call must stay silent and exit 0: status 2 and stderr would steer the CLI.
-        with contextlib.redirect_stderr(io.StringIO() if is_hook else sys.stderr):
-            args = parser().parse_args(argv)
-    except SystemExit as error:
-        return 0 if is_hook else int(error.code or 0)
+    if argv[:1] == ['day']:
+        return run_day(argv[1:])
+    args = parser().parse_args(argv)
     return args.run(args)
 
 
