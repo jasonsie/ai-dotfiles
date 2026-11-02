@@ -194,7 +194,7 @@ Pages: 227
 - [settings.md](settings.md): Change Claude Code settings, pick the scope a key belongs in, verify the change, and learn which value Claude Code uses when a key is set in several places.
 - [setup.md](setup.md): System requirements, platform-specific installation, version management, and uninstallation for Claude Code.
 - [skills.md](skills.md): Create, manage, and share skills to extend Claude's capabilities in Claude Code. Includes custom commands and bundled skills.
-- [slack.md](slack.md): Delegate coding tasks from Slack. This earlier version answers channel mentions only from Pro and Max accounts in workspaces not connected to Claude Tag.
+- [slack.md](slack.md): Delegate coding tasks from Slack. This earlier version answers mentions only from Pro, Max, and Ultra accounts in workspaces not connected to Claude Tag.
 - [statusline.md](statusline.md): Configure a custom status bar to monitor context window usage, costs, and git status in Claude Code
 - [sub-agents.md](sub-agents.md): Create and use specialized AI subagents in Claude Code for task-specific workflows and improved context management.
 - [terminal-config.md](terminal-config.md): Fix Shift+Enter for newlines, get a terminal bell when Claude finishes, configure tmux, match the color theme, and enable Vim mode in the Claude Code CLI.

@@ -150,7 +150,7 @@ Add sidebar apps, conversation panels, file viewers and editors, and forms to Ch
 
 #### MCP Events
 
-Let users ask ChatGPT to monitor updates from your MCP server and act when matching events arrive. ChatGPT requires MCP 2.0 and supports webhook delivery from the draft MCP Events specification.
+Let users ask ChatGPT to monitor updates from your MCP server and act when matching events arrive. ChatGPT supports webhook delivery from the draft MCP Events specification.
 
 [Build event subscriptions](https://developers.openai.com/plugins/build/mcp-events)
 
@@ -327,6 +327,40 @@ Source: [Glossary](https://learn.chatgpt.com/docs/glossary.md)
 
 Use this glossary as a quick reference for Codex terms across the app, CLI, IDE extension, cloud, SDK, and related integrations.
 
+### October 26–30, 2026
+
+Source: [October 26–30, 2026](https://learn.chatgpt.com/docs/whats-new/october-26-30-2026.md)
+
+#### [Text your dot](https://learn.chatgpt.com/docs/whats-new/dots-october-28-2026)
+
+Reach your dot through iMessage or RCS on Android for one-to-one conversations
+with text, photos, and voice messages. Texting is rolling out in beta to ChatGPT
+Pro users in the U.S.
+
+#### Use GPT-6.1 Terra for visual reasoning and computer use
+
+[GPT-6.1 Terra](https://learn.chatgpt.com/docs/models?surface=app#app-gpt-61-terra) is now available in ChatGPT Work
+and Codex on Plus, Pro, Business, Enterprise, and Edu plans. It's a fast,
+efficient model for professional work that combines strong image understanding
+with precise computer use.
+
+Use Terra to reason about images and screens, then take action across your
+browser, desktop, and apps. Match product photos from a supplier lookbook to
+catalog entries and update listings, or check campaign assets for cropping and text
+placement and organize the edits.
+
+Terra also writes in a clear, direct style, putting results first and explaining
+supporting details in plain language.
+
+Choose GPT-6.1 Terra from the model list in **Advanced** in the ChatGPT desktop
+app or ChatGPT Work on the web. Work also supports Terra on mobile. The model isn't available in Chat and does not support UAE inference residency. Enterprise access depends on workspace
+availability and administrator controls. Browser use and computer use each
+have setup and access requirements.
+
+See [Models](https://learn.chatgpt.com/docs/models?surface=app#app-gpt-61-terra), [browser use](https://learn.chatgpt.com/docs/browser), and
+[computer use](https://learn.chatgpt.com/docs/computer-use) to get started. Read the
+[launch announcement](https://learn.chatgpt.com/docs/changelog#codex-2026-10-26-gpt-61-terra).
+
 ### October 5–9, 2026
 
 Source: [October 5–9, 2026](https://learn.chatgpt.com/docs/whats-new/october-5-9-2026.md)
@@ -463,7 +497,7 @@ Composer mentions are available only in the desktop app. Free and Go web extensi
 updates from your server and act when matching events arrive. For example,
 a user can ask ChatGPT to summarize new messages or respond to document feedback.
 
-This integration requires MCP 2.0. ChatGPT supports webhook delivery from
+ChatGPT supports webhook delivery from
 the draft MCP Events specification; polling and streaming aren't supported.
 
 #### Customize website annotations
@@ -473,6 +507,20 @@ what people can select on your website, attach relevant context, and provide
 controls for previewing changes before sending feedback to ChatGPT. The
 Browser Annotation API is available in supported versions of the desktop
 app's built-in browser.
+
+### Text your dot
+
+Source: [Text your dot](https://learn.chatgpt.com/docs/whats-new/dots-october-28-2026.md)
+
+Texting is rolling out in beta to ChatGPT Pro users in the U.S. Reach your dot
+through iMessage or RCS on Android for one-to-one conversations with text,
+photos, and voice messages.
+
+Your dot uses context from your conversations to choose where to reach you. You can also ask it to use a particular channel, such as texting you when something needs your attention and keeping routine updates in ChatGPT.
+
+If your dot needs approval, it sends you a link to review the request in ChatGPT.
+
+See [texting setup and availability](https://learn.chatgpt.com/docs/dots/channels#texting).
 
 ### Use ChatGPT
 
@@ -755,6 +803,18 @@ Source: [What's new](https://learn.chatgpt.com/docs/whats-new.md)
 
 For every versioned update, bug fix, and minor improvement, see the [ChatGPT and Codex changelog](https://learn.chatgpt.com/docs/changelog) and [API changelog](https://developers.openai.com/api/docs/changelog).
 
+#### [October 26–30, 2026](https://learn.chatgpt.com/docs/whats-new/october-26-30-2026)
+
+#### Use GPT-6.1 Terra for visual reasoning and computer use
+
+[GPT-6.1 Terra](https://learn.chatgpt.com/docs/models?surface=app#app-gpt-61-terra) is now available in ChatGPT Work
+and Codex on Plus, Pro, Business, Enterprise, and Edu plans. This fast, efficient model for professional work combines
+strong image understanding with precise computer use. Match product photos to
+catalog entries, review design assets, and act on what you find across your
+browser, desktop, and apps.
+
+[Read the full update →](https://learn.chatgpt.com/docs/whats-new/october-26-30-2026)
+
 #### October 12–16, 2026
 
 #### Open your dot from iOS widgets and Shortcuts
@@ -843,7 +903,7 @@ Add sidebar apps, panels, editors, and forms to ChatGPT. Composer mentions requi
 
 #### MCP Events
 
-Let users ask ChatGPT to act on updates from your MCP server. Requires MCP 2.0 and webhook delivery.
+Let users ask ChatGPT to act on updates from your MCP server. ChatGPT supports webhook delivery.
 
 [Build event subscriptions](https://developers.openai.com/plugins/build/mcp-events)
 
@@ -940,7 +1000,7 @@ Add [ChatGPT sign-in and eligible plan usage](https://developers.openai.com/siwc
 
 #### Respond to MCP events
 
-Build [webhook subscriptions](https://developers.openai.com/plugins/build/mcp-events) so users can ask ChatGPT to act on updates from your MCP server. Requires MCP 2.0.
+Build [webhook subscriptions](https://developers.openai.com/plugins/build/mcp-events) so users can ask ChatGPT to act on updates from your MCP server.
 
 #### Customize website annotations
 
@@ -2096,6 +2156,10 @@ and reset times.
       15-160
       15-160
 
+      GPT-6.1 Terra
+      35-285
+      35-285
+
       GPT-6 Sol
       15-150
       15-150
@@ -2116,6 +2180,9 @@ and reset times.
 Usage limits are shared with other agentic features once pricing for those
 features is effective. This currently includes [ChatGPT for
 Excel](https://help.openai.com/articles/20001063) on Plus and Pro.
+
+GPT-6.1 Sol usage drawn from your subscription has no long-context surcharge
+in Codex or ChatGPT Work.
 
 Fast and Ultrafast modes use included subscription limits and paid credits
 at different rates, relative to Standard mode for the same model:
@@ -2240,6 +2307,11 @@ sales](https://chatgpt.com/contact-sales?utm_internal_source=openai_developers_c
         2.5 credits
         250 credits
 
+        GPT-6.1 Terra
+        25 credits
+        1.25 credits
+        125 credits
+
         GPT-6 Sol
         50 credits
         5 credits
@@ -2349,6 +2421,12 @@ In ChatGPT, GPT-6.1 Sol is available in Work and Codex, not Chat. For Enterprise
 and Edu, the model is off by default until an administrator enables it. Using
 it in ChatGPT Work or Codex also requires access to the respective surface.
 API-key access follows API model availability.
+
+[GPT-6.1 Terra](https://learn.chatgpt.com/docs/models?surface=app#app-gpt-61-terra) is available in Work and Codex on
+Plus, Pro, Business, Enterprise, and Edu plans. It does not support
+UAE inference residency. It isn't available in Chat. Access requires the corresponding
+surface; Enterprise access also depends on workspace availability and
+administrator controls. Overall Work and Codex plan limits are unchanged.
 
 - Feature is currently limited to only specific regions. Check the
   individual feature documentation to learn more about geographic restrictions.
@@ -3400,8 +3478,8 @@ You can increase model speed in Codex in exchange for higher usage.
 
 #### Fast mode
 
-Fast mode speeds up supported models, including GPT-6.1 Sol, GPT-6 Astra,
-GPT-6 Sol, and GPT-6 Luna, where available. For GPT-5.6, the speed increase
+Fast mode speeds up supported models, including GPT-6.1 Sol, GPT-6.1 Terra,
+GPT-6 Astra, GPT-6 Sol, and GPT-6 Luna, where available. For GPT-5.6, the speed increase
 is 1.5x.
 
 Use `/fast` in the CLI to toggle Fast mode. Use `/statusline` to show it in the
@@ -4121,7 +4199,7 @@ You reach the same dot in ChatGPT, Slack, Teams, or a call. Changing where you t
 
 Tell your dot where to send different kinds of updates. For example, ask it to keep routine progress in ChatGPT and bring decisions to you in Slack. Explain which changes need your attention, such as a deadline at risk.
 
-Open your dot's profile and select **Add** to connect an available contact method. See [Message your dot](https://learn.chatgpt.com/docs/dots/channels) for channel details.
+Open your dot's profile and select **Add** to connect an available contact method. Texting is rolling out in beta to ChatGPT Pro users in the U.S. See how to [set up texting](https://learn.chatgpt.com/docs/dots/channels#texting) with iMessage or RCS on Android. See [Message your dot](https://learn.chatgpt.com/docs/dots/channels) for other ways to reach it.
 
 In Slack, you can DM your dot or mention it in a channel you’ve added it to. By default, it responds to you; you can instruct it to engage with others. Existing permissions and safeguards still apply to what it shares and does. Tell it which channels and events to watch for. Adding it to a channel alone doesn’t start monitoring. You can also message your dot in Microsoft Teams. See [Slack and Teams](https://learn.chatgpt.com/docs/dots/channels#slack-and-teams).
 
@@ -4247,7 +4325,7 @@ You can create your dot in the ChatGPT mobile app, desktop app, or a desktop bro
 | Guide                                                | Covers                                                           |
 | ---------------------------------------------------- | ---------------------------------------------------------------- |
 | [Getting started](https://learn.chatgpt.com/docs/dots/getting-started)       | Setup, your first conversation, and assigning work.              |
-| [Messaging](https://learn.chatgpt.com/docs/dots/channels)                    | ChatGPT, calls, Slack, and Teams.                                |
+| [Messaging](https://learn.chatgpt.com/docs/dots/channels)                    | ChatGPT, calls, texting, Slack, and Teams.                       |
 | [Tasks and memory](https://learn.chatgpt.com/docs/dots/tasks-and-memory)     | Assigned work, recurring tasks, context, and proactive research. |
 | [Computers and apps](https://learn.chatgpt.com/docs/dots/computers-and-apps) | Cloud work, local access, plugins, and website sign-in.          |
 | [Controls](https://learn.chatgpt.com/docs/dots/controls)                     | Review activity, manage permissions, and stop work.              |
@@ -4317,7 +4395,25 @@ The action opens ChatGPT and requires authentication. If you switch accounts and
 
 #### Texting
 
-Texting is coming soon.
+Reach your dot through iMessage or RCS on Android. Texting supports one-to-one conversations. It’s rolling out in beta to ChatGPT Pro users in the U.S.
+
+Your dot can use relevant context from your conversations in ChatGPT and other connected channels, along with the plugins you’ve connected.
+
+#### Set up texting
+
+1. Open your dot’s profile in the ChatGPT mobile app, desktop app, or a desktop web browser and select **Texting**.
+2. Enter your phone number and follow the steps to verify it.
+3. Save your dot’s contact card when you receive it. Send your dot a message to start chatting.
+
+For iMessage, make sure you’re sending from the phone number you verified. On Android, enable RCS in your messaging app.
+
+You can send text, photos, and voice messages. If your dot needs approval, it sends you a link to review the request in ChatGPT.
+
+Your dot uses context from your conversations to choose where to reach you. You can also ask it to use a particular channel, such as texting you when something needs your attention and keeping routine updates in ChatGPT.
+
+Your dot can only text you, and you’re the only one who can text your dot. Setting up texting doesn’t give your dot or OpenAI access to your other text conversations.
+
+Group chats, phone calls, and FaceTime aren’t currently supported through texting. You can call your dot in ChatGPT.
 
 ### Model selection
 
@@ -4337,6 +4433,17 @@ model version. Check the [models available in ChatGPT](https://learn.chatgpt.com
 #### Find the right model for your workflow
 
 Choose your work and task and get a recommendation.
+
+#### When to consider GPT-6.1 Terra
+
+Try [GPT-6.1 Terra](https://developers.openai.com/api/docs/models/gpt-6.1-terra) for concise writing based on
+supplied material, computer-use tasks with a defined outcome, and scoped code
+fixes. Provide clear inputs, requirements, and a way to verify the result, such as
+checking saved records or running regression tests.
+
+Compare it with GPT-6.1 Sol on the same inputs and reasoning effort. For writing,
+judge audience fit, voice, and useful detail as well as accuracy and length. For
+computer use, check the saved result and the accuracy of the completion report.
 
 #### When to consider GPT-6.1 Sol
 
@@ -4380,6 +4487,20 @@ Start by considering:
 
 If you can, experiment using the same inputs to compare results and keep the
 lightest setting that meets your quality bar.
+
+Choose acceptance criteria before comparing models:
+
+- **Writing:** check required facts, qualifications, audience, and voice. Review
+  both outputs before deciding whether the shorter one is more useful.
+- **Computer use:** reopen the affected record or page to verify saved changes,
+  confirm that the workflow preserved unrelated data, and compare the completion
+  report with the actual result.
+- **Code and interfaces:** run regression tests. For an interactive application,
+  also inspect the rendered result on desktop and mobile.
+
+Repeat the comparison across representative tasks. Measure completion time
+alongside quality, including time spent reviewing or repairing the result. Then
+vary reasoning effort while keeping the model and inputs fixed.
 
 ### Prompting
 
@@ -5512,9 +5633,8 @@ plugin](https://learn.chatgpt.com/docs/security/plugin).
 
 Use Node.js 24 or 26, or Node.js 22 starting with 22.13.0.
 You also need Python 3.10 or later.
-Python 3.10 also needs `tomli`. Scans using OpenAI inference require Codex Security access.
-Depending on your account and repository, full-repository scans may also
-require [Trusted Access for Cyber](https://chatgpt.com/cyber).
+If you use Python 3.10, install `tomli`. Some cybersecurity requests and
+protected findings require [Trusted Access for Cyber](https://chatgpt.com/cyber).
 
 The CLI runs with your operating-system permissions and doesn't pause for
 approval.
@@ -5524,15 +5644,27 @@ permissions](https://learn.chatgpt.com/docs/security/cli/reference#local-scan-pe
 
 #### Set up and verify the CLI
 
-Run the public package with `npx`:
+Install the public package globally, then check its version:
+
+```bash
+npm install -g @openai/codex-security
+codex-security --version
+```
+
+The package provides the `codex-security` command and its `cs` alias. Ensure
+npm's global executable directory is on your `PATH`.
+
+To run without a global installation, use `npx`:
 
 ```bash
 npx @openai/codex-security --version
 ```
 
+The examples below use `npx @openai/codex-security`. After a global
+installation, you can use `codex-security` instead.
+
 The command prints the installed package version. Use `info --json` to check
-the bundled plugin version, or `--help` to list commands. Package changes are
-listed in the [CLI and SDK releases](https://github.com/openai/codex-security/releases).
+the bundled plugin version, or `--help` to list commands.
 
 #### Sign in
 
@@ -5542,8 +5674,10 @@ Sign in with your ChatGPT account:
 npx @openai/codex-security login
 ```
 
-On a machine without a browser, add `--device-auth` and follow the displayed
-sign-in instructions. Use `--auth chatgpt` in the scan commands below to select
+On a machine without a browser, add `--device-auth` if your workspace allows
+it, and follow the displayed sign-in instructions. If device authentication
+is disabled, use the [SSH login instructions](https://github.com/openai/codex-security/blob/main/sdk/typescript/docs/cli.md#remote-login-with-ssh-forwarding).
+Use `--auth chatgpt` in the scan commands below to select
 that sign-in even when your environment also contains an API key.
 
 For API keys and other providers, see [Select scan
@@ -5597,6 +5731,7 @@ elapsed time. For example:
   REPORT    /path/outside/repository/codex-security-results/report.md
 
   FINDINGS  2 (2 confirmed this scan; 0 previously found; 1 high, 1 medium)
+  SCOPE     repository: .
   ELAPSED   42s
   RESULTS   /path/outside/repository/codex-security-results
 ```
@@ -5607,17 +5742,13 @@ machine-readable stdout, add `--json`. To make findings fail a CI check, set a
 
 #### Review the results
 
-Open `report.md` from the reported directory. Confirm the target and revision,
-then read the coverage before reviewing individual findings.
-
-Check `scan.status` in `scan-manifest.json` to confirm that the scan completed.
-Review `coverage.json` for reviewed surfaces, excluded paths, deferred work,
-and open questions.
+Open `report.md` from the results directory. Confirm the target and revision,
+then review the findings. For the recorded status and scope, look at
+`scan.status` and `scan.scope` in `scan-manifest.json`.
 
 A completed scan exits with `0` unless findings meet a configured severity
-threshold, which returns `1`. Coverage gaps don't change the exit code, so
-exit `0` doesn't mean every file was reviewed. Input, execution, result-integrity,
-or required-output failures return `2`. The
+threshold, which returns `1`. Exit `0` doesn't establish that every file was
+reviewed. Input, execution, result-integrity, or required-output failures return `2`. The
 [CLI reference](https://learn.chatgpt.com/docs/security/cli/reference#exit-codes-and-signals) explains
 the exit codes.
 
@@ -5627,9 +5758,23 @@ include a successful runtime reproduction. Select a finding for remediation
 only after its evidence supports the claimed issue.
 
 Keep the scan directory together when sharing or archiving it. It contains
-`scan-manifest.json`, `findings.json`, and `coverage.json` alongside the report
+`scan-manifest.json` and `findings.json` alongside the report
 and supporting artifacts. See [Scan
 artifacts](https://learn.chatgpt.com/docs/security/cli/reference#scan-artifacts) for the full layout.
+
+#### Export the saved threat model
+
+Standard, Deep, and Diff scans save their threat model with the results.
+Export it as Markdown without signing in or making another model call:
+
+```bash
+npx @openai/codex-security export "$SCAN_DIR" \
+  --artifact threat-model --output "$SCAN_DIR/exports/threatmodel.md"
+```
+
+If no threat model was saved, `export` returns an error. See the [export
+reference](https://learn.chatgpt.com/docs/security/cli/reference#codex-security-export) to select saved
+scans and other output formats.
 
 #### Revisit a saved scan
 
@@ -5655,6 +5800,8 @@ commands](https://learn.chatgpt.com/docs/security/cli/reference#codex-security-v
 | Goal                                             | Guide                                                                                    |
 | ------------------------------------------------ | ---------------------------------------------------------------------------------------- |
 | Scan selected paths or a diff                    | [Select the scan target](https://learn.chatgpt.com/docs/security/cli/reference#select-the-scan-target)           |
+| Scan components of one repository in parallel    | [Component scans](https://learn.chatgpt.com/docs/security/cli/reference#codex-security-scan-components)          |
+| Use a test script to validate candidate findings | [Custom validation](https://learn.chatgpt.com/docs/security/cli/reference#validate-findings-in-your-environment) |
 | Use deep scans or limit their runtime            | [Configure deep scans](https://learn.chatgpt.com/docs/security/cli/reference#configure-deep-scans)               |
 | Supply architecture or security policies         | [Add security context](https://learn.chatgpt.com/docs/security/cli/reference#add-security-context)               |
 | Change the model or reasoning effort             | [Configure the runtime](https://learn.chatgpt.com/docs/security/cli/reference#configure-the-runtime)             |
@@ -5670,16 +5817,17 @@ feedback, see the [CLI FAQ](https://learn.chatgpt.com/docs/security/cli/faq).
 
 Source: [Codex Security CLI reference](https://learn.chatgpt.com/docs/security/cli/reference.md)
 
-Use this reference to check the supported `codex-security` commands, flags,
-output formats, and exit behavior. For a guided first scan, start with the
+Look up `codex-security` commands, flags, output formats, and exit behavior.
+For a first scan, follow the
 [CLI quickstart](https://learn.chatgpt.com/docs/security/cli).
 
-The `@openai/codex-security` package is public. Scans using OpenAI inference
-require Codex Security access. Scans use your local permissions and don't
-pause for approval. Before you start, review [Local scan
-permissions](#local-scan-permissions).
+Scans use your local permissions and don't pause for approval. Some
+cybersecurity requests and protected findings require
+[Trusted Access for Cyber](https://chatgpt.com/cyber)
+. See [Local scan permissions](#local-scan-permissions).
 
-Run the CLI with `npx @openai/codex-security`.
+Run the CLI with `npx @openai/codex-security`. The installed package also
+provides the `cs` alias.
 
 #### Command overview
 
@@ -5689,20 +5837,30 @@ usage: codex-security [--version] <command> [options]
 
 The CLI provides these commands:
 
-| Command                       | Purpose                                               |
-| ----------------------------- | ----------------------------------------------------- |
-| `codex-security scan`         | Run a Codex Security scan.                            |
-| `codex-security install-hook` | Install a Git pre-commit security scan.               |
-| `codex-security bulk-scan`    | Discover repositories and run resumable bulk scans.   |
-| `codex-security scans`        | List, inspect, compare, and retrieve saved scan logs. |
-| `codex-security findings`     | Review and update saved security findings.            |
-| `codex-security export`       | Export completed findings as CSV, JSON, or SARIF.     |
-| `codex-security publish`      | Publish completed scan findings to Linear.            |
-| `codex-security validate`     | Check one or more candidate security findings.        |
-| `codex-security patch`        | Patch one or more security issues.                    |
-| `codex-security login`        | Sign in, store credentials, or check sign-in status.  |
-| `codex-security logout`       | Remove the stored sign-in.                            |
-| `codex-security info`         | Show read-only SDK and bundled-plugin metadata.       |
+| Command                            | Purpose                                                             |
+| ---------------------------------- | ------------------------------------------------------------------- |
+| `codex-security scan`              | Run a Codex Security scan.                                          |
+| `codex-security scan import`       | [Save CSV or JSON findings as a scan](#codex-security-scan-import). |
+| `codex-security import github`     | [Read GitHub code scanning alerts](#codex-security-import-github).  |
+| `codex-security policy`            | Draft or update a repository security policy.                       |
+| `codex-security init`              | Create a YAML or JSON project configuration.                        |
+| `codex-security install-hook`      | Install a Git pre-commit security scan.                             |
+| `codex-security bulk-scan`         | Discover repositories and run resumable bulk scans.                 |
+| `codex-security scan-components`   | Run separate scans for project components.                          |
+| `codex-security scans`             | List, inspect, compare, and retrieve saved scan logs.               |
+| `codex-security findings`          | Review and update saved security findings.                          |
+| `codex-security export`            | Export findings or a retained threat model.                         |
+| `codex-security publish`           | Publish findings to Linear or a custom findings service.            |
+| `codex-security classify-severity` | Apply a severity rubric to saved findings.                          |
+| `codex-security suggest-owners`    | Suggest finding owners using CODEOWNERS and Git history.            |
+| `codex-security dedupe`            | Deduplicate saved findings.                                         |
+| `codex-security validate`          | Check one or more candidate security findings.                      |
+| `codex-security patch`             | Patch one or more security issues.                                  |
+| `codex-security verify-fix`        | Check whether reported issues are fixed.                            |
+| `codex-security feedback`          | Send feedback to OpenAI and return a feedback ID.                   |
+| `codex-security login`             | Sign in, store credentials, or check sign-in status.                |
+| `codex-security logout`            | Remove the stored sign-in.                                          |
+| `codex-security info`              | Show read-only SDK and bundled-plugin metadata.                     |
 
 The CLI also provides these integration commands:
 
@@ -5727,6 +5885,7 @@ npx @openai/codex-security scan --help
 `codex-security --version` prints the installed version and exits.
 `codex-security info --json` reports the SDK and bundled-plugin versions.
 Neither command requires Python.
+Use `codex-security --update` to update the installed CLI.
 
 #### Discover commands and connect agents
 
@@ -5750,10 +5909,10 @@ npx @openai/codex-security completions bash
 
 Replace `bash` with `zsh` or `fish` for those shells.
 
-Scan results support `--format toon|json|yaml|jsonl` and `--full-output`. This
-framework-level `--format` is separate from `--export-format`, which selects
-the format of an artifact exported from a completed scan. Global command help
-also lists `md`, but scan results don't support Markdown output.
+Scan results support `--format toon|json|yaml|jsonl` and `--full-output`.
+`--export-format` instead selects the format of an artifact exported from a
+completed scan. Global command help also lists `md`, but scan results don't
+support Markdown output.
 
 Register the CLI as an MCP server:
 
@@ -5767,8 +5926,9 @@ Sync Codex Security skills to your agents:
 npx @openai/codex-security skills add
 ```
 
-MCP exposes only the read-only `info` metadata command. Scans, exports,
-authentication, validation, and patching remain CLI-only.
+The CLI exposes only the read-only `info` metadata command through its MCP
+server. Scans, exports, publication, authentication, validation, and patching
+remain CLI-only.
 
 #### `codex-security scan`
 
@@ -5777,28 +5937,53 @@ working tree.
 
 ```text
 usage: codex-security scan [-h] [--auth {auto,chatgpt,api-key}]
+                           [--config FILE]
+                           [--cyber-access-program PROGRAM]
                            [--provider {openai,openrouter,fireworks,amazon-bedrock}]
                            [--path PATH | --diff BASE | --working-tree]
                            [--head HEAD] [--base BASE]
                            [--knowledge-base PATH] [--scan-prompt-file FILE]
+                           [--validation-prompt-file FILE]
                            [--post-scan-prompt-file FILE]
                            [--mode {standard,deep}] [--workers N]
                            [--subagents N] [--stop-after-no-new N]
-                           [--max-discovery-runs N] [--max-time-hours HOURS]
+                           [--max-discovery-runs N] [--max-time MINUTES]
                            [--model MODEL]
-                           [--effort {minimal,low,medium,high,xhigh,max}]
+                           [--effort EFFORT]
                            [--output-dir DIR]
                            [--archive-existing]
                            [--plugin-path PATH] [--python PATH]
                            [--codex KEY=VALUE] [--fail-on-severity LEVEL]
-                           [--patch] [--patch-severity {critical,high,medium,low}]
+                           [--validate] [--patch] [--patch-severity {critical,high,medium,low}]
                            [--create-pr]
-                           [--max-cost USD] [--dry-run] [--headless] [--verbose]
+                           [--max-cost USD] [--show-cost] [--dry-run] [--mock]
+                           [--workflow-id ID] [--safety-identifier ID]
+                           [--headless] [--verbose]
                            [--json] [--format {toon,json,yaml,jsonl}]
                            [--full-output] [repository]
 ```
 
 `repository` defaults to the current directory.
+
+#### Load project configuration
+
+Create a starter configuration and select it explicitly:
+
+```bash
+npx @openai/codex-security init codex-security.yaml
+npx @openai/codex-security scan . --config codex-security.yaml
+```
+
+`init` doesn't overwrite an existing file. Use `-c FILE` as a shorter form of
+`--config FILE`, or set `CODEX_SECURITY_PROJECT_CONFIG`. An explicit flag takes
+precedence over the environment variable. The CLI doesn't discover a project
+file automatically.
+
+Select only configuration you control. It has the same authority as CLI
+options: native Codex settings can start MCP server processes and choose model
+service destinations. Don't select a file controlled by an untrusted repository
+or pull request. In CI, keep scanner configuration outside the checkout being
+assessed. See the [project configuration guide](https://github.com/openai/codex-security/blob/main/docs/project-configuration.md) for settings and precedence.
 
 #### Select scan authentication
 
@@ -5822,6 +6007,23 @@ npx @openai/codex-security scan . --auth api-key
 
 To make stored credentials the automatic default, run
 `unset OPENAI_API_KEY CODEX_API_KEY`.
+
+Use `--auth api-key` with
+`--cyber-access-program standard|daybreak_blue|daybreak_red` to select a
+Cyber access program for OpenAI model requests. Omission preserves Codex
+defaults; `standard` explicitly selects the standard program.
+Selecting a program doesn't grant access; your API project must be approved
+for the selected program. See the [access-program guide](https://github.com/openai/codex-security/blob/main/sdk/typescript/docs/cli.md#select-a-cyber-access-program) for credential requirements.
+
+#### Attribute scans to end users
+
+When scanning on behalf of users, `--safety-identifier ID` accepts a stable,
+hashed identifier with API-key authentication. Use 1–64 characters without NUL
+or personal data such as email addresses.
+
+To forward the identifier, use `CODEX_CLI_PATH` to select a Codex build that
+supports this option and a plugin that passes it to workers. The bundled Codex
+runtime doesn't support it.
 
 #### Use OpenRouter or Fireworks
 
@@ -5899,28 +6101,19 @@ Set credentials and `AWS_REGION` in the same shell or CI job as the scan.
 #### Local results and access checks
 
 Saved local reports, `scans show`, and `export` work without cloud credentials.
-Uploading findings to Codex Security Cloud requires a separate ChatGPT
-sign-in and access to the destination.
 
 `info` and `scan --dry-run` don't test AWS credentials or model access. Run a
 scan to check access. For AWS authentication or access-denied errors, check
 your credentials, region, and model permissions.
 
-#### Bedrock release status
+#### Bedrock cost estimates
 
-`@openai/codex-security@0.1.31` supports Amazon Bedrock scans. This version
-doesn't provide cost estimates or support `--max-cost` for the Daybreak Blue
-and Daybreak Red model IDs above.
-
-Check your installed package and bundled Codex versions:
-
-```bash
-npx @openai/codex-security --version
-npx @openai/codex-security info --json
-```
-
-Use `npx @openai/codex-security scan --help` to check the options available
-in your installed version.
+The CLI supports cost estimates and `--max-cost` for the Daybreak Blue and
+Daybreak Red model IDs above. Estimates use AWS Standard
+commercial in-region prices, including the AWS fee. The cost limit uses
+`estimatedUsd`, the short-context baseline. Requests already in progress can
+put this estimate above the limit. Long-context pricing can raise the reported
+`estimatedUsdRange` above it. This limit is not a billing cap.
 
 #### Select the scan target
 
@@ -5974,22 +6167,17 @@ npx @openai/codex-security scan . --mode deep
 
 #### Configure deep scans
 
-Use these options with `--mode deep` to control worker concurrency and runtime:
+Use these options with `--mode deep` to control discovery:
 
-| Argument                 | Description                                                                            |
-| ------------------------ | -------------------------------------------------------------------------------------- |
-| `--workers N`            | Limit on concurrent independent standard-scan workers. Defaults to `4`.                |
-| `--subagents N`          | Subagents available to each worker. Defaults to `3`.                                   |
-| `--stop-after-no-new N`  | Stop after `N` consecutive completed worker scans find no new issues. Defaults to `4`. |
-| `--max-discovery-runs N` | Limit on total independent standard-scan runs. Defaults to `40`.                       |
-| `--max-time-hours HOURS` | Worker execution time limit in hours. Defaults to `96`; accepts fractions.             |
+| Argument                 | Description                                                                                           |
+| ------------------------ | ----------------------------------------------------------------------------------------------------- |
+| `--workers N`            | Limit on concurrent independent standard-scan workers. Defaults to `4`.                               |
+| `--subagents N`          | Subagents available to each worker. Defaults to `3`. Use `0` to disable them.                         |
+| `--stop-after-no-new N`  | Stop after `N` consecutive completed worker scans find no new issues. Defaults to `4`.                |
+| `--max-discovery-runs N` | Limit on total independent standard-scan runs. Defaults to `40`.                                      |
+| `--max-time MINUTES`     | Discovery time limit. Accepts positive fractional minutes. The default and maximum are 5,760 minutes. |
 
-`--subagents` accepts zero or a positive integer. `--max-time-hours` accepts a
-positive number no greater than `96`. The remaining options require a positive
-integer. These options aren't available for standard scans.
-
-For example, use two workers, allow up to ten runs, and stop worker execution
-after 1.5 hours:
+For example, use two workers, allow up to ten runs, and stop discovery after 90 minutes:
 
 ```bash
 npx @openai/codex-security scan . \
@@ -5998,30 +6186,32 @@ npx @openai/codex-security scan . \
   --subagents 0 \
   --stop-after-no-new 3 \
   --max-discovery-runs 10 \
-  --max-time-hours 1.5
+  --max-time 90
 ```
 
-When the time limit expires, the scan stops unfinished workers, keeps completed
-scan results, and aggregates them into the final report. Check the report for
-reviewed areas and deferred work. The deadline alone doesn't determine the exit
-code; execution status and the severity policy do.
+When the time limit expires, the scan stops unfinished workers and combines
+completed findings in its report. For a standard scan, `--max-time` sets an
+advisory investigation time. Reporting can finish later. Custom validation
+and post-scan instructions run outside that allowance.
 
-Set persistent defaults in `~/.codex/codex-security/config.toml`, or in
-`$CODEX_HOME/codex-security/config.toml` when you set `CODEX_HOME`:
+To reuse these limits, save them in a
+[project configuration file](#load-project-configuration):
 
-```toml
-[deep_scan]
-workers = 2
-subagents = 0
-stop_after_no_new = 3
-max_discovery_runs = 10
-max_time_hours = 1.5
+```yaml
+scan:
+  mode: deep
+  max_time_minutes: 90
+  deep:
+    workers: 2
+    subagents_per_worker: 0
+    stop_after_no_new: 3
+    max_discovery_runs: 10
 ```
 
-Command-line options override these defaults. `scan --workers` controls
-independent standard-scan workers within one deep scan; `bulk-scan --workers`
-controls concurrent repository scans. Set `stop_after_consecutive_errors` only
-in the TOML file; its default is `3`.
+Command-line options override the project configuration. Use
+`scan.deep.stop_after_consecutive_errors` to change how many consecutive worker
+errors stop discovery. The default is `3`. For `bulk-scan`, `--workers`
+controls concurrent repository scans.
 
 #### Add security context
 
@@ -6034,17 +6224,19 @@ npx @openai/codex-security scan . \
   --knowledge-base /path/to/security-policies
 ```
 
-Supported documents include `.md`, `.markdown`, `.txt`, `.pdf`, and `.docx`
-files. The CLI searches directories recursively, rejects linked input paths,
-skips linked directory entries, and keeps extracted document content
-outside the saved scan results.
+Supported documents include UTF-8 text files (including JSON and SARIF), PDF,
+and DOCX files. The CLI searches directories recursively, rejects linked input
+paths, and skips linked directory entries. It saves extracted documents in the
+private `.scan-knowledge.json` continuation file beside the scan artifacts to
+support resuming the scan. Preserve this file with the scan directory.
+Canonical reports don't include the document text.
 
 #### Add scan instructions
 
 To add scan instructions, provide a text or Markdown file with
 `--scan-prompt-file`. Use `--post-scan-prompt-file` to run follow-up
-instructions in the same authenticated session after successful scans and
-scan errors:
+instructions in the same authenticated session after scans that succeed or
+return errors:
 
 ```bash
 npx @openai/codex-security scan . \
@@ -6056,7 +6248,38 @@ For example, use the scan prompt to focus on authorization boundaries and ask
 the follow-up to write a new `post-scan-summary.md` in the scan directory.
 If the follow-up fails, the CLI reports a warning and keeps the completed scan.
 The follow-up doesn't run after cancellation or when the scan reaches its cost
-limit.
+limit. When it runs, the follow-up is outside scan cost tracking and `--max-cost`.
+
+#### Validate findings in your environment
+
+Use `--validation-prompt-file FILE` to replace the final validation step with
+your own test procedure. Codex reviews the source first and skips validation if
+it finds no candidates. Keep the prompt and test script in a directory you
+control outside the checkout:
+
+```bash
+npx @openai/codex-security scan . \
+  --validation-prompt-file /path/to/security-tests/validation.md
+```
+
+For example, if your local test server is running, put these instructions in
+`validation.md`:
+
+```text
+Run /path/to/security-tests/validate.sh against http://localhost:3000.
+Report which findings reproduce and include the relevant test output.
+```
+
+Use this flag with standard repository, path, diff, or working-tree scans. For
+standard component scans, set `scan.validation_file` in the
+[project configuration](#load-project-configuration). Deep scans reject custom validation.
+
+Add `--validate` to a new scan command for a separate source-only assessment
+of each reported finding. If the scan reports findings, the CLI writes the
+assessments to a report in the scan directory. They don't change the findings
+or severity-policy decision. You can't combine `--validate` with `--dry-run`,
+`--mock`, or a scan cost limit set on the command line or in the project
+configuration.
 
 #### Set output and policy options
 
@@ -6070,17 +6293,28 @@ machine-readable result.
 | `--fail-on-severity LEVEL` | Return exit `1` when a completed scan reports a finding at or above `critical`, `high`, `medium`, or `low`.                  |
 | `--patch`                  | Fix and verify selected findings after a complete scan.                                                                      |
 | `--patch-severity LEVEL`   | Patch findings at or above `critical`, `high`, `medium`, or `low`. Defaults to `low`.                                        |
-| `--create-pr`              | Commit verified patch files and open a GitHub pull request. Requires `--patch`.                                              |
+| `--create-pr`              | Commit verified patch files and open a draft GitHub pull request or GitLab merge request. Requires `--patch`.                |
 | `--max-cost USD`           | Stop a scan when its estimated model cost exceeds the specified USD amount.                                                  |
+| `--show-cost`              | Show estimated cost in progress and completion output.                                                                       |
+| `--mock`                   | Save synthetic Standard scan findings without calling a model.                                                               |
+| `--workflow-id ID`         | Reuse completed work in the named local findings workflow.                                                                   |
 | `--dry-run`                | Check the repository, target, knowledge base, output directory, and Codex configuration without starting a scan.             |
 | `--headless`               | Show plain-text progress instead of the interactive scan dashboard.                                                          |
-| `--verbose`                | Print redacted lifecycle, authentication, progress, and cost diagnostics to stderr.                                          |
-| `--json`                   | Print manifest, findings, coverage, paths, and turn metadata as one JSON document.                                           |
+| `--verbose`                | Print additional lifecycle, authentication, progress, and cost diagnostics to stderr.                                        |
+| `--json`                   | Print the manifest, findings, review exclusions, paths, and turn metadata as one JSON document.                              |
 | `--format FORMAT`          | Print the complete scan result as `toon`, `json`, `yaml`, or `jsonl`.                                                        |
 | `--full-output`            | Print the complete result using the default structured output format.                                                        |
 
-The cost limit is an estimate, not a hard spending cap. Requests already in
-progress can finish slightly above the limit. If a deep scan reaches the limit
+Mock mode supports Standard repository, path, and diff scans. You can't combine
+it with `--dry-run`, `--patch`, Deep mode, custom validation, or post-scan prompts.
+Scan prompts and knowledge bases don't change its synthetic findings. Use a
+separate `CODEX_SECURITY_STATE_DIR` to keep mock results out of your scan history.
+
+The cost limit uses `estimatedUsd`, the short-context baseline. Requests already
+in progress can put this estimate above the limit. Long-context pricing can
+raise `estimatedUsdRange` above it. This limit is not a billing cap.
+
+If a deep scan reaches the limit
 after Codex Security aggregates completed worker results, the CLI can seal a
 completed result and report the budget warning. It returns `0`, or `1` if
 findings meet the configured severity threshold. If it can't produce a valid
@@ -6098,10 +6332,8 @@ The workbench keeps scan history in
 `CODEX_SECURITY_STATE_DIR` also moves the workbench database.
 
 The output directory must be outside the scanned directory and any enclosing
-Git worktree. A scan can replace an existing result directory with
-`--archive-existing`.
-
-To preserve earlier results before reusing an output directory:
+Git worktree. Use `--archive-existing` to preserve earlier results before reusing
+an output directory:
 
 ```bash
 npx @openai/codex-security scan . \
@@ -6133,22 +6365,31 @@ npx @openai/codex-security scan . \
 
 #### Configure the runtime
 
-Use runtime options when you need an explicit model, interpreter, plugin, or
-Codex configuration value.
+Use runtime options to select a model, interpreter, plugin, or Codex
+configuration value.
 
-| Argument                                                  | Description                                                                                              |
-| --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `--auth {auto,chatgpt,api-key}`                           | Select the scan credentials. The default is `auto`.                                                      |
-| `--provider {openai,openrouter,fireworks,amazon-bedrock}` | Select the inference provider. The default is `openai`.                                                  |
-| `--model MODEL`                                           | Select the model. The default is `gpt-5.6-sol`. Required for OpenRouter, Fireworks, and Amazon Bedrock.  |
-| `--effort {minimal,low,medium,high,xhigh,max}`            | Select the model's reasoning effort. The default is `xhigh`.                                             |
-| `--plugin-path PATH`                                      | Use a Codex Security plugin directory or ZIP to override the bundled plugin.                             |
-| `--python PATH`                                           | Select the Python interpreter for the plugin runtime.                                                    |
-| `--codex KEY=VALUE`                                       | Override an isolated Codex configuration value. Values use TOML syntax. Repeat the flag for more values. |
+| Argument                                                  | Description                                                                                                     |
+| --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `--auth {auto,chatgpt,api-key}`                           | Select the scan credentials. The default is `auto`.                                                             |
+| `--provider {openai,openrouter,fireworks,amazon-bedrock}` | Select the inference provider. The default is `openai`.                                                         |
+| `--model MODEL`                                           | Select the model. The default is `gpt-5.6-sol`. Required for OpenRouter, Fireworks, and Amazon Bedrock.         |
+| `--effort EFFORT`                                         | Select the model's reasoning effort. The default is `xhigh`; supported values depend on the model and provider. |
+| `--plugin-path PATH`                                      | Use a Codex Security plugin directory or ZIP to override the bundled plugin.                                    |
+| `--python PATH`                                           | Select the Python interpreter for the plugin runtime.                                                           |
+| `--codex KEY=VALUE`                                       | Override an isolated Codex configuration value. Values use TOML syntax. Repeat the flag for more values.        |
 
-To select a different model and reasoning effort without writing TOML, choose a
-model your credentials can access. If you use ChatGPT sign-in, check [GPT-6.1
-Sol availability](https://learn.chatgpt.com/docs/models#gpt-6.1-sol) before using these examples:
+Codex Security accepts model IDs and reasoning-effort values as strings.
+Supported combinations depend on the model, provider, Codex version, and your
+credentials.
+
+If the scan's isolated Codex configuration selects a profile, that profile's
+`model` and `model_reasoning_effort` values take precedence over `--model` and
+`--effort`. Your normal Codex configuration isn't loaded.
+Add `--dry-run --verbose` to your scan command to inspect the resolved model
+and effort before starting a scan.
+
+To choose a model and reasoning effort, select a [Codex model](https://learn.chatgpt.com/docs/models)
+available to your account:
 
 ```bash
 npx @openai/codex-security scan . --model gpt-6.1-sol --effort medium
@@ -6161,30 +6402,188 @@ string:
 npx @openai/codex-security scan . --codex 'model="gpt-6.1-sol"'
 ```
 
-#### `codex-security install-hook`
+Model and effort values pass through to Codex unchanged. Unsupported
+combinations return Codex or provider errors without substituting another
+model or effort.
 
-Install a Git pre-commit security check for the current repository:
+#### `codex-security scan import`
+
+Save existing findings as a completed scan in local history without running
+security analysis or making model calls. Import doesn't require model
+authentication.
+
+```text
+usage: codex-security scan import (--csv FILE | --json FILE)
+                                  [--output-dir DIR] [--archive-existing]
+                                  [--dry-run] [--format json]
+```
+
+Supply exactly one input. CSV uses the Codex Security export columns. JSON
+accepts a complete `codex-security.findings` document or an object containing
+a `findings` array that matches the findings schema. Arbitrary scanner JSON
+and raw GitHub alert arrays aren't accepted as saved findings.
+
+Save this synthetic example as `findings.csv`:
+
+```csv
+occurrence_id,finding_id,title,summary,severity,confidence,status,close_reason,note,remediation,path,start_line,end_line
+occ_000000000000000000000001,csf_000000000000000000000001,Missing authorization check,The route reads a record without checking ownership,high,high,open,,,Check record ownership before returning data,src/routes.ts,18,18
+```
+
+Validate the file, then import it:
 
 ```bash
-npx @openai/codex-security install-hook
+npx @openai/codex-security scan import --csv findings.csv --dry-run --format json
+npx @openai/codex-security scan import --csv findings.csv --format json
+```
+
+The dry run reports `dryRun: true` and `findingCount: 1` without saving a scan.
+The import returns the saved scan ID and result paths. To import JSON instead:
+
+```bash
+npx @openai/codex-security scan import --json findings.json --format json
+```
+
+For this command, `--json FILE` selects the input file. Use `--format json` for
+JSON output.
+
+| Option               | Behavior                                                                        |
+| -------------------- | ------------------------------------------------------------------------------- |
+| `--csv FILE`         | Read findings in the Codex Security CSV export format.                          |
+| `--json FILE`        | Read a findings document or an object with a `findings` array.                  |
+| `--dry-run`          | Validate the input without saving a scan.                                       |
+| `--output-dir DIR`   | Choose the artifact directory. The default is persistent Codex Security state.  |
+| `--archive-existing` | Archive existing results before importing. This option requires `--output-dir`. |
+
+Use a regular input file with no symbolic links or directory junctions in its
+path. Each import preserves finding occurrences, including duplicates, and
+retains the input under `artifacts/import/`. Original identifiers are stored in
+`extensions.import`. Completion means the import finished; it doesn't mean the
+source was reviewed. `scans rerun SCAN_ID` imports the retained input again.
+
+To scan a repository named `import`, use `scan ./import`.
+
+#### `codex-security import github`
+
+Read GitHub code scanning alerts without changing GitHub or checking out code:
+
+```bash
+npx @openai/codex-security import github example/repository --format json > /path/outside/repository/alerts.json
+npx @openai/codex-security import github example/repository \
+  --github-alert 12 --github-alert 18 --format json
+```
+
+Replace `example/repository` with your repository. Authenticate with GitHub
+CLI credentials that have code-scanning read access. By default, import reads
+open alerts from the default branch, including third-party SARIF uploads.
+
+| Option                  | Behavior                                                                          |
+| ----------------------- | --------------------------------------------------------------------------------- |
+| `--github-alert NUMBER` | Select an exact alert regardless of state; repeat for multiple alerts.            |
+| `--github-ref REF`      | Select a Git reference instead of the default branch.                             |
+| `--github-state STATE`  | List `open`, `closed`, `dismissed`, `fixed`, or `all` alerts; defaults to `open`. |
+
+Don't combine exact alert numbers with a state other than `open`. The command returns
+an array of upstream alerts, not a saved scan. From the corresponding local
+repository, run
+`codex-security validate /path/outside/repository/alerts.json` to assess them.
+Keep the full JSON without output filters or token limits when saving
+validation inputs. Use [`scan import`](#codex-security-scan-import) for
+findings already in the Codex Security schema.
+
+#### `codex-security install-hook`
+
+Install the CLI outside the repository, inspect the repository's existing
+pre-commit hook, and run the installed CLI from outside the checkout:
+
+```bash
+git -C /path/to/repository rev-parse --git-path hooks/pre-commit
+codex-security install-hook /path/to/repository
 ```
 
 The check scans staged and unstaged changes before each commit and blocks
-high-severity findings or scan errors. It respects `core.hooksPath` and does
-not replace an existing pre-commit script. Set a different severity threshold
-when needed:
+commits on high or critical findings or scan errors. Local hooks are optional;
+use a required CI check for enforcement. Leave custom, linked, or shared hooks
+and hook directories to their owner. The installer doesn't replace an unrelated
+pre-commit script. Set a different severity threshold when needed:
 
 ```bash
-npx @openai/codex-security install-hook . --fail-on-severity medium
+codex-security install-hook /path/to/repository --fail-on-severity medium
 ```
+
+#### `codex-security policy`
+
+Draft a `SECURITY.md` policy that describes project security boundaries and
+what should count as a finding:
+
+```bash
+npx @openai/codex-security policy .
+npx @openai/codex-security policy . --headless --json
+```
+
+The command saves a draft outside the repository and leaves existing files
+unchanged. Review the draft, diff, and review notes, then copy only the reviewed
+`SECURITY.md` to the displayed policy target. In headless mode, unanswered
+questions remain in the review notes. Policy generation is optional; scans
+can use an existing policy or run without one. See the [policy guide](https://github.com/openai/codex-security/blob/main/sdk/typescript/docs/cli.md#generate-a-security-policy) for path scopes and options.
+
+#### `codex-security scan-components`
+
+Use `scan-components` to scan services or packages in one repository separately.
+Each run, including a plan-only run, needs a new or empty output directory
+outside the enclosing Git worktree. Set it with `--output-dir` or with
+`output.directory` in the project configuration.
+
+For example, scan two services in parallel:
+
+```bash
+npx @openai/codex-security scan-components . \
+  --component apps/api --component apps/web \
+  --output-dir /path/outside/repository/manual-components
+```
+
+Unlike `scan --path`, this command produces a scan per component, then combines
+and matches the findings. By default, four component scans can run at once.
+Set `--workers N` to change that limit. `--max-cost USD` limits each component
+scan. It excludes automatic planning and cross-component matching.
+
+To have Codex propose a split, save a plan for review before scanning:
+
+```bash
+npx @openai/codex-security scan-components . --auto --plan-only \
+  --output-dir /path/outside/repository/component-plan
+```
+
+Review the component names and paths in `components.json`, then run the saved
+plan in a new output directory:
+
+```bash
+npx @openai/codex-security scan-components . \
+  --components-file /path/outside/repository/component-plan/components.json \
+  --output-dir /path/outside/repository/components
+```
+
+Open `report.md` in the output directory to review the combined findings. If
+a component fails, use the saved retry plan to rerun only the failed components:
+
+```bash
+npx @openai/codex-security scan-components . \
+  --components-file /path/outside/repository/components/retry-components.json \
+  --output-dir /path/outside/repository/retry-results
+```
+
+The retry report covers only the retried components. Keep the original report
+to review findings from components that completed on the first run.
+
+Failed scans or matching failures return `2`. Severity-policy violations return `1`. See the [component scan guide](https://github.com/openai/codex-security/blob/main/sdk/typescript/docs/cli.md#scan-project-components) for plan syntax and retries.
 
 #### `codex-security bulk-scan`
 
 Discover and scan GitHub repositories, or run a resumable scan from a
 repository CSV.
 
-For a complete guide to GitHub discovery, CSV inventories, campaign results,
-and containerized scans, see [Run bulk security
+For GitHub discovery, CSV inventories, campaign results, and containerized
+scans, see [Run bulk security
 scans](https://learn.chatgpt.com/docs/security/cli/bulk-scans).
 
 ```text
@@ -6192,7 +6591,7 @@ usage: codex-security bulk-scan [input] [--output-dir DIR]
                                 [--workers N] [--mode {standard,deep}]
                                 [--provider {openai,openrouter,fireworks,amazon-bedrock}]
                                 [--model MODEL]
-                                [--effort {minimal,low,medium,high,xhigh,max}]
+                                [--effort EFFORT]
                                 [--knowledge-base PATH]
                                 [--scan-prompt-file FILE]
                                 [--post-scan-prompt-file FILE]
@@ -6203,9 +6602,8 @@ usage: codex-security bulk-scan [input] [--output-dir DIR]
 Run `npx @openai/codex-security bulk-scan` without arguments to select
 repositories interactively. This flow requires a GitHub CLI sign-in.
 
-To choose a model and reasoning effort during interactive discovery, use a model
-your credentials can access. See [GPT-6.1 Sol availability with ChatGPT
-sign-in](https://learn.chatgpt.com/docs/models#gpt-6.1-sol):
+For interactive discovery, select a [Codex model](https://learn.chatgpt.com/docs/models) available
+to your account:
 
 ```bash
 npx @openai/codex-security bulk-scan --model gpt-6.1-sol --effort medium
@@ -6232,17 +6630,18 @@ Use `--knowledge-base PATH` to share security documents across every
 repository. Use `--scan-prompt-file FILE` to add shared scan instructions; the
 CSV `prompt` column adds repository-specific instructions after that shared
 prompt. `--post-scan-prompt-file FILE` runs follow-up instructions after each
-scan, including scan errors. It doesn't run after
+scan, including scans that return errors. It doesn't run after
 cancellation or when a scan reaches its cost limit.
 
 `--workers` limits simultaneous repository scans and defaults to `4`. `--mode`
 defaults to `standard`, and `--max-attempts` defaults to `1`. Set
-`--max-attempts` to retry repository or scan errors. Completed scans aren't
-retried because of coverage gaps or severity-policy violations. Their results
-remain available.
+`--max-attempts` to retry repository or scan errors. Exclusions and follow-up
+notes don't trigger retries of completed scans. Remaining execution failures
+return `2`; completed severity-policy violations return `1`.
 
 Run the same command again to resume from an existing output directory. The CLI
-skips completed scans, including scans with coverage gaps.
+skips completed scans. Use `--recover` to retry failed or interrupted attempts
+in a matching campaign.
 
 For containerized campaigns, see [Run bulk scans in
 Docker](https://learn.chatgpt.com/docs/security/cli/bulk-scans#run-bulk-scans-in-docker).
@@ -6279,15 +6678,20 @@ npx @openai/codex-security scans show SCAN_ID
 
 Add `--show-linked-findings` to include finding links from earlier scans.
 
-Rerun the scan against the current checkout using its original configuration:
+Rerun a saved scan:
 
 ```bash
 npx @openai/codex-security scans rerun SCAN_ID
 ```
 
-The rerun requires the plugin version recorded by the original scan. If the
-installed version differs, the command stops instead of running with a
-different plugin.
+A rerun creates a new scan using saved settings and authentication choice,
+the current checkout, and current context files. It doesn't reload project
+configuration files or reuse saved credentials. If the original used scan or
+custom-validation prompts, supply those files again with `--scan-prompt-file`
+and `--validation-prompt-file`.
+
+Reruns require the original scan's recorded plugin version and stop if the
+installed version differs.
 
 #### Inspect saved scan logs
 
@@ -6381,34 +6785,47 @@ doesn't suppress a rule, path, or vulnerability class.
 
 #### `codex-security export`
 
-Export CSV, JSON, or SARIF from a completed, sealed scan. Export validates the
-scan artifacts before writing output and leaves the Codex runtime and
-credentials untouched.
+Export saved findings or a threat model without starting Codex or loading
+credentials. You can export findings as CSV, JSON, SARIF, or a ServiceNow AVIT
+CSV only from a completed, sealed scan. Threat models use Markdown.
 
 ```text
-usage: codex-security export [--export-format {csv,json,sarif}]
+usage: codex-security export [scan_dir | --scan SCAN_ID]
+                             [--artifact {findings,threat-model}]
+                             [--export-format {csv,json,sarif,md,servicenow-avit}]
+                             [--avit-template FILE]
                              [--output FILE|-] [--source-root PATH]
-                             [--python PATH] scan_dir
+                             [--python PATH]
 ```
 
-`scan_dir` is the completed scan directory.
+Omit `scan_dir` and `--scan` to use the current repository's latest completed
+scan. Otherwise, provide a saved result directory or select a scan by ID or
+unique prefix of at least eight characters with `--scan`. You can't combine
+these selectors.
 
-| Argument                           | Description                                                                                 |
-| ---------------------------------- | ------------------------------------------------------------------------------------------- |
-| `--export-format {csv,json,sarif}` | Select the export format. The default is `sarif`.                                           |
-| `--output FILE\|-`                 | Write the selected format to a file or stdout. Defaults to a file in the current directory. |
-| `--source-root PATH`               | Add source-line fingerprints to SARIF using a repository checkout.                          |
-| `--python PATH`                    | Select the Python interpreter for the bundled exporter.                                     |
+| Argument                             | Description                                                                                                              |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| `--artifact {findings,threat-model}` | Select the saved artifact. The default is `findings`.                                                                    |
+| `--scan SCAN_ID`                     | Select a saved scan by ID, unique prefix of at least eight characters, or `latest`.                                      |
+| `--export-format FORMAT`             | Select `csv`, `json`, `sarif`, `md`, or `servicenow-avit`. Findings default to `sarif`; threat models support only `md`. |
+| `--avit-template FILE`               | Supply the CSV template that `servicenow-avit` requires. Only this format accepts it.                                    |
+| `--output FILE\|-`                   | Write the selected format to a file or stdout. Defaults to a file in the current directory.                              |
+| `--source-root PATH`                 | Add source-line fingerprints to SARIF using a repository checkout.                                                       |
+| `--python PATH`                      | Select the Python interpreter for the bundled exporter.                                                                  |
 
-`--source-root` works only with `--export-format sarif`. JSON preserves
+`--source-root` works only with SARIF findings exports. JSON preserves
 the sealed findings document. CSV contains portable finding columns and does
 not include local workbench triage state.
 
 Without `--output`, the CLI writes SARIF to `results.sarif`, JSON to
-`findings.json`, and CSV to `findings.csv` in the current working directory.
-Exports can contain source excerpts and vulnerability details. Run the command
-outside the repository or pass `--output` with a private path outside the
-scanned checkout.
+`findings.json`, CSV to `findings.csv`, ServiceNow AVIT CSV to
+`servicenow-avit.csv`, and Markdown to `threatmodel.md` in the current working
+directory.
+Exports can contain source excerpts and vulnerability details. Pass `--output`
+with a private path outside the checkout. When running outside the repository,
+also specify a result directory or `--scan`.
+
+#### Export findings
 
 Write SARIF to a file:
 
@@ -6444,9 +6861,63 @@ npx @openai/codex-security export /path/to/scan \
   --output /path/outside/repository/exports/findings.csv
 ```
 
+#### Export findings for ServiceNow
+
+ServiceNow requires the **Ethical Hacker** role (`sn_vul.app_pen_tester`).
+Open **All** > **Manual AVIT Ingestion** > **Upload File UI** and download the
+CSV template. Keep the original headers and exactly one data row.
+Use the exact ServiceNow application name. Fill in the purpose, sensitive data
+types, compliance programs, technology stack, application team, and URLs to test.
+Set **Requested by**, **Assigned to**, and **Assignment group**. Leave the
+finding fields blank. Save the template as `app.csv` in a private directory
+outside the scanned repository. Reuse it for scans of the same application.
+
+From the scanned repository, export the latest findings with that template.
+Keep the output in the private directory as well:
+
+```bash
+npx @openai/codex-security export --scan latest \
+  --export-format servicenow-avit \
+  --avit-template /path/outside/repository/exports/app.csv \
+  --output /path/outside/repository/exports/findings-avit.csv
+```
+
+The CLI writes one row per finding and fills **Steps to reproduce** from the
+recorded attack path when available. Review those steps and fill in any blanks
+in the exported CSV. Return to **Upload File UI**, select **Import File**,
+upload the CSV, and select **Submit**. Each upload creates a new penetration
+test form for the application.
+See the [ServiceNow upload instructions](https://www.servicenow.com/docs/r/security-management/application-vulnerability-response/ingest-vulnerabilities-manually-avr.html).
+
+#### Export a saved threat model
+
+Export the latest completed scan's saved threat model to stdout without making
+another model call:
+
+```bash
+npx @openai/codex-security export --artifact threat-model --output -
+```
+
+Or select a scan and save its model to a file:
+
+```bash
+npx @openai/codex-security export --scan SCAN_ID \
+  --artifact threat-model \
+  --output /path/outside/repository/exports/threatmodel.md
+```
+
+If you select a scan by ID or directory, you can also export a saved model
+from an unfinished or failed scan. If no model was saved, the command returns
+an error. Review any provisional or recovered content identified in the
+document before reusing it.
+
+To provide the exported model as context for another scan, pass its path to
+[`--knowledge-base`](#add-security-context).
+
 #### `codex-security publish scan`
 
-Publish every finding from a completed scan to Linear:
+Publish selected findings from a completed scan to Linear or a custom findings
+service. The following options describe Linear publication:
 
 ```text
 usage: codex-security publish scan [SCAN_DIR] --to linear
@@ -6462,6 +6933,12 @@ terminal to select a completed scan from local scan history. Creating issues
 also requires the scan and its findings to exist in local scan history. A dry
 run validates the sealed artifacts without this persistence check.
 
+Use `--scan SCAN_ID` or `--scan latest` instead of a directory to select a
+saved scan. Repeat `--finding-id ID` to select a subset for Linear. Use
+`publish check SCAN_DIR` with the Linear destination options to verify artifacts
+and recorded publications. With an API key, it also checks authentication and
+destination access; connected-app access is reported as `not-checked`.
+
 | Argument                             | Description                                                                                                                                                      |
 | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `--to linear`                        | Publish to Linear. This argument is required.                                                                                                                    |
@@ -6470,14 +6947,17 @@ run validates the sealed artifacts without this persistence check.
 | `--linear-api-key KEY`               | Use a Linear personal API key for direct publication. Uses `CODEX_SECURITY_LINEAR_API_KEY` when omitted.                                                         |
 | `--linear-assignee EMAIL_OR_USER_ID` | Assign created issues by email address or Linear user ID. Requires `--linear-api-key` or `CODEX_SECURITY_LINEAR_API_KEY`. Issues remain unassigned when omitted. |
 | `--dry-run`                          | Prepare issue payloads without starting Codex, contacting Linear, creating issues, or writing publication state.                                                 |
+| `--skip-existing`                    | Skip findings with a recorded successful publication for the same occurrence, Linear team, and project. Requires local history.                                  |
 | `--json`                             | Write structured publication results to stdout. Progress remains on stderr.                                                                                      |
 
 Linear issue descriptions and dry-run output can include source code snippets
 and vulnerability details. Check who can view the destination team or project
 before publishing.
 
-Each non-dry-run invocation attempts to create a new issue for every finding.
-Publishing the same scan again doesn't match, update, or reuse existing issues.
+Each non-dry-run invocation attempts to create a new issue for every selected
+finding unless `--skip-existing` finds a recorded success for that occurrence,
+team, and project. This option doesn't inspect remote issues or cover
+unrecorded or concurrent publication.
 If some findings fail, the command preserves successfully created issues and
 returns exit code `2`.
 With `--json`, review the `created` and `failed` results before retrying to
@@ -6525,9 +7005,57 @@ Command-line values override their matching environment variables. For API
 keys, prefer `CODEX_SECURITY_LINEAR_API_KEY` over `--linear-api-key` because
 command-line arguments can appear in shell history and process listings.
 
+#### Publish to a custom findings service
+
+For an existing findings service, select its URL explicitly:
+
+```bash
+npx @openai/codex-security publish scan --scan latest \
+  --to custom --findings-url http://localhost:3000
+```
+
+Publication sends the complete sealed findings and the repository target ID.
+Findings can include source excerpts, evidence, and vulnerability details. Use
+HTTPS for services outside your local machine, and add `--dry-run --json` to
+inspect the payload before sending it.
+
+The CLI doesn't send model credentials to a custom service. Handle any required
+authentication outside the CLI. See the [findings service guide](https://github.com/openai/codex-security/blob/main/sdk/typescript/docs/findings-service.md) for deployment and protocol details.
+
+#### Finding review commands
+
+These commands work with existing findings:
+
+| Command             | Example                                                                                | Behavior                                                                                                                                                                                    |
+| ------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `classify-severity` | `codex-security classify-severity --scan latest --rubric policy.md --json`             | Apply a rubric without repeating discovery or rewriting original findings. Omit `--rubric` to inherit an existing severity without model calls. Findings without severity require a rubric. |
+| `suggest-owners`    | `codex-security suggest-owners findings.json --source-root /path/to/repository --json` | Read committed source, CODEOWNERS, blame, and Git history to suggest owners. Doesn't assign tickets.                                                                                        |
+| `dedupe`            | `codex-security dedupe --scan SCAN_ID --json`                                          | Identify duplicate findings in local SQLite. Missing or stale embeddings require an embedding API key; fresh reviews require model access.                                                  |
+| `verify-fix`        | `codex-security verify-fix --scan SCAN_ID --json`                                      | Check existing fixes in a read-only sandbox. Accepts finding IDs, descriptions, and Linear selectors.                                                                                       |
+
+`verify-fix` returns `2` if any check is inconclusive or fails. Otherwise, it
+returns `1` if any finding remains vulnerable, or `0` if all findings are fixed.
+Use each command's `--help` for selectors, model settings, and output options.
+
+#### `codex-security feedback`
+
+Send a problem description to OpenAI and receive an ID to share with support:
+
+```bash
+npx @openai/codex-security feedback SCAN_ID \
+  --reason "The scan stopped before it finished" --json
+```
+
+Without a scan ID, the command selects the most recently started scan in the
+current repository, including active or failed scans, or sends a general
+report if none exists. Reports include the description, versions, and selected
+scan/session IDs. Logs are excluded by default. Add `--include-logs` only when
+you can share the included source, prompts, findings, and tool output with
+OpenAI.
+
 #### `codex-security validate` and `codex-security patch`
 
-Check whether a candidate finding is valid:
+Assess candidate findings against the current repository's source code:
 
 ```bash
 npx @openai/codex-security validate findings.json \
@@ -6542,9 +7070,28 @@ npx @openai/codex-security patch findings.json \
 ```
 
 Each positional argument accepts literal text or a file path. These inputs use
-the current directory. Use `validate` to recheck a finding after a fix or when a
-later scan no longer reports it. Comparing scans alone doesn't prove that a fix
-worked.
+the current directory. `validate` uses a read-only sandbox to assess source
+evidence. It doesn't build the target, execute application code, run tests or
+proofs of concept, or contact services. Standard, Deep, and diff scans retain
+their own validation workflows; `patch` still fixes and verifies findings.
+
+Use `validate` to reassess a finding after a fix or when a later scan no longer
+reports it. Comparing scans alone doesn't prove that a fix worked. For runtime
+evidence, run a separate reproduction step.
+
+The command prints its assessment to stdout without saving a report. Redirect
+stdout to retain it:
+
+```bash
+npx @openai/codex-security validate findings.json > /path/outside/repository/assessment.md
+```
+
+Add `--context TEXT`, `--context-file FILE`, or repeated `--knowledge-base PATH`
+options to supply security context. For structured output, use
+`--output-schema FILE` with a self-contained JSON Schema supported by your model
+and provider. The CLI checks the generated JSON against the schema before
+writing stdout. If the output is invalid, the CLI exits with `2` and writes no
+assessment. `validate` doesn't accept `--json`.
 
 Use `--effort` to select reasoning effort for either command:
 
@@ -6554,9 +7101,8 @@ npx @openai/codex-security validate "Possible SQL injection" --effort high
 
 #### Patch findings after a scan
 
-Use `scan --patch` to fix findings after a complete scan. This requires
-`@openai/codex-security` 0.1.15 or later. The default severity threshold is
-`low`. This command selects high and critical findings:
+Use `scan --patch` to fix findings after a completed scan. The default severity
+threshold is `low`. This command selects high and critical findings:
 
 ```bash
 npx @openai/codex-security scan . --patch --patch-severity high --json
@@ -6576,10 +7122,10 @@ npx @openai/codex-security patch --scan latest --severity medium
 ```
 
 `--scan latest` selects the latest completed scan for the current repository.
-Saved-finding commands support `--json`; literal-text and file inputs don't.
+`patch` supports `--json` for saved findings, literal text, and file inputs.
 
-Add `--create-pr` to commit only verified patch files and open a pull request
-with the GitHub CLI:
+Add `--create-pr` to commit only verified patch files and open a draft GitHub
+pull request or GitLab merge request with the corresponding CLI:
 
 ```bash
 npx @openai/codex-security patch --scan SCAN_ID --severity high --create-pr
@@ -6656,9 +7202,6 @@ Inspect read-only SDK and bundled-plugin metadata:
 npx @openai/codex-security info --json
 ```
 
-When you expose the CLI as an MCP server, `info` is the only available command.
-Scans, exports, publication, sign-in, validation, and patching remain CLI-only.
-
 #### Read scan output
 
 By default, scans send progress, completion summaries, and errors to stderr
@@ -6666,7 +7209,7 @@ without writing the complete scan result to stdout. Request `--json`,
 `--format`, or `--full-output` to send structured scan results to stdout.
 
 Interactive terminals show a live dashboard with the current scan phase,
-reviewed files, activity, token usage, and estimated cost. CI and redirected
+file inventory, activity, token usage, and estimated cost. CI and redirected
 output use plain-text progress. Add `--headless` to use plain-text progress in
 an interactive terminal:
 
@@ -6679,7 +7222,7 @@ contain source code or credentials. Review them before sharing.
 
 #### Verbose diagnostics
 
-Add `--verbose` to print redacted lifecycle, authentication, progress, and cost
+Add `--verbose` to print lifecycle, authentication, progress, and cost
 diagnostics to stderr:
 
 ```bash
@@ -6688,20 +7231,24 @@ npx @openai/codex-security scan . --verbose
 
 Set `CODEX_SECURITY_LOG_LEVEL=debug` to enable the same diagnostics without the
 flag. `LOG_LEVEL=debug` also enables diagnostics when
-`CODEX_SECURITY_LOG_LEVEL` is unset.
+`CODEX_SECURITY_LOG_LEVEL` is unset or blank.
+
+Codex Security preserves diagnostic text. Diagnostics can contain source code
+or credentials, so review them before sharing.
 
 #### Completion summary
 
 A completed scan writes its open repository finding count, severity breakdown,
-elapsed time, report path, and result directory to stderr. It
-includes token usage and estimated cost when available. For example:
+elapsed time, report path, and result directory to stderr. It also reports token
+usage when available and estimated cost when you set `--show-cost` or
+`--max-cost`. For example:
 
 ```text
   REPORT    /path/to/scan/report.md
 
   FINDINGS  4 (3 confirmed this scan; 1 previously found; 1 critical, 2 high, 1 informational)
+  SCOPE     repository: .
   ELAPSED   1s
-  TOKENS    1,250 input, 200 cached, 30 output
   RESULTS   /path/to/scan
 ```
 
@@ -6711,38 +7258,36 @@ scan, not earlier findings shown in the repository total.
 
 #### JSON output
 
-`scan --json` writes one complete JSON document to stdout. Its top-level shape
-is:
+`scan --json` writes one JSON document to stdout. Use `manifest.scan` for
+status and scope and `findings` for the current scan's findings. When available,
+`repositoryFindings` includes those findings and earlier open findings.
+`review.excludedPaths` lists path patterns the scan recorded as excluded from
+review. `scanDir`, `reportPath`, and `artifactsDir` point to the saved results.
 
-```text
-manifest
-repositoryFindings
-findings
-coverage
-scanDir
-threadId
-reportPath
-artifactsDir
-sarifPath
-cost
-turn
-  id
-  status
-  durationMs
-  finalResponse
-  usage
-```
+`threatModel` contains the saved model as structured data or Markdown.
+`threatModelPath` points to its saved document. Either can be `null`; the model
+can still be exported if writing the document failed.
 
 When [patching](#patch-findings-after-a-scan), JSON output also includes patch
 results and any created pull request.
 
-Progress, completion summaries, archive notices, and errors remain on stderr.
-A completed scan still prints the full JSON result when a severity policy
+Progress, completion summaries, archive notices, and diagnostics remain on
+stderr. A completed scan still prints the JSON result when a severity policy
 returns exit `1`.
 
+Always check the process exit code, even when JSON parses successfully.
+Execution failures without returned scan results produce a structured error
+with `status`, `code`, and `message` when using `--json`, `--format json`, or
+`--format jsonl`. When valid scan results are retained, output can instead
+contain the normal scan result and `warnings`, such as after a target change.
+With `--json`, `--format json`, or `--format jsonl`, add `--full-output` to
+receive an `ok: false` envelope with the error under `error` and any valid
+retained sealed results under `data`. Other formats report failures only on
+stderr, even with `--full-output`. These rules also apply to `scans rerun` and
+`scans resume`.
+
 `codex-security scan --json` emits one JSON document. `codex exec --json`
-emits a JSON Lines event stream. Use the output format that matches the
-command you run.
+emits a JSON Lines event stream.
 
 #### Scan artifacts
 
@@ -6754,8 +7299,8 @@ those files haven't changed:
 <scan-directory>/
 ├── scan-manifest.json
 ├── findings.json
-├── coverage.json
 ├── report.md
+├── threatmodel.md          # when available
 ├── artifacts/
 └── exports/
     └── results.sarif       # when produced
@@ -6767,27 +7312,37 @@ The structured files serve different jobs:
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | `scan-manifest.json`    | Scan identity, status, target, scope, producer, and sealed artifact records.                                                    |
 | `findings.json`         | Finding identifiers, severity, confidence, taxonomy, locations, evidence, validation, data flow, reachability, and remediation. |
-| `coverage.json`         | Reviewed surfaces, exclusions, deferred work, and open questions.                                                               |
 | `report.md`             | Readable scan report.                                                                                                           |
+| `threatmodel.md`        | Saved threat model, when available.                                                                                             |
 | `artifacts/`            | Supporting scan artifacts.                                                                                                      |
 | `exports/results.sarif` | SARIF generated during the scan, when present.                                                                                  |
 
-Read `scan.status` in `scan-manifest.json` for execution status: `completed`,
-`failed`, `canceled`, or `interrupted`. New results don't include
-`coverage.completeness`. Review deferred surfaces, explicit exclusions, and
-open questions in `coverage.json` to understand what the scan reviewed.
+#### Completion and review coverage
+
+Read `scan.status` in `scan-manifest.json` to check whether the scan
+completed. Read `scan.scope` for the configured scope and
+`scan.review.excludedPaths` for exclusions the scan recorded during review.
+Scan comparisons also use those exclusions. A completed scan can still leave
+some files in scope unreviewed.
+
+For unresolved work, inspect the available evidence with `scans show SCAN_ID`
+and `scans logs SCAN_ID`. An eligible interrupted Deep Scan can continue with
+`scans resume SCAN_ID`. To start a new review with saved settings, use
+`scans rerun SCAN_ID` when a launch recipe is available. Plugin scans may lack
+a replayable recipe; start a new scan with the intended paths and context in
+that case.
 
 #### Exit codes and signals
 
 The CLI uses these exit codes:
 
-| Exit  | Condition                                                                                                                                 |
-| ----- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `0`   | A scan or bulk campaign completed and passed its severity policy, a publication completed without failures, or another command succeeded. |
-| `1`   | A completed scan or bulk campaign reports a finding at or above the configured severity.                                                  |
-| `2`   | An input, execution, result-integrity, required-output, or export failure occurred, or a publication has one or more failed findings.     |
-| `130` | Ctrl-C interrupted a scan or publication.                                                                                                 |
-| `143` | SIGTERM terminated a scan or publication.                                                                                                 |
+| Exit  | Condition                                                                                                                                                                          |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `0`   | A scan or bulk campaign completed and passed its severity policy, a publication completed without failures, or another command succeeded.                                          |
+| `1`   | A completed scan or bulk campaign reports a finding at or above the configured severity, or `verify-fix` reports a finding as still vulnerable with no inconclusive results.       |
+| `2`   | An input, execution, result-integrity, required-output, or export failure occurred, a publication has one or more failed findings, or `verify-fix` reports an inconclusive result. |
+| `130` | Ctrl-C interrupted a scan or publication.                                                                                                                                          |
+| `143` | SIGTERM terminated a scan or publication.                                                                                                                                          |
 
 Coverage gaps don't change a completed scan's exit code or bypass its severity
 policy. Exit `0` doesn't mean every file was reviewed. When you request
@@ -6798,15 +7353,12 @@ error.
 
 #### Local scan permissions
 
-CLI and SDK scans run with your local operating-system permissions. Every scan
-uses the `codex_security_scan` filesystem profile and sets `approvalPolicy` to
-`"never"`. The profile permits reading the local filesystem and writing to
-workspace roots and the selected scan state directory. Scans don't stop to
-request interactive approval.
-
-Settings supplied through CLI `--codex` or SDK `codexOverrides`, including
-`approval_policy`, `sandbox_mode`, and filesystem permissions, can't replace
-or restrict these scan controls. Host and network restrictions still apply.
+CLI and SDK scans run with your local operating-system permissions. The scan
+profile permits reading the local filesystem and writing to workspace roots.
+Execution approvals are reviewed automatically and may grant extra permissions
+for an operation. Use `--codex 'approval_policy="never"'`, or set
+`codexOverrides.approval_policy: "never"` in the SDK, to deny permission requests. Host
+and network restrictions still apply.
 
 Scan and workbench processes can inherit your environment, including unrelated
 API tokens and cloud credentials. Remove unrelated credentials before
@@ -6830,6 +7382,10 @@ Scans, bulk scans, exports, scan history, and saved findings also require
 Python 3.10 or later.
 Python 3.10 also requires `tomli`. Use `--python` with `scan`, `bulk-scan`, or
 `export`, or set `PYTHON` for any Python-backed command.
+
+To read or resume compressed Codex sessions (`.jsonl.zst`), use Node.js
+22.15.0 or later within 22.x, or Node.js 24 or 26. Plain `.jsonl` sessions work
+on all supported Node.js versions.
 
 Continue with the [CLI quickstart](https://learn.chatgpt.com/docs/security/cli), [bulk-scan
 guide](https://learn.chatgpt.com/docs/security/cli/bulk-scans), [CLI FAQ](https://learn.chatgpt.com/docs/security/cli/faq), [CI
@@ -7098,9 +7654,7 @@ For questions about builds, validation, or result interpretation, see the
 
 Source: [Codex Security plugin changelog](https://learn.chatgpt.com/docs/security/plugin/changelog.md)
 
-Use this changelog to see what changed in the Codex Security plugin.
-
-**Newest release notes:** `0.1.30`.
+**Newest release notes:** `0.1.32`.
 
 Check the plugin version in your current Codex environment before you use a
 feature from a newer release.
@@ -7108,6 +7662,22 @@ feature from a newer release.
 Changelog entries follow the plugin version, not the package version. CLI and
 SDK users can run `npx @openai/codex-security info --json` to check the
 package and bundled plugin versions together.
+
+For CLI and SDK changes, see the [Codex Security package releases](https://github.com/openai/codex-security/releases).
+
+#### 0.1.32
+
+#### Complete deep scans more reliably
+
+- The plugin keeps the scan identity and completion instructions with
+  aggregated results so Codex can finish the scan and generate `report.md`.
+- The plugin reads large sets of worker results in smaller pages to avoid
+  response-size errors during aggregation.
+- The plugin retries recoverable worker errors, including parsing errors,
+  before stopping the scan.
+
+See [Run a deep security scan](https://learn.chatgpt.com/docs/security/plugin/deep-scans) for setup,
+results, and recovery guidance.
 
 #### 0.1.30 (September 24, 2026)
 
@@ -7674,6 +8244,34 @@ If **Security** doesn't appear in the desktop-app sidebar, confirm that
 **Codex** is selected and the plugin is enabled. Update the app and plugin if
 needed, and check whether your workspace administrator allows the plugin.
 
+#### Check versions and updates
+
+Check the [plugin changelog](https://learn.chatgpt.com/docs/security/plugin/changelog) before a long
+scan. Manage your installation in **Plugins** in the desktop app or `/plugins`
+in Codex CLI. See the [plugin guide](https://learn.chatgpt.com/docs/plugins) for details. After updating
+the plugin, start a new chat to load its skills and tools. In Codex CLI, enter
+`/new`.
+
+Codex and the Codex Security plugin have separate versions. In Codex CLI, check
+the host version and installed plugin versions with:
+
+```bash
+codex --version
+codex plugin list --json
+```
+
+Find Codex Security in the `installed` list. Record both versions when you
+start a scan so you can include them when reporting a failure.
+
+The standalone `@openai/codex-security` package has its own bundled plugin.
+Updating that package doesn't update the marketplace plugin used in Codex.
+For package installation and version checks, see the [CLI
+quickstart](https://learn.chatgpt.com/docs/security/cli).
+
+For Amazon Bedrock, configure the Codex host using the [Codex Bedrock
+guide](https://learn.chatgpt.com/docs/amazon-bedrock). The standalone package uses the separate
+[Security CLI provider settings](https://learn.chatgpt.com/docs/security/cli/reference#use-amazon-bedrock).
+
 #### Run your first scan
 
 For the best scan quality, use `gpt-5.6-sol`
@@ -7773,16 +8371,19 @@ Source: [Codex Security TypeScript SDK](https://learn.chatgpt.com/docs/security/
 
 Use the Codex Security TypeScript SDK to run security scans on repositories and
 code changes from your application or developer tool. The SDK returns typed
-findings, coverage details, and paths to scan artifacts. For longer scans, it
-supports preflight checks, cost limits, progress callbacks, and cancellation.
+findings, the scan manifest, and paths to saved reports.
 
 The SDK uses ECMAScript modules (ESM) and runs server-side with Node.js 24 or 26,
 or Node.js 22 starting with 22.13.0. Scanning also requires Python 3.10 or later.
 Python 3.10 also requires the `tomli` package.
 
-Running scans requires Codex Security access. For general coding agents, see
-the [Codex SDK guide](https://learn.chatgpt.com/docs/codex-sdk). For terminal and CI workflows, see
-the [Codex Security CLI quickstart](https://learn.chatgpt.com/docs/security/cli).
+To read or resume compressed Codex sessions (`.jsonl.zst`), use Node.js
+22.15.0 or later within 22.x, or Node.js 24 or 26. Plain `.jsonl` sessions work
+on all supported Node.js versions.
+
+For general coding agents, see the [Codex SDK guide](https://learn.chatgpt.com/docs/codex-sdk). For
+terminal and CI workflows, see the [Codex Security CLI
+quickstart](https://learn.chatgpt.com/docs/security/cli).
 
 #### Set up the SDK
 
@@ -7798,8 +8399,7 @@ provider](#configure-the-runtime-and-credentials). Amazon Bedrock uses AWS
 credentials; OpenRouter and Fireworks use provider-specific API keys and
 configuration.
 
-For best results, use an account verified for [Trusted Access for Cyber](https://chatgpt.com/cyber). Signing in or providing an API key does not
-grant Trusted Access.
+Some cybersecurity requests and protected findings require [Trusted Access for Cyber](https://chatgpt.com/cyber) for your ChatGPT account or API organization.
 
 #### Run a scan
 
@@ -7809,22 +8409,26 @@ Scan processes can inherit your environment, so remove unrelated credentials
 before you start. See [Local scan
 permissions](https://learn.chatgpt.com/docs/security/cli/reference#local-scan-permissions).
 
-Save this example as `scan.mjs`. Replace the paths, run a standard repository
-scan, and close the client when the work completes. Pass `outputDir` to choose a private
+Save this example as `scan.mjs`. Pass the paths to the repository and results directory as command-line arguments. Run a standard repository scan and close the client
+when the work completes. Pass `outputDir` to choose a private
 results directory outside the enclosing Git worktree.
 
 If you omit `outputDir`, Codex Security saves results in its own persistent
 state directory. Results can include source excerpts and vulnerability
 details. Set who can read them and how long to keep them.
 
-```ts
+```typescript
 import { CodexSecurity } from "@openai/codex-security";
 
+const [repository, outputDir] = process.argv.slice(2);
+if (!repository || !outputDir) {
+  throw new Error("Usage: node scan.mjs <repository> <results-directory>");
+}
 const security = new CodexSecurity();
 
 try {
-  const result = await security.run("/path/to/repository", {
-    outputDir: "/path/outside/repository/results",
+  const result = await security.run(repository, {
+    outputDir,
   });
 
   console.log(result.reportPath);
@@ -7838,18 +8442,17 @@ try {
 Run it with Node.js:
 
 ```bash
-node scan.mjs
+node scan.mjs /path/to/repository /path/outside/repository/results
 ```
 
 The example prints the report path, scan status, and finding count.
-Open the report to review the evidence. The count varies with the repository
-and scan, so don't use an expected count to check whether the integration works.
+Open the report to review the evidence.
 
 `run` validates the saved artifacts and returns a `ScanResult` when
-`result.manifest.scan.status` is `"completed"`. Check `result.coverage` for
-reviewed surfaces, exclusions, and deferred work. A completed scan can still
-have coverage gaps. Runtime, input, or result-integrity failures can throw an
-[error](#handle-scan-errors).
+`result.manifest.scan.status` is `"completed"`. Check `result.manifest.scan.scope`
+for the requested target and `result.manifest.scan.warnings` for any warnings.
+Completion alone doesn't tell you which files were reviewed. Runtime, input, or
+result-integrity failures can throw an [error](#handle-scan-errors).
 
 In later examples, reuse the open `security` client and keep `close()` in
 `finally` to release the runtime. Add any additional imports at the top of
@@ -7858,13 +8461,18 @@ In later examples, reuse the open `security` client and keep `close()` in
 #### Check inputs with preflight
 
 Use `preflight` to check a repository, target, mode, knowledge-base documents,
-output location, and Codex configuration before starting a scan:
+output location, and Codex configuration before starting a scan. This example
+reads `security.md` from the repository root:
 
-```ts
-const plan = await security.preflight("/path/to/repository", {
+```typescript
+import { join } from "node:path";
+
+const knowledgeBase = join(repository, "security.md");
+
+const plan = await security.preflight(repository, {
   target: ["services/billing", "packages/auth"],
-  knowledgeBasePaths: ["/path/to/architecture.md"],
-  outputDir: "/path/outside/repository/results",
+  knowledgeBasePaths: [knowledgeBase],
+  outputDir: outputDir,
 });
 
 console.log(plan.repository);
@@ -7880,9 +8488,9 @@ that the scan can authenticate or start.
 To preview archival for an existing result directory, set
 `archiveExisting: true`:
 
-```ts
-const plan = await security.preflight("/path/to/repository", {
-  outputDir: "/path/outside/repository/results",
+```typescript
+const plan = await security.preflight(repository, {
+  outputDir: outputDir,
   archiveExisting: true,
 });
 
@@ -7893,9 +8501,9 @@ The returned `archiveDir` previews the archive naming. The final path can
 differ because `run` generates its own unique destination. Capture the actual
 archive path with `onOutputArchived`:
 
-```ts
-await security.run("/path/to/repository", {
-  outputDir: "/path/outside/repository/results",
+```typescript
+await security.run(repository, {
+  outputDir: outputDir,
   archiveExisting: true,
   onOutputArchived(archiveDir) {
     console.log("Archived results:", archiveDir);
@@ -7915,8 +8523,8 @@ The default target is the complete repository.
 
 Pass an array of paths inside the repository:
 
-```ts
-const result = await security.run("/path/to/repository", {
+```typescript
+const result = await security.run(repository, {
   target: ["services/billing", "packages/auth"],
 });
 ```
@@ -7929,28 +8537,29 @@ repository and removes duplicates.
 Use `DiffTarget.refs` to scan committed changes between two locally available
 Git revisions:
 
-```ts
+```typescript
 import { DiffTarget } from "@openai/codex-security";
 
 const target = DiffTarget.refs({
-  base: "origin/main",
+  base: "HEAD~1",
   head: "HEAD",
 });
 
-const result = await security.run("/path/to/repository", { target });
+const result = await security.run(repository, { target });
 ```
 
-The head defaults to `HEAD`. Diff targets require the repository argument to
-be the Git worktree root.
+The head defaults to `HEAD`. Pass the Git worktree root as the repository and
+check out the requested head before scanning.
 
 #### Scan the working tree
 
 Use `DiffTarget.workingTree` to scan staged and unstaged changes against a base
 revision:
 
-```ts
+```typescript
+import { DiffTarget } from "@openai/codex-security";
 const target = DiffTarget.workingTree({ base: "HEAD" });
-const result = await security.run("/path/to/repository", { target });
+const result = await security.run(repository, { target });
 ```
 
 The base defaults to `HEAD`. Fetch the selected revisions before starting a
@@ -7960,54 +8569,61 @@ diff or working-tree scan.
 
 Set `mode: "deep"` for a repository or path scan that needs broader review:
 
-```ts
-const result = await security.run("/path/to/repository", {
+```typescript
+const result = await security.run(repository, {
   target: ["services/billing"],
   mode: "deep",
   workers: 2,
   subagents: 0,
   stopAfterNoNew: 3,
   maxDiscoveryRuns: 10,
-  maxTimeHours: 1.5,
+  maxTimeMinutes: 90,
 });
 ```
 
 Deep mode supports repository and path targets. Use standard mode for diff and
-working-tree scans. The optional settings control concurrent independent
-standard-scan workers, subagents per worker, consecutive completed worker scans
-without new findings, and the total number and duration of worker runs. They
-require `mode: "deep"`.
+working-tree scans. In deep mode, `workers` limits concurrent scan workers and
+`subagents` sets the number of subagents per worker. `stopAfterNoNew` stops
+discovery after that many consecutive worker runs without new findings.
+`maxDiscoveryRuns` limits the total number of worker runs.
 
-`maxTimeHours` defaults to `96` and accepts a positive number up to `96`,
-including fractional hours. At the deadline, Codex Security stops unfinished
-workers, keeps completed scan results, and aggregates them into the final
-report. Review `result.coverage` for deferred work and open questions.
+Set `maxTimeMinutes` to limit deep discovery. The default and maximum are
+5,760 minutes (96 hours). At the deadline, discovery stops and the SDK combines
+the results from completed workers. Standard scans treat `maxTimeMinutes` as an
+advisory allowance for investigation. Reporting can finish later. Custom
+validation and post-scan instructions run outside that allowance.
 
 #### Add a security knowledge base
 
 Pass architecture documents, threat models, or security policies through
 `knowledgeBasePaths`:
 
-```ts
-const result = await security.run("/path/to/repository", {
-  knowledgeBasePaths: [
-    "/path/to/architecture.md",
-    "/path/to/security-policies",
-  ],
+```typescript
+import { join } from "node:path";
+
+const knowledgeBase = join(repository, "security.md");
+
+const result = await security.run(repository, {
+  knowledgeBasePaths: [knowledgeBase],
 });
 ```
 
 The SDK accepts files or directories and searches directories recursively.
-Supported document formats are `.md`, `.markdown`, `.txt`, `.pdf`, and `.docx`.
-The SDK rejects linked input paths, skips linked directory entries, and keeps
-extracted document content outside the saved scan results.
+Supported formats include UTF-8 text (including JSON and SARIF), PDF, and DOCX.
+The SDK rejects linked input paths and skips linked directory entries.
+
+The SDK saves extracted document text in the private `.scan-knowledge.json`
+file beside scan artifacts. Keep it with the scan directory.
+When resuming an interrupted Deep Scan,
+`codex-security scans resume` uses this saved text even if the original documents
+change or are deleted. Canonical reports don't embed the document text.
 
 #### Add scan and follow-up instructions
 
 Use `scanPrompt` to focus the scan and `postScanPrompt` to request a follow-up:
 
-```ts
-const result = await security.run("/path/to/repository", {
+```typescript
+const result = await security.run(repository, {
   scanPrompt: "Focus on tenant isolation and authorization checks.",
   postScanPrompt: "Write confirmed findings to post-scan-summary.md.",
 });
@@ -8015,32 +8631,109 @@ const result = await security.run("/path/to/repository", {
 
 If the follow-up fails, the SDK keeps the completed scan and reports the
 error through `onWarning`. It restores any completed scan artifacts that the
-follow-up changed.
+follow-up changed. The follow-up runs after scan cost tracking stops and
+is outside `maxCostUsd`.
+
+#### Validate findings in your environment
+
+Pass `validationPrompt` to check candidate findings with your own test
+procedure. For example, point the prompt at a script you control outside the
+checkout and run it against your local test server. Pass the validation script
+and server URL after the repository and results directory arguments:
+
+```typescript
+const [validationScript, validationUrl] = process.argv.slice(4);
+if (!validationScript || !validationUrl)
+  throw new Error("Pass a validation script path and service URL.");
+const result = await security.run(repository, {
+  outputDir,
+  validationPrompt: `Run ${validationScript} against ${validationUrl} and report which findings reproduce.`,
+});
+```
+
+```bash
+node scan.mjs /path/to/repository /path/outside/repository/results /path/to/validate.sh http://localhost:3000
+```
+
+Use `validationPrompt` with standard repository, path, committed-diff, or
+working-tree scans. To use the same procedure for each standard component
+scan, pass `scanOptions.validationPrompt` to `runComponentScans`. Deep scans
+reject custom validation.
 
 #### Set a scan budget
 
 Set `maxCostUsd` to stop a scan when its estimated model cost exceeds a limit.
-Use `onCost` to track cost as the scan runs:
+Use `onCost` to track cost as the scan runs and report `estimatedUsdRange`:
 
-```ts
-const result = await security.run("/path/to/repository", {
+```typescript
+const result = await security.run(repository, {
   maxCostUsd: 5,
   onCost(cost) {
-    console.log(cost.estimatedUsd);
+    console.log(cost.estimatedUsdRange);
   },
 });
 
-console.log(result.cost?.estimatedUsd);
+console.log(result.cost?.estimatedUsdRange);
 ```
 
-The limit estimates spending but isn't a hard cap, so requests already in
-progress can finish slightly above it. If a deep scan reaches the limit after
+The limit uses `estimatedUsd`, the short-context baseline. Requests already
+in progress can put this estimate above the limit. Long-context pricing can
+raise `estimatedUsdRange` above it. This limit is not a billing cap.
+
+If a deep scan reaches the limit after
 Codex Security aggregates completed worker results, `run` can return a result
 with `manifest.scan.status` set to `"completed"` and report the budget warning
-through `onWarning`. Check `result.coverage` for the work left unfinished.
+through `onWarning`.
 
 If the scan can't produce a valid completed result, `run` throws
 `ScanCostLimitExceededError` and preserves any available output.
+
+#### Scan project components
+
+Use `runComponentScans` to scan services or packages in parallel and combine
+their findings. Give each component a name and one or more repository-relative
+paths. Choose a new or empty output directory outside the enclosing Git worktree.
+
+```typescript
+import { runComponentScans } from "@openai/codex-security";
+
+const result = await runComponentScans({
+  repository: repository,
+  outputDir: outputDir,
+  components: [
+    { name: "API", paths: ["services/api", "packages/auth"] },
+    { name: "Web", paths: ["services/billing"] },
+  ],
+  workers: 2,
+  onProgress: ({ name, status }) => console.log(name, status),
+});
+
+console.log(result.reportPath);
+```
+
+Set `workers` to control how many components run at once. The default is four.
+
+To let Codex propose components, pass `auto: true` instead of `components`.
+Add `planOnly: true` to save the plan in `components.json` without running any
+scans:
+
+```typescript
+import { runComponentScans } from "@openai/codex-security";
+
+const plan = await runComponentScans({
+  repository: repository,
+  outputDir: outputDir,
+  auto: true,
+  planOnly: true,
+});
+
+console.log(plan.planPath);
+```
+
+If the run returns with failed components, read the JSON file at
+`result.retryPlanPath`. Pass its `components` array to `runComponentScans`
+with a new `outputDir`. The retry report covers only those components. Review
+the reports from both runs.
 
 #### Work with scan results
 
@@ -8052,15 +8745,16 @@ paths:
 | `manifest`           | The sealed scan manifest, including target, scope, producer, and artifact records. |
 | `findings`           | Findings from the current scan. Read finding objects from `findings.findings`.     |
 | `repositoryFindings` | Open findings across repository scans, when scan history is available.             |
-| `coverage`           | Reviewed surfaces, exclusions, deferred work, and open questions.                  |
+| `review`             | Path patterns excluded from review (`review.excludedPaths`).                       |
 | `scanDir`            | The scan directory.                                                                |
 | `threadId`           | The Codex thread identifier for the scan.                                          |
 | `turnResult`         | Turn status, response, and available usage metadata.                               |
 | `cost`               | Estimated model and token cost, or `null` when unavailable.                        |
 | `reportPath`         | The path to `report.md`.                                                           |
+| `threatModel`        | The saved threat model, or `null` when unavailable.                                |
+| `threatModelPath`    | The saved threat-model document path, or `null` when unavailable.                  |
 | `manifestPath`       | The path to `scan-manifest.json`.                                                  |
 | `findingsPath`       | The path to `findings.json`.                                                       |
-| `coveragePath`       | The path to `coverage.json`.                                                       |
 | `artifactsDir`       | The supporting-artifacts directory.                                                |
 | `sarifPath`          | The generated SARIF path, or `null` when SARIF is absent.                          |
 | `pluginVersion`      | The version recorded by the scan producer.                                         |
@@ -8069,9 +8763,9 @@ To require the same plugin for a later scan, pass
 `expectedPluginVersion: result.pluginVersion`. The SDK rejects the scan if
 the installed plugin version differs.
 
-Use the structured findings and coverage directly:
+Read the severity and first source location for each finding:
 
-```ts
+```typescript
 for (const finding of result.findings.findings) {
   const location = finding.locations[0];
   if (location === undefined) continue;
@@ -8082,10 +8776,6 @@ for (const finding of result.findings.findings) {
     finding.title
   );
 }
-
-for (const deferred of result.coverage.deferred) {
-  console.log(deferred.id, deferred.reason);
-}
 ```
 
 Findings can include optional `codeEvidence`, `rootCause`, `validation`,
@@ -8094,28 +8784,89 @@ Findings can include optional `codeEvidence`, `rootCause`, `validation`,
 For repository-wide findings, `confirmedInLatestScan` distinguishes findings
 seen in the latest scan from earlier findings that remain open:
 
-```ts
+```typescript
 for (const finding of result.repositoryFindings ?? []) {
   console.log(finding.title, finding.confirmedInLatestScan);
 }
 ```
 
-New results don't include `coverage.completeness`. Use `manifest.scan.status`
-for execution status, and review deferred surfaces, exclusions, and open
-questions in `coverage` to understand what the scan reviewed.
+Use `result.toJSON()` to serialize the manifest, findings, recorded review exclusions,
+artifact paths, and turn metadata.
 
-`result.toJSON()` returns the manifest, repository and current-scan findings,
-coverage, scan and thread identifiers, `reportPath`, `artifactsDir`,
-`sarifPath`, cost, and turn metadata in one JSON-ready object.
+#### Read saved threat models
+
+Check `threatModel` and `threatModelPath` for `null` before using them. You can
+still export a saved model if Codex Security couldn't write its Markdown file.
+Use the path returned by the export instead of assuming a filename.
+
+#### Export saved artifacts
+
+Export saved results without starting Codex, loading credentials, or making a
+model call. This example exports a saved threat model to stdout. Pass an existing
+scan results directory as the first command-line argument:
+
+```typescript
+import { exportArtifact } from "@openai/codex-security";
+
+const directory = process.argv[2];
+if (!directory) {
+  throw new Error(
+    "Pass an existing scan results directory as the first argument."
+  );
+}
+
+await exportArtifact({
+  source: { directory },
+  artifact: "threat-model",
+  output: "-",
+});
+```
+
+To select a saved scan by ID, use `source: { scanId: "SCAN_ID" }` instead. Set
+`output` to a destination path to save the artifact to a file.
+
+Use `artifact: "threat-model"` to export Markdown; the export returns an error
+if no threat model was saved. For findings, use `artifact: "findings"` and choose
+`format: "csv"`, `"json"`, or `"sarif"` (the default).
+
+The result includes the output `path` and, for a threat-model file export,
+`provenance` from the same saved results. Both fields are `null` when
+`output: "-"` writes to stdout. Export requires Python 3.10 or later.
+
+#### Validate an existing finding
+
+Use `validate` to check a finding from another tool or workflow against the
+source. It doesn't start a new scan, run the application, or execute its tests.
+Run a separate reproduction if you need runtime evidence.
+
+```typescript
+const validation = await security.validate({
+  repositoryPath: repository,
+  finding: {
+    title: "Possible SQL injection",
+    location: "src/index.js:1",
+  },
+});
+
+console.log(validation.disposition);
+console.log(validation.report);
+```
+
+Pass the finding as nonempty text or a JSON object. If it's in a file, read
+the file and pass its contents.
+
+The `disposition` tells you whether the finding is `reportable`, `suppressed`,
+`not_applicable`, or `deferred`. The Markdown in `validation.report` explains the evidence and remaining gaps.
+Save that string if you need a report file.
 
 #### Track or cancel a scan
 
 Pass `ScanOptions` callbacks to report scan startup, worker progress, and
 connection retries:
 
-```ts
-const result = await security.run("/path/to/repository", {
-  outputDir: "/path/outside/repository/results",
+```typescript
+const result = await security.run(repository, {
+  outputDir: outputDir,
   onScanStarted() {
     console.log("Scan started");
   },
@@ -8143,12 +8894,12 @@ Pass an `AbortSignal` from your request or job controller to cancel a scan.
 If the scan is still running after 30 minutes, this example interrupts it and
 prints the directory containing any saved output:
 
-```ts
+```typescript
 import { ScanInterruptedError } from "@openai/codex-security";
 
 try {
-  await security.run("/path/to/repository", {
-    outputDir: "/path/outside/repository/results",
+  await security.run(repository, {
+    outputDir: outputDir,
     signal: AbortSignal.timeout(30 * 60 * 1000),
   });
 } catch (error) {
@@ -8176,7 +8927,7 @@ lifecycle callbacks:
 | `onReconnect(attempt, maxAttempts)` | The SDK retries a disconnected scan stream.          |
 | `onActivity(activity)`              | A command, tool, reasoning step, or message updates. |
 | `onProgress(progress)`              | The scan phase or reviewed file count changes.       |
-| `onWorkerStatus(status)`            | Worker preflight or dispatch status changes.         |
+| `onWorkerStatus(status)`            | Best-effort counts of workers planned and started.   |
 | `onSessionEvent(session)`           | A scan or worker session emits an event.             |
 | `onCost(cost)`                      | An updated estimated scan cost is available.         |
 | `onWarning(warning)`                | The scan reports a warning.                          |
@@ -8192,14 +8943,12 @@ services.
 #### Configure the runtime and credentials
 
 Pass runtime configuration when you need a specific plugin, interpreter, or
-Codex setting. Choose a model your credentials can access. If you use ChatGPT
-sign-in, check [GPT-6.1 Sol availability](https://learn.chatgpt.com/docs/models#gpt-6.1-sol) before
-using this example:
+Codex setting. Choose a [model](https://learn.chatgpt.com/docs/models) available to your account:
 
 ```typescript
 const security = new CodexSecurity({
-  pluginPath: "/path/to/codex-security-plugin",
-  pythonPath: "/path/to/python",
+  // To override the bundled plugin, add pluginPath: "/path/to/plugin".
+  pythonPath: "python3",
   codexOverrides: {
     model: "gpt-6.1-sol",
     model_reasoning_effort: "medium",
@@ -8207,37 +8956,39 @@ const security = new CodexSecurity({
 });
 ```
 
-`pluginPath` accepts a plugin directory or ZIP. `pythonPath` selects the
+Set `pluginPath` to a plugin directory or ZIP to override the bundled plugin.
+`pythonPath` selects the
 plugin interpreter. `codexOverrides` merges supported values into the isolated
-Codex configuration. Scans use `gpt-5.6-sol` with extra-high reasoning effort
-by default. Set `model` and `model_reasoning_effort` in `codexOverrides` to use
-a different model or reasoning effort. To use [Amazon
+Codex configuration. To use [Amazon
 Bedrock](https://learn.chatgpt.com/docs/security/cli/reference#use-amazon-bedrock), set
 `model_provider` and `model` in `codexOverrides`.
 
-`codexOverrides` can't restrict the scan's filesystem access or change its
-approval policy. See [Local scan
-permissions](https://learn.chatgpt.com/docs/security/cli/reference#local-scan-permissions).
+Set `codexOverrides.approval_policy` to `"never"` to deny permission requests.
+Scans otherwise use automatic approval review. See [Local scan
+permissions](https://learn.chatgpt.com/docs/security/cli/reference#local-scan-permissions) for filesystem
+access and inherited credentials.
 
 For OpenRouter or Fireworks, also provide the matching API key and a complete
-provider configuration in `codexOverrides`. For example, set
-`OPENROUTER_API_KEY` and configure OpenRouter:
+provider configuration in `codexOverrides`. Set `OPENROUTER_API_KEY`
+and pass an available OpenRouter model ID to this TypeScript function:
 
-```ts
-const security = new CodexSecurity({
-  codexOverrides: {
-    model: "anthropic/claude-sonnet-4.5",
-    model_provider: "openrouter",
-    model_providers: {
-      openrouter: {
-        name: "OpenRouter",
-        base_url: "https://openrouter.ai/api/v1",
-        env_key: "OPENROUTER_API_KEY",
-        wire_api: "responses",
+```typescript
+function createOpenRouterClient(model: string) {
+  return new CodexSecurity({
+    codexOverrides: {
+      model,
+      model_provider: "openrouter",
+      model_providers: {
+        openrouter: {
+          name: "OpenRouter",
+          base_url: "https://openrouter.ai/api/v1",
+          env_key: "OPENROUTER_API_KEY",
+          wire_api: "responses",
+        },
       },
     },
-  },
-});
+  });
+}
 ```
 
 For Fireworks, change both `openrouter` keys to `fireworks`, set `name` to
@@ -8263,8 +9014,8 @@ for CI and server-side automation.
 When both an API key and a stored sign-in are available, the SDK uses the API
 key by default. To use your ChatGPT sign-in instead, select it for the scan:
 
-```ts
-const result = await security.run("/path/to/repository", {
+```typescript
+const result = await security.run(repository, {
   auth: "chatgpt",
 });
 ```
@@ -8299,141 +9050,93 @@ reference](https://learn.chatgpt.com/docs/security/cli/reference).
 
 Source: [Export and track security findings](https://learn.chatgpt.com/docs/security/plugin/export-findings.md)
 
-Use a completed Codex Security scan for either of these handoffs:
-
-- **Export** creates a portable JSON, CSV, or SARIF file.
-- **Track findings** prepares selected findings as Linear, GitHub, or Jira
-  issues, or as one private draft GitHub Security Advisory. Codex checks for
-  duplicates and waits for your approval before writing.
-
-Neither workflow changes the sealed scan bundle.
-
-Available artifact links and export formats depend on your Codex surface and
-installed plugin version. Check the [plugin
-changelog](https://learn.chatgpt.com/docs/security/plugin/changelog) before you use a format in
-automation.
+Export findings from a completed scan to use them in another tool. To track
+remediation or coordinate disclosure, ask Codex to prepare an issue or a
+private draft GitHub Security Advisory.
 
 #### Export a portable artifact
 
-In the desktop app, open a completed scan from **Security** > **Scans**. Use its
-available artifact links to inspect `report.md`, `findings.json`,
-`scan-manifest.json`, `coverage.json`, or a SARIF report when present.
+In the desktop app, open a completed scan from **Security** > **Scans**. Under
+**Artifacts**, select **Findings JSON** to open the structured findings or
+**SARIF report** if the scan produced one. Available artifacts depend on the
+app and plugin version.
 
-To create another supported format, ask Codex to export findings from the
-completed scan without modifying its sealed bundle:
-
-```text
-Export the findings from [completed scan directory] as [JSON, CSV, or SARIF]. Do not modify the sealed scan bundle or upload its contents.
-```
-
-Choose the format that fits your destination:
+When Codex offers to export the scan's findings, ask for JSON, CSV, or SARIF.
+To export from a terminal, use the saved scan directory with the
+[CLI export command](https://learn.chatgpt.com/docs/security/cli/reference#codex-security-export).
 
 | Format | Use it for                                                        |
 | ------ | ----------------------------------------------------------------- |
 | JSON   | Preserve the sealed structured findings for tools and scripts.    |
-| CSV    | Review findings and current local triage state in a spreadsheet.  |
+| CSV    | Review findings in a spreadsheet.                                 |
 | SARIF  | Send findings to tools that support the SARIF interchange format. |
+
+To include your latest triage status, close reasons, or notes, export a CSV
+from the plugin after making those changes. Open `exports/findings.csv` in
+the scan directory. The CLI exports the saved scan without local triage updates.
 
     Open the coverage, findings, scan manifest, Markdown report, or SARIF
     artifact from a completed scan.
 
-Select **Markdown report** to open `report.md` in your configured external
-editor. The editor depends on your system settings; the example below shows the
-generated report contents.
+Select **Markdown report** to open `report.md` in your configured editor.
 
     Review the scan scope, threat model, validated findings, and detailed report
     links in the generated Markdown report.
 
-Use the returned artifact path. If another tool needs the complete scan
-context, keep the original `scan-manifest.json`, `findings.json`, and
-`coverage.json` together. Exporting doesn't upload findings to a code-scanning
-service.
+Keep the whole scan directory when you archive the report. Tracking requires
+the original `scan-manifest.json` and `findings.json`. If you need to edit
+the findings, make your own copy of `findings.json` first.
 
 #### Track selected findings
 
-Run `$codex-security:track-findings` with one validated finding or an
-selected batch of up to 25 findings from the same sealed scan. Each
-run uses one provider and one destination. A private draft GitHub Security
-Advisory accepts only one finding.
+Use `$codex-security:track-findings` with one or more validated findings from
+the same completed scan. Choose one destination for each run.
 
-To prepare a Linear issue, send:
-
-```text
-Use $codex-security:track-findings to prepare finding [finding ID] from
-[completed scan directory] for the Linear team [team] and project [project, if
-any]. Check for duplicates and show me the exact issue title, body, metadata,
-and destination. Do not create or update anything until I approve that payload.
-```
-
-To prepare a GitHub issue, send:
+| Destination                            | What to specify                                            |
+| -------------------------------------- | ---------------------------------------------------------- |
+| Linear issue                           | Team and optional project                                  |
+| GitHub issue                           | Owner and repository                                       |
+| Jira issue                             | Site, project, and issue type in the Atlassian app         |
+| Private draft GitHub Security Advisory | One finding and its public source repository on GitHub.com |
 
 ```text
-Use $codex-security:track-findings to prepare finding [finding ID] from
-[completed scan directory] for GitHub repository [owner/repository]. Check open
-and closed issues for duplicates and show me the exact issue title, body,
-metadata, repository visibility, and authenticated transport. Do not create or
-update anything until I approve that payload.
+Use $codex-security:track-findings to draft a Linear issue for team [team]
+about finding [finding ID] in [completed scan directory].
 ```
 
-To prepare a Jira issue, send:
+For a batch, list the finding IDs in your request. To track findings in Jira,
+connect the Atlassian app in Codex. Confirm who can read issues in the
+project. Creating an issue requires browse and create permissions. You need
+read access to reuse an existing issue and both read and edit access to update it.
 
-```text
-Use $codex-security:track-findings to prepare finding [finding ID] from
-[completed scan directory] for Jira project [project key] as [issue type].
-Check for duplicates and show me the exact issue summary, description,
-metadata, and destination. Do not create or update anything until I approve
-that payload.
-```
+For a draft advisory, sign in to GitHub.com with GitHub CLI (`gh`) using an
+account with administrator access to the public, non-fork source repository.
+Select one finding from a scan whose target is a Git revision
+(`git_revision`). Commit-diff scans don't qualify. Have the package name,
+ecosystem, and affected versions ready.
 
-Jira tracking requires the Atlassian Rovo plugin in Codex. Reusing an issue
-requires read access; creating or updating one requires read and write access.
+#### Review the issue or advisory
 
-To prepare a private draft GitHub Security Advisory, send:
+1. Check the source scan, selected findings, and signed-in account. Confirm
+   the destination and who can read it. Use a private destination for sensitive
+   findings. An internal or public GitHub issue requires explicit disclosure
+   approval.
+2. Check whether Codex proposes to create, reuse, or update an issue.
+   For advisories, it can create a private draft or reuse a matching draft or
+   published advisory.
+3. Read the title, body, and source locations. A draft advisory may become public.
+   Remove credentials, private evidence, and unnecessary exploit details.
+4. Approve the preview in the Codex conversation before Codex creates or
+   updates an item. If the preview changes, review and approve it again.
 
-```text
-Use $codex-security:track-findings to prepare finding [finding ID] from
-[completed scan directory] as a private draft GitHub Security Advisory in
-[owner/repository]. Verify the sealed source revision, repository, affected
-paths, package metadata, and duplicate state. Show me the exact advisory
-payload, authenticated GitHub CLI identity, and disclosure warnings. Do not
-create anything until I approve that payload.
-```
+Save the issue ID or link the tracker returns, even if Codex can't reopen the
+issue. For a new advisory, Codex checks that the draft matches what you
+approved.
 
-Draft advisories require one finding from a sealed `git_revision` scan, the
-verified public canonical source repository, and administrator access. The
-workflow doesn't batch, update, publish, or close advisories. Use a private
-issue destination when the source doesn't meet those requirements.
+If Codex can't tell whether it created or updated an item, it stops the batch.
+Before retrying, check the tracker for the issue or advisory and ask Codex
+which findings it hasn't tried yet.
 
-#### Review the proposed write
-
-1. Confirm the finding ID and fingerprint came from the intended sealed scan.
-2. Confirm the provider, exact Linear team, GitHub repository, Jira project, or
-   advisory repository, and the live destination visibility.
-3. Review the duplicate outcome: `create`, `reuse`, `update`, or `blocked`.
-4. Read the complete proposed title, body, source locations, and provider
-   metadata. Remove exploit detail or internal evidence that the destination
-   shouldn't expose.
-5. Approve only that exact payload. A changed destination, visibility, finding
-   set, or body requires a new preview.
-
-Sensitive findings should go to a private destination. Creating an issue in an
-internal or public GitHub repository requires an explicit visibility warning
-and approval of the complete content. Treat a draft advisory description as
-eventually public and remove credentials, private evidence, and unnecessary
-exploit details before approval.
-
-Review and approve external actions in the Codex conversation. Approval
-doesn't create a separate issue or advisory screen in the Security workbench.
-
-#### Verify the tracked item
-
-After you approve the proposed write, Codex rechecks the sealed source,
-destination, access, and duplicate state. For a batch, it processes findings
-one at a time and stops at the first uncertain result. Creation, update, or
-reuse is complete only after Codex reads the exact issue back and verifies its
-binding identifiers and content.
-
-Keep the returned canonical issue or advisory URL with your triage record.
 Continue with [Fix and verify a finding](https://learn.chatgpt.com/docs/security/plugin/fix-findings)
 when the owner accepts the item for remediation.
 
@@ -8877,7 +9580,7 @@ steps:
 For Azure Repos, configure a **Build validation** branch policy to run the
 pipeline on pull requests.
 
-```groovy
+```groovy snippet=configuration reason="Jenkins pipeline configuration for the documented CI integration"
 pipeline {
   agent { label 'linux' }
   stages {
@@ -9109,6 +9812,10 @@ to limit concurrency or duration.
 
 #### Review the result
 
+The scan is complete only after finalization succeeds and generates
+`report.md`. A message that aggregation finished or a `scan-manifest.json`
+file alone doesn't confirm completion.
+
 Deep scans use the same saved scan details and complete scan directory as
 standard scans. Open the completed scan in **Scans** or review its findings in
 **Findings**. The generated `report.md` links to detailed vulnerability reports
@@ -9161,6 +9868,25 @@ coverage.
 The `max_time_hours` setting requires plugin version `0.1.19` or later. See the
 [plugin changelog](https://learn.chatgpt.com/docs/security/plugin/changelog) for release details.
 
+#### Handle an interruption or failure
+
+Check the saved scan's status before starting another scan. In the desktop
+app, open the scan in **Scans**. In a Codex conversation, ask Codex to check the
+existing scan.
+
+- If a wait ends while the scan is still active, return to
+  the same scan or conversation and ask Codex to continue it. A response ending
+  or a wait timing out doesn't cancel the scan.
+- If the scan reports a terminal failure or was canceled, keep the error and
+  saved scan directory. Review saved findings separately from pending
+  candidates, which haven't been confirmed. Coverage is incomplete, so an
+  empty findings list doesn't establish that the code has no vulnerabilities.
+
+When asking for help, include the Codex CLI or desktop app and plugin versions
+used for the failed run, plus the provider, model, scan status, and exact error.
+Versions checked after an update may differ. See [Check versions and
+updates](https://learn.chatgpt.com/docs/security/plugin#check-versions-and-updates).
+
 ### Run bulk security scans
 
 Source: [Run bulk security scans](https://learn.chatgpt.com/docs/security/cli/bulk-scans.md)
@@ -9170,9 +9896,10 @@ campaign. Discover repositories from your personal GitHub account or an
 organization, or provide a CSV that pins every repository to an exact Git
 revision.
 
-The `@openai/codex-security` package is public. Running scans requires Codex
-Security access. Follow the [CLI quickstart](https://learn.chatgpt.com/docs/security/cli) to install
-the CLI and sign in.
+The `@openai/codex-security` package is public. Scans using OpenAI inference
+require Codex Security access. Follow the [CLI
+quickstart](https://learn.chatgpt.com/docs/security/cli) to install the CLI, then [select credentials
+for your provider](https://learn.chatgpt.com/docs/security/cli/reference#select-scan-authentication).
 
 #### Choose a repository source
 
@@ -9327,9 +10054,7 @@ The same options work during interactive repository discovery:
 npx @openai/codex-security bulk-scan --model gpt-6.1-sol --effort medium
 ```
 
-Available effort levels depend on the selected model. Bulk scans support
-`minimal`, `low`, `medium`, `high`, `xhigh`, and `max`; GPT-6.1 Sol requires at
-least `low`.
+Use an `--effort` value supported by your model, provider, and Codex version.
 
 To use OpenRouter or Fireworks, set `OPENROUTER_API_KEY` or `FIREWORKS_API_KEY`,
 respectively, and specify `--provider` and `--model`. For credentials and
@@ -9880,7 +10605,7 @@ codex-security:
   before_script:
     - apt-get update -qq
     - apt-get install -y -qq --no-install-recommends ca-certificates git python3 ripgrep
-    - npm install --prefix /tmp/codex-security-cli --ignore-scripts --no-audit --no-fund @openai/codex-security@0.1.20
+    - npm install --prefix /tmp/codex-security-cli --ignore-scripts --no-audit --no-fund @openai/codex-security@0.8.1
   script:
     - |
       set -eu
@@ -9902,13 +10627,14 @@ codex-security:
           --head "$CI_COMMIT_SHA" \
           --auth api-key \
           --output-dir "$RESULTS_DIR" \
+          --fail-on-severity high \
           --json
       scan_exit="$?"
       set -e
       unset codex_security_api_key
 
       case "$scan_exit" in
-        0|1|2) ;;
+        0|1) ;;
         *) exit "$scan_exit" ;;
       esac
 
@@ -9982,9 +10708,9 @@ full-repository scan.
 
 Open the `codex-security` job and confirm that its artifacts include:
 
-- `scan-manifest.json`
-- `findings.json`
-- `coverage.json`
+- `results/scan-manifest.json`
+- `results/findings.json`
+- `results/report.md`
 - `results.sarif`
 - `scan-exit-code.txt`
 
@@ -10023,7 +10749,7 @@ environment instead of inheriting every GitLab variable. For diff scans, the
 workflow calculates the merge base and binds the scan to the reviewed base and
 head revisions.
 
-The example pins `@openai/codex-security` to `0.1.20`. Retest authentication,
+The example pins `@openai/codex-security` to `0.8.1`. Retest authentication,
 artifacts, SARIF ingestion, and policy gating before changing the pin.
 
 #### Separate reporting from policy enforcement
@@ -10032,21 +10758,25 @@ GitLab ingests SARIF from a successful report job. The pipeline publishes the
 report first and restores the scanner's exit status in a separate
 `codex-security-gate` job.
 
-The report job accepts findings from exit codes `0` and `1`. It accepts exit
-code `2` only when the scan manifest proves the scan completed, coverage is
-explicitly `partial`, and a non-empty SARIF report exists. Other runtime,
-configuration, or export failures remain blocking.
+The report job exports findings only after exit codes `0` and `1`. Any other
+exit code skips SARIF export and blocks the pipeline. An export failure also
+blocks the pipeline.
 
-The final gate preserves these scanner exit codes:
+The report job propagates execution errors and interruptions. When it succeeds,
+the final gate restores the scanner's policy result:
 
-| Exit | Meaning                                                                     |
-| ---- | --------------------------------------------------------------------------- |
-| `0`  | The scan completed with complete coverage and passed its policy.            |
-| `1`  | The scan completed and found an issue at or above the configured threshold. |
-| `2`  | The scan had incomplete coverage or an input or runtime error.              |
+| Exit          | Meaning                                                                     |
+| ------------- | --------------------------------------------------------------------------- |
+| `0`           | The scan completed and passed its policy.                                   |
+| `1`           | The scan completed and found an issue at or above the configured threshold. |
+| `2`           | The scan had an input, runtime, target-integrity, or required-output error. |
+| `130` / `143` | The scan was interrupted or terminated.                                     |
 
-The example temporarily allows exit `2` while you calibrate partial coverage.
-Remove that allowance when incomplete coverage must block the pipeline.
+The example passes `--fail-on-severity high`, so high and critical findings fail
+the gate. Without a severity threshold, completed scans exit `0` by default.
+In `results/scan-manifest.json`, read `scan.scope` for the configured scope and
+`scan.review.excludedPaths` for paths excluded from finding comparisons. Read
+`results/report.md` for follow-up work.
 
 Remediation and publishing run before the final policy gate. An eligible
 finding can produce a verified draft merge request even when the gate later
@@ -10061,8 +10791,8 @@ credentials.
 
 The workflow:
 
-1. Requires complete scan coverage and a `high`- or `critical`-severity
-   finding.
+1. Requires a completed scan manifest for the current revision and a `high`- or
+   `critical`-severity finding.
 2. Confirms that the configured regression test fails before patching.
 3. Generates a patch and rejects changes to CI, credential, binary, or
    other protected files.
@@ -10087,8 +10817,8 @@ source changes.
 #### Advanced: repository command isolation
 
 The `validate`, `patch`, and `verify-fix` commands receive a process-scoped
-`CODEX_API_KEY`. Repository-controlled setup and test commands run as a
-separate unprivileged user in a writable copy of the tracked source files.
+`OPENAI_API_KEY` and use `--auth api-key`. Repository-controlled setup and test
+commands run as a separate unprivileged user in a writable copy of the tracked source files.
 The copy excludes Git metadata, submodule contents, and
 downloaded artifacts. Setup and test commands that require `.git` or
 submodules must run in a separately designed credential-free job.
@@ -10132,10 +10862,10 @@ Configure only the variables needed for the features you enable:
 | Variable                                  | When needed                       | Default or purpose                                          |
 | ----------------------------------------- | --------------------------------- | ----------------------------------------------------------- |
 | `CODEX_SECURITY_API_KEY`                  | Every scan                        | Protected, masked, hidden; scope to `codex-security/openai` |
-| `CODEX_SECURITY_VERSION`                  | CLI upgrade                       | Pinned to `0.1.20`; retest before changing                  |
+| `CODEX_SECURITY_VERSION`                  | CLI upgrade                       | Pinned to `0.8.1`; retest before changing                   |
 | `CODEX_SECURITY_FULL_SCAN_DEFAULT_BRANCH` | Default-branch full scans         | Explicit opt-in; off by default                             |
 | `CODEX_SECURITY_SCHEDULED_DEEP_SCAN`      | Scheduled deep scans              | Explicit opt-in; off by default                             |
-| `CODEX_SECURITY_DEEP_MAX_TIME_HOURS`      | Scheduled deep scans              | Required time budget greater than `0` and less than `8`     |
+| `CODEX_SECURITY_DEEP_MAX_TIME_MINUTES`    | Scheduled deep scans              | Required minute budget greater than `0` and less than `480` |
 | `CODEX_SECURITY_DEEP_MAX_COST`            | Scheduled deep scans              | Required estimated USD cost guardrail greater than `0`      |
 | `CODEX_SECURITY_ENABLE_REMEDIATION`       | Patch generation                  | Protected opt-in; off by default                            |
 | `CODEX_SECURITY_VERIFICATION_COMMAND`     | Patch generation                  | Protected regression test                                   |
@@ -10159,13 +10889,15 @@ identity from the normalized base and head revisions.
 Use diff scans for merge request feedback, standard repository scans
 for the default branch, and scheduled deep scans for broader coverage. Both
 full-repository profiles are off by default. A scheduled deep scan also requires
-`CODEX_SECURITY_DEEP_MAX_TIME_HOURS` and `CODEX_SECURITY_DEEP_MAX_COST`; keep the
-CLI time budget below the job's eight-hour timeout. Measure representative runs
+`CODEX_SECURITY_DEEP_MAX_TIME_MINUTES` and `CODEX_SECURITY_DEEP_MAX_COST`; keep the
+CLI time budget below the job's eight-hour timeout. When adopting the new YAML,
+convert existing hour-based settings to minutes. Measure representative runs
 before setting a budget. Treat `--max-cost` as an estimated cost guardrail, not
 a hard billing cap.
 
-Start with report-only scans. Add `--fail-on-severity` after your team has
-reviewed representative findings, coverage, cost, and runtime. See the
+This example gates on high and critical findings. For report-only scans, remove
+`--fail-on-severity high`; choose a threshold after reviewing representative
+findings, coverage, cost, and runtime. See the
 [CI/CD overview](https://learn.chatgpt.com/docs/security/cli/ci#choose-a-severity-policy) for severity
 policies and the [CLI reference](https://learn.chatgpt.com/docs/security/cli/reference#exit-codes-and-signals)
 for exit-code details.
@@ -10173,11 +10905,12 @@ for exit-code details.
 When a job fails:
 
 - Missing scan artifacts point to a configuration or runner problem.
-- Existing artifacts with partial coverage require reviewing `coverage.json`.
+- For unexpected exclusions, check the scope and review details in
+  `results/scan-manifest.json`.
 - Missing GitLab findings require checking whether the SARIF report job
   succeeded and whether GitLab accepted the report.
-- Skipped remediation requires checking the protected branch, complete
-  coverage, finding severity, verification command, and opt-in variables.
+- Skipped remediation requires checking the protected branch, scan manifest,
+  finding severity, verification command, and opt-in variables.
 - Publishing errors require checking the project token's role, scopes, and
   environment restriction.
 
@@ -12233,7 +12966,7 @@ For automatic review to run, keep all three controls in place:
 
 Requests to a target on the network allowlist stay inside the network boundary and don't automatically trigger Auto-review. To review a sensitive command even when its destination is on the allowlist, create an explicit [command rule](https://learn.chatgpt.com/docs/agent-configuration/rules) under `~/.codex/rules/`:
 
-```python
+```python snippet=configuration reason="Starlark policy configuration interpreted by Codex"
 prefix_rule(
     pattern = ["curl"],
     decision = "prompt",
@@ -13096,7 +13829,7 @@ Note: Rename `experimental_instructions_file` to `model_instructions_file`. Code
 `requirements.toml` is an admin-enforced configuration file that constrains security-sensitive settings users can't override. For details, locations, and examples, see [Admin-enforced requirements](https://learn.chatgpt.com/docs/enterprise/managed-configuration#admin-enforced-requirements-requirementstoml).
 
 For ChatGPT Business and Enterprise users, Codex can also apply cloud-fetched
-requirements. See the security page for precedence details.
+requirements. See the security page for precedence details. To serve CLI policy from your own HTTPS endpoint, see [Self-host Codex configuration for your team](https://learn.chatgpt.com/docs/enterprise/configuration-server).
 
 Use `[features]` in `requirements.toml` to pin runtime feature flags by the same
 canonical keys that `config.toml` uses. Requirements can also include documented
@@ -13203,6 +13936,15 @@ from either one wins.
 | `computer_use.windows.exes[].binary_name`                    | `string`                               |         | Optional `OriginalFilename` from the executable's signed version information. Matching is case-insensitive. If a matching publisher and product rule requires this value but the executable does not provide it, Computer Use blocks the executable.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `computer_use.windows.exes[].product_name`                   | `string`                               |         | Required exact `ProductName` from the executable's signed version information.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `computer_use.windows.exes[].publisher_name`                 | `string`                               |         | Required exact publisher name from the executable's trusted signing certificate, formatted as a Windows X.500 distinguished name.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `config_server`                                              | `table`                                |         | Enroll Codex with a configuration server. Set this in local administrator-controlled requirements.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `config_server.base_url`                                     | `string (HTTPS URL)`                   |         | Base URL of the configuration server enrolled by the administrator. Codex appends /codex/config/bundle to this URL.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `config_server.oauth`                                        | `table`                                |         | Optional company sign-in settings. Omit this table to fetch the bundle without credentials.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `config_server.oauth.authorization_url`                      | `string (HTTPS URL)`                   |         | Authorization endpoint for company browser sign-in. Required when OAuth is configured.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `config_server.oauth.client_id`                              | `string`                               |         | Public OAuth client ID registered for Codex. Required when OAuth is configured.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `config_server.oauth.redirect_port`                          | `number`                               |         | Optional port for the browser callback on 127.0.0.1. By default, Codex chooses an available port.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `config_server.oauth.resource`                               | `string`                               |         | Optional OAuth resource identifier required by the identity provider.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `config_server.oauth.scopes`                                 | `array`                                |         | Optional OAuth permissions to request from the identity provider.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `config_server.oauth.token_url`                              | `string (HTTPS URL)`                   |         | Token endpoint for company sign-in and refresh. Required when OAuth is configured.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `default_permissions`                                        | `string`                               |         | Managed default permission profile. The profile must be allowed by `allowed_permission_profiles`. Set this explicitly for predictable behavior; if omitted, Codex defaults to `:workspace` only when both `:workspace` and `:read-only` are explicitly allowed.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `enforce_residency`                                          | `string`                               |         | Require Codex service traffic to use a supported data residency. Currently accepts `us`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | `experimental_network`                                       | `table`                                |         | Administrator-managed network requirements for sandboxed local commands, enforced from `requirements.toml`. When enabled, these requirements can start the command network proxy without `features.network_proxy`. Browser tools separately check managed network denies and exclusive allowlists. These requirements do not route browser traffic through the proxy or control web search, apps, MCP servers, native-app traffic, or other capability-specific traffic. On supported managed Codex Cloud paths, these requirements constrain command networking alongside separate Cloud environment internet settings. Approved full sandbox escalation can bypass the command proxy where policy permits it. Work Cloud does not inherit these requirements. |
@@ -13582,8 +14324,7 @@ Set `project_root_markers = []` to skip searching parent directories and treat t
 #### Custom model providers
 
 If your organization provides a model gateway, follow
-[Sign in with ChatGPT through a gateway](https://learn.chatgpt.com/docs/enterprise/sign-in-with-chatgpt-through-a-gateway)
-or [Use API/provider credentials](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway)
+[Connect to a gateway](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway)
 for client setup and verification. For organization-wide deployment, see
 [Roll out a gateway](https://learn.chatgpt.com/docs/enterprise/roll-out-a-gateway).
 
@@ -13632,6 +14373,14 @@ Add request headers when needed:
 http_headers = { "X-Example-Header" = "example-value" }
 env_http_headers = { "X-Example-Features" = "EXAMPLE_FEATURES" }
 ```
+
+For browser sign-in through your organization's identity provider, use
+[native gateway OAuth](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway#use-native-gateway-oauth).
+Configure `[model_providers..gateway_oauth]` with the authorization and token
+URLs, public client ID, and token delivery settings. This works with
+`requires_openai_auth = false`; ChatGPT sign-in, PowerShell, the Azure CLI, and
+an external credential helper aren't required. The gateway must accept the OAuth
+token in the configured cookie or custom header.
 
 Use command-backed authentication when a provider needs Codex to fetch bearer tokens from an external credential helper:
 
@@ -14096,22 +14845,37 @@ Example `notify.py` (truncated) that reacts to `agent-turn-complete`:
 
 ```python
 #!/usr/bin/env python3
-import json, subprocess, sys
+import argparse
+import json
+import subprocess
+import sys
+
 
 def main() -> int:
-    notification = json.loads(sys.argv[1])
+    parser = argparse.ArgumentParser(
+        description="Show a Codex turn-completion notification on macOS."
+    )
+    parser.add_argument("notification", type=json.loads, help="Codex notification JSON")
+    notification = parser.parse_args().notification
     if notification.get("type") != "agent-turn-complete":
         return 0
     title = f"Codex: {notification.get('last-assistant-message', 'Turn Complete!')}"
     message = " ".join(notification.get("input-messages", []))
-    subprocess.check_output([
-        "terminal-notifier",
-        "-title", title,
-        "-message", message,
-        "-group", "codex-" + notification.get("thread-id", ""),
-        "-activate", "com.googlecode.iterm2",
-    ])
+    subprocess.check_output(
+        [
+            "terminal-notifier",
+            "-title",
+            title,
+            "-message",
+            message,
+            "-group",
+            "codex-" + notification.get("thread-id", ""),
+            "-activate",
+            "com.googlecode.iterm2",
+        ]
+    )
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())
@@ -14283,9 +15047,7 @@ See [Configuration Reference](https://learn.chatgpt.com/docs/config-file/config-
 
 Source: [Authentication](https://learn.chatgpt.com/docs/auth.md)
 
-For a local client using an organization-provided model gateway, choose
-[Sign in with ChatGPT through a gateway](https://learn.chatgpt.com/docs/enterprise/sign-in-with-chatgpt-through-a-gateway)
-or [API/provider credentials](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway).
+To connect a local client to your organization's gateway with or without ChatGPT sign-in, see [Connect to a gateway](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway).
 Direct Bedrock access uses the
 [Amazon Bedrock authentication options](https://learn.chatgpt.com/docs/amazon-bedrock#authentication-options).
 
@@ -14591,7 +15353,9 @@ When you define a [custom model provider](https://learn.chatgpt.com/docs/config-
 
 - **OpenAI authentication**: Set `requires_openai_auth = true` to use OpenAI authentication. You can then sign in with ChatGPT or an API key. This is useful when you access OpenAI models through an LLM proxy server. When `requires_openai_auth = true`, Codex ignores `env_key`.
 - **Environment variable authentication**: Set `env_key = "<ENV_VARIABLE_NAME>"` to use a provider-specific API key from the local environment variable named `<ENV_VARIABLE_NAME>`.
-- **No authentication**: If you don't set `requires_openai_auth` (or set it to `false`) and you don't set `env_key`, Codex assumes the provider doesn't require authentication. This is useful for local models.
+- **Native gateway OAuth**: Configure `[model_providers..gateway_oauth]` for browser sign-in through your organization's identity provider. It works with or without ChatGPT sign-in. See [Native gateway OAuth](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway#use-native-gateway-oauth) for the gateway requirements and configuration.
+- **Command-backed authentication**: Configure `[model_providers..auth]` to obtain a token from an installed [credential helper](https://learn.chatgpt.com/docs/config-file/config-advanced#custom-model-providers).
+- **No authentication**: For a local model that doesn't require credentials, leave `requires_openai_auth` unset or `false` and omit credential settings, including `env_key`, `experimental_bearer_token`, `auth`, and `gateway_oauth`.
 
 ### Config basics
 
@@ -14830,31 +15594,22 @@ For lifecycle hook configuration, see [Hooks](https://learn.chatgpt.com/docs/hoo
 
 Source: [Models](https://learn.chatgpt.com/docs/models.md)
 
-#### GPT-5.5 retirement
+Choosing a model is about finding the right balance of speed, cost, and capability
+for your task. Sometimes you need a quick first draft. Other times, a complex
+problem calls for more careful reasoning. This guide introduces our latest
+models, shows where each one shines, and helps you find a starting point for
+your work.
 
-Effective October 14, 2026, at noon PDT (19:00 UTC), GPT-5.5 retires from
-Codex for users signed in with ChatGPT. The OpenAI API and Codex sessions
-authenticated with an API key aren't affected.
-
-For Codex with ChatGPT sign-in, choose an available replacement:
-
-- On Plus, Pro, Business, Enterprise, and Edu plans, choose **GPT-6.1 Sol**
-  (`gpt-6.1-sol`) when available.
-- On Free and Go plans, choose **GPT-6 Luna** (`gpt-6-luna`) in the desktop app
-  when available.
-
-Replace `gpt-5.5` in workspace defaults, saved model settings, managed
-configurations, custom agents, scheduled tasks, and scripts that select a model.
-
-See [workspace model availability](https://learn.chatgpt.com/docs/enterprise/workspace-model-availability#prepare-for-the-gpt-55-retirement)
-for administrator guidance.
+GPT-5.5 retirement: [See replacement models and migration
+steps](#gpt-55-retirement).
 
 #### Choose a model
 
 In Work or Codex in the ChatGPT desktop app, use the model and reasoning control
 beneath the composer to choose an available model and adjust its reasoning effort.
 
-Higher reasoning effort can improve results for complex tasks, but it takes
+**Reasoning effort** guides how much work the model puts into thinking through
+your request. Higher effort can improve results for complex tasks, but it takes
 longer and uses more tokens. Start with the default effort and increase it when
 the task needs deeper planning or analysis.
 
@@ -14869,7 +15624,8 @@ These recommendations apply to **ChatGPT Work** on the web. Use the
 model and reasoning control beneath the composer to choose an available model
 and adjust its reasoning effort.
 
-Higher reasoning effort can improve results for complex tasks, but it takes
+**Reasoning effort** guides how much work the model puts into thinking through
+your request. Higher effort can improve results for complex tasks, but it takes
 longer and uses more tokens. Start with the default effort and increase it when
 the task needs deeper planning or analysis.
 
@@ -14879,6 +15635,9 @@ beyond a single-agent run. It uses
 making it useful for larger tasks that can be split across subagents.
 
 #### Choose a model
+
+GPT-6.1 Terra requires Codex CLI 0.159.0 or later. To use it, run
+`codex -m gpt-6.1-terra`.
 
 In an interactive CLI session, use `/model` to switch models or adjust
 reasoning effort. You can also choose a model when you launch Codex with
@@ -14894,7 +15653,8 @@ The same option works with non-interactive runs. For example:
 codex exec -m gpt-6.1-sol "Review the current changes"
 ```
 
-Higher reasoning effort can improve results for complex tasks, but it takes
+**Reasoning effort** guides how much work the model puts into thinking through
+your request. Higher effort can improve results for complex tasks, but it takes
 longer and uses more tokens. Start with the default effort and increase it when
 the task needs deeper planning or analysis.
 
@@ -14908,7 +15668,8 @@ making it useful for larger tasks that can be split across subagents.
 Use the model switcher below the composer to choose an available model and
 reasoning effort.
 
-Higher reasoning effort can improve results for complex tasks, but it takes
+**Reasoning effort** guides how much work the model puts into thinking through
+your request. Higher effort can improve results for complex tasks, but it takes
 longer and uses more tokens. Start with the default effort and increase it when
 the task needs deeper planning or analysis.
 
@@ -14917,68 +15678,37 @@ beyond a single-agent run. It uses
 [subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents) to accelerate complex work,
 making it useful for larger tasks that can be split across subagents.
 
-#### Recommended models
-
-For complex coding and agentic workflows, use GPT-6.1 Sol when available to your
-account and client. Use Luna for focused, repeatable tasks. Select `gpt-6.1-sol`
-or `gpt-6-luna` in your model picker or saved configuration when available.
-
-GPT-6.1 Sol offers near-Astra performance for complex work at a lower cost
-than Astra. See [GPT-6.1 Sol](#gpt-61-sol) for its separate rollout.
-
-In ChatGPT, GPT-6.1 Sol, GPT-6 Sol, and GPT-6 Luna are available in Work and
-Codex. They aren't available in Chat.
-
-GPT-5.6 Sol, GPT-5.6 Terra, and GPT-5.6 Luna remain available during the rollout. Selecting a
-new model doesn't change workspace permissions or grant access to it.
-
-For Ultrafast mode availability and credit usage on Pro $500 and eligible
-Enterprise and Edu plans, see [Speed](https://learn.chatgpt.com/docs/agent-configuration/speed#ultrafast-mode).
-
-Availability depends on the rollout, your sign-in method, and your client.
-See [pricing](https://learn.chatgpt.com/docs/pricing) for plan access and usage, and
-[workspace model availability](https://learn.chatgpt.com/docs/enterprise/workspace-model-availability)
-for Enterprise access.
-
-#### GPT-6.1 Sol
-
-The GPT-6.1 Sol launch rollout includes Plus, Pro, Business, Enterprise, and Edu
-in Codex in the desktop app and CLI, and ChatGPT Work on the web and mobile.
-For Enterprise and Edu, the plan keeps GPT-6.1 Sol off by default until an
-administrator enables it.
-Free and Go are not included at launch.
-
-Standard and Fast modes are available where supported. Ultrafast is available
-on Pro $500 and eligible Enterprise and Edu plans. See
-[Ultrafast mode](https://learn.chatgpt.com/docs/agent-configuration/speed#ultrafast-mode) for plan and
-workspace requirements.
-
-Use `gpt-6.1-sol`. Available controls depend on your plan, client, and workspace
-settings.
-Reasoning effort ranges from Light to Ultra. Max and Ultra depend on your settings.
-
-See [pricing](https://learn.chatgpt.com/docs/pricing) for credit usage and
-[model selection](https://developers.openai.com/api/docs/guides/model-selection#when-to-consider-gpt-61-sol)
-for guidance on comparing it with Astra and Luna. To see how its API
-specifications differ from the previous Sol model, [compare GPT-6.1 Sol and
-GPT-6 Sol](https://developers.openai.com/api/docs/models/compare?model=gpt-6.1-sol&model2=gpt-6-sol).
-
 In the ChatGPT desktop app and ChatGPT Work on the web, start with the default
 Power setting available to your account. Move toward **Smarter** for deeper
 reasoning or **Faster** for faster, lower-cost work. Open **Advanced** to
-choose a specific model, reasoning effort, or speed.
+choose a specific model, reasoning effort, or speed. To try GPT-6.1 Terra in
+this example, open **Advanced** and choose it from the model list.
 
 The six Power presets shown are Luna High, GPT-6 Sol Light (selected
 in this example), GPT-6 Sol Medium, Astra Light, Astra Medium, and Astra Extra
 High. Some paid plans omit Astra Extra High. Advanced controls are illustrative;
 available options and defaults vary by plan, client, workspace settings, and rollout.
 
+#### Recommended models
+
+Start with the kind of work you want to do. Astra suits the most demanding
+workflows. GPT-6.1 Sol offers near-Astra performance at a lower cost than Astra.
+GPT-6.1 Terra is a fast, efficient choice for writing, visual understanding, and
+computer use. Luna suits focused, repeatable tasks.
+
+These recommendations apply to ChatGPT Work and Codex. For Chat, see [models in ChatGPT](https://help.openai.com/en/articles/20001354-gpt-6-and-other-models-in-chatgpt) in the Help Center.
+
+GPT-6.1 Sol uses a default context window of 500,000 tokens in Codex and
+ChatGPT Work. See [pricing](https://learn.chatgpt.com/docs/pricing) for subscription usage and credit rates.
+
+For model availability, pricing, and usage limits, see [ChatGPT Work and Codex](https://help.openai.com/en/articles/20001275-chatgpt-work-and-codex) in the Help Center.
+
 #### Choosing a model
 
-Choose **Astra** when a task needs the strongest capability across steps and
-tools. **GPT-6.1 Sol** offers near-Astra performance at a lower cost
-than Astra. Use **GPT-6.1 Sol** when available to your account and client, and
-**Luna** for clear, repeatable tasks.
+Start with a task you know well and compare the result with what you need.
+Consider how long you're willing to wait, how much usage the task requires,
+and the level of detail or judgment involved. You can change models as your
+work changes.
 
 #### Where each model shines
 
@@ -14990,11 +15720,35 @@ than Astra. Use **GPT-6.1 Sol** when available to your account and client, and
 - **GPT-6.1 Sol, for repeated, long-running work.** Consider GPT-6.1 Sol for
   work across code, apps, and documents when cost matters. Keep Astra for your
   most demanding work.
+- **GPT-6.1 Terra, for everyday writing and visual work.** Choose Terra for clear
+  communication, interpreting images and screens, and completing tasks across
+  supported apps. Try it for drafting proposals, reviewing visual materials,
+  or filling out forms from source documents.
 - **Luna, for clear, repeatable tasks.** Choose Luna for specific, high-volume
   tasks when you know what a good result looks like, such as extraction,
   classification, transformation, and structured summaries.
 
+#### Try an example
+
+Use your own materials with these prompts, and tell ChatGPT what a useful
+result should include.
+
+| Model         | Task                                           | Example prompt                                                                                                                                                                        |
+| ------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Astra         | Work through a complex decision.               | "Compare these three vendor proposals against our requirements. Explain the tradeoffs, recommend an option, and list the questions we should resolve before deciding."                |
+| GPT-6.1 Sol   | Bring several sources into a working document. | "Use this project brief, meeting notes, and timeline to draft an implementation plan. Identify dependencies, flag conflicting details, and list the decisions we still need to make." |
+| GPT-6.1 Terra | Make sense of visual information.              | "Review these dashboard screenshots and summarize the main changes. Refer to the chart labels and values, and flag anything you can't read confidently."                              |
+| Luna          | Organize information into a consistent format. | "Turn these meeting notes into a table of action items, owners, and due dates. Mark any missing owner or date as unspecified."                                                        |
+
+Review the result against your source materials, especially names, numbers,
+and details taken from images. For tasks on websites or in desktop apps, check
+the [browser use](https://learn.chatgpt.com/docs/browser) and [computer use](https://learn.chatgpt.com/docs/computer-use) setup
+requirements first.
+
 #### Pick a reasoning effort
+
+For example, you might use a lower effort to rewrite a short email and a higher
+effort to compare several proposals with competing requirements.
 
 For GPT-6.1 Sol, start with the reasoning effort available by default in your
 client and adjust based on the task. Start with **High** for Luna or **Light**
@@ -15029,6 +15783,25 @@ to see its supported Max or Ultra options.
 If your model supports Ultra but it doesn't appear in the desktop app's model
 slider, go to **Settings** > **Configuration**, then turn on
 **Ultra in model picker slider**.
+
+#### GPT-5.5 retirement
+
+Effective October 14, 2026, at noon PDT (19:00 UTC), GPT-5.5 retires from
+Codex for users signed in with ChatGPT. The OpenAI API and Codex sessions
+authenticated with an API key aren't affected.
+
+For Codex with ChatGPT sign-in, choose an available replacement:
+
+- On Plus, Pro, Business, Enterprise, and Edu plans, choose **GPT-6.1 Sol**
+  (`gpt-6.1-sol`) when available.
+- On Free and Go plans, choose **GPT-6 Luna** (`gpt-6-luna`) in the desktop app
+  when available.
+
+Replace `gpt-5.5` in workspace defaults, saved model settings, managed
+configurations, custom agents, scheduled tasks, and scripts that select a model.
+
+See [workspace model availability](https://learn.chatgpt.com/docs/enterprise/workspace-model-availability#prepare-for-the-gpt-55-retirement)
+for administrator guidance.
 
 #### Other models
 
@@ -15981,7 +16754,7 @@ prefer_mxc = true
 
 # url = "https://github-mcp.example.com/mcp" # required
 
-# bearer_token_env_var = "GITHUB_TOKEN" # optional; Authorization: Bearer
+# bearer_token_env_var = "GITHUB_TOKEN" # optional; Authorization: Bearer <token>
 
 # http_headers = { "X-Example" = "value" } # optional static headers
 
@@ -16003,7 +16776,7 @@ prefer_mxc = true
 
 # client_id = "my-pre-registered-client" # OAuth client registered with the provider
 
-# client_secret = "" # optional confidential client secret; stored in config
+# client_secret = "<client-secret>" # optional confidential client secret; stored in config
 
 # callback_url = "http://127.0.0.1/callback" # saved registered callback for this client
 
@@ -16035,7 +16808,7 @@ prefer_mxc = true
 
 # model_provider = "amazon-bedrock"
 
-# model = ""
+# model = "<bedrock-model-id>"
 
 # [model_providers.amazon-bedrock.aws]
 
@@ -17509,7 +18282,7 @@ ChatGPT can use context from your open tabs when a task needs it.
 
 1. Open the page you want to work with.
 2. Select ChatGPT from the browser toolbar or **Extensions** menu. On macOS, you
-   can also press Cmd+Shift+..
+   can also press Cmd+Shift+&nbsp;.&nbsp;.
 3. Ask a question about the page or give ChatGPT a task.
 
 The panel stays with the tab where you opened it. Chats you start in side chat
@@ -18218,7 +18991,7 @@ source control.
 
 Codex identifies missing configuration and asks for values it can't infer.
 In the environment configuration, select **Manage** beside **Environment variables**
-or **Network secrets**. Choose how to supply each value:
+or **HTTP secrets**. Choose how to supply each value:
 
 | Configuration        | Use it for                                    | Delivery                                                                                       |
 | -------------------- | --------------------------------------------- | ---------------------------------------------------------------------------------------------- |
@@ -18282,8 +19055,8 @@ controls creating and editing environments shared with the workspace. See
 #### Agent Security
 
 The environment's [internet-access settings](#connect-to-services) define which
-domains its VM can reach. VPN settings connect that VM to services on a private
-network.
+public internet destinations its VM can reach. VPN settings independently connect
+that VM to services on a private network.
 
 In Enterprise workspaces, admins use
 [Agent Security](https://learn.chatgpt.com/docs/enterprise/agent-security) to configure workspace
@@ -18297,12 +19070,20 @@ Cloud overrides.
 Configure access to the package registries, APIs, and other services your
 workflow needs:
 
-1. In the environment configuration, turn on **Allow Codex to access internet**.
-2. Under **Allow domains**, choose **Package managers** or **Custom domains only**,
-   then add required hosts under **Additional allowed domains**. Use
-   **All (unrestricted)** when the workflow needs broader access.
+1. In the environment configuration, choose how much public internet access your
+   workflow needs. Turn on **Enable all public internet access** for full public access.
+   This includes the destinations covered by the package-manager and
+   additional-domain controls, so those narrower controls are disabled.
+2. To restrict public internet access, turn off **Enable all public internet access**, then allow
+   package managers or add specific hosts under **Additional allowed domains**.
+   Turning off full public access still permits these allowed destinations.
 3. Save and test the services during setup. Publish or republish, then verify
    access in a new task.
+
+Public internet access and [VPN access](#private-networking-vpn) are independent.
+You can use either or both. Public internet settings apply to connections outside
+Tailscale, even when a Tailscale subnet route uses public IP addresses. Restricting
+public internet access doesn't disable the configured VPN.
 
 For workspace requirements, see [Agent Security](#agent-security). Allowing a
 destination doesn't supply credentials or grant permissions in that service.
@@ -18336,13 +19117,15 @@ the service's authentication and authorization controls in place.
 
 #### Private networking (VPN)
 
-Give cloud tasks access to internal APIs, package registries, and other HTTP or
-HTTPS services on your private network through a VPN connection.
+Give cloud tasks access to services on your private network through a VPN
+connection. Tailscale uses your configured private DNS, subnet routes, and access
+rules. You don't need a separate Codex IP or domain allowlist for destinations
+reached through Tailscale, including HTTP, HTTPS, and other TCP services.
 
-1. Open the environment's **Advanced** > **VPN** settings and select **Add**.
+1. In the environment configuration, select the pencil icon beside **Tailscale**.
 2. Enter the connection credentials from your VPN provider.
-3. Allow the required destinations in both your VPN's access rules and the
-   environment's [internet-access settings](#connect-to-services).
+3. Configure the required routes, DNS, and access rules in Tailscale so the
+   environment's VPN identity can reach the intended services.
 4. Save, then publish or republish. Start a new task and test the service.
 
 Tailscale is currently the supported VPN provider. When creating a Tailscale
@@ -18357,10 +19140,31 @@ If your service uses your organization's internal DNS, configure split DNS in
 the Tailscale admin console to send queries for your internal domain to your DNS
 server. Use the service's fully qualified hostname, such as
 `api.corp.example.com`, which must resolve to an IPv4 address. The destination
-must also be allowed by the environment's internet-access settings and your
-Tailscale access rules.
+must be reachable through your configured Tailscale routes and permitted by
+your Tailscale access rules.
 
 Tasks in a shared environment use its configured VPN identity.
+
+#### Connect to TCP services
+
+Use the VPN to connect to TCP services such as databases or SSH. TCP destinations
+must use IPv4 addresses routed through Tailscale. For hostnames, every resolved
+IPv4 address must use those routes. Platform-protected addresses remain blocked.
+
+TCP clients must connect through the environment's HTTP CONNECT proxy at
+`proxy:8088`, either directly or through a local forwarding tool. For hostname
+destinations, preserve the hostname for proxy-side DNS resolution. TCP tunnels
+don't intercept TLS or inject network secrets: the client must supply the service's
+credentials and verify its TLS certificate when applicable. Requests that need
+[network-secret substitution](#configure-environment-variables-and-network-secrets)
+must use the configured HTTPS proxy and meet the secret's allowed-domain rules;
+substitution works on port 443.
+
+After changing VPN configuration, save the changes, then publish or republish the
+environment. Replace existing running environments to use the updated VPN
+configuration. Start a new task and test access. Detaching the VPN from a draft
+doesn't revoke existing connections; replace or terminate the affected environment
+to revoke access.
 
 #### Access cloud resources with OIDC
 
@@ -18529,7 +19333,7 @@ Check that you added the value to the right place in the environment configurati
 
 - **Environment variables:** use these for values that programs need to read
   directly, such as `APP_MODE=development`.
-- **Network secrets:** use these for credentials sent to an allowed HTTPS
+- **HTTP secrets:** use these for credentials sent to an allowed HTTPS
   service, such as a private registry token. Programs receive a placeholder;
   the proxy substitutes the credential in matching requests. If the program
   needs to read the raw value, add it under **Environment variables**.
@@ -18545,8 +19349,8 @@ for setup instructions.
 
 1. Confirm the client uses the environment's configured HTTP/HTTPS proxy.
    When testing with `curl`, omit `--noproxy` so the request uses that proxy.
-2. Check the destination against both the environment's allowed domains and
-   the VPN's access rules.
+2. For Tailscale destinations, check the VPN's routes and access rules. For
+   public internet destinations, check the environment's allowed domains.
 3. If the service is reachable by IP address but not by hostname, check your
    Tailscale DNS settings. For an internal company domain, verify that split DNS
    points to the correct DNS server and that the server is reachable through
@@ -19533,7 +20337,7 @@ Predictions use the conversation in your current thread. If context from past wo
 
 #### Availability and controls
 
-Composer predictions is currently in beta for users aged 18 and older on personal ChatGPT Pro plans in supported regions. It’s available in local and SSH threads in the Codex desktop app with GPT-6 Astra and GPT-6.1 Sol. Predictions are enabled by default for eligible users. You can turn them on or off using the **Show predictions** toggle in **Settings → General → Composer**.
+Composer predictions is currently in beta for users aged 18 and older on personal ChatGPT Pro plans in supported regions. It’s available in local and SSH threads in the Codex desktop app with GPT-6 Astra, GPT-6.1 Sol, and GPT-6.1 Terra. Predictions are enabled by default for eligible users. You can turn them on or off using the **Show predictions** toggle in **Settings → General → Composer**.
 
 Generating predictions doesn’t count toward your Codex usage limits or consume credits. When you send a message, including an accepted prediction, normal Codex usage limits and billing apply.
 
@@ -21218,7 +22022,7 @@ Worktrees require a Git repository. Make sure the project you selected lives in 
 
 3.  Submit your prompt
 
-    Submit your prompt, and Codex creates a Git worktree based on the branch you selected. By default, Codex works in a ["detached HEAD"](https://git-scm.com/docs/git-checkout#_detached_head).
+    Submit your prompt, and Codex creates a Git worktree based on the branch you selected. By default, Codex works in a [detached HEAD](https://git-scm.com/docs/git-checkout#_detached_head) state.
 
 4.  Choose where to keep working
 
@@ -21261,11 +22065,9 @@ Since Handoff uses Git operations, any files that are part of your `.gitignore` 
 
 #### Advanced details
 
-#### Codex-managed and permanent worktrees
+#### Codex-managed worktrees
 
 By default, chats use a Codex-managed worktree. These are meant to feel lightweight and disposable. A Codex-managed worktree is typically dedicated to one chat, and Codex returns that chat to the same worktree if you hand it back there later.
-
-If you want a long-lived environment, create a permanent worktree from the three-dot menu on a project in the sidebar. This creates a new permanent worktree as its own project. Permanent worktrees aren't automatically deleted, and you can start multiple chats from the same worktree.
 
 #### How Codex manages worktrees for you
 
@@ -21292,7 +22094,7 @@ Codex skips source symlinks and won't overwrite files that already exist in the 
 
 Suppose Codex finishes some work on a worktree and you choose to create a `feature/a` branch on it using **Create branch here**. Now, you want to try it on your local checkout. If you tried to check out the branch, you would get the following error:
 
-```
+```text
 fatal: 'feature/a' is already used by worktree at '<WORKTREE_PATH>'
 ```
 
@@ -21304,9 +22106,9 @@ If you plan on checking out the branch locally, use Handoff to move the chat int
 
 Git prevents the same branch from being checked out in more than one worktree at a time because a branch represents a single mutable reference (`refs/heads/`) whose meaning is “the current checked-out state” of a working tree.
 
-When a branch is checked out, Git treats its HEAD as owned by that worktree and expects operations like commits, resets, rebases, and merges to advance that reference in a well-defined, serialized way. Allowing multiple worktrees to simultaneously check out the same branch would create ambiguity and race conditions around which worktree’s operations update the branch reference, potentially leading to lost commits, inconsistent indexes, or unclear conflict resolution.
+When a branch is checked out, Git treats its HEAD as owned by that worktree and expects operations like `git commit`, `git reset`, `git rebase`, and `git merge` to advance that reference in a well-defined, serialized way. Allowing multiple worktrees to simultaneously check out the same branch would create ambiguity and race conditions around which worktree’s operations update the branch reference, potentially leading to lost commits, inconsistent indexes, or unclear conflict resolution.
 
-By enforcing a one-branch-per-worktree rule, Git guarantees that each branch has a single authoritative working copy, while still allowing other worktrees to safely reference the same commits via detached HEADs or separate branches.
+By enforcing a one-branch-per-worktree rule, Git guarantees that each branch has a single authoritative working copy, while still allowing other worktrees to safely reference the same commits in a detached HEAD state or on separate branches.
 
 #### Worktree cleanup
 
@@ -21318,7 +22120,8 @@ Codex tries to avoid deleting worktrees that are still important. Codex-managed 
 
 - A pinned chat is tied to it
 - The chat is still in progress
-- The worktree is a permanent worktree
+
+Permanent worktrees created in earlier versions remain available and protected from automatic cleanup. You can no longer create permanent worktrees from the project menu.
 
 Codex-managed worktrees are deleted automatically when:
 
@@ -21345,8 +22148,6 @@ Codex returns it to the same associated worktree.
 Chats can remain in your history even if the underlying worktree directory is
 deleted. For Codex-managed worktrees, Codex saves a snapshot before deleting
 the worktree and offers to restore it if you reopen the associated chat.
-Permanent worktrees are not automatically deleted when you archive their
-chats.
 
 ### Appshots
 
@@ -22677,6 +23478,49 @@ Don't use sites to process Protected Health Information; target children under 1
 
 See [Creating and managing ChatGPT sites](https://help.openai.com/en/articles/20001339) for current limits and policy links.
 
+#### Pricing
+
+**Your plan includes a monthly allowance that covers your initial hosting usage.** You can create as many Sites as you want. Hosting keeps your Site available to visitors. Its usage depends on traffic and storage.
+
+#### What will my plan cover?
+
+Your plan includes a monthly allowance for hosting, traffic, and storage across your Sites. The amount depends on your plan. Enterprise usage draws from your organization’s existing credit pool, according to your agreement. Upgrading from Plus to Pro gives you an expanded hosting allowance. Building and editing a Site count toward your plan’s [Codex usage](https://learn.chatgpt.com/docs/pricing).
+
+Credits measure hosting usage. Your plan’s allowance covers that usage before overages apply. Traffic and storage contribute separately:
+
+- **Traffic** is measured by the requests your Site handles, such as loading a page, image, or other resource. A page visit can generate multiple requests, typically 30–50, though the number varies by Site.
+- **Database storage** holds saved records, such as form responses. A Site with a database has a monthly base fee, even when the database is empty, plus usage for the data it stores.
+- **File storage** holds uploaded files, such as images or PDFs. Usage depends on how much you store and for how long.
+
+Hosting is free through December 31, 2026. Starting **January 1, 2027**, we’ll
+turn on metering and you’ll pay overages only for usage above your plan’s
+included monthly hosting allowance. Enterprise billing follows your
+organization’s agreement.
+
+Starting **December 1, 2026**, you’ll be able to view traffic and storage usage for each Site. Workspace admins will be able to compare usage across their workspace.
+
+#### Hosting usage rates
+
+The following rates are proposed to take effect on January 1, 2027. All credit amounts are approximate.
+
+| What you use                                                       | Billing unit             | Approx. credits |
+| ------------------------------------------------------------------ | ------------------------ | --------------- |
+| Site without storage                                               | 1 Site per month         | 0               |
+| Site with storage, including an empty database                     | 1 Site per month         | 25              |
+| Traffic                                                            | 100,000 requests         | 16              |
+| Database storage (saved records, such as form responses)           | 1 GiB stored for a month | 150             |
+| File storage (uploaded files, such as images or PDFs)              | 1 GiB stored for a month | 3.75            |
+| Custom domain (domain registration costs extra)                    | 1 domain per month       | 25              |
+| Private connection (Enterprise only; a tunnel to a private system) | 1 tunnel per month       | 125             |
+
+For example, a Site with an empty database uses approximately 25 credits per month before traffic. With 1 GiB of saved records for a full month, its base fee and database storage use approximately 175 credits, excluding traffic and files. One GiB is about 1.07 GB.
+
+#### Estimate your monthly cost
+
+Choose whether your Site has a database, then adjust monthly requests, saved records, and uploaded files to estimate your hosting usage.
+
+Estimates assume a full month of storage. Select **This Site has a database** to include its base fee even when saved records are zero. Custom domains and private connections cost extra, as listed in [Hosting usage rates](#hosting-usage-rates).
+
 #### Next up
 
 [
@@ -23370,15 +24214,15 @@ Examples include:
 
 Feature-detect each extension and provide a fallback when practical:
 
-```js
+```typescript
 const openai = typeof window !== "undefined" ? window.openai : undefined;
 
 if (openai?.requestModal) {
   await openai.requestModal({
-    /* ... */
+    template: "ui://widget/details.html",
   });
 } else {
-  // Fallback behavior for hosts without this extension.
+  document.body.textContent = "This host does not support modals.";
 }
 ```
 
@@ -23492,9 +24336,11 @@ Best practices:
 
 Example (decoupled dice tools):
 
-```ts
+```typescript
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod/v3";
+import { build } from "esbuild";
+import { fileURLToPath } from "node:url";
 
 const TEMPLATE_URI = "ui://widget/dice.html";
 
@@ -23503,75 +24349,19 @@ const server = new McpServer(
   { capabilities: { tools: {} } }
 );
 
-// The widget only renders the latest tool result.
-// Re-roll calls the data tool directly to avoid remounting the widget.
-const widgetHtml = `
-  <div style="font-family: system-ui; padding: 8px;">
-    <div style="font-size: 20px; margin-bottom: 6px;">
-      Result: <span id="out">—</span>
-    </div>
-    <button id="reroll">Re-roll</button>
-  </div>
-
-  <script>
-    const outputEl = document.getElementById("out");
-    const rerollButton = document.getElementById("reroll");
-    const pendingRequests = new Map();
-    let nextRequestId = 1;
-    let latestToolInput;
-    let latestToolOutput;
-
-    function render(result) {
-      outputEl.textContent = String(result?.value ?? "—");
-    }
-
-    function request(method, params) {
-      const id = nextRequestId++;
-      window.parent.postMessage({ jsonrpc: "2.0", id, method, params }, "*");
-      return new Promise((resolve, reject) => {
-        pendingRequests.set(id, { resolve, reject });
-      });
-    }
-
-    window.addEventListener(
-      "message",
-      (event) => {
-        if (event.source !== window.parent) return;
-        const message = event.data;
-        if (!message || message.jsonrpc !== "2.0") return;
-
-        if (message.id !== undefined && pendingRequests.has(message.id)) {
-          const pending = pendingRequests.get(message.id);
-          pendingRequests.delete(message.id);
-          if (message.error) pending.reject(message.error);
-          else pending.resolve(message.result);
-          return;
-        }
-
-        if (message.method === "ui/notifications/tool-input") {
-          latestToolInput = message.params;
-        }
-
-        if (message.method === "ui/notifications/tool-result") {
-          latestToolOutput = message.params?.structuredContent;
-          render(latestToolOutput);
-        }
-      },
-      { passive: true }
-    );
-
-    rerollButton.onclick = async () => {
-      const sides = latestToolOutput?.sides ?? latestToolInput?.sides ?? 6;
-      const next = await request("tools/call", {
-        name: "roll_dice",
-        arguments: { sides },
-      });
-      if (next?.structuredContent) {
-        render(next.structuredContent);
-      }
-    };
-  </script>
-`.trim();
+// Bundle the same browser source that is type-checked and tested directly.
+const widgetBundle = await build({
+  entryPoints: [fileURLToPath(new URL("./dice-widget.ts", import.meta.url))],
+  bundle: true,
+  format: "esm",
+  platform: "browser",
+  write: false,
+});
+const widgetScript = widgetBundle.outputFiles[0].text.replace(
+  /<\/script/gi,
+  "<\\/script"
+);
+const widgetHtml = `<!doctype html><html lang="en"><meta charset="utf-8"><title>Dice widget</title><body><script type="module">${widgetScript}</script></body></html>`;
 
 server.registerResource("dice-widget", TEMPLATE_URI, {}, async () => ({
   contents: [
@@ -23644,6 +24434,63 @@ server.registerTool(
 export default server;
 ```
 
+Install `esbuild` with the server dependencies, then save this browser code as
+`dice-widget.ts` beside the server file:
+
+```typescript
+import { App } from "@modelcontextprotocol/ext-apps";
+
+const container = document.createElement("div");
+container.style.cssText = "font-family: system-ui; padding: 8px;";
+const resultLine = document.createElement("div");
+resultLine.style.cssText = "font-size: 20px; margin-bottom: 6px;";
+const output = document.createElement("span");
+output.id = "out";
+output.textContent = "—";
+resultLine.append("Result: ", output);
+const rerollButton = document.createElement("button");
+rerollButton.id = "reroll";
+rerollButton.textContent = "Re-roll";
+rerollButton.disabled = true;
+container.append(resultLine, rerollButton);
+document.body.append(container);
+
+const app = new App({ name: "Dice widget", version: "1.0.0" });
+let latestInput: Record<string, unknown> = {};
+let latestOutput: Record<string, unknown> = {};
+
+function render(result: Record<string, unknown>) {
+  latestOutput = result;
+  output.textContent = String(result.value ?? "—");
+}
+
+app.ontoolinput = ({ arguments: input }) => {
+  latestInput = input ?? {};
+};
+app.ontoolresult = (result) => {
+  render(result.structuredContent ?? {});
+};
+
+// Call the data tool without remounting the widget.
+rerollButton.onclick = async () => {
+  const candidate = latestOutput.sides ?? latestInput.sides;
+  const sides =
+    typeof candidate === "number" &&
+    Number.isInteger(candidate) &&
+    candidate >= 2
+      ? candidate
+      : 6;
+  const next = await app.callServerTool({
+    name: "roll_dice",
+    arguments: { sides },
+  });
+  if (next.structuredContent) render(next.structuredContent);
+};
+
+await app.connect();
+rerollButton.disabled = false;
+```
+
 #### Manage state
 
 UI from an MCP server works with three kinds of state:
@@ -23707,12 +24554,16 @@ there is nothing to `await`.
 ```tsx
 import { useState } from "react";
 
-export function TaskList({ tasks }) {
+export function TaskList({
+  tasks,
+}: {
+  tasks: { id: string; title: string }[];
+}) {
   const [state, setState] = useState(
     window.openai?.widgetState ?? { selectedId: null }
   );
 
-  function selectTask(selectedId) {
+  function selectTask(selectedId: string) {
     const nextState = { ...state, selectedId };
     setState(nextState);
     window.openai?.setWidgetState?.(nextState);
@@ -23748,13 +24599,15 @@ For UI that works with images, use the structured widget-state shape:
 - `imageIds`: File IDs the model should receive on later turns.
 
 ```tsx
+const selectedFiles = await window.openai.selectFiles();
+
 window.openai.setWidgetState({
   modelContent: "Review the currently selected images.",
   privateContent: {
     currentView: "image-viewer",
     filters: ["crop", "sharpen"],
   },
-  imageIds: ["file_123", "file_456"],
+  imageIds: selectedFiles.map((file) => file.fileId),
 });
 ```
 
@@ -23787,7 +24640,7 @@ it’s time to scaffold your component project.
 
 As best practice, keep the component code separate from your server logic. A common layout is:
 
-```
+```text
 plugin-ui/
   server/            # MCP server (Python or Node)
   web/               # Component bundle source
@@ -23802,7 +24655,7 @@ Create the project and install dependencies (Node 18+ recommended):
 ```bash
 cd plugin-ui/web
 npm init -y
-npm install react@^18 react-dom@^18
+npm install react@^19 react-dom@^19
 npm install -D typescript esbuild
 ```
 
@@ -23838,6 +24691,8 @@ Each example shows how to bundle assets, wire host APIs, and structure state for
 A small helper to subscribe to `ui/notifications/tool-result`:
 
 ```tsx
+import { useEffect, useState } from "react";
+
 type ToolResult = { structuredContent?: unknown } | null;
 
 export function useToolResult() {
@@ -23865,17 +24720,15 @@ Render from `toolResult?.structuredContent`, and treat it as untrusted input.
 #### Widget localization
 
 The host mirrors the locale to `document.documentElement.lang`. Use that locale
-to load translations and format dates/numbers. A common pattern with
-`react-intl`:
+to load translations and format dates/numbers. Run `npm install react-intl`
+in the `web/` directory before using this example:
 
 ```tsx
-import { IntlProvider } from "react-intl";
-import en from "./locales/en-US.json";
-import es from "./locales/es-ES.json";
+import { IntlProvider, FormattedMessage } from "react-intl";
 
 const messages: Record<string, Record<string, string>> = {
-  "en-US": en,
-  "es-ES": es,
+  "en-US": { greeting: "Hello" },
+  "es-ES": { greeting: "Hola" },
 };
 
 export function PluginUI() {
@@ -23885,7 +24738,7 @@ export function PluginUI() {
       locale={locale}
       messages={messages[locale] ?? messages["en-US"]}
     >
-      {/* Render UI with <FormattedMessage> or useIntl() */}
+      <FormattedMessage id="greeting" defaultMessage="Hello" />
     </IntlProvider>
   );
 }
@@ -23899,7 +24752,7 @@ Once you finish writing your React component, you can build it into a single Jav
 // package.json
 {
   "scripts": {
-    "build": "esbuild src/component.tsx --bundle --format=esm --outfile=dist/component.js"
+    "build": "esbuild src/component.tsx --bundle --format=esm --jsx=automatic --outfile=dist/component.js"
   }
 }
 ```
@@ -23913,7 +24766,7 @@ Expose the component as an MCP resource with the MCP Apps UI MIME type
 `@modelcontextprotocol/ext-apps/server`, prefer `RESOURCE_MIME_TYPE` instead of
 embedding the string:
 
-```ts
+```typescript
 import {
   registerAppResource,
   RESOURCE_MIME_TYPE,
@@ -24244,8 +25097,12 @@ Run the script after both elements exist:
 ```
 
 ```javascript
-const summary = document.getElementById("delivery-summary");
-const button = document.getElementById("discuss-delivery");
+const summary = /** @type {HTMLElement} */ (
+  document.getElementById("delivery-summary")
+);
+const button = /** @type {HTMLButtonElement} */ (
+  document.getElementById("discuss-delivery")
+);
 
 button.hidden = typeof document.oai?.annotation?.request !== "function";
 
@@ -24309,8 +25166,12 @@ an `oai-annotation-container-text` attribute:
 Run this script after both elements exist:
 
 ```javascript
-const passage = document.getElementById("draft-passage");
-const button = document.getElementById("discuss-passage");
+const passage = /** @type {HTMLElement} */ (
+  document.getElementById("draft-passage")
+);
+const button = /** @type {HTMLButtonElement} */ (
+  document.getElementById("discuss-passage")
+);
 
 button.hidden = typeof document.oai?.annotation?.request !== "function";
 
@@ -24398,9 +25259,12 @@ the cards directly; selection attributes aren't required:
 Run this script after creating the preview:
 
 ```javascript
-const preview = document.getElementById("component-preview");
+const preview = /** @type {HTMLElement} */ (
+  document.getElementById("component-preview")
+);
 const annotation = document.oai?.annotation;
 
+/** @param {CustomEvent<{ callback: string; value: number | string }>} event */
 function previewSpacing(event) {
   const { callback, value } = event.detail;
   if (callback === "setCardPadding") {
@@ -24408,6 +25272,7 @@ function previewSpacing(event) {
   }
 }
 
+/** @type {{ dispose(): void } | undefined} */
 let registration;
 if (typeof annotation?.registerControls === "function") {
   preview.addEventListener("oaiannotationcontrolchange", previewSpacing);
@@ -24464,7 +25329,9 @@ selection attributes or metadata. Run the script after the paragraph exists:
 ```
 
 ```javascript
-const draft = document.getElementById("email-draft");
+const draft = /** @type {HTMLElement} */ (
+  document.getElementById("email-draft")
+);
 const registration = document.oai?.annotation?.registerControls?.({
   targets: draft,
   controlsHeading: "Email options",
@@ -24647,8 +25514,12 @@ and a stable object ID. Put the script after the canvas:
 ```
 
 ```javascript
-const canvas = document.getElementById("revenue-canvas");
-const context = canvas.getContext("2d");
+const canvas = /** @type {HTMLCanvasElement} */ (
+  document.getElementById("revenue-canvas")
+);
+const context = /** @type {CanvasRenderingContext2D} */ (
+  canvas.getContext("2d")
+);
 const bar = { x: 40, y: 60, width: 320, height: 100 };
 
 context.fillStyle = "#2563eb";
@@ -24741,6 +25612,7 @@ For the canvas above, define this function and add
 `renderSelection: renderRevenueSelection` to the `registerSurface()` options:
 
 ```javascript
+/** @param {{ hoveredId: string | null; selectedId: string | null }} selection */
 function renderRevenueSelection({ hoveredId, selectedId }) {
   context.clearRect(0, 0, canvas.width, canvas.height);
   context.fillStyle = "#2563eb";
@@ -24791,17 +25663,21 @@ then run the script after it exists:
 ```
 
 ```javascript
-const button = document.getElementById("toggle-annotations");
+const button = /** @type {HTMLButtonElement} */ (
+  document.getElementById("toggle-annotations")
+);
 const annotation = document.oai?.annotation;
 
+/** @param {boolean} active */
 function renderMode(active) {
   button.textContent = active
     ? "Exit annotation mode"
     : "Enter annotation mode";
 }
 
+/** @param {CustomEvent<{ active: boolean }>} event */
 const onModeChange = (event) => renderMode(event.detail.active);
-const onClick = () => annotation.toggle(!annotation.isActive());
+const onClick = () => annotation?.toggle(!annotation.isActive());
 
 if (
   typeof annotation?.toggle === "function" &&
@@ -25442,62 +26318,68 @@ Triggering the tool-level OAuth flow requires both metadata (`securitySchemes` a
 
    Example (public + optional auth)—TypeScript SDK
 
-   ```ts
+   ```typescript
    import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
    import { z } from "zod";
-
-   declare const server: McpServer;
-
-   server.registerTool(
-     "search",
-     {
-       title: "Public Search",
-       description: "Search public documents.",
-       inputSchema: {
-         q: z.string(),
-       },
-       outputSchema: {},
-       securitySchemes: [
-         { type: "noauth" },
-         { type: "oauth2", scopes: ["search.read"] },
-       ],
-     },
-     async ({ q }) => {
-       return {
-         content: [{ type: "text", text: `Results for ${q}` }],
-         structuredContent: {},
-       };
-     }
-   );
    ```
+
+const server = new McpServer({ name: "auth-example", version: "1.0.0" });
+
+server.registerTool(
+"search",
+{
+title: "Public Search",
+description: "Search public documents.",
+inputSchema: {
+q: z.string(),
+},
+outputSchema: {},
+\_meta: {
+securitySchemes: [
+{ type: "noauth" },
+{ type: "oauth2", scopes: ["search.read"] },
+],
+},
+},
+async ({ q }) => {
+return {
+content: [{ type: "text", text: `Results for ${q}` }],
+structuredContent: {},
+};
+}
+);
+
+````
 
    Example (auth required)—TypeScript SDK
 
-   ```ts
-   import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-   import { z } from "zod";
+   ```typescript
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "zod";
 
-   declare const server: McpServer;
+const server = new McpServer({ name: "auth-example", version: "1.0.0" });
 
-   server.registerTool(
-     "create_doc",
-     {
-       title: "Create Document",
-       description: "Make a new doc in your account.",
-       inputSchema: {
-         title: z.string(),
-       },
-       outputSchema: {},
-       securitySchemes: [{ type: "oauth2", scopes: ["docs.write"] }],
-     },
-     async ({ title }) => {
-       return {
-         content: [{ type: "text", text: `Created doc: ${title}` }],
-         structuredContent: {},
-       };
-     }
-   );
-   ```
+server.registerTool(
+  "create_doc",
+  {
+    title: "Create Document",
+    description: "Make a new doc in your account.",
+    inputSchema: {
+      title: z.string(),
+    },
+    outputSchema: {},
+    _meta: {
+      securitySchemes: [{ type: "oauth2", scopes: ["docs.write"] }],
+    },
+  },
+  async ({ title }) => {
+    return {
+      content: [{ type: "text", text: `Created doc: ${title}` }],
+      structuredContent: {},
+    };
+  }
+);
+````
 
 3. **Check tokens inside the tool handler and emit `_meta["mcp/www_authenticate"]`** when you want ChatGPT to trigger the authentication UI. Inspect the token and verify issuer, audience, expiry, and scopes. If no valid token is present, return an error result that includes `_meta["mcp/www_authenticate"]` and make sure the value contains both an `error` and `error_description` parameter. This `WWW-Authenticate` payload is what actually triggers the tool-level OAuth UI once steps 1 and 2 are in place. When a challenge prompts reauthorization, your provider can [preserve the user's existing login context](#preserve-login-context-during-reauthorization) during that flow.
 
@@ -25675,7 +26557,7 @@ pip install mcp
 
 Create an MCP server with a stable name and version:
 
-```ts
+```typescript
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
 const server = new McpServer({
@@ -25694,7 +26576,7 @@ required tool sequences or shared rate limits. Keep the most important details
 in the first 512 characters. Do not repeat every tool description or try to
 change the model's personality.
 
-```ts
+```typescript
 const server = new McpServer(
   { name: "acme-projects", version: "1.0.0" },
   {
@@ -25723,7 +26605,16 @@ The model uses this metadata to decide whether and how to call the tool. Treat
 names, descriptions, schemas, and annotations as part of the plugin's
 user-facing behavior.
 
-```ts
+```typescript
+// Local example data; replace this with your application data.
+const projects = [
+  { id: "project-1", name: "Website", status: "active" },
+  { id: "project-2", name: "Launch", status: "archived" },
+];
+async function listProjects({ status }: { status?: string }) {
+  return projects.filter((project) => !status || project.status === status);
+}
+
 import { z } from "zod";
 
 server.registerTool(
@@ -25782,123 +26673,6 @@ refer to the same records.
 Do not put secrets, access tokens, or unnecessary personal data in tool
 results. Treat `_meta` as hidden from the model, not as a substitute for
 authorization or secure storage.
-
-#### Import skills from the MCP server
-
-Configure the MCP server to supply skills when you want to version and deploy
-their instructions and supporting files with the server. During plugin
-submission, **Scan Tools** imports a static snapshot of those skills into the
-draft.
-
-OpenAI currently supports a bounded, static subset of the
-[draft SEP-2640 Skills extension](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/2640).
-This proposal is not yet part of the stable MCP specification.
-
-#### Advertise the extension
-
-Declare `io.modelcontextprotocol/skills` in the server's initialization
-capabilities:
-
-```json
-{
-  "capabilities": {
-    "extensions": {
-      "io.modelcontextprotocol/skills": {}
-    }
-  }
-}
-```
-
-The declaration must be under `capabilities.extensions`. OpenAI does not
-recognize the earlier `experimental` declaration.
-
-#### List the skills and their resources
-
-Support the paginated `skills/list` method. Each entry must include:
-
-- A `uri` that points to the skill's `SKILL.md`.
-- `frontmatter` containing every entry from the parsed `SKILL.md` front matter.
-  Include the `name` and `description` entries.
-- A complete `resources` list containing `SKILL.md` and every supporting file.
-- A SHA-256 digest for each resource in the form
-  `sha256:<64 lowercase hexadecimal characters>`.
-
-Use the `skill://` URI convention. The directory containing `SKILL.md` must
-match the skill name. For example:
-
-```json
-{
-  "skills": [
-    {
-      "uri": "skill://dice-roller/tabletop-dice/SKILL.md",
-      "frontmatter": {
-        "name": "tabletop-dice",
-        "description": "Roll one or more dice and report each result and the total."
-      },
-      "resources": [
-        {
-          "uri": "skill://dice-roller/tabletop-dice/SKILL.md",
-          "digest": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-        },
-        {
-          "uri": "skill://dice-roller/tabletop-dice/references/notation.md",
-          "digest": "sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789"
-        }
-      ]
-    }
-  ],
-  "nextCursor": "optional-next-page-cursor"
-}
-```
-
-The example digests show the required format. For a text resource, hash the
-UTF-8 bytes of `content.text`. For a blob resource, base64-decode
-`content.blob`, then hash the decoded bytes.
-
-Also support `skills/get` for each listed `SKILL.md` URI. Return a `skill` object
-with the same complete entry shape as `skills/list`.
-
-Use these request parameters:
-
-- For the first `skills/list` request, accept an empty object (`{}`).
-- For each later `skills/list` request, accept the returned cursor, such as
-  `{ "cursor": "next-page-cursor" }`.
-- For `skills/get`, accept the catalog URI, such as
-  `{ "uri": "skill://dice-roller/tabletop-dice/SKILL.md" }`.
-
-#### Return every listed resource
-
-Support `resources/read` for every URI in the manifest. Return exactly one
-content item whose URI matches the request. OpenAI accepts UTF-8 text or a
-base64-encoded blob.
-
-During import, OpenAI verifies that:
-
-- OpenAI can fetch every listed resource and confirm its digest.
-- The fetched `SKILL.md` front matter exactly matches the catalog entry.
-- Resource paths are safe, unique, and free of normalization conflicts.
-- The complete skill fits the import limits.
-
-The importer accepts up to five uniquely named skills across 10 catalog pages.
-Each skill can contain up to 100 files, with these size limits:
-
-| Content                               | Limit   |
-| ------------------------------------- | ------- |
-| `SKILL.md`                            | 256 KiB |
-| Each supporting file                  | 1 MiB   |
-| All resources for one skill           | 5 MiB   |
-| Generated skill archives for one scan | 8 MiB   |
-
-The combined archive limit includes ZIP packaging overhead.
-
-If any entry fails validation or exceeds a limit, **Scan Tools** still returns
-the server's tools but does not update the draft's imported skills. Fix the
-server and scan again.
-
-Skills imported from MCP are submission-time snapshots, not live runtime
-resources. After changing a skill, run **Scan Tools** again, review the imported
-skills, and submit a new plugin version. See
-[Submit plugins](https://developers.openai.com/plugins/deploy/submission#mcp) for the complete flow.
 
 #### Authenticate and authorize requests
 
@@ -26363,22 +27137,6 @@ dependencies:
 A dependency makes the required tool available; it does not replace clear
 workflow instructions. Tell the model which tools to use, in what order, and
 how to handle missing or ambiguous results.
-
-#### Import a skill from MCP
-
-You can upload a packaged skill during submission or import it from the
-plugin's MCP server. The MCP option keeps the skill's instructions and
-supporting files with the server deployment.
-
-OpenAI imports skills from MCP when you select **Scan Tools** in the plugin
-submission portal. The imported files become a snapshot in the draft; ChatGPT
-and Codex do not fetch them from your MCP server at runtime. After changing the
-skill, deploy the server and scan it again before submitting a new plugin
-version.
-
-For the capability declaration, discovery methods, resource manifest, and
-import limits, see
-[Import skills from the MCP server](https://developers.openai.com/plugins/build/mcp-server#import-skills-from-the-mcp-server).
 
 #### Test the skill
 
@@ -27421,7 +28179,7 @@ url = "https://developers.openai.com/mcp"
 
     To have Codex reliably use the MCP server, add this snippet to your `AGENTS.md`:
 
-```
+```text
 Always use the OpenAI developer documentation MCP server if you need to work with the OpenAI API, plugins, ChatGPT, Codex,… without me having to explicitly ask.
 ```
 
@@ -27446,7 +28204,7 @@ Always use the OpenAI developer documentation MCP server if you need to work wit
 
     To have VS Code reliably use the MCP server, add this snippet to your `AGENTS.md`:
 
-```
+```text
 Always use the OpenAI developer documentation MCP server if you need to work with the OpenAI API, plugins, ChatGPT, Codex,… without me having to explicitly ask.
 ```
 
@@ -27474,7 +28232,7 @@ Always use the OpenAI developer documentation MCP server if you need to work wit
 
     To have Cursor reliably use the MCP server, add this snippet to your `AGENTS.md`:
 
-```
+```text
 Always use the OpenAI developer documentation MCP server if you need to work with the OpenAI API, plugins, ChatGPT, Codex,… without me having to explicitly ask.
 ```
 
@@ -28678,7 +29436,7 @@ MCP Events lets ChatGPT subscribe to updates from your MCP server, such as new m
 
 MCP Events is available in Work chats on ChatGPT web, in Work chats in the desktop app with **Cloud** selected, and with [dots](https://learn.chatgpt.com/docs/dots). Workspace controls for plugins and event-triggered tasks apply.
 
-MCP Events in ChatGPT requires MCP 2.0 (protocol version `2026-07-28`). Configure your server in your plugin and provide persistent subscription storage and outbound HTTPS access to callback URLs.
+ChatGPT supports MCP Events over Streamable HTTP using `initialize`, or over MCP 2.0 HTTP (protocol version `2026-07-28`). Configure your server in your plugin and provide persistent subscription storage and outbound HTTPS access to callback URLs.
 
 ChatGPT supports webhook delivery and callback verification from the [draft MCP Events specification](https://github.com/modelcontextprotocol/experimental-ext-triggers-events/blob/main/docs/design-sketch-proposal.md). Polling, streaming, and the draft’s `gap` and `terminated` control notifications are not supported by this integration.
 
@@ -28692,7 +29450,27 @@ ChatGPT supports webhook delivery and callback verification from the [draft MCP 
 
 #### Advertise event support
 
-Event discovery starts with your server’s capabilities. Add `events` to the capabilities returned by its `server/discover` response:
+Event discovery starts with your server’s capabilities. For MCP versions that use initialization, add `events` to the capabilities returned by the `initialize` response:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "protocolVersion": "2025-03-26",
+    "capabilities": {
+      "tools": {},
+      "events": {}
+    },
+    "serverInfo": {
+      "name": "example-server",
+      "version": "1.0.0"
+    }
+  }
+}
+```
+
+For MCP 2.0 (protocol version `2026-07-28`), add `events` to the capabilities returned by the `server/discover` response:
 
 ```json
 {
@@ -28885,6 +29663,35 @@ npm install standardwebhooks
 
 Pass a `webhookFetch` function with the same interface as `fetch` that validates callback addresses on each connection and blocks redirects.
 
+```javascript
+import { Webhook } from "standardwebhooks";
+
+export async function sendEvent(subscription, event, webhookFetch) {
+  const body = JSON.stringify(event);
+  if (Buffer.byteLength(body, "utf8") > 256 * 1024) {
+    throw new Error("Event payload exceeds 256 KiB");
+  }
+
+  const signedAt = new Date();
+  const signer = new Webhook(subscription.secret);
+  const response = await webhookFetch(subscription.url, {
+    method: "POST",
+    redirect: "error",
+    signal: AbortSignal.timeout(10_000),
+    headers: {
+      "Content-Type": "application/json",
+      "webhook-id": event.eventId,
+      "webhook-timestamp": String(Math.floor(signedAt.getTime() / 1000)),
+      "webhook-signature": signer.sign(event.eventId, signedAt, body),
+      "X-MCP-Subscription-Id": subscription.id,
+    },
+    body,
+  });
+
+  return { accepted: response.ok, status: response.status };
+}
+```
+
 Set `subscription.url` and `subscription.secret` from the subscription request’s `delivery` object.
 
 #### Handle delivery responses
@@ -28951,7 +29758,7 @@ Make unsubscribe idempotent and authorize it against the connected account.
 
 With the event methods and webhook delivery in place, connect your MCP server to ChatGPT through a plugin and test the full subscription lifecycle:
 
-1. Confirm your server receives `server/discover` and `events/list`, and returns the expected event definitions.
+1. Confirm your server advertises `events` through `initialize` or `server/discover`, then receives `events/list` and returns the expected event definitions.
 2. Verify that your events appear on your plugin page alongside your tools. Rescan your MCP server whenever you change its tools or events.
 
    **_Plugin events._** _Discovered events appear alongside tools on the plugin page._
@@ -29059,7 +29866,7 @@ This file will contain the web component that will be rendered in the ChatGPT in
 Add the following content:
 
 ```html
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -29391,7 +30198,7 @@ Register a resource for your component bundle and the tools the model can call (
 
 Create a file named `server.js` and paste the following example that uses the Node SDK:
 
-```js
+```javascript
 import { createServer } from "node:http";
 import { readFileSync } from "node:fs";
 import {
@@ -31074,7 +31881,7 @@ These settings apply to local-marketplace plugins in supported local clients,
 including Codex CLI and Codex in the ChatGPT desktop app. They don't change
 workspace installation policies for plugins imported through **Admin** >
 **Plugins**. Those plugins use their workspace-managed enabled state, even when
-their source is a GitHub repository. See [Plugin management](https://learn.chatgpt.com/docs/enterprise/plugin-management).
+their source is a GitHub repository. See [Import and sync plugins from GitHub](https://learn.chatgpt.com/docs/enterprise/plugin-management).
 
 #### Publish a local plugin to your workspace
 
@@ -31895,7 +32702,7 @@ to receive that input and read the resource with the app SDK.
 
 Extend standard MCP forms with richer components native to ChatGPT.
 
-```ts
+```typescript
 import type {
   OpenAIForm,
   OpenAIFormOption,
@@ -32910,14 +33717,25 @@ so views remain testable. This example helper listens for host
 `openai:set_globals` events and lets React components subscribe to a single
 global value:
 
-```ts
+```typescript
+import { useSyncExternalStore } from "react";
+
+type WebplusGlobals = {
+  widgetState: { selectedId?: string | null; [key: string]: unknown } | null;
+  toolInput: Record<string, unknown>;
+  toolOutput: Record<string, unknown> | null;
+  theme: "light" | "dark";
+};
+const SET_GLOBALS_EVENT_TYPE = "openai:set_globals";
+
 export function useOpenAiGlobal<K extends keyof WebplusGlobals>(
   key: K
 ): WebplusGlobals[K] {
   return useSyncExternalStore(
     (onChange) => {
-      const handleSetGlobal = (event: SetGlobalsEvent) => {
-        const value = event.detail.globals[key];
+      const handleSetGlobal = (event: Event) => {
+        if (!(event instanceof CustomEvent)) return;
+        const value = event.detail?.globals?.[key];
         if (value === undefined) {
           return;
         }
@@ -32933,7 +33751,11 @@ export function useOpenAiGlobal<K extends keyof WebplusGlobals>(
         window.removeEventListener(SET_GLOBALS_EVENT_TYPE, handleSetGlobal);
       };
     },
-    () => window.openai[key]
+    () => {
+      const globals = (window as Window & { openai?: WebplusGlobals }).openai;
+      if (!globals) throw new Error("This hook requires a ChatGPT app host.");
+      return globals[key];
+    }
   );
 }
 ```
@@ -32960,7 +33782,7 @@ URI of another UI template registered by the same MCP server, or omit
 
 ```tsx
 await window.openai.requestModal({
-  template: "ui://widget/checkout.html",
+  template: "ui://widget/details.html",
 });
 ```
 
@@ -33098,6 +33920,23 @@ navigation controls in sync with your UI.
 Router setup with React Router's `BrowserRouter`:
 
 ```tsx
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Link,
+  useParams,
+} from "react-router-dom";
+function PizzaListPlugin() {
+  const { placeId } = useParams();
+  return (
+    <main>
+      <Link to="/place/pizzeria">Example Pizzeria</Link>
+      <p>{placeId ?? "Choose a place"}</p>
+    </main>
+  );
+}
+
 export default function PizzaListRouter() {
   return (
     <BrowserRouter>
@@ -33113,15 +33952,30 @@ export default function PizzaListRouter() {
 
 Programmatic navigation:
 
-```ts
-const navigate = useNavigate();
+```typescript
+import { createElement } from "react";
+import { BrowserRouter, useNavigate } from "react-router-dom";
+function NavigationExample() {
+  const navigate = useNavigate();
 
-function openDetails(placeId: string) {
-  navigate(`place/${placeId}`, { replace: false });
-}
+  function openDetails(placeId: string) {
+    navigate(`place/${placeId}`, { replace: false });
+  }
 
-function closeDetails() {
-  navigate("..", { replace: true });
+  function closeDetails() {
+    navigate("..", { replace: true });
+  }
+
+  return createElement(
+    "div",
+    null,
+    createElement(
+      "button",
+      { onClick: () => openDetails("pizzeria") },
+      "Open details"
+    ),
+    createElement("button", { onClick: closeDetails }, "Close details")
+  );
 }
 ```
 
@@ -33154,7 +34008,24 @@ OpenAI-specific metadata for compatibility and optional extensions.
 
 Example:
 
-```ts
+```typescript
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+const server = new McpServer({ name: "docs-example", version: "1.0.0" });
+
+// Local example data; replace this with your application data.
+async function performSearch(query: string) {
+  const documents = [
+    {
+      id: "intro",
+      title: "Introduction to Acme",
+      url: "https://example.com/intro",
+    },
+  ];
+  return documents.filter((document) =>
+    document.title.toLowerCase().includes(query.toLowerCase())
+  );
+}
+
 import { registerAppTool } from "@modelcontextprotocol/ext-apps/server";
 import { z } from "zod";
 
@@ -33174,10 +34045,6 @@ registerAppTool(
         })
       ),
     },
-    securitySchemes: [
-      { type: "noauth" },
-      { type: "oauth2", scopes: ["search.read"] },
-    ],
     _meta: {
       securitySchemes: [
         { type: "noauth" },
@@ -33220,7 +34087,15 @@ user; servers must still enforce their own authorization logic.
 
 Example:
 
-```ts
+```typescript
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+const server = new McpServer({ name: "docs-example", version: "1.0.0" });
+
+// Local example data; replace this with your application data.
+async function fetchSavedRecipes() {
+  return [{ id: "pasta", title: "Tomato pasta" }];
+}
+
 import { z } from "zod";
 
 server.registerTool(
@@ -33240,6 +34115,7 @@ server.registerTool(
     annotations: { readOnlyHint: true },
   },
   async () => ({
+    content: [],
     structuredContent: { recipes: await fetchSavedRecipes() },
   })
 );
@@ -33322,7 +34198,19 @@ Host-provided tool result metadata:
 
 Example:
 
-```ts
+```typescript
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+const server = new McpServer({ name: "docs-example", version: "1.0.0" });
+
+// Local example data; replace this with your application data.
+function generateZooAnimals(count: number) {
+  return Array.from({ length: count }, (_, index) => ({
+    id: `animal-${index + 1}`,
+    name: `Penguin ${index + 1}`,
+    species: "Penguin",
+  }));
+}
+
 import { registerAppTool } from "@modelcontextprotocol/ext-apps/server";
 import { z } from "zod";
 
@@ -33382,7 +34270,22 @@ Operation-phase `_meta["openai/userAgent"]` and `_meta["openai/userLocation"]` a
 
 Example:
 
-```ts
+```typescript
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+const server = new McpServer({ name: "docs-example", version: "1.0.0" });
+
+// Local example data; replace this with your application data.
+async function findNearbyCafes(city: unknown) {
+  return city === "San Francisco"
+    ? [{ name: "Example Cafe", address: "123 Example Street, San Francisco" }]
+    : [];
+}
+
+function formatIntro(locale: unknown, city: unknown) {
+  const location = typeof city === "string" ? city : "your area";
+  return locale === "es" ? `Cafés en ${location}` : `Cafes in ${location}`;
+}
+
 import { z } from "zod";
 
 server.registerTool(
@@ -33401,7 +34304,13 @@ server.registerTool(
   },
   async (_args, { _meta }) => {
     const locale = _meta?.["openai/locale"] ?? "en";
-    const location = _meta?.["openai/userLocation"]?.city;
+    const userLocation = _meta?.["openai/userLocation"];
+    const location =
+      typeof userLocation === "object" &&
+      userLocation !== null &&
+      "city" in userLocation
+        ? userLocation.city
+        : undefined;
     const cafes = await findNearbyCafes(location);
 
     return {
@@ -34140,7 +35049,7 @@ These local `.rules` instructions apply to Codex; don't assume Local computer ac
 1. Create a `.rules` file under a `rules/` folder next to an active config layer (for example, `~/.codex/rules/default.rules`).
 2. Add a rule. This example prompts before allowing `gh pr view` to run outside the sandbox.
 
-   ```python
+   ```python snippet=configuration reason="Starlark policy configuration interpreted by Codex"
    # Prompt before running commands with the prefix `gh pr view` outside the sandbox.
    prefix_rule(
        # The prefix to match.
@@ -34398,7 +35307,7 @@ You can also write the code yourself. In your page's JavaScript module, check
 for browser support and register a tool. This read-only example returns the
 current page's title:
 
-```javascript
+```typescript
 if (typeof document.modelContext?.registerTool === "function") {
   await document.modelContext.registerTool({
     name: "get_page_title",
@@ -35842,7 +36751,7 @@ If a teammate can open the plugin but cannot use it, check plugin installation, 
 
 For custom integrations or development with plugin files, see [Package your plugin](https://developers.openai.com/plugins/build/plugins). The [developer documentation](https://developers.openai.com/plugins/) covers building skills and MCP servers, [extensions](https://developers.openai.com/plugins/build/extensions), testing, and public submission.
 
-For workspace distribution through GitHub, see [Plugin management](https://learn.chatgpt.com/docs/enterprise/plugin-management).
+For workspace distribution through GitHub, see [Import and sync plugins from GitHub](https://learn.chatgpt.com/docs/enterprise/plugin-management).
 
 ### Import from another agent
 
@@ -36046,7 +36955,7 @@ The Plugins Directory organizes plugins into tabs:
 Use the separate **Installed** row to review plugins you already installed.
 
 Workspace admins can import and sync a GitHub marketplace for their team. See
-[Plugin management](https://learn.chatgpt.com/docs/enterprise/plugin-management) for setup and access
+[Import and sync plugins from GitHub](https://learn.chatgpt.com/docs/enterprise/plugin-management) for setup and access
 requirements.
 
 #### Install and use a plugin
@@ -36488,7 +37397,7 @@ Example (Node.js / TypeScript):
 
 ```ts
 import { spawn } from "node:child_process";
-
+import readline from "node:readline";
 const proc = spawn("codex", ["app-server"], {
   stdio: ["pipe", "pipe", "inherit"],
 });
@@ -36500,6 +37409,24 @@ let threadId: string | null = null;
 rl.on("line", (line) => {
   const msg = JSON.parse(line) as any;
   console.log("server:", msg);
+  if (msg.id === 0 && msg.result) {
+    send({ method: "initialized", params: {} });
+    send({
+      method: "thread/start",
+      id: 1,
+      params: { model: "gpt-6.1-sol" },
+    });
+  }
+  if (msg.method === "turn/completed") {
+    proc.stdin.end();
+    rl.close();
+  }
+  if (msg.error) {
+    console.error(msg.error);
+    process.exitCode = 1;
+    proc.stdin.end();
+    rl.close();
+  }
   if (msg.id === 1 && msg.result?.thread?.id && !threadId) {
     threadId = msg.result.thread.id;
     send({
@@ -36523,8 +37450,11 @@ send({
     },
   },
 });
-send({ method: "initialized", params: {} });
-send({ method: "thread/start", id: 1, params: { model: "gpt-6.1-sol" } });
+proc.on("error", (error) => {
+  console.error(error);
+  process.exitCode = 1;
+  rl.close();
+});
 ```
 
 #### Core primitives
@@ -37872,7 +38802,7 @@ If you omit the `skill` item, the model will still parse the `$` marker and try 
 
 Example:
 
-```
+```text
 $skill-creator Add a new skill for triaging flaky CI and include step-by-step usage.
 ```
 
@@ -38895,7 +39825,7 @@ npm install @openai/codex-sdk
 
 Start a thread with Codex and run it with your prompt.
 
-```ts
+```typescript
 import { Codex } from "@openai/codex-sdk";
 
 const codex = new Codex();
@@ -38909,7 +39839,7 @@ console.log(result.finalResponse);
 
 Call `run()` again to continue on the same thread, or resume a past thread by providing a thread ID.
 
-```ts
+```typescript
 // running the same thread
 const result = await thread.run("Implement the plan");
 
@@ -38917,7 +39847,7 @@ console.log(result.finalResponse);
 
 // resuming past thread
 
-const threadId = "<thread-id>";
+const threadId = thread.id!;
 const thread2 = codex.resumeThread(threadId);
 const result2 = await thread2.run("Pick up where you left off");
 
@@ -38930,7 +39860,7 @@ Pass `config` to set structured Codex configuration. For keys that can't be
 expressed as dotted paths, use `configOverrides` to pass raw TOML strings as
 separate `--config` arguments:
 
-```ts
+```typescript
 const codex = new Codex({
   config: { default_permissions: "audit" },
   configOverrides: [
@@ -38972,6 +39902,7 @@ use your configured default. See [GPT-6.1 Sol availability by plan](https://lear
 
 ```python
 from openai_codex import Codex, Sandbox
+
 with Codex() as codex:
     thread = codex.thread_start(
         model="gpt-6.1-sol",
@@ -38986,11 +39917,15 @@ Use `AsyncCodex` when your application is already asynchronous:
 ```python
 import asyncio
 from openai_codex import AsyncCodex
+
+
 async def main() -> None:
     async with AsyncCodex() as codex:
         thread = await codex.thread_start(model="gpt-6.1-sol")
         result = await thread.run("Implement the plan")
         print(result.final_response)
+
+
 asyncio.run(main())
 ```
 
@@ -40484,7 +41419,7 @@ with [Prepare a gateway](#prepare-a-gateway). For access without a gateway,
 see [Amazon Bedrock](https://learn.chatgpt.com/docs/amazon-bedrock).
 
 Other gateway products follow the same [gateway requirements](https://learn.chatgpt.com/docs/enterprise/gateway-compatibility)
-and [API/provider connection flow](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway).
+and [gateway connection flow](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway).
 
 #### Connect to an existing gateway
 
@@ -40493,7 +41428,8 @@ Get these values from your gateway administrator:
 - The HTTPS base URL, such as `https://gateway.example.com/v1`.
 - The model alias that LiteLLM routes to an approved Bedrock model.
 - The provider ID to use in Codex configuration.
-- A scoped gateway credential or an authentication helper that returns it.
+- Native gateway OAuth settings, a scoped gateway API key, or an authentication
+  helper that returns the key.
 - Any model catalog distributed with your organization's configuration.
 
 Then complete the connection in this order:
@@ -40501,7 +41437,7 @@ Then complete the connection in this order:
 1. Ask your gateway team to confirm that the gateway serves `POST /v1/responses`,
    streams responses, preserves follow-up turns and tool calls, and routes the
    approved alias. See [Gateway compatibility](https://learn.chatgpt.com/docs/enterprise/gateway-compatibility).
-2. Follow [Use API/provider credentials](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway#configure-the-provider)
+2. Follow [Connect to a gateway](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway#configure-the-provider)
    to configure the provider, model, and credential.
 3. Verify the active provider and alias, send the short `gateway-ok` prompt from
    the connection guide, and confirm that the LiteLLM record shows the expected
@@ -40509,6 +41445,12 @@ Then complete the connection in this order:
 4. For organization-wide distribution, continue with [Roll out a gateway](https://learn.chatgpt.com/docs/enterprise/roll-out-a-gateway).
 
 Your gateway credential authenticates you to LiteLLM. The gateway manages its own Bedrock credentials; you don't need to copy those credentials to your workstation.
+
+If your gateway accepts OAuth access tokens, use [native gateway
+OAuth](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway#use-native-gateway-oauth) for browser
+sign-in without ChatGPT sign-in or a credential helper. Confirm that your deployed
+gateway validates the token in the configured cookie or custom header. A LiteLLM
+API key alone doesn't enable this flow.
 
 #### Prepare a gateway
 
@@ -40627,7 +41569,7 @@ Distribute the key through your secret-management process or an authentication h
 Complete these checks before expanding access:
 
 1. Confirm that the HTTPS certificate matches the gateway host name and the service is healthy.
-2. Connect one user through [Use API/provider credentials](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway).
+2. Connect one user through [Connect to a gateway](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway).
 3. Run a short prompt, a follow-up turn, and a read-only tool task.
 4. Confirm that gateway records show the expected identity, alias, and upstream route without exposing credentials or sensitive prompt content.
 5. Test credential expiration or revocation and confirm that unauthorized model aliases are rejected.
@@ -42811,9 +43753,9 @@ Use this recipe when Codex should have no internet access or should reach only a
 
 1. Create separate environments for different trust levels, such as no-internet-review, approved-dependencies-build, and cyber-lab.
 
-2. In the environment configuration, leave **Allow Codex to access internet** off unless the workflow needs internet access.
+2. In the environment configuration, turn off **Enable all public internet access** and **Enable package manager domains**.
 
-3. When access is required, turn on **Allow Codex to access internet**. Under **Allow domains**, choose **Custom domains only**, then add exact required hosts under **Additional allowed domains**.
+3. When public internet access is required, add exact approved hosts under **Additional allowed domains**. Remove **HTTP secrets** that allow unapproved public destinations. To block public internet access outside the VPN, leave that list empty and remove **HTTP secrets** that allow public destinations.
 
 4. Save and test the services during setup. Publish or republish the environment, then test access to approved and unapproved destinations in a new task. Review setup scripts separately: pin dependencies, prefer approved mirrors, and avoid executable downloads that have not been reviewed.
 
@@ -42956,7 +43898,7 @@ Use this recipe when Codex needs access to approved source directories while sec
    ```
 
 5. Choose the credential flow for your Cloud environment:
-   - In current Codex Cloud, use **Network secrets** for credentials sent to an allowed HTTPS service. Programs receive a placeholder, and the proxy substitutes the real value for approved destinations on port 443 during setup and tasks. The raw credential is not placed in a local process or file. Direct environment variables are available to programs. See [Environment variables and network secrets](https://learn.chatgpt.com/docs/environments/cloud-environments#configure-environment-variables-and-network-secrets).
+   - In current Codex Cloud, use **HTTP secrets** for credentials sent to an allowed HTTPS service. Programs receive a placeholder, and the proxy substitutes the real value for approved destinations on port 443 during setup and tasks. The raw credential is not placed in a local process or file. Direct environment variables are available to programs. See [Environment variables and network secrets](https://learn.chatgpt.com/docs/environments/cloud-environments#configure-environment-variables-and-network-secrets).
    - In Codex Cloud (Legacy), secrets support setup-time authentication and are removed before the agent phase; environment variables remain for the full chat. See [Legacy Cloud environments](https://learn.chatgpt.com/docs/environments/cloud-environment).
 
 6. If the agent needs authentication, use an independent broker to provide short-lived credentials scoped to the exact target and action. See [Recommended configuration](https://learn.chatgpt.com/docs/cyber-safety/recommended-configuration).
@@ -43309,7 +44251,7 @@ This network control for local commands does not by itself cover web search, app
 
 #### Configure cloud environment networking separately
 
-In the current Codex Cloud interface, open the environment configuration. Leave **Allow Codex to access internet** off. If you need internet access, turn it on and choose **Custom domains only**, add the exact required hosts under **Additional allowed domains**, then save the configuration, publish or republish the environment, and test a new task.
+In the current Codex Cloud interface, open the environment configuration. Turn off **Enable all public internet access** and **Enable package manager domains**. If public internet access is required, add exact approved hosts under **Additional allowed domains**. Remove **HTTP secrets** that allow unapproved public destinations. To block public internet access outside the VPN, leave that list empty and remove **HTTP secrets** that allow public destinations. Save the configuration, publish or republish the environment, and test a new task.
 
 Review service authentication and capabilities independently.
 
@@ -43679,6 +44621,393 @@ This page doesn't duplicate that contract.
 - [Governance](https://learn.chatgpt.com/docs/enterprise/governance)
 - [Analytics API](https://learn.chatgpt.com/docs/enterprise/analytics-api)
 
+### Connect to a gateway
+
+Source: [Connect to a gateway](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway.md)
+
+Connect Codex to your organization's model gateway using the provider settings and authentication method your gateway team supplies. The gateway routes model requests to your backend, such as Amazon Bedrock.
+
+For an organization-wide rollout, see [Roll out a
+gateway](https://learn.chatgpt.com/docs/enterprise/roll-out-a-gateway). For the required API behavior,
+see [Gateway compatibility](https://learn.chatgpt.com/docs/enterprise/gateway-compatibility). To
+connect directly to Bedrock without a gateway, see [Amazon
+Bedrock](https://learn.chatgpt.com/docs/amazon-bedrock).
+
+#### Check for an existing configuration
+
+Before adding anything, check whether your administrator already configured Codex.
+
+- For the CLI, inspect the selected profile and run `codex doctor`. After startup,
+  use `/status` to confirm the active model and provider.
+- For the macOS app, inspect `~/.codex/config.toml` or the managed configuration
+  your organization delivers.
+- For the Windows app, inspect `%USERPROFILE%\.codex\config.toml` or the system
+  configuration your organization delivers.
+
+If the expected gateway provider and model are already active, continue to
+[Verify the connection](#verify-the-connection).
+
+#### Get your gateway connection details
+
+Install the [Codex CLI](https://learn.chatgpt.com/docs/codex/cli) or the desktop app approved by your
+organization. To configure Codex yourself, get these values from your gateway team:
+
+- The HTTPS gateway base URL, including its API path, such as `https://gateway.example.com/v1`.
+- The model name and provider ID to use.
+- The authentication method: [native gateway OAuth](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway?gateway-auth=oauth#use-native-gateway-oauth),
+  a scoped API key and its environment variable, or an installed credential helper.
+- For OAuth, the authorization URL, token URL, public client ID, required scopes,
+  and the cookie or custom header the gateway accepts.
+- Any required model catalog URL, or a catalog file and its absolute local path.
+
+#### Configure the provider
+
+Open `config.toml` at `~/.codex/config.toml` on macOS or Linux, or
+`%USERPROFILE%\.codex\config.toml` on Windows.
+
+Merge this example into your existing configuration, replacing the URL and model
+with the values your administrator supplied. Don't add a second definition of an
+existing key or table. This example uses `gpt-6-sol`; use it without a custom
+catalog only if your administrator confirms that your Codex version recognizes
+the model and its bundled metadata matches the gateway.
+
+Keep `model`, `model_provider`, `model_catalog_json`, and `web_search` before
+the first TOML table. Keys placed after a table header belong to that table,
+so Codex won't read them as top-level settings.
+
+```toml
+model = "gpt-6-sol"
+model_provider = "enterprise-gateway"
+web_search = "disabled"
+
+[model_providers.enterprise-gateway]
+name = "Organization Gateway"
+base_url = "https://gateway.example.com/v1"
+wire_api = "responses"
+requires_openai_auth = false
+```
+
+Then add the [authentication settings](#choose-an-authentication-method) your
+gateway team supplies.
+
+For API-key or helper authentication, if your administrator supplies a catalog
+URL, add it to the existing
+`[model_providers.enterprise-gateway]` table:
+
+```toml
+model_catalog_url = "https://gateway.example.com/codex/models.json"
+```
+
+Remove any effective `model_catalog_json` setting; it takes precedence over the
+URL. Administrators can find endpoint requirements in
+[remote catalog setup](https://learn.chatgpt.com/docs/enterprise/roll-out-a-gateway#serve-a-remote-catalog).
+
+If your administrator supplies a local model catalog file, save it and add
+`model_catalog_json` before the first TOML table, using the file's absolute path.
+Custom aliases need matching catalog metadata. For example:
+
+```toml
+model_catalog_json = "/etc/codex/gateway-models.json"
+```
+
+Use the model name and catalog supplied together by your administrator. Don't
+add a catalog path unless the file exists at that location.
+
+`enterprise-gateway` is an illustrative provider ID. Use the same ID in
+`model_provider` and its provider and authentication tables.
+This example disables web search
+for the initial connection test; your administrator should verify feature support
+before enabling it.
+
+#### Choose an authentication method
+
+Use native gateway OAuth for browser sign-in, an API key for a scoped credential, or a credential helper if your organization supplies a command.
+
+{/_ prettier-ignore _/}
+
+#### Use native gateway OAuth
+
+Gateway OAuth works independently of ChatGPT sign-in. Use it when your gateway accepts access tokens issued by your
+organization's identity provider, such as Microsoft Entra ID. Codex handles the
+browser sign-in, encrypted credential storage, and token refresh when the
+authorization server issues a refresh token.
+
+Your gateway team must register a public OAuth client that supports the
+authorization code flow with PKCE. Add this table to the provider configuration
+in `config.toml`, replacing the URLs, client ID, and cookie name with their values:
+
+```toml
+[model_providers.enterprise-gateway.gateway_oauth]
+authorization_url = "https://login.example.com/oauth/authorize"
+token_url = "https://login.example.com/oauth/token"
+client_id = "YOUR_PUBLIC_CLIENT_ID"
+delivery = { kind = "cookie", name = "auth-openid" }
+# redirect_port = 43127
+```
+
+Add `scopes` and, if required, `resource` to this table using the values your
+identity provider and gateway require. Request the scopes needed for refresh
+tokens if your provider requires them. Codex uses an available loopback port by default.
+If your identity provider requires a fixed redirect URI, set `redirect_port` and
+register `http://127.0.0.1:43127/callback` for this example.
+
+The gateway must validate the OAuth access token received in the configured
+cookie. If it accepts a custom header instead, replace `delivery` with the header
+your administrator provides, for example:
+
+```toml
+delivery = { kind = "header", name = "X-Gateway-Token", scheme = "Bearer" }
+```
+
+Codex reserves `Authorization`; you can't use it as the `gateway_oauth` delivery header.
+A gateway that accepts only a static API key must add support for the OAuth token
+and its delivery method before you can use this flow. The gateway continues to
+manage its own upstream credentials, such as its AWS credentials for Bedrock.
+
+When OAuth is your only credential, keep `requires_openai_auth = false` and remove the
+previous `env_key`, `experimental_bearer_token`, or `auth` settings used for the
+gateway credential. Use a local `model_catalog_json` file if you need custom model
+metadata; OAuth alone doesn't enable remote catalog discovery.
+
+Restart the desktop app and follow its gateway sign-in prompt to open the browser.
+In the CLI, start `codex` and follow the browser sign-in when Codex first accesses
+the gateway. Complete your organization's sign-in and MFA, then return to the
+client. If the grant expires or Codex can't refresh it, sign in again when prompted.
+
+Native gateway OAuth requires a browser and a reachable loopback callback. It has
+no device-code fallback. If the CLI runs over SSH, set `redirect_port = 43127` in
+the OAuth table and register the matching redirect URI described above. From the
+machine with your browser, forward that port before starting Codex:
+
+```shell
+ssh -L 43127:127.0.0.1:43127 user@remote
+```
+
+In that SSH session, start `codex` and open the gateway sign-in URL in your local
+browser. A CLI inside a container also needs a callback reachable from the
+browser. If you can't make the callback reachable, use an API key or credential
+helper instead.
+
+#### Use an API key
+
+Use this setting when the gateway expects an API key in the `Authorization` header.
+
+Add the following setting inside the existing
+`[model_providers.enterprise-gateway]` table:
+
+```toml
+env_key = "CODEX_GATEWAY_API_KEY"
+```
+
+Make your gateway credential available as `CODEX_GATEWAY_API_KEY` in the
+environment of the process that launches Codex, using your organization's secret
+delivery mechanism. Don't put the credential in TOML or a repository. A variable
+set in a terminal may not be available to an app launched from the desktop.
+
+#### Use a custom authentication header
+
+If your gateway requires a header such as `X-API-Key` instead of a bearer token,
+replace `env_key` in the provider table with:
+
+```toml
+env_http_headers = { "X-API-Key" = "CODEX_GATEWAY_API_KEY" }
+```
+
+Use the exact header name your administrator provides. Codex reads the value from
+the named environment variable; keep the credential out of the configuration file.
+See the [configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference) for
+`model_providers..env_http_headers`.
+
+With ChatGPT sign-in, use the custom header for the gateway key so Codex can send the user's OpenAI credential in `Authorization`.
+
+If the custom header is your only authentication mechanism, use
+`model_catalog_json`; remote catalog discovery won't run.
+
+#### Use an organization credential helper
+
+If your administrator provides command-backed authentication, use their installed
+helper and configuration instead of `env_key`. Don't configure both mechanisms.
+The helper must exist on your machine; Codex doesn't install it. For example,
+add this table without `env_key`, using the resolver path and
+arguments your administrator supplies:
+
+```toml
+[model_providers.enterprise-gateway.auth]
+command = "/usr/local/bin/fetch-codex-gateway-token"
+args = ["print-token"]
+timeout_ms = 30000
+refresh_interval_ms = 300000
+```
+
+The [custom provider authentication reference](https://learn.chatgpt.com/docs/config-file/config-advanced#custom-model-providers)
+defines the command, arguments, timeout, refresh interval, and token output
+contract. Ask your administrator how to renew your sign-in if the helper can no
+longer retrieve a token.
+
+With ChatGPT sign-in, run the helper before launching Codex and pass its output through a [custom gateway header](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway?gateway-auth=api-key#use-a-custom-authentication-header) instead of configuring the `auth` table. When the key expires, get a new key and relaunch Codex.
+
+Use resolved absolute paths for helper executables and catalog files.
+
+#### Enable ChatGPT sign-in (recommended)
+
+If your organization uses a ChatGPT workspace, signing in gives users access to eligible features such as first-party plugins. Your workspace controls apply, and your gateway still handles model requests. [Compare feature availability](https://learn.chatgpt.com/docs/pricing#feature-availability).
+
+Add the gateway provider to your workspace's [managed `requirements.toml`](https://learn.chatgpt.com/docs/enterprise/managed-configuration). These settings apply when users sign in to that workspace.
+
+```toml
+# requirements.toml
+model_provider = "enterprise-gateway"
+
+[model_providers.enterprise-gateway]
+name = "Enterprise gateway"
+base_url = "https://gateway.example.com/backend-api/codex"
+requires_openai_auth = true
+```
+
+Configure [gateway authentication](#choose-an-authentication-method) as described above. Codex sends the user's OpenAI credential to your gateway in `Authorization`. Use a separate header for the gateway credential. With native gateway OAuth, `gateway_oauth.delivery` can specify a header or a cookie.
+
+#### Handle credentials at the gateway
+
+The gateway receives two credentials on each model request. For example, when Codex sends the gateway OAuth token in a cookie:
+
+```http
+POST /backend-api/codex/responses
+Authorization: Bearer <ChatGPT token>
+ChatGPT-Account-ID: <workspace ID, when available>
+Cookie: auth-openid=<gateway token>
+```
+
+Validate the gateway credential and strip its cookie or custom header. Redact credentials and sensitive request data from logs. Choose which credential to use upstream:
+
+- **Forward the user's credential for direct OpenAI inference (recommended).** This lets OpenAI attribute usage and apply inference settings for that user. For this route, the gateway must proxy `/models` and `/responses` to `https://chatgpt.com/backend-api/codex` and forward `Authorization` and any `ChatGPT-Account-ID` header unchanged.
+- **Let the gateway authenticate to the inference provider.** Use the credentials configured on the gateway for that provider. Leave the user's OpenAI token and any `ChatGPT-Account-ID` header out of the upstream request.
+
+These diagrams show the recommended route for OpenAI inference.
+
+#### How a gateway key works with ChatGPT sign-in
+
+#### How gateway OAuth works with ChatGPT sign-in
+
+#### Add routing headers (optional)
+
+To route requests by configuration or tool, add headers to the same `enterprise-gateway` provider in your cloud-managed `requirements.toml`:
+
+```toml
+[model_providers.enterprise-gateway.http_headers]
+x-portkey-config = "<gateway-routing-config-id>"
+x-portkey-metadata = '{"tool_id":"codex"}'
+```
+
+Use `env_http_headers` for values supplied by the client environment. Send a test request and confirm that the gateway selects the intended route. See [Custom model providers](https://learn.chatgpt.com/docs/config-file/config-advanced#custom-model-providers) for more header options.
+
+Only model-provider requests use this gateway route. [Voice sessions](https://learn.chatgpt.com/docs/features/voice) use a separate route. Workspace sign-in, MCP servers, and plugins can also use other network paths.
+
+#### Start the client
+
+With ChatGPT sign-in, start the client and sign in to the workspace that provides the managed configuration. If you use native gateway OAuth, also complete your organization's gateway sign-in when prompted. Then [verify the connection](#verify-the-connection).
+
+For a locally configured provider, follow the instructions for your client.
+
+#### Configure the CLI
+
+The CLI reads `~/.codex/config.toml` by default on macOS or Linux. After saving
+the provider settings, run `codex`. Inside WSL, use the Linux configuration and
+paths unless `CODEX_HOME` points elsewhere.
+
+#### Configure the macOS app
+
+The macOS app reads the same `~/.codex/config.toml`. After saving the provider
+settings, restart the app. If you use an environment variable for the credential,
+make sure it's available to the app process.
+
+#### Configure the Windows app
+
+Place the provider settings in `%USERPROFILE%\.codex\config.toml`, then restart
+the app. For command-backed authentication, use the resolver installed by your
+administrator. For example, replace the Unix auth table with:
+
+```toml
+[model_providers.enterprise-gateway.auth]
+command = 'C:\Program Files\OpenAI\Codex\fetch-codex-gateway-token.exe'
+args = ["print-token"]
+timeout_ms = 30000
+refresh_interval_ms = 300000
+```
+
+In Windows TOML, single-quoted literal strings preserve backslashes. Replace
+Unix catalog paths too, for example with
+`'C:\ProgramData\OpenAI\Codex\models.json'`, using the actual path your
+administrator supplied.
+
+Configure MCP servers and plugins separately. A model gateway credential doesn't
+authorize access to your tools or connected systems.
+
+#### Verify the connection
+
+Restart the client after changing the configuration. In the CLI, start `codex`
+and use `/status` to inspect the active model and provider. In the desktop app,
+check the selected model and configuration.
+
+Send this prompt in a new task:
+
+```text
+Reply with exactly: gateway-ok
+```
+
+Expect `gateway-ok`. A response alone doesn't prove which route handled it: ask
+your administrator to confirm that the gateway recorded your user, model alias,
+and intended upstream route. Don't identify the model by asking it its name.
+
+If the gateway serves the model catalog, check that it returns a Codex-compatible `models` array. For OpenAI inference using the user's credential, verify that the gateway forwards the ChatGPT headers to the Codex backend.
+
+This verifies an initial connection. Administrators should also complete the
+[rollout checks](https://learn.chatgpt.com/docs/enterprise/roll-out-a-gateway#test-the-client-and-gateway)
+for streaming, tools, and follow-up turns.
+
+#### Troubleshoot the connection
+
+| Symptom                                 | What to check                                                                                                                                                                                                       |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The expected provider isn't active.     | Check the selected profile and configuration precedence. Confirm that top-level keys aren't inside a provider table.                                                                                                |
+| OAuth sign-in or token delivery fails.  | Check the public client registration, redirect URI, scopes, and configured cookie or header. Confirm that the gateway accepts the issued access token.                                                              |
+| API-key or helper authentication fails. | Check that the credential variable reaches the client process, or that the installed helper can retrieve a current token. Ask the administrator to distinguish gateway authentication from upstream authentication. |
+| The model isn't found.                  | Confirm the supplied model name and ask the administrator to check its route.                                                                                                                                       |
+| The model uses unexpected capabilities. | Ask the administrator to check that the catalog metadata matches the model behind the alias.                                                                                                                        |
+| Streaming stalls or follow-ups fail.    | Ask the gateway owner to check proxy buffering, the terminal `response.completed` event, and [Gateway compatibility](https://learn.chatgpt.com/docs/enterprise/gateway-compatibility).                                                      |
+| A catalog or helper path fails.         | Confirm that the file exists at the configured absolute path in the environment running Codex.                                                                                                                      |
+
+When requesting help, include the error message with tokens and sensitive prompts removed.
+
+#### Use an existing gateway deployment
+
+If your organization already uses a gateway with another coding tool, you may be
+able to reuse its network path, logging, and provider access. Work with your
+gateway team to configure and test a Codex connection:
+
+1. Identify the existing gateway URL, credential mechanism, required headers,
+   model routes, and configuration delivery method.
+2. Ask your gateway team to confirm that the gateway supports the
+   [API behavior Codex requires](https://learn.chatgpt.com/docs/enterprise/gateway-compatibility) and to
+   configure a Codex model route.
+3. Obtain the OAuth settings, scoped gateway credential, or credential helper,
+   along with the model name and any required catalog from your gateway team.
+4. [Configure Codex](#configure-the-provider) with those values.
+5. [Verify the connection](#verify-the-connection) in the CLI or desktop app you
+   plan to use. Have your gateway team complete the
+   [streaming, tool, and follow-up checks](https://learn.chatgpt.com/docs/enterprise/roll-out-a-gateway#test-the-client-and-gateway).
+6. After the pilot passes, follow
+   [Roll out a gateway](https://learn.chatgpt.com/docs/enterprise/roll-out-a-gateway) to distribute the
+   configuration to other developers.
+
+For the administrator migration checklist and configuration mapping, see
+[Reuse an existing gateway deployment](https://learn.chatgpt.com/docs/enterprise/roll-out-a-gateway#reuse-an-existing-gateway-deployment).
+
+#### Related docs
+
+- [Codex CLI](https://learn.chatgpt.com/docs/codex/cli)
+- [MCP servers](https://learn.chatgpt.com/docs/extend/mcp)
+- [Plugins](https://learn.chatgpt.com/docs/plugins)
+
 ### Deploy the Windows app and Codex CLI
 
 Source: [Deploy the Windows app and Codex CLI](https://learn.chatgpt.com/docs/enterprise/windows-deployment.md)
@@ -43775,19 +45104,23 @@ To offer installation through Company Portal, deploy the offline package as a **
 
 3. Save this script as `Uninstall-ChatGPT.ps1` beside the MSIX, license, and installation script. Configure Intune to run this script in System context when uninstalling the app. The script removes the provisioned package and app registrations for all users on the device:
 
-   ```powershell
-   #Requires -RunAsAdministrator
-   $ErrorActionPreference = 'Stop'
+If you choose to [remove local data on
+uninstall](#uninstall-and-local-data), back up any data you want to keep
+before running this script.
 
-   Get-AppxProvisionedPackage -Online |
-     Where-Object DisplayName -eq 'OpenAI.Codex' |
-     Remove-AppxProvisionedPackage -Online -AllUsers
+```powershell
+#Requires -RunAsAdministrator
+$ErrorActionPreference = 'Stop'
 
-   Get-AppxPackage -AllUsers -Name 'OpenAI.Codex' |
-     Remove-AppxPackage -AllUsers
-   ```
+Get-AppxProvisionedPackage -Online |
+  Where-Object DisplayName -eq 'OpenAI.Codex' |
+  Remove-AppxProvisionedPackage -Online -AllUsers
 
-   Follow your organization's PowerShell script-signing policy for both scripts.
+Get-AppxPackage -AllUsers -Name 'OpenAI.Codex' |
+  Remove-AppxPackage -AllUsers
+```
+
+Follow your organization's PowerShell script-signing policy for both scripts.
 
 4. Use Microsoft's [Win32 app workflow](https://learn.microsoft.com/en-us/intune/app-management/deployment/add-win32) to package the MSIX, license, `Install-ChatGPT.ps1`, and `Uninstall-ChatGPT.ps1` together. Add a **Windows app (Win32)** in Intune, set **Install behavior** to **System**, and target the package's architecture. Configure the 64-bit install and uninstall commands below, then assign the app as **Available for enrolled devices**.
 
@@ -44104,6 +45437,22 @@ Follow [Manage app updates](https://learn.chatgpt.com/docs/enterprise/manage-app
 
 For each CLI update, choose a new approved release, update the explicit `-Release` value or npm package version in your deployment package, and update its detection rule. Deploy through your package process, then verify the installed version, account context, and detection behavior. Do not switch the managed package back to an installer command without an explicit release. See [CLI releases](https://github.com/openai/codex/releases), [CLI installation and updates](https://learn.chatgpt.com/docs/codex/cli), and [npm version selection](https://docs.npmjs.com/cli/v11/using-npm/package-spec).
 
+#### Uninstall and local data
+
+Uninstall the desktop app through Windows Settings or your management tool, such
+as Intune or SCCM. Cleanup runs automatically during uninstall.
+
+By default, local coding chats and settings are kept in the user's
+[`CODEX_HOME`](https://learn.chatgpt.com/docs/config-file/config-advanced#config-and-state-locations).
+
+To also remove `CODEX_HOME` during uninstall, add this to `config.toml` in that
+folder before uninstalling:
+
+```toml
+[desktop]
+uninstall_codex_home = true
+```
+
 #### Users are prompted for administrator credentials when installing
 
 When users install the app themselves, an administrator must approve the installation.
@@ -44279,7 +45628,7 @@ Source: [Gateway compatibility requirements](https://learn.chatgpt.com/docs/ente
 
 These requirements cover the API/provider credential path through a gateway.
 For gateways that forward ChatGPT workspace requests, see [Sign in with
-ChatGPT through a gateway](https://learn.chatgpt.com/docs/enterprise/sign-in-with-chatgpt-through-a-gateway).
+ChatGPT through a gateway](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway#enable-chatgpt-sign-in-recommended).
 
 For this path, the gateway must preserve the Responses API behavior described here:
 endpoints, streaming, continuation, tool calls, authentication, routing, and
@@ -44643,6 +45992,239 @@ steps, availability, and limits:
 - [Roles and workspace permissions](https://learn.chatgpt.com/docs/enterprise/roles-and-workspace-permissions)
 - [Managed configuration](https://learn.chatgpt.com/docs/enterprise/managed-configuration)
 - [Admin rollout guide](https://learn.chatgpt.com/docs/enterprise/admin-setup)
+
+### Import and sync plugins from GitHub
+
+Source: [Import and sync plugins from GitHub](https://learn.chatgpt.com/docs/enterprise/plugin-management.md)
+
+You can import plugins from GitHub into your workspace and keep them up to date
+as the repository changes. A marketplace is a JSON file that lists the plugins
+to import.
+
+#### Before you begin
+
+You need to be a workspace admin. Use a GitHub account that can read the
+marketplace repository and every repository it references. Public and private
+GitHub repositories are supported. Complete any access approval required by your
+GitHub organization before importing.
+
+Review the repository before you import it. These defaults affect what members
+can use:
+
+- New plugins are **Available** for installation. If authentication is required,
+  members complete it when they install the plugin.
+- The import processes all valid entries. New marketplaces sync automatically
+  each day, adding any new plugins from the repository.
+
+This guide covers importing plugins into a workspace. For local clients, see
+[Configure plugin marketplaces and defaults](https://learn.chatgpt.com/docs/enterprise/managed-configuration#configure-plugin-marketplaces-and-defaults)
+for cloud-managed or system `config.toml` settings. For a specific project, see
+[Enable or disable a plugin for a repo](https://developers.openai.com/plugins/build/plugins#enable-or-disable-a-plugin-for-a-repo).
+
+#### Configure a marketplace sync
+
+1. Open **Admin** > **Plugins** and select **Add** > **Import marketplace**.
+2. In **Source**, enter the repository URL, such as `https://github.com/example/team-plugins`. Use the repository URL only, without a branch or folder URL.
+3. If the marketplace is in a subdirectory, enter that directory in **Path**. For example, use `team-tools` for `team-tools/.agents/plugins/marketplace.json`. Leave **Path** empty for the repository root. Do not enter the manifest filename.
+4. Optionally enter a **Branch, tag, or commit**. Leave this empty to use the repository's default branch. A branch lets you receive later updates. A fixed commit keeps the version you selected.
+5. Select **Import marketplace** and authorize GitHub access when prompted. The initial import can take up to an hour for especially large marketplaces. Subsequent daily syncs typically take a few minutes.
+6. Review **Import results**, then open each imported plugin to configure its installation policy and any required apps.
+
+#### Supported formats
+
+The selected directory must contain one of these files:
+
+| File                               | Format                                                               |
+| ---------------------------------- | -------------------------------------------------------------------- |
+| `.agents/plugins/marketplace.json` | A Codex marketplace with a `plugins` array.                          |
+| `.claude-plugin/marketplace.json`  | A Claude-compatible marketplace with a `plugins` array.              |
+| `.claude-plugin/plugin.json`       | A standalone Claude plugin, when no marketplace manifest is present. |
+
+In a marketplace, entries can reference native plugins with `.codex-plugin/plugin.json`, Claude-compatible plugins, Agent Plugins 1.0 packages, or supported skill packages.
+
+For a Codex marketplace, use local paths for plugins in the same repository:
+
+```json
+{
+  "name": "team-plugins",
+  "interface": {
+    "displayName": "Team plugins"
+  },
+  "plugins": [
+    {
+      "name": "team-tools",
+      "source": {
+        "source": "local",
+        "path": "./plugins/team-tools"
+      }
+    }
+  ]
+}
+```
+
+The path is relative to the selected marketplace root, not to `.agents/plugins/`.
+
+A Claude-compatible marketplace can use a path string for each local plugin:
+
+```json
+{
+  "name": "team-plugins",
+  "plugins": [
+    {
+      "name": "team-tools",
+      "source": "./plugins/team-tools"
+    }
+  ]
+}
+```
+
+Codex marketplace entries also support `source: "url"` for a plugin at a GitHub repository root and `source: "git-subdir"` for a plugin in a GitHub subdirectory. For example:
+
+```json
+{
+  "name": "team-tools",
+  "source": {
+    "source": "git-subdir",
+    "url": "https://github.com/example/team-tools.git",
+    "path": "./plugins/team-tools",
+    "ref": "main"
+  }
+}
+```
+
+Git sources can select a `ref` or a full 40-character commit `sha`. The authorizing GitHub account must be able to read every referenced repository. Workspace import currently only supports GitHub repositories.
+
+#### Configure workspace access
+
+Set each plugin's installation and authentication settings in your workspace.
+Import and sync don't apply these settings from the repository. These settings include
+`AVAILABLE`, `INSTALLED_BY_DEFAULT`, `NOT_AVAILABLE`, `ON_INSTALL`, and `ON_USE`.
+Existing workspace settings stay in place when you sync an update or move a
+plugin to GitHub management.
+
+Use **Installation policy** to choose **Available** or **Installed** for each
+eligible role. Also enable the apps the plugin needs and check that members have
+access to the connected service. Importing a plugin doesn't give members app
+access or connect their accounts. See [Plugin controls](https://learn.chatgpt.com/docs/enterprise/apps-and-connectors)
+for help choosing access and action settings.
+
+#### Move an existing plugin to GitHub management
+
+Add `pluginId` to the existing plugin's marketplace entry:
+
+```json
+{
+  "name": "team-tools",
+  "pluginId": "plugin_0123456789abcdef0123456789abcdef",
+  "source": {
+    "source": "local",
+    "path": "./plugins/team-tools"
+  }
+}
+```
+
+Open the plugin from **Admin** > **Plugins** and copy the ID after `/plugins/` in its URL. Put `pluginId` beside `name` and `source` in the marketplace entry. The existing plugin must be in the same workspace, and the entry's `name` must match the existing plugin's name.
+
+Use this to move a workspace plugin to GitHub if it isn't already managed there.
+The plugin keeps its ID, sharing, and workspace settings. Future updates come
+from GitHub, so you can no longer replace it by uploading an archive. You can't
+use this method for a plugin already managed by a different GitHub source.
+
+#### Desktop-only plugins
+
+Plugins marked **Desktop only** cannot run in ChatGPT on the web. Imported
+plugins can receive this label when they declare MCP servers, including servers
+with remote HTTPS URLs. Adding an `.app.json` reference does not by itself remove
+the label.
+
+#### Reference an existing app with `.app.json`
+
+Add `.app.json` at the plugin root. The filename includes a leading dot; `app.json` without the dot is not supported.
+
+```json
+{
+  "apps": {
+    "team-tools": {
+      "id": "asdk_app_example",
+      "required": true
+    }
+  }
+}
+```
+
+Replace `asdk_app_example` with the existing app's ID. Supported app IDs start with `asdk_app_`, `connector_`, or `templated_apps_`. Use the app ID, not a `plugin_...` ID. For example, a plugin URL containing `plugin_asdk_app_example` represents the app `asdk_app_example`.
+
+The key `team-tools` names the reference within this file. Set `required` to `true` when the plugin depends on the app. You can add more entries to reference other existing apps.
+
+For a native plugin, set `apps` to `./.app.json` in `.codex-plugin/plugin.json`. Here is a complete manifest for this example:
+
+```json
+{
+  "name": "team-tools",
+  "version": "1.0.0",
+  "description": "Use the team's approved tools.",
+  "author": {
+    "name": "Example team"
+  },
+  "apps": "./.app.json",
+  "interface": {
+    "displayName": "Team tools",
+    "shortDescription": "Use approved team tools",
+    "longDescription": "Connect to the team's existing app.",
+    "developerName": "Example team",
+    "category": "Productivity",
+    "capabilities": ["Read"]
+  }
+}
+```
+
+Keep the files in this layout:
+
+```text
+team-plugins/
+├── .agents/plugins/marketplace.json
+└── plugins/team-tools/
+    ├── .codex-plugin/plugin.json
+    └── .app.json
+```
+
+This file points to an existing app. It doesn't create an app or give anyone
+access. Make the app available to the roles that need it, and ask members to
+complete any required authentication. The app's permissions, allowed actions,
+and connected-service access still apply.
+
+#### Keep plugins up to date
+
+New marketplaces check for updates daily. Open **Admin** > **Plugins** > **Marketplaces**, select the marketplace, and choose **Sync now** to request an update without waiting for automatic sync.
+
+Sync can add new plugins from the marketplace and update existing ones. Review
+repository changes before merging them because automatic sync imports new
+plugins too.
+
+After each sync, read the status and saved report. A completed sync can still
+include errors for individual plugins. If an update is invalid, the existing
+plugin keeps its last working version. Fix the problem in GitHub, then select
+**Sync now** to try again.
+
+Removing a plugin's entry from the marketplace leaves its workspace copy in
+place, marked **No longer in source**. Deleting the marketplace in ChatGPT has a different
+effect: it deletes all plugins imported from that marketplace.
+
+#### Reconnect or change GitHub access
+
+Marketplace sync uses the GitHub connection of the admin who imported it.
+
+To reconnect, first check that the importing admin's GitHub account can still
+read the marketplace repository and every repository it references. That admin
+should then open the GitHub plugin in ChatGPT and reconnect their account.
+
+To change owners, the new workspace admin imports the marketplace again from
+**Admin** > **Plugins** > **Add** > **Import marketplace**. Use the same **Source**,
+**Path**, and **Branch, tag, or commit** values. Future syncs will use the new
+admin's GitHub connection.
+
+Keep the marketplace in place when reconnecting or changing owners. Deleting it
+also deletes its imported plugins.
 
 ### Local computer access for Work Cloud and dots
 
@@ -45310,6 +46892,8 @@ Enterprise admins can control supported local client behavior with:
 - **Legacy managed defaults**: `managed_config.toml` starting values applied when a supported client launches. Users can still change settings during a run. The client reapplies these defaults the next time it starts.
 
 See [Agent Security](https://learn.chatgpt.com/docs/enterprise/agent-security) for the Global baseline, environment overrides, and orchestrator and executor field lists.
+
+If your users don't sign in to Codex with ChatGPT, you can distribute defaults and requirements to Codex CLI and the desktop app from an HTTPS endpoint you operate. See [Self-host Codex configuration for your team](https://learn.chatgpt.com/docs/enterprise/configuration-server).
 
 #### Configure a policy in Agent security
 
@@ -46053,6 +47637,66 @@ If `mcp_servers` is present but empty, the local client disables all MCP servers
 
 Command networking and desktop-app networking use different controls. Start with **Network use controls** for supported command traffic, review the environment and runtime limits, then use the separate desktop-app requirements if needed. Browser site rules remain in [Control browser and Computer Use](#control-browser-and-computer-use).
 
+#### Use the system proxy for native client requests
+
+{/_ Preserve the standard technical term "proxy auto-configuration". _/}
+{/_ vale Microsoft.Auto = NO _/}
+
+The experimental `features.respect_system_proxy` setting lets the native Codex
+runtime used by ChatGPT desktop and Codex use operating-system proxy settings
+for its own network requests. Enable it on devices that need a system proxy or
+proxy auto-configuration (PAC). The setting defaults to `false`.
+
+{/_ vale Microsoft.Auto = YES _/}
+
+Add the following to a supported `config.toml` defaults source or to
+[`managed_config.toml`](#locations):
+
+```toml
+[features]
+respect_system_proxy = true
+```
+
+Project-local configuration can't enable this setting. For macOS MDM, include
+the same TOML in [`config_toml_base64`](#macos-managed-preferences-mdm).
+Restart the client after changing local configuration. To turn off the opt-in,
+set it to `false` in the configuration source that enabled it.
+
+#### Sign-in and cloud defaults
+
+The separate `system_proxy_fallback` feature is enabled by default. After a
+connection failure, it can retry supported sign-in and cloud-configuration
+requests through the system proxy, even when `respect_system_proxy` is `false`.
+This fallback can let supported clients sign in and fetch cloud defaults without
+a local opt-in. Disabling `respect_system_proxy` alone doesn't disable the
+fallback.
+
+If direct access doesn't work and the fallback is unavailable, disabled, or
+unsuccessful, deploy `respect_system_proxy` locally before sign-in.
+
+#### Scope and limitations
+
+Validate sign-in and an authenticated request with the client versions and on
+the networks you plan to use. Keep these boundaries in mind:
+
+- **Request scope:** The setting applies to network clients owned by the Codex
+  runtime. It doesn't configure every ChatGPT desktop request, browser request,
+  plugin process, or shell command. It doesn't enforce a destination allowlist
+  or guarantee that direct connections are blocked. For supported traffic, see
+  the [command network requirements](#configure-network-access-requirements)
+  and [desktop app network requirements](#control-desktop-app-network-destinations).
+- **Platform support:** macOS and Windows support native system proxy discovery.
+  When system resolution is unavailable, the runtime uses explicit proxy
+  environment settings if available. Otherwise, it connects directly. Other
+  platforms use the same environment-or-direct fallback instead of native
+  system discovery.
+- **PAC routing:** The runtime selects one route from a PAC result. If that
+  connection fails, it doesn't retry later proxy or `DIRECT` entries in the result.
+- **Windows authentication:** Supported builds can respond to an HTTP `407`
+  proxy challenge during tunnel setup using the signed-in Windows user's
+  credentials with Negotiate or NTLM. HTTPS proxies that require authentication
+  tokens bound to the proxy's TLS connection aren't supported.
+
 #### Configure network access requirements
 
 `[experimental_network]` is experimental and may change. Do not enable these
@@ -46646,70 +48290,187 @@ Avoid embedding secrets or high-churn dynamic values in the payload. Treat the m
 
 Source: [Plugin controls](https://learn.chatgpt.com/docs/enterprise/apps-and-connectors.md)
 
-Plugins package reusable workflows and can include skills and MCP servers that connect
-to other tools. ChatGPT and Codex use the same public plugin directory on
-supported surfaces, while admins decide which plugins are available in their workspace.
-Learn more about [plugins](https://learn.chatgpt.com/docs/plugins),
-[skills](https://learn.chatgpt.com/docs/skills-and-plugins), and
-[connected services](https://help.openai.com/en/articles/11487775).
+Plugins help your team reuse instructions and work with information from connected
+apps. For example, a plugin can help prepare a weekly update using your team's
+template and project documents. Members can use it again without adding the same
+instructions to every conversation.
 
-{"For workspace controls and data-handling guidance, see "}
-[{"Admin controls, security, and compliance for plugins and apps"}](https://help.openai.com/articles/11509118)
-{" in the Help Center."}
+As an admin, you decide who can use each plugin and what its apps can do. This
+guide explains how to choose settings, test access, and help members when
+something doesn't work.
 
-In this guide, **app** and **MCP server** refer to the same connected
-integration and are interchangeable terms. We use **MCP server** in the prose,
-but preserve **app** in UI labels such as **Workspace apps** and
-**App permissions**, and in CSV column names.
+{"For setup, availability, and data handling, see the "}
+[{"Help Center's plugin administration guide"}](https://help.openai.com/articles/11509118)
+{"."}
 
-A member can use an MCP server's capabilities only when the plugin and MCP server
-are available to their role and the authenticated account has access to the
-connected service. For a shared credential, the member also needs permission
-to use that credential; the external account can differ from their personal account.
+See how plugin availability, roles, and groups work together.
 
-Plugins work in Chat and Work across ChatGPT on the web, desktop, and mobile,
-in Codex in the ChatGPT desktop app, and through the Codex CLI plugin browser.
-They aren't available in the IDE extension.
+#### Choose plugins for your team's tasks
 
-To see how these controls fit with workspace roles and permissions, see
+A plugin can include skills, apps, or both:
+
+- **Skills** give ChatGPT instructions, templates, and reference material for a
+  task, such as preparing a brief or presentation.
+- **Apps** let ChatGPT work with tools and information in services such as
+  Google Drive or Slack. An app can only use the information and actions allowed
+  by its settings and the connected account's permissions.
+
+In the weekly update example, the skill supplies the reporting instructions and
+template. The app retrieves project documents the connected account can access.
+
+You can read a plugin's skills in its preview to check whether they suit the task.
+The preview doesn't let you edit the instructions or select individual skills
+from the plugin. See [Skill controls](https://learn.chatgpt.com/docs/enterprise/skills) for more guidance.
+
+Before choosing settings, decide who needs the plugin and whether their task
+involves reading information, changing it, or both. A plugin that one department
+uses every week may be optional for another.
+
+Give members a short description of when to use each approved plugin and one
+example request.
+
+#### Understand what each control does
+
+Member permissions control what people can do with plugins. Installation
+settings control which plugins they can install or receive by default. App and
+account settings control access to connected information and actions.
+
+| What you want to control                                                     | Where to look                                                        |
+| ---------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| Who can use, upload, share, or publish plugins.                              | [Member permissions](#choose-what-members-can-do-with-plugins).      |
+| Who can install a plugin and who gets it by default.                         | [Installation settings](#choose-installation-settings).              |
+| Who can use an app and which actions it allows.                              | [App access and actions](#manage-app-access-and-actions).            |
+| When ChatGPT asks before using an app.                                       | The app's **Permissions** settings.                                  |
+| Which files and records an account can access and which actions it can take. | Permissions in the connected service, such as Google Drive or Slack. |
+| Additional limits on content ChatGPT can access.                             | [Content restrictions](#review-content-access), where supported.     |
+| What an agent can do on a computer or in a cloud environment.                | [Environment permissions](#review-runtime-controls-and-hooks).       |
+
+{"For background on plugin security, read the "}
+[{"App Security Whitepaper (PDF, June 2026)"}](https://cdn.openai.com/business-guides-and-resources/app-security-whitepaper.pdf)
+{"."}
+
+#### Choose what members can do with plugins
+
+Before choosing individual plugins, review member permissions. Open your
+workspace's **Permissions & roles** settings and search for **plugins**.
+Depending on your workspace, the controls include:
+
+| Member permission                      | What it allows                                                                                                                 |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Use plugins                            | Use plugins and apps available to the workspace.                                                                               |
+| Upload plugins                         | Create plugins by uploading plugin ZIP files.                                                                                  |
+| Upload plugins with custom MCP servers | Upload or update plugins that include custom connections to tools. Members still need permission to create or edit the plugin. |
+| Share plugins                          | Share plugins they own with people or groups, or anyone in the workspace with a link.                                          |
+| Publish plugins to workspace           | Add plugins they own to the workspace's plugin directory.                                                                      |
+| Create plugins with MCPs               | Use developer mode to create custom app connections.                                                                           |
+
+Where role-based access control (RBAC) is supported, a role holds a set of
+permissions. Workspace owners can assign a role to a group so its members receive
+those permissions. For example, a team can use approved plugins while only the
+people maintaining them have permission to upload or publish them.
+
+These permissions are separate from each plugin's installation settings. Next,
+choose which plugins members can install or receive by default. For more on
+assigning roles and groups, see
 [Roles and workspace permissions](https://learn.chatgpt.com/docs/enterprise/roles-and-workspace-permissions).
 
-To configure plugin authentication for supported workspace
-experiences, see [Workspace connections](https://learn.chatgpt.com/docs/enterprise/shared-connections).
-Installing a plugin for everyone doesn't, by itself, provide a shared account.
+#### Choose installation settings
 
-Plugins in Sites let each visitor use their own connected accounts. Each
-plugin has a separate Sites permission, with defaults that depend on the
-workspace plan. See [Enable plugin use in
-Sites](https://learn.chatgpt.com/docs/enterprise/sites#enable-plugin-use-in-sites) to review plugin
-defaults, change access, and troubleshoot tenant restrictions.
+Open [Admin console](https://admin.openai.com),
+select your workspace, and open **Plugins**. The bulk edit menu offers these
+installation settings:
 
-#### Understand the capability chain
+| Setting                    | What it changes                                                      | When to consider it                                                          |
+| -------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Available for installation | Members can install the plugin.                                      | Plugins that members choose based on their work.                             |
+| Installed for workspace    | Installs the plugin by default and keeps any role-specific settings. | A plugin the team uses regularly.                                            |
+| Customize by role          | Sets availability for a custom role where supported.                 | A plugin for a particular team or responsibility.                            |
+| Disable                    | Changes the workspace default to disabled.                           | A plugin you no longer want available by default. Review role overrides too. |
 
-A plugin can span these control layers:
+Where per-plugin role settings are supported, **Workspace default** uses the
+workspace setting. For ordinary custom roles, **Off** means that role
+doesn't give access. A member may still get access through another role, so
+check all roles assigned to them, including those assigned through groups.
 
-| Layer                   | What it determines                                                       | Where to manage it                                                                                                              |
-| ----------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
-| Availability            | Whether the plugin bundle is available to the user                       | [Workspace settings](https://chatgpt.com/admin/settings) for supported web and desktop surfaces; the CLI plugin browser for CLI |
-| Included skills         | Which reusable instructions the installed plugin contributes             | The plugin package and [Skill controls](https://learn.chatgpt.com/docs/enterprise/skills)                                                               |
-| MCP server access       | Whether users can use an MCP server's capabilities                       | [Workspace apps](https://chatgpt.com/admin/ca) and [Permissions & roles](https://chatgpt.com/admin/settings)                    |
-| Actions and permissions | Which actions users can run and when ChatGPT asks before using its tools | The connection's **Action control** and **App permissions** in [Workspace apps](https://chatgpt.com/admin/ca)                   |
-| Service authorization   | Which external data and actions the authenticated identity can access    | The connected service and its identity provider                                                                                 |
-| Runtime permissions     | What an agent can do after it receives data or a tool                    | The runtime, sandbox, and approval controls for the active surface                                                              |
+For example, make a research plugin available for members to install when they
+need it. If role controls are available, install the weekly update plugin for the
+role assigned to the people who prepare those updates. Check their app access
+before asking them to use it.
 
-Use these layers as a two-step rollout: first make the right plugins available,
-then configure the capabilities and permissions each workflow needs.
+#### Manage multiple plugins together
 
-#### Step 1: Enable plugin availability
+To change several plugins at once, select them and choose **Edit**. Use this only
+when the plugins need the same installation setting. Review who the change
+affects and which apps each plugin needs before confirming. If a change fails
+or you're unsure whether it saved, check that plugin's setting before trying again.
 
-For supported web and desktop surfaces, workspace plugin controls determine
-which roles can use or install a plugin. The Codex CLI uses its own plugin
-browser for installation. See
-[Build plugins](https://developers.openai.com/plugins/build/plugins) for
-packaging and distribution.
+For current limits and instructions, see the [Help Center's plugin administration guide](https://help.openai.com/en/articles/11509118-admin-controls-security-and-compliance-for-plugins-and-apps).
 
-To import workspace plugins from GitHub and keep them up to date, see
-[Plugin management](https://learn.chatgpt.com/docs/enterprise/plugin-management).
+To manage workspace plugins from a repository, see
+[Import and sync plugins from GitHub](https://learn.chatgpt.com/docs/enterprise/plugin-management). For installation on
+other versions of ChatGPT and Codex, see [Plugins](https://learn.chatgpt.com/docs/plugins).
+
+#### Manage app access and actions
+
+Installing a plugin doesn't give members access to its apps or external data.
+You also need to allow the required apps. If an app requires an account, that
+account must have permission to access the information or take the action in the
+connected service.
+
+Review each included app in **Plugins** in Admin console. Where available, use
+**Manage Legacy Apps** to open the older app settings page.
+
+- Use **App access** to choose who can use the app.
+- Where supported, use **Tools** (or **Actions**) to allow actions that read or
+  change information in the connected service.
+- Use **New tools** (or **New actions**), where supported, to decide whether to
+  allow actions added later. This doesn't turn off actions you've already enabled.
+- Use **Permissions** to choose when ChatGPT asks before using the app.
+
+For example, summarizing documents may need only read actions. Updating project
+records needs write actions. Before allowing write actions, check what they can
+change and how members can review or correct the result. Asking for confirmation
+doesn't replace restrictions on what the app or connected account can access.
+
+If you use a [workspace connection](https://learn.chatgpt.com/docs/enterprise/shared-connections), members
+need permission to use that shared account. Installing a plugin for everyone
+doesn't create a shared account. Choose an account with the permissions the task
+needs, and tell members which account they're using.
+
+Plugins in Sites use each visitor's connected accounts and have a separate
+Sites permission. See [Plugin access in
+Sites](https://learn.chatgpt.com/docs/enterprise/sites#enable-plugin-use-in-sites) for defaults and
+setup.
+
+#### Review content access
+
+Some apps offer **Safety & Security Controls** to limit which content ChatGPT can
+access. These settings apply in addition to the connected service's permissions.
+
+For example, a member may be able to open a file in Google Drive while workspace
+content restrictions prevent ChatGPT from accessing it. After choosing
+restrictions, send new requests for an allowed item and a restricted item to
+check that ChatGPT can access the allowed item but not the restricted item.
+
+For supported apps and setup, see the [Help Center's plugin administration guide](https://help.openai.com/en/articles/11509118-admin-controls-security-and-compliance-for-plugins-and-apps).
+
+#### Check the member experience
+
+Ask a member to try the plugin in their workspace on a version of ChatGPT or
+Codex that supports it. Test with their account because an owner's account may
+have different permissions.
+
+| Check                     | What to verify                                                                          |
+| ------------------------- | --------------------------------------------------------------------------------------- |
+| Find the plugin           | The member can install it, or it is already installed, as intended.                     |
+| Use an included app       | The app is enabled, and the correct account is connected with the required permissions. |
+| Try the team's task       | The member can use the actions and information the task needs.                          |
+| Test content restrictions | A new request can access an allowed item and cannot access a restricted item.           |
+| Test a write action       | If enabled, use a disposable test record. Check the result in the connected service.    |
+
+If the plugin is installed but a task fails, check the app connection, allowed
+actions, content restrictions, and the connected account's permissions before
+reinstalling it. For more checks, see [Troubleshooting plugins and apps in ChatGPT](https://help.openai.com/en/articles/20001497-troubleshooting-plugins-and-apps-in-chatgpt).
 
 #### Troubleshoot "Disabled by admin"
 
@@ -46719,17 +48480,16 @@ If you're a workspace owner, check these settings when a plugin shows
 1. Open [Admin console](https://admin.openai.com), select the workspace, and open **Plugins** (**Apps** in
    FedRAMP workspaces). Review the plugin's workspace availability and any
    supported role settings. ChatGPT Business uses workspace-wide availability.
-2. If your workspace supports RBAC, review the workspace default and all direct
-   and group role assignments in **Permissions & roles**. Confirm the member's
-   general plugin permission is enabled: **Allow members to use plugins** or
-   **Use plugins**, depending on the label shown. FedRAMP workspaces may show
-   **Use apps**.
+2. If your workspace supports RBAC, open **Permissions & roles**. Check the
+   workspace default and every role assigned to the member, directly or through
+   a group. The general plugin permission must be on. Look for **Allow members
+   to use plugins** or **Use plugins**. FedRAMP workspaces may show **Use apps**.
 3. Confirm the member can access each app required by the plugin and that the
    task's required actions are enabled.
-4. Where Lockdown Mode roles are available, check all direct and group role
-   assignments for restrictions on the capability the member needs. Lockdown Mode
-   doesn't automatically disable every app in managed workspaces, but its
-   restrictions can apply even when an ordinary role grants access.
+4. If Lockdown Mode roles are available, check whether they restrict what the
+   member is trying to do. Review roles assigned directly and through groups.
+   Lockdown Mode restrictions can apply even when an ordinary role gives access.
+   They don't automatically disable every app in managed workspaces.
 
 For self-serve ChatGPT Business accounts, ask the member to review [Lockdown Mode](https://help.openai.com/en/articles/20001061-lockdown-mode) in
 **Settings > Security**, where available. Lockdown Mode doesn't affect Codex
@@ -46739,15 +48499,29 @@ Correct unintended settings or role assignments according to your organization's
 security policy. Allow up to five minutes for role changes to apply, then ask the
 member to try again. See [Role-based access control (RBAC)](https://help.openai.com/en/articles/11750701-rbac) for details.
 
+#### Keep approved workflows useful
+
+For each shared plugin, give members a contact who can answer questions and review
+changes to its skills and apps. Review access when the team, task, or connected
+account changes.
+
+When you stop using a plugin, review its installation settings and app access
+separately. Disabling an app doesn't necessarily uninstall the plugin or remove
+skills that work without it. Tell members what's changing and suggest a
+replacement, if one exists.
+
 #### Export the public catalog for review
 
 Eligible ChatGPT Enterprise workspace owners and admins can download a CSV of
 the public plugins available to their workspace. Use the export to review
-plugin, MCP server, and skill metadata before changing plugin availability.
+plugin descriptions, apps, and skills before changing availability. Apps use Model
+Context Protocol (MCP) to connect to services, so the export describes them as MCP
+servers. The export doesn't show what each member can access. Use the member
+checks above for that.
 
-1. Open [Admin > Plugins](https://chatgpt.com/admin/plugins).
-2. Select **Public**.
-3. Select the download icon (**Export CSV**) in the page header.
+1. Open [Admin console](https://admin.openai.com) and select the intended workspace.
+2. Open **Plugins** and select **Public**.
+3. Select **Export CSV** in the page header.
 
 The download uses the filename `public-plugins-security-review.csv` and includes:
 
@@ -46756,312 +48530,55 @@ The download uses the filename `public-plugins-security-review.csv` and includes
 - MCP server metadata: `App Name(s)` and `App Description(s)`.
 - Chat skill metadata: `Skill Name(s)` and `Skill Description(s)`.
 
-When a plugin includes more than one MCP server or skill, semicolons separate the
-corresponding values. The export uses a public-catalog snapshot that can be up
-to 48 hours old,
-includes only public plugins visible to the current workspace, and does not
-include plugins created for that workspace. It isn't available in FedRAMP
-workspaces.
-
-#### Step 2: Manage capabilities
-
-Conversation sync does not grant additional plugin, MCP server, or connected-service access. For Local computer access with Work Cloud, Agent Security's enterprise `apps` and `plugins` requirements apply to local executors. Work cloud containers retain existing Work Cloud policies. Configure these requirements through TOML and review them alongside workspace permissions and the connected account's permissions.
-
-Review hook support separately from plugin availability:
-
-- **Enterprise hooks.** Where enabled for your workspace, Local computer access with Work Cloud supports admin-defined MCP hooks that run on the cloud coordinator (orchestrator) for supported lifecycle and tool events. Command hooks and hooks from local configuration or plugins are not supported with cloud orchestration, even when tools execute locally.
-- **Cloud orchestration:** Command hooks and hooks from local configuration or plugins do not run, even when tools execute locally and the plugin itself is allowed. Consumers do not have hooks support in this feature. When both orchestration and execution are local, existing supported hooks continue to work in local-only Work and Codex threads. Admins can still configure supported managed hooks in Agent Security for those workflows.
-- **Auditing.** Before relying on these hooks, test the callback connection, confirm the events it receives, and check how failures affect the task. MCP hooks do not provide a complete Compliance API audit trail.
-
-See [Hooks](https://learn.chatgpt.com/docs/hooks) and the [Configuration Reference](https://learn.chatgpt.com/docs/config-file/config-reference) for supported requirements.
-
-Making an MCP server or plugin available in ChatGPT doesn't grant access to
-files, records, or actions in the connected service. When troubleshooting
-access, check the member's workspace role and approved action settings. Then
-confirm the authenticated account or shared connection has the expected
-permissions in the connected service.
-
-Plugins in ChatGPT and Codex can include MCP server connections that search, retrieve, sync,
-or act on external systems. Plugin availability and the access and actions
-granted to each connection are separate controls.
-
-Manage MCP server capabilities from
-[Workspace apps](https://chatgpt.com/admin/ca) and
-[Permissions & roles](https://chatgpt.com/admin/settings). Available controls
-let admins:
-
-- Enable MCP server connections and assign access by workspace role.
-- For connections that support **Action control**, allow read-only actions or an
-  approved custom set, including how the workspace handles newly added actions.
-- Set **App permissions** that determine when ChatGPT asks before using a connection.
-- Keep access within the scopes and permissions granted by each connected
-  service and authenticated account.
-
-For current availability and procedures, see
-[Admin controls, security, and compliance in apps](https://help.openai.com/en/articles/11509118).
+Semicolons separate multiple MCP servers or skills in the same cell. The catalog
+data can be up to 48 hours old. It includes public plugins visible to your
+workspace, but not plugins created for that workspace. The export isn't
+available in FedRAMP workspaces.
 
 #### Restrict company app accounts to authorized workspaces
 
-When activated, verified-domain restrictions prevent users from creating new connections to supported apps with company-domain accounts in personal ChatGPT workspaces or other unauthorized workspaces. Employees must use an authorized workspace to connect those company accounts.
+Verified-domain restrictions let you require employees to connect company
+accounts only in authorized ChatGPT workspaces. When activated, this blocks new
+connections to supported apps in personal or other unauthorized workspaces. It
+applies to accounts that use your company's verified domain.
 
 Verifying a domain does not activate this restriction. Existing app connections are not automatically disconnected.
 
 For supported apps, availability, and setup guidance, see [Admin controls, security, and compliance for plugins and apps](https://help.openai.com/en/articles/11509118).
 
-#### Choose a focused initial set
+#### Review permissions for the computer or cloud environment
 
-Enable plugins that support an approved business need. Set each plugin’s audience to the users or roles that need it, and complete any required review before enabling it.
+If an agent uses plugins on a computer or in a cloud environment, review that
+environment's permissions too. These work alongside workspace and account
+permissions.
 
-For each connected service, record the business owner, permitted data, approved
-read or write actions, authentication method, and a support or removal contact.
+Hooks can run scripts or tools at specific points during an agent's work. If you
+use them, check that the environment supports them and test what happens when
+they fail. A hook failure doesn't necessarily stop the action. Keep access
+restrictions in place even when you use hooks.
 
-Before enabling write actions or publishing a new connected capability, verify
-its role scope and test with an account that has only the intended permissions
-in the connected service.
-
-For a broad rollout, begin with categories teams use every day, such as email,
-calendar, and file or document systems. Use the
-[Plugins Directory](https://chatgpt.com/apps) to confirm current availability
-and capabilities across supported ChatGPT and Codex surfaces.
-
-Whatever the initial set, start with read actions. Before enabling write
-actions, identify the plugin owner, review MCP server scopes and service
-permissions, confirm data access, and document external effects and a recovery
-path.
+See [Agent Security](https://learn.chatgpt.com/docs/enterprise/agent-security) for environment-specific
+controls and [Hooks](https://learn.chatgpt.com/docs/hooks) for supported events and configuration.
 
 #### Understand data flow and security
 
-When ChatGPT uses an MCP server included with a plugin, it sends a request
-to the connected service and returns data or action results allowed by the
-authenticated account's permissions in that service.
+When ChatGPT uses an app in a plugin, it sends a request to the connected service.
+The account's permissions and workspace controls limit the data ChatGPT can
+access and the actions it can take.
 
-ChatGPT handles data from connected services in two ways:
+Before allowing access to sensitive information, review what the task needs,
+which account it uses, and whether the connected service meets your
+organization's requirements.
 
-- **Non-synced:** ChatGPT processes data from Chat and deep research transiently
-  and doesn't index it.
-- **Synced:** ChatGPT indexes selected connected content in advance. You can see
-  whether a connection supports sync on its plugin page.
+For current data handling, retention, and compliance guidance, see [Admin controls, security, and compliance for plugins and apps](https://help.openai.com/en/articles/11509118).
+For locally configured MCP servers, see [Codex MCP configuration](https://learn.chatgpt.com/docs/extend/mcp).
 
-The mode changes how ChatGPT indexes connected content; it doesn't replace
-normal chat-retention controls. ChatGPT conversations that use these connections remain
-available through the Compliance API.
+#### Go deeper
 
-OpenAI's connected-service guidance documents encryption in transit and at rest, per-user
-authorization, role and action controls, restricted network access for
-conversations that use these connections, and no model training on information accessed
-through these connections for Business, Enterprise, and Edu customers. When a request reaches
-a connected service, that service's scopes, retention, data residency, and other
-policies also apply.
-
-See [security and compliance for connected services](https://help.openai.com/en/articles/11509118)
-and [connections with sync](https://help.openai.com/en/articles/10847137) for current
-data-handling details. For locally configured MCP servers in the ChatGPT desktop
-app, Codex CLI, or IDE extension, see
-[Codex MCP configuration](https://learn.chatgpt.com/docs/extend/mcp).
-
-#### Use current procedures and references
-
-- [Admin controls, security, and compliance in apps](https://help.openai.com/en/articles/11509118)
-- [Apps in ChatGPT](https://help.openai.com/en/articles/11487775)
-- [Apps with sync](https://help.openai.com/en/articles/10847137)
-- [Manage workspace settings](https://help.openai.com/en/articles/8411955)
-- [Plugins](https://learn.chatgpt.com/docs/plugins)
-- [Skills and plugins](https://learn.chatgpt.com/docs/skills-and-plugins)
-- [Build plugins](https://developers.openai.com/plugins/build/plugins)
-- [Admin rollout guide](https://learn.chatgpt.com/docs/enterprise/admin-setup)
-
-### Plugin management
-
-Source: [Plugin management](https://learn.chatgpt.com/docs/enterprise/plugin-management.md)
-
-#### Before you begin
-
-Workspace admins can import a plugin marketplace from GitHub and keep its plugins up to date from the repository. A marketplace is a JSON catalog that lists the plugins to import.
-
-This page covers workspace import and sync. To configure marketplaces directly
-on local clients through cloud-managed or system `config.toml`, see
-[Configure plugin marketplaces and defaults](https://learn.chatgpt.com/docs/enterprise/managed-configuration#configure-plugin-marketplaces-and-defaults).
-To enable or disable plugins for a specific project, see [Enable or disable a plugin for a
-repo](https://developers.openai.com/plugins/build/plugins#enable-or-disable-a-plugin-for-a-repo).
-
-Use a GitHub account that can read the marketplace repository and any other repositories it references. Public and private GitHub repositories are supported. Complete any GitHub organization approval required for your repository access before importing.
-
-Review the repository content before importing. New plugins start with **Available** installation and authentication on install. New marketplaces have automatic daily sync enabled. Import processes all valid entries, and future syncs automatically add any new plugins in the repository.
-
-#### Configure a marketplace sync
-
-1. Open **Admin** > **Plugins** and select **Add** > **Import marketplace**.
-2. In **Source**, enter the repository URL, such as `https://github.com/example/team-plugins`. Use the repository URL only, without a branch or folder URL.
-3. If the marketplace is in a subdirectory, enter that directory in **Path**. For example, use `team-tools` for `team-tools/.agents/plugins/marketplace.json`. Leave **Path** empty for the repository root. Do not enter the manifest filename.
-4. Optionally enter a **Branch, tag, or commit**. Leave this empty to use the repository's default branch. Use a branch to receive future commits; a fixed commit stays at that revision.
-5. Select **Import marketplace** and authorize GitHub access when prompted. The initial import can take up to an hour for very large marketplaces. Subsequent daily syncs typically take a few minutes.
-6. Review **Import results**, then open each imported plugin to configure its installation policy and any required apps.
-
-To request an update without waiting for the daily sync, open the marketplace under **Admin** > **Plugins** > **Marketplaces** and select **Sync now**.
-
-#### Supported formats
-
-The selected directory must contain one of these files:
-
-| File                               | Format                                                               |
-| ---------------------------------- | -------------------------------------------------------------------- |
-| `.agents/plugins/marketplace.json` | A Codex marketplace with a `plugins` array.                          |
-| `.claude-plugin/marketplace.json`  | A Claude-compatible marketplace with a `plugins` array.              |
-| `.claude-plugin/plugin.json`       | A standalone Claude plugin, when no marketplace manifest is present. |
-
-In a marketplace, entries can reference native plugins with `.codex-plugin/plugin.json`, Claude-compatible plugins, Agent Plugins 1.0 packages, or supported skill packages.
-
-For a Codex marketplace, use local paths for plugins in the same repository:
-
-```json
-{
-  "name": "team-plugins",
-  "interface": {
-    "displayName": "Team plugins"
-  },
-  "plugins": [
-    {
-      "name": "team-tools",
-      "source": {
-        "source": "local",
-        "path": "./plugins/team-tools"
-      }
-    }
-  ]
-}
-```
-
-The path is relative to the selected marketplace root, not to `.agents/plugins/`.
-
-A Claude-compatible marketplace can use a path string for each local plugin:
-
-```json
-{
-  "name": "team-plugins",
-  "plugins": [
-    {
-      "name": "team-tools",
-      "source": "./plugins/team-tools"
-    }
-  ]
-}
-```
-
-Codex marketplace entries also support `source: "url"` for a plugin at a GitHub repository root and `source: "git-subdir"` for a plugin in a GitHub subdirectory. For example:
-
-```json
-{
-  "name": "team-tools",
-  "source": {
-    "source": "git-subdir",
-    "url": "https://github.com/example/team-tools.git",
-    "path": "./plugins/team-tools",
-    "ref": "main"
-  }
-}
-```
-
-Git sources can select a `ref` or a full 40-character commit `sha`. The authorizing GitHub account must be able to read every referenced repository. Workspace import currently only supports GitHub repositories.
-
-#### Configure workspace access
-
-GitHub import and sync do not apply repository installation or authentication policies, including `AVAILABLE`, `INSTALLED_BY_DEFAULT`, `NOT_AVAILABLE`, `ON_INSTALL`, and `ON_USE`. Workspace admins configure these settings for each plugin. Syncing an update or moving an existing plugin to GitHub management preserves its workspace policies.
-
-Use **Installation policy** to choose **Available** or **Installed** for each eligible role. Required apps must also be enabled, and members must have access to the connected service. Importing a plugin does not grant app access or connect members' accounts. See [Plugin controls](https://learn.chatgpt.com/docs/enterprise/apps-and-connectors) for role, app, and action controls.
-
-#### Move an existing plugin to GitHub management
-
-Add `pluginId` to the existing plugin's marketplace entry:
-
-```json
-{
-  "name": "team-tools",
-  "pluginId": "plugin_0123456789abcdef0123456789abcdef",
-  "source": {
-    "source": "local",
-    "path": "./plugins/team-tools"
-  }
-}
-```
-
-Open the plugin from **Admin** > **Plugins** and copy the ID after `/admin/plugins/` in its URL. Put `pluginId` beside `name` and `source` in the marketplace entry. The existing plugin must be in the same workspace.
-
-This moves an uploaded or otherwise unmanaged workspace plugin to GitHub management. The plugin keeps its ID, sharing, and workspace policies. Future updates come from GitHub; archive uploads can no longer replace the managed plugin. A plugin already managed by another GitHub source cannot be taken over this way.
-
-#### Desktop-only plugins
-
-Any imported plugin that declares MCP servers in `mcp.json` or `.mcp.json` is marked **Desktop only** and works only in the ChatGPT desktop app. This includes servers that use a remote HTTPS URL. The same restriction applies to other supported MCP configuration forms, such as inline server declarations.
-
-#### Reference an existing app with `.app.json`
-
-Add `.app.json` at the plugin root. The filename includes a leading dot; `app.json` without the dot is not supported.
-
-```json
-{
-  "apps": {
-    "team-tools": {
-      "id": "asdk_app_example",
-      "required": true
-    }
-  }
-}
-```
-
-Replace `asdk_app_example` with the existing app's ID. Supported app IDs start with `asdk_app_`, `connector_`, or `templated_apps_`. Use the app ID, not a `plugin_...` ID. For example, a plugin URL containing `plugin_asdk_app_example` represents the app `asdk_app_example`.
-
-The key `team-tools` names the reference within this file. Set `required` to `true` when the plugin depends on the app. You can add more entries to reference other existing apps.
-
-For a native plugin, set `apps` to `./.app.json` in `.codex-plugin/plugin.json`. Here is a complete manifest for this example:
-
-```json
-{
-  "name": "team-tools",
-  "version": "1.0.0",
-  "description": "Use the team's approved tools.",
-  "author": {
-    "name": "Example team"
-  },
-  "apps": "./.app.json",
-  "interface": {
-    "displayName": "Team tools",
-    "shortDescription": "Use approved team tools",
-    "longDescription": "Connect to the team's existing app.",
-    "developerName": "Example team",
-    "category": "Productivity",
-    "capabilities": ["Read"]
-  }
-}
-```
-
-Keep the files in this layout:
-
-```text
-team-plugins/
-├── .agents/plugins/marketplace.json
-└── plugins/team-tools/
-    ├── .codex-plugin/plugin.json
-    └── .app.json
-```
-
-The reference does not create an app or grant permissions. Admins must make the app available to the intended roles, and members must complete any required authentication. Existing app permissions, action controls, and service access still apply.
-
-#### Keep plugins up to date
-
-New marketplaces check for updates daily. Open **Admin** > **Plugins** > **Marketplaces**, select the marketplace, and choose **Sync now** to request an update without waiting for automatic sync.
-
-Sync can add new marketplace entries and update existing plugins. Review changes to the repository before merging them, because automatic sync will import any new plugins.
-
-After a sync, review the status and saved report. **Completed — N errors** means the pass finished but some plugins could not be processed. If an update to an existing plugin is invalid, its last working version is retained. Fix the reported problem in GitHub, then select **Sync now** to retry.
-
-Removing an entry from the repository does not delete its imported workspace copy. It is marked **No longer in source**. Deleting the marketplace in ChatGPT deletes all plugins imported from it.
-
-#### Reconnect or change GitHub access
-
-To **reconnect GitHub access**, first confirm that the GitHub account used for the import still has access to the repository and any referenced repositories. The admin who originally imported the marketplace should then open the GitHub plugin in ChatGPT and reconnect their account, since marketplace sync uses that admin’s GitHub connection.
-
-To **transfer to a new owner**, the new workspace admin should open **Admin** > **Plugins** > **Add** > **Import marketplace** and import the same marketplace using the same **Source**, **Path**, and **Branch, tag, or commit** values. Future syncs will use their GitHub connection.
-
-Do not delete the marketplace just to reconnect it or change ownership: deletion also removes its imported plugins.
+- [Install and use plugins](https://learn.chatgpt.com/docs/plugins)
+- [Understand skills and plugins](https://learn.chatgpt.com/docs/skills-and-plugins)
+- [Import and sync plugins from GitHub](https://learn.chatgpt.com/docs/enterprise/plugin-management)
+- Read the [App Security Whitepaper (PDF, June 2026)](https://cdn.openai.com/business-guides-and-resources/app-security-whitepaper.pdf)
 
 ### Prisma AIRS
 
@@ -47382,14 +48899,15 @@ for requirements, delivery, and precedence.
 
 Source: [Roll out a gateway](https://learn.chatgpt.com/docs/enterprise/roll-out-a-gateway.md)
 
-Roll out the API/provider credential path through your gateway. Configure model
-routes, issue developer credentials, and distribute a verified Codex
+Roll out native gateway OAuth, API keys, or credential helpers without ChatGPT
+sign-in. Configure model routes, authorize users, and distribute a verified Codex
 configuration. For a gateway that forwards ChatGPT workspace requests, see
-[Sign in with ChatGPT through a gateway](https://learn.chatgpt.com/docs/enterprise/sign-in-with-chatgpt-through-a-gateway).
+[Sign in with ChatGPT through a gateway](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway#enable-chatgpt-sign-in-recommended).
 
-To configure Codex on your own machine with values you were given, see [Use
-API/provider credentials](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway). Before
-choosing or rolling out a gateway, review the [gateway compatibility
+To configure Codex on your own machine with values you were given, see
+[Configure the
+provider](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway#configure-the-provider).
+Before choosing or rolling out a gateway, review the [gateway compatibility
 requirements](https://learn.chatgpt.com/docs/enterprise/gateway-compatibility).
 
 #### Prerequisites
@@ -47399,9 +48917,12 @@ Before deploying Codex to developers, confirm that you have:
 - A gateway serving HTTPS at the exact base URL you will distribute.
 - An upstream provider credential held by the gateway.
 - Approved Codex-facing model aliases mapped to intended upstream models.
-- A scoped test gateway credential.
-- A secret delivery mechanism or a tested credential helper.
-- A way to distribute configuration, helper executables, and any catalog files.
+- A tested authentication method: native gateway OAuth, scoped gateway API keys,
+  or a credential helper.
+- For OAuth, a registered public client, approved test users, and gateway support
+  for validating OAuth access tokens.
+- For API keys or helpers, a secret delivery mechanism or a tested helper.
+- A way to distribute configuration, any required helpers, and catalog files.
 
 #### Gateway requirements
 
@@ -47424,7 +48945,7 @@ Need an implementation starting point? The [Codex deployment guidance repository
 To move from a deployed gateway to a verified developer experience, complete these five checkpoints in order:
 
 1. [Choose model names and verify routes](#choose-model-names-and-routes).
-2. [Issue developer credentials](#issue-developer-credentials).
+2. [Choose authentication](#choose-authentication).
 3. [Test Codex through the gateway](#test-the-client-and-gateway).
 4. [Distribute the configuration](#distribute-the-configuration).
 5. [Verify from a developer machine](#verify-and-operate-the-rollout).
@@ -47442,7 +48963,7 @@ Set Codex's `model` to the gateway's model name. Configure the gateway to route 
 
 Supply a model catalog when your gateway uses a model name Codex does not recognize. The catalog supplies the instructions, reasoning options, context limits, and tool capabilities Codex uses for that name. Without a matching entry, a request can reach the intended upstream model while Codex uses generic settings.
 
-Host a remote catalog with `model_providers..model_catalog_url` to update model metadata centrally, or distribute a local file with `model_catalog_json`. See the [configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference) for both settings.
+Host a remote catalog with `model_providers..model_catalog_url` to update model metadata centrally, or distribute a local file with `model_catalog_json`. Use a local catalog when native gateway OAuth is the only credential; OAuth alone doesn't enable remote catalog discovery. See the [configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference) for both settings.
 
 Get a catalog endpoint or file compatible with your Codex version from your cloud
 or gateway provider. Make sure it includes each approved alias and its model
@@ -47472,7 +48993,7 @@ separately to route inference through the gateway. If you omit it, Codex uses th
 default OpenAI endpoint for the current authentication mode.
 
 Discovery requires API-key, command-backed, or Codex-backend authentication.
-Custom headers alone don't trigger it.
+Native gateway OAuth or custom headers alone don't trigger it.
 
 Coordinate catalog updates with your provider when your approved models change. Restart the client after
 changing its configuration.
@@ -47503,7 +49024,29 @@ model supports the required request and tool behavior.
 Model routing and tool authorization are separate parts of the rollout. Configure
 MCP connections, plugin distribution, and their policies separately.
 
-#### Issue developer credentials
+#### Choose authentication
+
+#### Native gateway OAuth
+
+1. Register a public OAuth client that supports authorization code with PKCE, and
+   approve the users or groups that can sign in.
+2. Configure the gateway to validate the issued access token in the selected
+   cookie or custom header. Apply the approved models, rate limits, and budgets
+   to each user's identity.
+3. Follow [native gateway
+   OAuth](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway#use-native-gateway-oauth) to collect
+   the authorization and token URLs, public client ID, scopes, optional resource,
+   token delivery settings, and any fixed redirect port. Register the matching
+   loopback redirect URI with your identity provider.
+4. Test browser sign-in, token refresh, and access revocation with a test user on
+   the CLI or desktop app you plan to deploy. Confirm that the browser can reach
+   the callback, including for remote CLI users.
+
+Users sign in individually. You distribute OAuth configuration, not a client
+secret, gateway API key, or helper executable. Keep upstream provider credentials
+on the gateway.
+
+#### API keys or credential helpers
 
 1. Issue one scoped gateway credential per developer so you can attribute usage
    and revoke access individually.
@@ -47519,7 +49062,7 @@ MCP connections, plugin distribution, and their policies separately.
 
 #### Test Codex through the gateway
 
-Before distributing anything, follow [Use API/provider credentials](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway) to configure one isolated test user with the provider block and credential mechanism you plan to distribute.
+Before distributing anything, follow [Configure the provider](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway#configure-the-provider) to configure one isolated test user with the provider block and authentication method you plan to distribute.
 
 Run the checks below from the same CLI or desktop surface developers will use:
 
@@ -47531,16 +49074,26 @@ Run the checks below from the same CLI or desktop surface developers will use:
 | Follow-up              | Ask a follow-up in the same thread.                                                                          | The answer uses the prior turn; the gateway accepts replayed input. If WebSocket or incremental transport is enabled, it also preserves `previous_response_id`. |
 | Errors and attribution | Repeat with an intentionally invalid test alias or expired test credential.                                  | The client receives a useful routing or authentication error, and valid requests remain attributed to the test user.                                            |
 
-After these checks succeed, direct developers to [Use API/provider credentials](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway) to configure and verify their own machine.
+After these checks succeed, direct developers to [Configure the provider](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway#configure-the-provider) to configure and verify their own machine.
 
 #### Distribute the configuration
 
 To give every machine the same connection path, distribute the gateway base URL,
-provider ID, approved model alias, and credential mechanism.
+provider ID, approved model alias, and authentication settings.
 
 #### What to distribute
 
-To set provider defaults, distribute this `config.toml` block through the configuration layer you chose. Use a model recognized by your Codex version, or supply the matching catalog described above. Install your token resolver at the configured command path:
+For native gateway OAuth, distribute the provider and
+`[model_providers..gateway_oauth]` tables from the [connection
+guide](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway#use-native-gateway-oauth), with the
+registration values collected above. Keep `requires_openai_auth = false` and omit
+`env_key`, `experimental_bearer_token`, and the command-backed `auth` table when
+OAuth is the only gateway credential.
+
+For a credential helper, distribute the following `config.toml` block through the
+configuration layer you chose. Use a model recognized by your Codex version, or
+supply the matching catalog described above. Install your token resolver at the
+configured command path:
 
 Put `model` and `model_provider` before the first TOML table. If you set
 `model_catalog_json`, keep it there too. TOML treats keys after
@@ -47567,6 +49120,8 @@ refresh_interval_ms = 300000
 For a short-lived static test key, remove the auth block and put `env_key = "CODEX_GATEWAY_API_KEY"` inside `[model_providers.enterprise-gateway]` and set that variable outside TOML. Do not combine `env_key` with command-backed auth.
 
 #### Distribute defaults and requirements
+
+If your users don't sign in to Codex with ChatGPT, you can [distribute team settings from your own server](https://learn.chatgpt.com/docs/enterprise/configuration-server). Codex fetches those settings independently of how you route model requests.
 
 Use [Configuration precedence](https://learn.chatgpt.com/docs/config-file/config-basic#configuration-precedence)
 to choose where to distribute defaults. For enforced settings and macOS MDM
@@ -47607,7 +49162,7 @@ inherit native Windows configuration.
 
 #### Hand developers the configuration values
 
-If you do not have managed distribution, give each developer the gateway URL, provider ID, model alias, credential variable or resolver, and any catalog URL or local path. Send them to [Use API/provider credentials](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway) to configure and verify their own machine.
+If you do not have managed distribution, give each developer the gateway URL, provider ID, model alias, OAuth configuration or credential variable or resolver, and any catalog URL or local path. Send them to [Configure the provider](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway#configure-the-provider) to configure and verify their own machine.
 
 Manual setup is not an enforcement channel. Project-local `.codex/config.toml` cannot override sensitive provider or authentication routing keys.
 
@@ -47616,7 +49171,7 @@ Manual setup is not an enforcement channel. Project-local `.codex/config.toml` c
 To confirm that the distributed settings reached a developer machine:
 
 1. Restart Codex and confirm the expected provider and model.
-2. Run the short test in [Use API/provider credentials](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway#verify-the-connection).
+2. Run the short test in [Connect to a gateway](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway#verify-the-connection).
 3. Ask one follow-up to confirm continuation, then check the gateway logs for that
    developer's request.
 
@@ -47628,7 +49183,7 @@ Use the issue to find the configuration, credential, or gateway layer that needs
 | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Expected provider is missing after restart.      | Inspect the winning configuration layer. User or profile configuration can override system defaults.                                                                                                                            |
 | Authentication fails for every user.             | Check gateway authentication and the upstream provider credential; identify which service rejected the request.                                                                                                                 |
-| Authentication fails for one user.               | Check that user's gateway credential or token resolver.                                                                                                                                                                         |
+| Authentication fails for one user.               | Check that user's identity-provider access, gateway credential, or token resolver.                                                                                                                                              |
 | Streaming stalls.                                | Inspect gateway buffering and terminal `response.completed` forwarding.                                                                                                                                                         |
 | A model is missing or uses generic capabilities. | For a custom alias, confirm the gateway alias, Codex `model`, and catalog `slug` match. Check the [catalog](#use-a-model-catalog-for-custom-names) path and compatibility with the installed Codex version, then restart Codex. |
 | A Windows path fails.                            | Use resolved absolute paths. In TOML, use single-quoted strings for Windows paths with single backslashes.                                                                                                                      |
@@ -47646,7 +49201,7 @@ retaining the existing working setup. Claude client settings and the
 | Gateway product, DNS, TLS, private networking, logging, redaction, and monitoring                                  | Keep these services in place. Add a Codex-facing route that satisfies the [Gateway compatibility requirements](https://learn.chatgpt.com/docs/enterprise/gateway-compatibility).                                                         |
 | Bedrock account, provider credential, IAM boundary, inference profiles, and credential rotation                    | Keep them only when they authorize the upstream models behind the new Codex aliases. The provider credential remains on the gateway.                                                                             |
 | Claude `/v1/messages` route, Bedrock InvokeModel shape, Anthropic headers, and Claude-specific retries or errors   | Do not reuse these as proof of compatibility. Codex needs `POST /v1/responses`, Responses streaming, continuation, tool calls, and useful errors.                                                                |
-| `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_API_KEY`, or `apiKeyHelper`                                                     | Codex does not support `apiKeyHelper`. Issue a scoped Codex gateway credential and configure it with `env_key` or a Codex command-backed token resolver.                                                         |
+| `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_API_KEY`, or `apiKeyHelper`                                                     | Codex does not support `apiKeyHelper`. Configure native gateway OAuth, a scoped key with `env_key`, or a Codex command-backed token resolver.                                                                    |
 | Claude model names, `ANTHROPIC_MODEL`, `ANTHROPIC_DEFAULT_*_MODEL`, `modelOverrides`, and Bedrock profile mappings | Have your gateway team [choose model names and configure any custom aliases](#choose-model-names-and-routes). Use the model name and any [model catalog JSON](https://learn.chatgpt.com/docs/config-file/config-reference) they provide. |
 | Claude `settings.json`, `managed-settings.json`, JSON `env` blocks, `plist`, or registry payloads                  | Keep the same MDM or configuration-management channel, but distribute Codex `config.toml` and supported `requirements.toml` values instead.                                                                      |
 
@@ -47654,17 +49209,116 @@ To migrate safely, complete these steps in order:
 
 1. Inventory the current Claude path: gateway URL, credential source, required headers, model aliases, Bedrock profile mappings, and managed delivery channel.
 2. Add a parallel Codex-facing Responses route and Codex model aliases.
-3. Issue one scoped Codex credential. If Codex will use a static credential, expose that new credential through `env_key`; if Claude uses a credential helper, implement and test the Codex command-backed resolver contract.
+3. Choose [native gateway OAuth, an API key, or a credential helper](#choose-authentication) and authorize one test user. For a static credential, expose it through `env_key`; for a helper, implement and test the Codex command-backed resolver contract.
 4. Configure that developer with the [provider block](#what-to-distribute). For a managed rollout, translate the payload into the Codex paths and precedence described in [Roll out a gateway](#distribute-the-configuration).
 5. Run the short connection check on the developer's actual CLI or desktop surface, then run the full streaming, continuation, tool-call, error, logging, and alias-routing checks in [Test Codex through the gateway](#test-the-client-and-gateway).
 6. After the pilot passes, [distribute the configuration](#distribute-the-configuration) to the remaining developers.
 
 #### Related docs
 
-- [Use API/provider credentials](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway)
+- [Configure the provider](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway#configure-the-provider)
 - [MCP](https://learn.chatgpt.com/docs/extend/mcp)
 - [Plugins](https://learn.chatgpt.com/docs/plugins)
 - [Managed configuration](https://learn.chatgpt.com/docs/enterprise/managed-configuration)
+
+### Self-host Codex configuration for your team
+
+Source: [Self-host Codex configuration for your team](https://learn.chatgpt.com/docs/enterprise/configuration-server.md)
+
+We recommend that your team sign in to Codex with ChatGPT. On supported plans,
+you can use [managed configuration](https://learn.chatgpt.com/docs/enterprise/managed-configuration)
+to set defaults and enforce requirements in **Agent security** in the Admin
+Console without running your own server.
+
+If your users don't sign in to Codex with ChatGPT, you can distribute configuration to Codex CLI and the desktop app from an HTTPS server you operate. Codex loads your settings at startup, whether users connect directly to their model provider or through a gateway.
+
+#### Client limitations
+
+The desktop app can't prompt you to sign in to the configuration server. If your server requires a new sign-in, run `codex login` in a terminal on the same computer, then reopen the app. If the app can't load the required settings, startup pauses.
+
+#### Configure Codex to use the server
+
+On a test computer, create or update the system `requirements.toml`. Add a `[config_server]` table with the base URL of your configuration server. Use `/etc/codex/requirements.toml` on Linux and macOS, or `%ProgramData%\OpenAI\Codex\requirements.toml` on Windows. On macOS, you can also distribute the table through [managed preferences](https://learn.chatgpt.com/docs/enterprise/managed-configuration#mdm-setup-workflow).
+
+```toml
+[config_server]
+base_url = "https://codex-config.example.com/team"
+```
+
+Only local administrator-controlled requirements can select the server. Keep this table on the computer when you move the rest of your policy to the endpoint.
+
+#### Authenticate to the configuration server (optional)
+
+By default, Codex attempts to fetch configuration without credentials. If your server requires sign-in, add `[config_server.oauth]` to the same `requirements.toml` file. Codex uses the OAuth authorization code flow with Proof Key for Code Exchange (PKCE).
+
+```toml
+[config_server.oauth]
+authorization_url = "https://login.example.com/oauth/authorize"
+token_url = "https://login.example.com/oauth/token"
+client_id = "codex-policy"
+redirect_port = 43127
+```
+
+The redirect URI for this example is `http://127.0.0.1:43127/callback`. You can omit `redirect_port` if your provider accepts a loopback callback on any available port. Codex sends the access token in the `Authorization` header. Your server must verify it before returning the bundle.
+
+#### Serve Codex configuration
+
+Host your managed configuration at an HTTPS endpoint. When Codex CLI fetches the bundle, it sends a GET request using the base URL from the local `requirements.toml`:
+
+```text
+GET {config_server.base_url}/codex/config/bundle
+```
+
+With the `base_url` from the bootstrap example above, Codex sends this request:
+
+```text
+GET https://codex-config.example.com/team/codex/config/bundle
+```
+
+Respond with `200 OK` and a [JSON configuration bundle](#configuration-bundle-format) in the response body.
+
+#### Configuration bundle format
+
+The bundle groups TOML entries into two arrays:
+
+- `config_toml.enterprise_managed` contains the defaults to apply. Each entry's `contents` is [`config.toml` text](https://learn.chatgpt.com/docs/config-file/config-reference#configtoml).
+- `requirements_toml.enterprise_managed` contains the requirements to enforce. Each entry's `contents` is [`requirements.toml` text](https://learn.chatgpt.com/docs/config-file/config-reference#requirementstoml).
+
+Each array entry has three string fields: `id`, `name` (a display name), and `contents`. Use an empty array for a category you don't need.
+
+This example sets the web search default to `disabled` and enforces that value with `allowed_web_search_modes`.
+
+```json
+{
+  "config_toml": {
+    "enterprise_managed": [
+      {
+        "id": "search-default",
+        "name": "Default web search",
+        "contents": "web_search = 'disabled'"
+      }
+    ]
+  },
+  "requirements_toml": {
+    "enterprise_managed": [
+      {
+        "id": "search-policy",
+        "name": "Allowed web search modes",
+        "contents": "allowed_web_search_modes = ['disabled']"
+      }
+    ]
+  }
+}
+```
+
+#### Verify the configuration in Codex
+
+1. On a test computer, open a terminal in your project directory and run `codex`. Complete company sign-in if prompted.
+2. At the interactive Codex CLI prompt, type [`/debug-config`](https://learn.chatgpt.com/docs/developer-commands?surface=cli#cli-inspect-config-layers-with-debug-config) and press Enter.
+3. If you serve defaults, find their names and IDs under **Config layer stack**. With the example above, look for `enterprise-managed (Default web search, search-default) (enabled)`.
+4. If you serve requirements, find a setting you enforce under **Requirements** and check the policy source listed next to it.
+
+Codex can start with cached settings and refresh them in the background. After you change a policy on the server, wait for Codex to refresh it, then start a new session and repeat the check before rolling it out to other machines.
 
 ### Service accounts
 
@@ -48104,149 +49758,6 @@ Use the current [Admin API reference](https://chatgpt.com/public/admin/api-refer
 
 Team Tasks use workspace credits. Team spending limits are separate from user limits.
 
-### Sign in with ChatGPT through a gateway
-
-Source: [Sign in with ChatGPT through a gateway](https://learn.chatgpt.com/docs/enterprise/sign-in-with-chatgpt-through-a-gateway.md)
-
-#### Why you would want this
-
-{/_ vale Microsoft.Foreign = NO _/}
-
-If you already have a model gateway and use Codex with the API Platform, you can keep your gateway while moving to **Sign in with ChatGPT**. This gives you access to eligible ChatGPT workspace features and controls (e.g. [**voice mode**](#voice-through-a-gateway)) while keeping your model gateway. Compare the sign-in methods in [Feature availability](https://learn.chatgpt.com/docs/pricing#feature-availability).
-
-{/_ vale Microsoft.Foreign = YES _/}
-
-#### How to set it up
-
-Existing [command-backed authentication](https://learn.chatgpt.com/docs/config-file/config-advanced#custom-model-providers) places the gateway key in `Authorization`. With ChatGPT sign-in, that header carries the ChatGPT token. Choose how to supply the separate gateway credential:
-
-- **Option A:** Reuse your credential command through a small launch helper. Send the same gateway key in a separate header.
-- **Option B:** Let Codex obtain the gateway credential through native OAuth.
-
-Add the selected provider configuration to your workspace's cloud-managed `requirements.toml` in [Managed configuration](https://learn.chatgpt.com/docs/enterprise/managed-configuration). These requirements apply after users sign in with ChatGPT; they do not restrict other sign-in methods. The gateway's Codex-compatible base URL must proxy `/models` and `/responses` to `https://chatgpt.com/backend-api/codex`.
-
-#### Option A: Reuse your credential command with a helper
-
-Keep your existing credential command. A small helper runs it before launching Codex and exports its output as `GATEWAY_KEY`. This is the same gateway key you use today; only its delivery header changes.
-
-For example, your existing API/provider configuration might contain:
-
-```toml
-# config.toml — existing API/provider setup
-model_provider = "enterprise_gateway"
-
-[model_providers.enterprise_gateway]
-name = "Enterprise gateway"
-base_url = "https://gateway.example.com/v1"
-requires_openai_auth = false
-
-[model_providers.enterprise_gateway.auth]
-command = "/usr/local/bin/fetch-gateway-token"
-```
-
-For ChatGPT sign-in, replace that provider with the following managed configuration. Remove its `auth` block: command-backed provider auth cannot be combined with `requires_openai_auth = true`.
-
-```toml
-# requirements.toml
-model_provider = "enterprise_gateway"
-
-[model_providers.enterprise_gateway]
-name = "Enterprise gateway"
-base_url = "https://gateway.example.com/backend-api/codex" # Keep the gateway route.
-requires_openai_auth = true # Use the ChatGPT credential for OpenAI.
-env_http_headers = { "X-Gateway-Key" = "GATEWAY_KEY" } # Send the same gateway key separately.
-```
-
-Use a launch helper function to run the command from your existing `auth` block, verify that it returned a non-empty key, export the key as `GATEWAY_KEY`, and then start Codex.
-
-Configure your gateway to accept `X-Gateway-Key`, validate the key, and remove that header before forwarding the request to the backend. The request from the client now carries:
-
-```http
-POST /backend-api/codex/responses
-Authorization: Bearer <ChatGPT token>
-ChatGPT-Account-ID: <workspace ID, when available>
-X-Gateway-Key: <same gateway key returned by your command>
-```
-
-The helper runs once per launch. Codex does not rerun it or refresh this header; when the key expires, obtain a new key and relaunch. For desktop, your launch integration must supply `GATEWAY_KEY` to the app process. Choose Option B if you want Codex to manage gateway sign-in and token renewal.
-
-#### Option B: Use native gateway OAuth
-
-Use this option to replace API-key or command-backed gateway authentication with Codex-managed gateway sign-in. Your gateway must have an OAuth authorization server. Register a public client that supports authorization code with PKCE, then replace the example URLs and client ID.
-
-For comparison, an existing API-key provider that reads its key from an environment variable might contain:
-
-```toml
-# config.toml — existing API-key path
-model_provider = "enterprise_gateway"
-
-[model_providers.enterprise_gateway]
-name = "Enterprise gateway"
-base_url = "https://gateway.example.com/v1"
-requires_openai_auth = false
-env_key = "CODEX_GATEWAY_API_KEY"
-```
-
-For ChatGPT sign-in, replace the existing provider with the following managed configuration:
-
-```toml
-# requirements.toml
-model_provider = "enterprise_gateway"
-
-[model_providers.enterprise_gateway]
-name = "Enterprise gateway"
-base_url = "https://gateway.example.com/backend-api/codex" # Keep the gateway route.
-requires_openai_auth = true # Use the ChatGPT credential for OpenAI.
-
-[model_providers.enterprise_gateway.gateway_oauth] # Add gateway OAuth.
-authorization_url = "https://login.example.com/oauth/authorize"
-token_url = "https://login.example.com/oauth/token"
-client_id = "YOUR_PUBLIC_CLIENT_ID"
-delivery = { kind = "cookie", name = "auth-openid" } # Add gateway auth as a cookie.
-# redirect_port = 43127
-```
-
-Codex uses a free loopback port by default. If your identity provider requires a fixed redirect URI, set `redirect_port` and register `http://127.0.0.1:43127/callback` for this example.
-
-The request from the client now carries:
-
-```http
-POST /backend-api/codex/responses
-Authorization: Bearer <ChatGPT token>
-ChatGPT-Account-ID: <workspace ID, when available>
-Cookie: auth-openid=<gateway token>
-```
-
-#### Add routing headers (optional)
-
-With either option, Codex can send custom routing headers to the gateway. For example, add these headers to the same `enterprise_gateway` provider in your cloud-managed `requirements.toml`:
-
-```toml
-[model_providers.enterprise_gateway.http_headers]
-x-portkey-config = "<gateway-routing-config-id>"
-x-portkey-metadata = '{"tool_id":"codex"}'
-```
-
-Codex sends the headers on model-provider requests; the gateway applies the routing rules. Use `env_http_headers` for values read from the Codex process environment. Test a request to confirm the gateway receives both headers and selects the intended route. See [Custom model providers](https://learn.chatgpt.com/docs/config-file/config-advanced#custom-model-providers) for more header options.
-
-#### Keep the credentials on their own paths
-
-Codex sends the ChatGPT `Authorization` header, any `ChatGPT-Account-ID` header, and the gateway header or cookie. Have the gateway verify and remove its credential, then forward the ChatGPT headers unchanged.
-
-#### Caveats and limitations
-
-- Use a Codex build that supports managed model-provider requirements and, for Option B, native gateway OAuth. Older builds may ignore or reject unsupported fields.
-- This route covers requests through the selected model provider. ChatGPT sign-in, MCP, plugins, and other app connections can use different paths.
-- Your gateway can see request data and both credentials. Redact them in logs; never forward gateway credentials upstream.
-- Native gateway OAuth needs a browser and a reachable loopback callback. It has no device-code fallback. Without a refresh token, users must repeat browser sign-in when the access token expires.
-- A generic OpenAI `/v1/models` response is insufficient: Codex expects a `models` array. Test the model list, a prompt, and each feature your deployment uses.
-
-#### Voice through a gateway
-
-This setup routes Codex model-provider requests; it does not enable [ChatGPT Voice](https://learn.chatgpt.com/docs/features/voice). For WebRTC voice sessions, call creation and the sideband connection use separate routes. The experimental `experimental_realtime_webrtc_call_base_url` setting in `~/.codex/config.toml` changes only the HTTP base URL for call creation. It does not redirect the sideband connection, media, or ordinary model requests. Work with OpenAI to verify the call destination and credential handling before using this override, then test a complete voice session.
-
-For the API/provider credential path, see [Gateway compatibility](https://learn.chatgpt.com/docs/enterprise/gateway-compatibility) and [Roll out a gateway](https://learn.chatgpt.com/docs/enterprise/roll-out-a-gateway). For these managed settings, see [Managed configuration](https://learn.chatgpt.com/docs/enterprise/managed-configuration) and the [Configuration Reference](https://learn.chatgpt.com/docs/config-file/config-reference).
-
 ### Sites administration
 
 Source: [Sites administration](https://learn.chatgpt.com/docs/enterprise/sites.md)
@@ -48658,244 +50169,6 @@ To assess ROI, compare the value of the improvement with the costs of AI, setup,
 Before raising usage limits, review current limits, consumption, and the work that needs more capacity. Credits consumed aren't automatically an additional invoice charge. See [ChatGPT Work usage and cost](https://learn.chatgpt.com/docs/enterprise/chatgpt-work-usage-and-cost).
 
 Usage insights are one part of understanding the return on your investment in ChatGPT Work and Codex. They show usage and credit consumption within the selected scope. The teams doing the work can explain what changed, whether results improved, and what that improvement is worth. Use both to decide which workflows to expand and where the team needs more support.
-
-### Use API/provider credentials through a gateway
-
-Source: [Use API/provider credentials through a gateway](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway.md)
-
-Connect Codex to an LLM gateway using the gateway URL, model alias, and credential
-or token resolver your organization provides.
-
-To keep the gateway while signing in with a ChatGPT workspace, use
-[Sign in with ChatGPT through a gateway](https://learn.chatgpt.com/docs/enterprise/sign-in-with-chatgpt-through-a-gateway).
-
-For an organization-wide rollout, see [Roll out a
-gateway](https://learn.chatgpt.com/docs/enterprise/roll-out-a-gateway). For the required API behavior,
-see [Gateway compatibility](https://learn.chatgpt.com/docs/enterprise/gateway-compatibility). To
-connect directly to Bedrock without a gateway, see [Amazon
-Bedrock](https://learn.chatgpt.com/docs/amazon-bedrock).
-
-#### Check for an existing configuration
-
-Before adding anything, check whether your administrator already configured Codex.
-
-- For the CLI, inspect the selected profile and run `codex doctor`. After startup,
-  use `/status` to confirm the active model and provider.
-- For the macOS app, inspect `~/.codex/config.toml` or the managed configuration
-  your organization delivers.
-- For the Windows app, inspect `%USERPROFILE%\.codex\config.toml` or the system
-  configuration your organization delivers.
-
-If the expected gateway provider and model are already active, continue to
-[Verify the connection](#verify-the-connection).
-
-#### Get your gateway connection details
-
-Install the [Codex CLI](https://learn.chatgpt.com/docs/codex/cli) or the desktop app approved by your
-organization. To configure Codex yourself, get these values from your gateway team:
-
-- The HTTPS gateway base URL, including its API path, such as `https://gateway.example.com/v1`.
-- The model name and provider ID to use.
-- Your scoped gateway credential and its environment variable, or an installed
-  token resolver and its configuration.
-- Any required model catalog URL, or a catalog file and its absolute local path.
-
-#### Configure the provider
-
-Open `config.toml` at `~/.codex/config.toml` on macOS or Linux, or
-`%USERPROFILE%\.codex\config.toml` on Windows.
-
-Merge this example into your existing configuration, replacing the URL and model
-with the values your administrator supplied. Don't add a second definition of an
-existing key or table. This example uses `gpt-6-sol`; use it without a custom
-catalog only if your administrator confirms that your Codex version recognizes
-the model and its bundled metadata matches the gateway.
-
-Keep `model`, `model_provider`, `model_catalog_json`, and `web_search` before
-the first TOML table. Keys placed after a table header belong to that table,
-so Codex won't read them as top-level settings.
-
-```toml
-model = "gpt-6-sol"
-model_provider = "enterprise-gateway"
-web_search = "disabled"
-
-[model_providers.enterprise-gateway]
-name = "Organization Gateway"
-base_url = "https://gateway.example.com/v1"
-wire_api = "responses"
-env_key = "CODEX_GATEWAY_API_KEY"
-```
-
-If your administrator supplies a catalog URL, add it to the existing
-`[model_providers.enterprise-gateway]` table:
-
-```toml
-model_catalog_url = "https://gateway.example.com/codex/models.json"
-```
-
-Remove any effective `model_catalog_json` setting; it takes precedence over the
-URL. Administrators can find endpoint requirements in
-[remote catalog setup](https://learn.chatgpt.com/docs/enterprise/roll-out-a-gateway#serve-a-remote-catalog).
-
-If your administrator supplies a local model catalog file, save it and add
-`model_catalog_json` before the first TOML table, using the file's absolute path.
-Custom aliases need matching catalog metadata. For example:
-
-```toml
-model_catalog_json = "/etc/codex/gateway-models.json"
-```
-
-Use the model name and catalog supplied together by your administrator. Don't
-add a catalog path unless the file exists at that location.
-
-`enterprise-gateway` is an illustrative provider ID. Use the same ID in
-`model_provider`, `[model_providers.]`, and `[model_providers..auth]`.
-This example disables web search
-for the initial connection test; your administrator should verify feature support
-before enabling it.
-
-Make your gateway credential available as `CODEX_GATEWAY_API_KEY` in the
-environment of the process that launches Codex, using your organization's secret
-delivery mechanism. Don't put the credential in TOML or a repository. A variable
-set in a terminal may not be available to an app launched from the desktop.
-
-#### Use a custom authentication header
-
-If your gateway requires a header such as `X-API-Key` instead of a bearer token,
-replace `env_key` in the provider table with:
-
-```toml
-env_http_headers = { "X-API-Key" = "CODEX_GATEWAY_API_KEY" }
-```
-
-Use the exact header name your administrator provides. Codex reads the value from
-the named environment variable; keep the credential out of the configuration file.
-See the [configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference) for
-`model_providers..env_http_headers`.
-
-If the custom header is your only authentication mechanism, use
-`model_catalog_json`; remote catalog discovery won't run.
-
-#### Use an organization credential helper
-
-If your administrator provides command-backed authentication, use their installed
-helper and configuration instead of `env_key`. Don't configure both mechanisms.
-The helper must exist on your machine; Codex doesn't install it. For example,
-replace the example `env_key` setting with this table, using the resolver path and
-arguments your administrator supplies:
-
-```toml
-[model_providers.enterprise-gateway.auth]
-command = "/usr/local/bin/fetch-codex-gateway-token"
-args = ["print-token"]
-timeout_ms = 30000
-refresh_interval_ms = 300000
-```
-
-The [custom provider authentication reference](https://learn.chatgpt.com/docs/config-file/config-advanced#custom-model-providers)
-defines the command, arguments, timeout, refresh interval, and token output
-contract. Ask your administrator how to renew your sign-in if the helper can no
-longer retrieve a token.
-
-Use resolved absolute paths for helper executables and catalog files.
-
-#### Configure the CLI
-
-The CLI reads `~/.codex/config.toml` by default on macOS or Linux. After saving
-the provider settings, run `codex`. Inside WSL, use the Linux configuration and
-paths unless `CODEX_HOME` points elsewhere.
-
-#### Configure the macOS app
-
-The macOS app reads the same `~/.codex/config.toml`. After saving the provider
-settings, restart the app. If you use an environment variable for the credential,
-make sure it's available to the app process.
-
-#### Configure the Windows app
-
-Place the provider settings in `%USERPROFILE%\.codex\config.toml`, then restart
-the app. For command-backed authentication, use the resolver installed by your
-administrator. For example, replace the Unix auth table with:
-
-```toml
-[model_providers.enterprise-gateway.auth]
-command = 'C:\Program Files\OpenAI\Codex\fetch-codex-gateway-token.exe'
-args = ["print-token"]
-timeout_ms = 30000
-refresh_interval_ms = 300000
-```
-
-In Windows TOML, single-quoted literal strings preserve backslashes. Replace
-Unix catalog paths too, for example with
-`'C:\ProgramData\OpenAI\Codex\models.json'`, using the actual path your
-administrator supplied.
-
-Configure MCP servers and plugins separately. A model gateway credential doesn't
-authorize access to your tools or connected systems.
-
-#### Verify the connection
-
-Restart the client after changing the configuration. In the CLI, start `codex`
-and use `/status` to inspect the active model and provider. In the desktop app,
-check the selected model and configuration.
-
-Send this prompt in a new task:
-
-```text
-Reply with exactly: gateway-ok
-```
-
-Expect `gateway-ok`. A response alone doesn't prove which route handled it: ask
-your administrator to confirm that the gateway recorded your user, model alias,
-and intended upstream route. Don't identify the model by asking it its name.
-
-This verifies an initial connection. Administrators should also complete the
-[rollout checks](https://learn.chatgpt.com/docs/enterprise/roll-out-a-gateway#test-the-client-and-gateway)
-for streaming, tools, and follow-up turns.
-
-#### Troubleshoot the connection
-
-| Symptom                                 | What to check                                                                                                                                                                                                       |
-| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| The expected provider isn't active.     | Check the selected profile and configuration precedence. Confirm that top-level keys aren't inside a provider table.                                                                                                |
-| Authentication fails.                   | Check that the credential variable reaches the client process, or that the installed helper can retrieve a current token. Ask the administrator to distinguish gateway authentication from upstream authentication. |
-| The model isn't found.                  | Confirm the supplied model name and ask the administrator to check its route.                                                                                                                                       |
-| The model uses unexpected capabilities. | Ask the administrator to check that the catalog metadata matches the model behind the alias.                                                                                                                        |
-| Streaming stalls or follow-ups fail.    | Ask the gateway owner to check proxy buffering, the terminal `response.completed` event, and [Gateway compatibility](https://learn.chatgpt.com/docs/enterprise/gateway-compatibility).                                                      |
-| A catalog or helper path fails.         | Confirm that the file exists at the configured absolute path in the environment running Codex.                                                                                                                      |
-
-When requesting help, include the error message with tokens and sensitive prompts removed.
-
-#### Use an existing gateway deployment
-
-If your organization already uses a gateway with another coding tool, you may be
-able to reuse its network path, logging, and provider access. Work with your
-gateway team to configure and test a Codex connection:
-
-1. Identify the existing gateway URL, credential mechanism, required headers,
-   model routes, and configuration delivery method.
-2. Ask your gateway team to confirm that the gateway supports the
-   [API behavior Codex requires](https://learn.chatgpt.com/docs/enterprise/gateway-compatibility) and to
-   configure a Codex model route.
-3. Obtain a scoped gateway credential or credential helper, the model name, and
-   any required model catalog from your gateway team.
-4. [Configure Codex](#configure-the-provider) with those values.
-5. [Verify the connection](#verify-the-connection) in the CLI or desktop app you
-   plan to use. Have your gateway team complete the
-   [streaming, tool, and follow-up checks](https://learn.chatgpt.com/docs/enterprise/roll-out-a-gateway#test-the-client-and-gateway).
-6. After the pilot passes, follow
-   [Roll out a gateway](https://learn.chatgpt.com/docs/enterprise/roll-out-a-gateway) to distribute the
-   configuration to other developers.
-
-For the administrator migration checklist and configuration mapping, see
-[Reuse an existing gateway deployment](https://learn.chatgpt.com/docs/enterprise/roll-out-a-gateway#reuse-an-existing-gateway-deployment).
-
-#### Related docs
-
-- [Codex CLI](https://learn.chatgpt.com/docs/codex/cli)
-- [MCP servers](https://learn.chatgpt.com/docs/extend/mcp)
-- [Plugins](https://learn.chatgpt.com/docs/plugins)
 
 ### User lifecycle management
 
@@ -50075,6 +51348,8 @@ Deploy apps and configure updates, runtime settings, remote connections, and mod
 
 - [Managed configuration](https://learn.chatgpt.com/docs/enterprise/managed-configuration): Review the global baseline in Agent Security, policy precedence for this feature, and supported runtime requirements.
 
+- [Self-host Codex configuration for your team](https://learn.chatgpt.com/docs/enterprise/configuration-server): Serve Codex defaults and required settings from your own HTTPS endpoint.
+
 - [Codex security cookbook](https://learn.chatgpt.com/docs/enterprise/security-cookbook): Configure and verify enterprise security controls, then combine them for common security goals.
 
 - [Remote connections](https://learn.chatgpt.com/docs/remote-connections): Start and control work on connected computers.
@@ -50085,9 +51360,7 @@ Deploy apps and configure updates, runtime settings, remote connections, and mod
 
 - [Bedrock GovCloud configuration](https://learn.chatgpt.com/docs/enterprise/govcloud-configuration): Configure local Codex workflows with Amazon Bedrock in AWS GovCloud.
 
-- [Sign in with ChatGPT through a gateway](https://learn.chatgpt.com/docs/enterprise/sign-in-with-chatgpt-through-a-gateway): Keep your gateway for model requests while using your ChatGPT workspace identity.
-
-- [Use API/provider credentials](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway): Configure one Codex client to use your organization's model gateway and verify the connection.
+- [Connect to a gateway](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway): Connect to your organization's model gateway with or without ChatGPT sign-in.
 
 - [Roll out a gateway](https://learn.chatgpt.com/docs/enterprise/roll-out-a-gateway): Configure model routes, issue credentials, and deploy Codex through your organization’s gateway.
 
@@ -50129,7 +51402,7 @@ Control plugin installation, bundled skills, connector-backed capabilities, and 
 
 - [Plugin controls](https://learn.chatgpt.com/docs/enterprise/apps-and-connectors): Manage plugin availability, connector access and actions, and source-system permissions.
 
-- [Plugin management](https://learn.chatgpt.com/docs/enterprise/plugin-management): Import and sync workspace plugins from GitHub.
+- [Import and sync plugins from GitHub](https://learn.chatgpt.com/docs/enterprise/plugin-management): Import and sync workspace plugins from GitHub.
 
 - [Skill controls](https://learn.chatgpt.com/docs/enterprise/skills): Compare ChatGPT workspace, local filesystem, and plugin skill controls.
 
@@ -50749,10 +52022,11 @@ through Amazon Bedrock. In this setup, the local client sends model requests to
 Bedrock using AWS-managed authentication and access controls.
 
 This page covers direct access to Bedrock. If your organization already
-provides a model gateway, follow [Use API/provider
-credentials](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway). To configure a gateway
-backed by Bedrock, see [Bedrock through
-LiteLLM](https://learn.chatgpt.com/docs/enterprise/bedrock-through-litellm).
+provides a model gateway, follow [Connect to a gateway without ChatGPT
+sign-in](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway). That path supports native
+gateway OAuth with your organization's identity provider; the gateway manages
+the Bedrock credentials. To configure a gateway backed by Bedrock, see
+[Bedrock through LiteLLM](https://learn.chatgpt.com/docs/enterprise/bedrock-through-litellm).
 
 #### How it works
 

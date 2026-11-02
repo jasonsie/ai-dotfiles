@@ -15,19 +15,19 @@ Welcome to Google Antigravity! Follow the instructions in this guide to get star
     
     macOSmacOS 12 (Monterey) or later (Apple Silicon or 64-bit Intel)
     
-    [Download for Apple Silicon](https://storage.googleapis.com/antigravity-public/antigravity-hub/2.26.0-6546645232517120/darwin-arm/Antigravity.dmg)[Download for Intel](https://storage.googleapis.com/antigravity-public/antigravity-hub/2.26.0-6546645232517120/darwin-x64/Antigravity.dmg)
+    [Download for Apple Silicon](https://storage.googleapis.com/antigravity-public/antigravity-hub/2.28.2-5937220255875072/darwin-arm/Antigravity.dmg)[Download for Intel](https://storage.googleapis.com/antigravity-public/antigravity-hub/2.28.2-5937220255875072/darwin-x64/Antigravity.dmg)
     
     Open the downloaded `Antigravity.dmg` disk image and drag **Antigravity** into your **Applications** folder. If you are upgrading an existing installation, select **Replace** when prompted instead of **Keep Both**.
     
     WindowsWindows 10 (64-bit) or Windows 11
     
-    [Download for x64](https://storage.googleapis.com/antigravity-public/antigravity-hub/2.26.0-6546645232517120/windows-x64/Antigravity-x64.exe)[Download for ARM64](https://storage.googleapis.com/antigravity-public/antigravity-hub/2.26.0-6546645232517120/windows-arm/Antigravity-arm64.exe)
+    [Download for x64](https://storage.googleapis.com/antigravity-public/antigravity-hub/2.28.2-5937220255875072/windows-x64/Antigravity-x64.exe)[Download for ARM64](https://storage.googleapis.com/antigravity-public/antigravity-hub/2.28.2-5937220255875072/windows-arm/Antigravity-arm64.exe)
     
     Run the downloaded `.exe` installer and follow the guided setup wizard.
     
     Linuxglibc >= 2.28, glibcxx >= 3.4.25 (Ubuntu 20+, Debian 10+, Fedora 36+, RHEL 8+)
     
-    [Download for x64](https://storage.googleapis.com/antigravity-public/antigravity-hub/2.26.0-6546645232517120/linux-x64/Antigravity.tar.gz)[Download for ARM64](https://storage.googleapis.com/antigravity-public/antigravity-hub/2.26.0-6546645232517120/linux-arm/Antigravity.tar.gz)
+    [Download for x64](https://storage.googleapis.com/antigravity-public/antigravity-hub/2.28.2-5937220255875072/linux-x64/Antigravity.tar.gz)[Download for ARM64](https://storage.googleapis.com/antigravity-public/antigravity-hub/2.28.2-5937220255875072/linux-arm/Antigravity.tar.gz)
     
     Extract the archive with `tar -xzf Antigravity.tar.gz` and launch `./Antigravity`.
     
@@ -121,11 +121,15 @@ For authentication options or enterprise configurations, consult the **[Authenti
     
     Open **Xcode** > **Settings** (Cmd+,), select the **Intelligence** panel, and click **Get** next to **Antigravity**. See the [Xcode guide](/docs/ide/extensions/xcode).
     
+    **Eclipse:**
+    
+    [Install from Eclipse Marketplace](https://marketplace.eclipse.org/content/google-antigravity)
+    
+    **Requirements:** Eclipse 2026-06 or later on macOS, Linux, or Windows (Public Preview).
+    
+    Select **Help** > **Eclipse Marketplace…**, search for **Google Antigravity**, click **Install**, and restart Eclipse when prompted. Check out the [Eclipse guide](/docs/ide/extensions/eclipse).
+    
     **Antigravity IDE:**
-    
-    Note
-    
-    **Note**: Gemini 4 Argon is not available in Antigravity IDE. To use Gemini 4 Argon, install the [Antigravity App](/download#antigravity-2), [Antigravity CLI](/docs/cli/install), or [IDE extensions](/docs/ide/extensions).
     
     [Download Antigravity IDE](/download#antigravity-ide)
     
@@ -143,7 +147,7 @@ For authentication options or enterprise configurations, consult the **[Authenti
     
     ![Open the editor from the Agent Manager in Antigravity IDE](/assets/image/docs/agent-manager-open-editor.png)
     
-2.  Sign in with your personal Google Account or **Gemini Enterprise** credentials (Enterprise support is available in IDE extensions—GA in VS Code and Visual Studio, and in **Preview** for JetBrains, Zed, and Xcode) when prompted in the Antigravity panel or settings.
+2.  Sign in with your personal Google Account or **Gemini Enterprise** credentials (Enterprise support is available in IDE extensions—GA in VS Code and Visual Studio, and in **Preview** for JetBrains, Zed, Xcode, and Eclipse) when prompted in the Antigravity panel or settings.
 
 ### Antigravity SDK
 
@@ -233,7 +237,7 @@ Navigate to any codebase directory in your terminal and start a session:
 ### For IDEs
 
 1.  Open your workspace folder, repository, or solution in your preferred editor.
-2.  Open the Antigravity panel or agent view in your IDE (for example, click the Antigravity icon in the VS Code Activity Bar, press Ctrl+, Ctrl+A in Visual Studio, or select Antigravity in JetBrains AI, Zed External Agents, or Xcode Intelligence).
+2.  Open the Antigravity panel or agent view in your IDE (for example, click the Antigravity icon in the VS Code Activity Bar, press Ctrl+, Ctrl+A in Visual Studio, select **Antigravity** > **Toggle Chat** in Eclipse, or select Antigravity in JetBrains AI, Zed External Agents, or Xcode Intelligence).
 3.  Enter a task prompt in the conversation panel to start an agent session that shares context and [customizations](/docs/skills) with the rest of the Antigravity ecosystem.
 4.  Inspect interactive implementation plans, review granular inline diffs, and execute multi-step engineering tasks directly inside your editor.
 
@@ -286,11 +290,15 @@ Navigate to any codebase directory in your terminal and start a session:
 
 | Action | macOS | Windows / Linux | Description |
 | :-- | :-- | :-- | :-- |
-| **Conversation picker** | ⌘K | Ctrl + K | Search and switch between active agent threads |
-| **File search** | ⌘P | Ctrl + P | Fuzzy search and navigate files across the workspace |
-| **Focus input** | ⌘L | Ctrl + L | Jump cursor focus directly into the agent prompt box |
+| **Conversation picker** | ⌘K | Ctrl + K | Search past conversations by title or full text and switch to one |
+| **File search** | ⌘P | Ctrl + P | Search files in the current project by name and open one |
+| **Commands** | ⌘⇧P | Ctrl + Shift + P | Search and run app commands |
+| **Find** | ⌘F | Ctrl + F | Find text in the current conversation or open file |
+| **Focus input** | ⌘L | Ctrl + L | Jump cursor focus directly into the message box |
 | **New conversation** | ⌘N | Ctrl + N | Start a fresh autonomous agent session |
-| **Cycle conversations** | ⌥ Up / Down | Alt + Up / Down | Move to previous or next conversation in history |
+| **Previous or next conversation** | ⌥ Up / Down | Alt + Up / Down | Move to the previous or next conversation in the sidebar |
+
+For more about searching conversations, files, and commands, see [Search and command palette](/docs/search).
 
 #### Core slash commands
 
@@ -337,6 +345,7 @@ Navigate to any codebase directory in your terminal and start a session:
 | **Zed** | ⌘⇧P / Ctrl + Shift + P → `agent: open settings` | Open Agent settings to configure **External Agents** |
 | **JetBrains** | **JetBrains AI** > **Settings** > **Agents** | Install or configure the **Antigravity** agent |
 | **Xcode** | ⌘, → **Intelligence** | Manage and authenticate **Antigravity** in Xcode Settings |
+| **Eclipse** | ⌘⌥E / Ctrl + Alt + K | Toggle the **Antigravity** chat view |
 
 #### Authentication configuration
 

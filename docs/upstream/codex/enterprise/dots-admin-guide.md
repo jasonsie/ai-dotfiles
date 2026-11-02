@@ -80,10 +80,8 @@ To review them later, go to **Admin Console** > **Permissions** > **Workspace de
 
 Members still need to complete [Slack](https://learn.chatgpt.com/docs/dots/channels#slack) and [local-computer setup](https://learn.chatgpt.com/docs/dots/computers-and-apps#connect-your-computer) after you enable access. Supported app connections they've already set up may be available to their dot.
 
-<span
-  id="3-configure-approved-apps-and-actions"
-  data-localization-body-anchor
-/>
+
+
 
 
 
@@ -98,10 +96,8 @@ Dots can use supported ChatGPT app connections. When setting up access, check:
 
 For example, permission to read a document may not include editing or sharing it. To restrict access to a particular source, check the connected account and app permissions.
 
-<span
-  id="4-choose-communication-channels-and-destinations"
-  data-localization-body-anchor
-/>
+
+
 
 
 
@@ -127,10 +123,6 @@ Turning off a dot's Slack identity doesn't remove its access through the member'
 
 Enabling the ChatGPT permission does not install an app in Slack or connect a member’s dot.
 
-<span
-  id="5-record-approval-and-oversight-responsibilities"
-  data-localization-body-anchor
-/>
 
 
 
@@ -141,10 +133,10 @@ Enabling the ChatGPT permission does not install an app in Slack or connect a me
 
 
 
-<span
-  id="manage-ongoing-work-and-access-changes"
-  data-localization-body-anchor
-/>
+
+
+
+
 
 
 
@@ -163,20 +155,14 @@ Enabling the ChatGPT permission does not install an app in Slack or connect a me
 
 
 
-<span
-  id="can-we-use-o-if-our-workspace-requires-ekm-or-zdr"
-  data-localization-body-anchor
-/>
 
-<span
-  id="does-background-work-count-toward-usage-limits"
-  data-localization-body-anchor
-/>
 
-<span
-  id="enterprise-availability-and-limitations"
-  data-localization-body-anchor
-/>
+
+
+
+
+
+
 
 ## Review availability and data requirements
 
@@ -197,10 +183,8 @@ Check requirements for the dot itself, tasks it delegates to Work or Codex, and 
 
 ### Access and eligibility
 
-<span
-  id="does-access-to-o-grant-access-to-apps-and-websites"
-  data-localization-body-anchor
-/>
+
+
 
 
 
@@ -211,10 +195,8 @@ No. Dots access does not grant access to apps or websites. App connections requi
 
 </ToggleSection>
 
-<span
-  id="whose-account-does-o-use-for-connected-work"
-  data-localization-body-anchor
-/>
+
+
 
 
 
@@ -225,10 +207,8 @@ For apps, a dot uses the connected account. For websites, it uses the account si
 
 </ToggleSection>
 
-<span
-  id="can-o-use-a-local-computer-vpn-or-existing-sign-in"
-  data-localization-body-anchor
-/>
+
+
 
 
 
@@ -239,10 +219,8 @@ A dot’s cloud computer is separate from a member’s local computer. Local wor
 
 </ToggleSection>
 
-<span
-  id="can-we-use-o-with-policies-that-target-an-operating-system"
-  data-localization-body-anchor
-/>
+
+
 
 
 
@@ -258,10 +236,8 @@ If any cloud policy has `enforce_residency` enabled, local computer access is un
 
 ### Actions and ongoing work
 
-<span
-  id="can-o-keep-working-when-the-user-is-away"
-  data-localization-body-anchor
-/>
+
+
 
 
 
@@ -290,10 +266,8 @@ Microsoft Teams access is limited to an invite-only alpha.
 
 </ToggleSection>
 
-<span
-  id="does-o-always-ask-before-sending-or-changing-something"
-  data-localization-body-anchor
-/>
+
+
 
 
 
@@ -304,10 +278,8 @@ Microsoft Teams access is limited to an invite-only alpha.
 
 </ToggleSection>
 
-<span
-  id="how-should-we-stop-work-or-remove-a-users-access"
-  data-localization-body-anchor
-/>
+
+
 
 
 
@@ -318,10 +290,8 @@ See [Manage access changes](#manage-access-changes) for steps to remove access a
 
 </ToggleSection>
 
-<span
-  id="how-do-custom-rules-affect-confirmations"
-  data-localization-body-anchor
-/>
+
+
 
 
 
@@ -334,10 +304,8 @@ Custom rules don't grant tool access or override workspace permissions and built
 
 </ToggleSection>
 
-<span
-  id="what-safeguards-help-protect-work-done-by-dots"
-  data-localization-body-anchor
-/>
+
+
 
 
 
@@ -355,10 +323,8 @@ Members can follow progress in [Activity View](https://learn.chatgpt.com/docs/do
 
 ### Models and usage
 
-<span
-  id="do-existing-model-controls-and-defaults-apply-to-o"
-  data-localization-body-anchor
-/>
+
+
 
 
 
@@ -380,10 +346,8 @@ The daily usage endpoint `/v1/analytics/workspaces/{workspace_id}/usage` identif
 
 </ToggleSection>
 
-<span
-  id="which-data-policies-should-we-review-for-o"
-  data-localization-body-anchor
-/>
+
+
 
 
 
@@ -392,10 +356,8 @@ The daily usage endpoint `/v1/analytics/workspaces/{workspace_id}/usage` identif
 
 OpenAI does not use ChatGPT Enterprise data to improve its models by default. For OpenAI’s business data commitments, see [Enterprise privacy](https://openai.com/enterprise-privacy/).
 
-<span
-  id="what-does-o-remember-between-requests"
-  data-localization-body-anchor
-/>
+
+
 
 
 
@@ -410,10 +372,8 @@ See the [dots privacy FAQ](https://help.openai.com/en/articles/20001529-dots-pri
 
 </ToggleSection>
 
-<span
-  id="how-can-admins-investigate-work-o-has-done"
-  data-localization-body-anchor
-/>
+
+
 
 
 

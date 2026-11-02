@@ -5,7 +5,7 @@ Official Codex docs (CLI, IDE extension, cloud): configuration, sandboxing, MCP,
 
 Consult through the `upstream-docs` skill (`find`, `outline`, `show`): read a section, not a file.
 
-Pages: 193
+Pages: 195
 
 - [administration.md](administration.md): Set access and policy boundaries for ChatGPT, Codex developer tools, APIs, plugins, and connected systems
 - [agent-approvals-security.md](agent-approvals-security.md): How to securely operate Codex with sandboxing, approvals, and network controls
@@ -71,6 +71,7 @@ Pages: 193
 - [enterprise/chatgpt-work-usage-and-cost.md](enterprise/chatgpt-work-usage-and-cost.md): Understand shared credit consumption, billing impact, spending controls, and role-based adoption planning for ChatGPT Work
 - [enterprise/cloud-local-access.md](enterprise/cloud-local-access.md): Review shared policies and compatibility, then enable local computer access separately for Work and dots
 - [enterprise/compliance-api.md](enterprise/compliance-api.md): Understand the purpose and administration boundary of the Compliance API
+- [enterprise/configuration-server.md](enterprise/configuration-server.md): Serve configuration defaults and required settings to Codex from an HTTPS endpoint you operate.
 - [enterprise/connect-to-a-gateway.md](enterprise/connect-to-a-gateway.md): Configure a model gateway and authenticate with native gateway OAuth, an API key, or a credential helper.
 - [enterprise/dots-admin-guide.md](enterprise/dots-admin-guide.md): Set up dots access, apps, and Slack for your Enterprise workspace.
 - [enterprise/dynamic-groups.md](enterprise/dynamic-groups.md): Automatically manage group membership using SCIM user attributes
@@ -89,7 +90,6 @@ Pages: 193
 - [enterprise/security-cookbook.md](enterprise/security-cookbook.md): Configure, verify, and combine enterprise controls for Codex access, files, services, and actions
 - [enterprise/service-accounts.md](enterprise/service-accounts.md): Set up and manage service accounts for Codex automation in your ChatGPT workspace
 - [enterprise/shared-connections.md](enterprise/shared-connections.md): Connect company-managed accounts for team tasks and ChatGPT in Slack and Microsoft Teams
-- [enterprise/sign-in-with-chatgpt-through-a-gateway.md](enterprise/sign-in-with-chatgpt-through-a-gateway.md): Keep your gateway for Codex model requests while users sign in with their ChatGPT workspace.
 - [enterprise/sites.md](enterprise/sites.md): Plan site access, review publishing decisions, and maintain sites in your workspace
 - [enterprise/skills.md](enterprise/skills.md): Compare ChatGPT workspace, local filesystem, and plugin skill controls
 - [enterprise/teams.md](enterprise/teams.md): Set team and task permissions, configure shared connections, and create and manage recurring Team Tasks.
@@ -148,7 +148,7 @@ Pages: 193
 - [sandboxing/auto-review.md](sandboxing/auto-review.md): How Codex routes sandbox-boundary approvals through a reviewer agent
 - [security-administration.md](security-administration.md): Manage permissions, security, and safety controls for ChatGPT and Codex developer tools
 - [security.md](security.md): Scan code, investigate findings, and review fixes with Codex Security.
-- [security/cli.md](security/cli.md): Sign in, scan a local repository, and review the findings and coverage.
+- [security/cli.md](security/cli.md): Sign in, scan a local repository, and review the scan scope and findings.
 - [security/cli/bulk-scans.md](security/cli/bulk-scans.md): Discover GitHub repositories or run resumable security scans from a CSV inventory.
 - [security/cli/ci.md](security/cli/ci.md): Choose a CI integration, prepare scan access, and decide how findings and scan coverage affect your pipeline.
 - [security/cli/ci/github.md](security/cli/ci/github.md): Scan pull requests and repositories with the Codex Security Action, save reports, upload SARIF, and configure enforcement.
@@ -194,7 +194,9 @@ Pages: 193
 - [webmcp.md](webmcp.md): Use WebMCP to give AI agents a direct way to work with your website
 - [whats-new.md](whats-new.md): A weekly digest of ChatGPT and Codex features that can change how you work
 - [whats-new/devday-2026.md](whats-new/devday-2026.md): DevDay updates across ChatGPT, Codex, Sites, plugins, the API, and Enterprise.
+- [whats-new/dots-october-28-2026.md](whats-new/dots-october-28-2026.md): Reach your dot through iMessage or RCS on Android.
 - [whats-new/dots-october-9-2026.md](whats-new/dots-october-9-2026.md): This week in dots: mobile setup, more context from ChatGPT and Codex, and improvements to browsing, notifications, and everyday use.
+- [whats-new/october-26-30-2026.md](whats-new/october-26-30-2026.md)
 - [whats-new/october-5-9-2026.md](whats-new/october-5-9-2026.md)
 - [whats-new/september-28-october-2-2026.md](whats-new/september-28-october-2-2026.md)
 - [windows/windows-app.md](windows/windows-app.md): Use the ChatGPT desktop app on Windows with native sandbox and PowerShell support

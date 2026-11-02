@@ -13,10 +13,8 @@ Enterprise admins control who can create teams and manage Team Tasks through two
 
 For more on team membership and tasks, see [Teams in ChatGPT](https://help.openai.com/articles/20001541) and [Creating and managing team tasks in ChatGPT](https://help.openai.com/articles/20001540) in the Help Center.
 
-<span
-  id="plan-the-teams-access-and-responsibilities"
-  data-localization-body-anchor
-/>
+
+
 
 
 
@@ -64,10 +62,8 @@ See [Roles and workspace permissions](https://learn.chatgpt.com/docs/enterprise/
 
 
 
-<span
-  id="2-configure-membership-and-assign-maintainers"
-  data-localization-body-anchor
-/>
+
+
 
 
 
@@ -83,23 +79,17 @@ See [Roles and workspace permissions](https://learn.chatgpt.com/docs/enterprise/
 
 3. **Add the team’s connections.** Workspace connections use centrally managed accounts; team connections share an individually connected account with the team. As team owner, choose a connection you’re allowed to use. Review its data and action permissions, and complete any required sign-in before unattended work. Team ownership doesn’t grant workspace admin permissions. See [Workspace connections](https://learn.chatgpt.com/docs/enterprise/shared-connections#create-a-workspace-connection) for admin setup.
 
-<span
-  id="create-and-validate-the-first-team-task"
-  data-localization-body-anchor
-/>
 
 
 
 
-<span
-  id="2-review-the-schedule-actions-and-audience"
-  data-localization-body-anchor
-/>
 
-<span
-  id="3-validate-access-and-the-first-result"
-  data-localization-body-anchor
-/>
+
+
+
+
+
+
 
 
 
@@ -119,18 +109,14 @@ See [Roles and workspace permissions](https://learn.chatgpt.com/docs/enterprise/
 
 
 
-<span
-  id="review-membership-connections-and-destinations"
-  data-localization-body-anchor
-/>
 
 
 
 
-<span
-  id="handle-departures-and-stop-work-when-needed"
-  data-localization-body-anchor
-/>
+
+
+
+
 
 
 

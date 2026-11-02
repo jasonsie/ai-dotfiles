@@ -177,6 +177,13 @@
           icon: "dataControls",
         },
         {
+          title: "Self-host Codex configuration for your team",
+          description:
+            "Serve Codex defaults and required settings from your own HTTPS endpoint.",
+          href: "/codex/enterprise/configuration-server",
+          icon: "settings",
+        },
+        {
           title: "Codex security cookbook",
           description:
             "Configure and verify enterprise security controls, then combine them for common security goals.",
@@ -211,16 +218,9 @@
           icon: "storage",
         },
         {
-          title: "Sign in with ChatGPT through a gateway",
+          title: "Connect to a gateway",
           description:
-            "Keep your gateway for model requests while using your ChatGPT workspace identity.",
-          href: "/codex/enterprise/sign-in-with-chatgpt-through-a-gateway",
-          icon: "connect",
-        },
-        {
-          title: "Use API/provider credentials",
-          description:
-            "Configure one Codex client to use your organization's model gateway and verify the connection.",
+            "Connect to your organization's model gateway with or without ChatGPT sign-in.",
           href: "/codex/enterprise/connect-to-a-gateway",
           icon: "connect",
         },
@@ -336,7 +336,7 @@
           icon: "connect",
         },
         {
-          title: "Plugin management",
+          title: "Import and sync plugins from GitHub",
           description: "Import and sync workspace plugins from GitHub.",
           href: "/codex/enterprise/plugin-management",
           icon: "connect",

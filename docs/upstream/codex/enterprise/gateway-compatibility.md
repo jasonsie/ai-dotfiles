@@ -7,7 +7,7 @@
 
 These requirements cover the API/provider credential path through a gateway.
 For gateways that forward ChatGPT workspace requests, see [Sign in with
-ChatGPT through a gateway](https://learn.chatgpt.com/docs/enterprise/sign-in-with-chatgpt-through-a-gateway).
+ChatGPT through a gateway](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway#enable-chatgpt-sign-in-recommended).
 
 For this path, the gateway must preserve the Responses API behavior described here:
 endpoints, streaming, continuation, tool calls, authentication, routing, and

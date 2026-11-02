@@ -7,8 +7,17 @@
 
 This document describes the code style and guidelines to use for `bpfilter` contributors. ClangFormat is used to validate and enforce as many of those rules as possible based on `.clang-format` at the root of the repository. The `check` build target validates all source files, and the `fixstyle` build target can automatically fix all the violations.
 
-> [!NOTE]
-> The CI will use the ClangFormat version from the latest Fedora release. If you use a different version, you might trigger violation(s) during the CI run, which we expect you to fix.
+<div class="note">
+
+<div class="title">
+
+Note
+
+</div>
+
+The CI will use the ClangFormat version from the latest Fedora release. If you use a different version, you might trigger violation(s) during the CI run, which we expect you to fix.
+
+</div>
 
 ## Formatting
 
