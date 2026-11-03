@@ -115,6 +115,7 @@ has the reasoning and each CLI's commands.
   it is deleted; the one archive format, worktree-guard's too.
 - **`push-branch`**, **`open-pr`**, **`merge-pr`**, **`prune-branch`**: the git steps
   that land a branch: push to origin, open or reuse its PR, merge commit, branch deleted.
+- **`approve-pr`**: approve the branch's PR as the repo's cached reviewer account.
 
 ## Repository setup
 

@@ -16,9 +16,9 @@ from support import ROOT
 
 sys.path.insert(0, str(ROOT / 'skills/git/scripts'))
 import git_run  # noqa: E402
-STEPS = ('push-branch', 'open-pr', 'archive-tag', 'merge-pr', 'prune-branch')
+STEPS = ('push-branch', 'open-pr', 'approve-pr', 'archive-tag', 'merge-pr', 'prune-branch')
 git_run.use(*STEPS)
-push_branch, open_pr, archive_tag, merge_pr, prune_branch = (importlib.import_module(s.replace('-', '_')) for s in STEPS)
+push_branch, open_pr, approve_pr, archive_tag, merge_pr, prune_branch = (importlib.import_module(s.replace('-', '_')) for s in STEPS)
 TODAY = time.strftime('%Y-%m-%d')
 
 TIP = 'a' * 40
@@ -189,6 +189,51 @@ class StepTest(unittest.TestCase):
                                                     'git merge-base --is-ancestor': FAIL})
         self.assertEqual(code, 1)
         self.assertIn('push: origin/feat/x is at bbbbbbb', err)
+
+
+class ApprovePrTest(unittest.TestCase):
+    def test_review_alone_approves_as_the_reviewer(self):
+        code, output, err, fake = land([], approve_pr.main)
+        self.assertEqual(code, 0, err)
+        self.assertIn('review     approved as second', output)
+        self.assertEqual(next(t for c, t in fake.calls if c.startswith('gh pr review')), 'tok-second')
+
+    def test_no_cached_reviewer_exits_3_and_asks(self):
+        code, _, err, fake = land([], approve_pr.main, **{'git config --local approve.reviewer': FAIL})
+        self.assertEqual(code, approve_pr.NO_REVIEWER)
+        self.assertIn('Ask the user which GitHub login reviews here', err)
+        self.assertEqual(fake.ran('git push'), [])
+
+    def test_a_given_reviewer_is_verified_then_cached(self):
+        code, output, err, fake = land(['--reviewer', 'second'], approve_pr.main, **{'git config --local approve.reviewer': FAIL})
+        self.assertEqual(code, 0, err)
+        self.assertTrue(fake.ran('git config --local approve.reviewer second'))
+        self.assertIn('reviewer   second', output)
+
+    def test_the_author_cannot_be_the_reviewer(self):
+        code, _, err, fake = land(['--reviewer', 'owner'], approve_pr.main)
+        self.assertEqual(code, 1)
+        self.assertIn('refuses self-approval', err)
+        self.assertEqual(fake.ran('git config --local approve.reviewer owner'), [])
+
+    def test_a_reviewer_without_a_token_or_without_access_stops(self):
+        code, _, err, _ = land([], approve_pr.main, **{'gh auth token --user second': (1, '', 'no such account')})
+        self.assertEqual(code, 1)
+        self.assertIn('no gh token for second', err)
+        code, _, err, _ = land([], approve_pr.main, **{'gh api repos/o/r': (1, '', 'gh: Not Found (HTTP 404)')})
+        self.assertEqual(code, 1)
+        self.assertIn('second cannot read o/r (gh: Not Found (HTTP 404)). Invite that account', err)
+        self.assertNotIn('collaborators', ' '.join(c for c, _ in Fake().calls), 'the script never invites')
+
+    def test_reviewer_subcommand_shows_sets_and_clears(self):
+        reviewer = approve_pr.main_reviewer
+        code, output, _, _ = land([], reviewer)
+        self.assertEqual((code, output.strip()), (0, 'second'))
+        code, output, _, _ = land([], reviewer, **{'git config --local approve.reviewer': FAIL})
+        self.assertEqual((code, output.strip()), (approve_pr.NO_REVIEWER, 'no reviewer cached for this repo'))
+        code, _, _, fake = land(['--unset'], reviewer)
+        self.assertEqual(code, 0)
+        self.assertTrue(fake.ran('git config --local --unset approve.reviewer'))
 
 
 if __name__ == '__main__':

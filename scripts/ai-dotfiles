@@ -8,6 +8,7 @@
 #   ai-dotfiles check               verify live state (scripts/healthcheck.sh)
 #   ai-dotfiles worktree <command>  agents' linked worktrees: list, done, rm, prune, release, share
 #   ai-dotfiles commit check [args]  the size and message `git commit [args]` would get past the hook
+#   ai-dotfiles git <step> [flags]  one step: push, pr, review, reviewer, tag, merge, prune
 #   Flags pass through, e.g. --dry-run, --target=claude; see each script's --help.
 
 set -euo pipefail
@@ -21,7 +22,7 @@ while [ -L "$SELF" ]; do
 done
 SCRIPTS="$(cd "$(dirname "$SELF")" && pwd)"
 
-usage() { sed -n '2,11p' "$SELF" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,12p' "$SELF" | sed 's/^# \{0,1\}//'; }
 
 COMMAND="${1:-install}"
 case "$COMMAND" in
@@ -37,5 +38,19 @@ case "$COMMAND" in
   check) exec bash "$SCRIPTS/healthcheck.sh" "$@" ;;
   worktree) exec python3 "$SCRIPTS/../skills/worktree-guard/scripts/worktree_guard.py" "$@" ;;
   commit) exec python3 "$SCRIPTS/../skills/small-commits/scripts/small_commits.py" "$@" ;;
+  git)
+    GIT="$SCRIPTS/../skills/git"
+    STEP="${1:-}"
+    [ $# -gt 0 ] && shift
+    case "$STEP" in
+      push) exec python3 "$GIT/push-branch/scripts/push_branch.py" "$@" ;;
+      pr) exec python3 "$GIT/open-pr/scripts/open_pr.py" "$@" ;;
+      review) exec python3 "$GIT/approve-pr/scripts/approve_pr.py" "$@" ;;
+      reviewer) exec python3 "$GIT/approve-pr/scripts/approve_pr.py" reviewer "$@" ;;
+      tag) exec python3 "$GIT/archive-tag/scripts/archive_tag.py" "$@" ;;
+      merge) exec python3 "$GIT/merge-pr/scripts/merge_pr.py" "$@" ;;
+      prune) exec python3 "$GIT/prune-branch/scripts/prune_branch.py" "$@" ;;
+      *) printf '[ERR] ai-dotfiles git <step>: push, pr, review, reviewer, tag, merge or prune; got: %s\n' "$STEP" >&2; exit 1 ;;
+    esac ;;
   *) printf '[ERR] Unknown command: %s\n' "$COMMAND" >&2; usage >&2; exit 1 ;;
 esac
