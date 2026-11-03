@@ -8,6 +8,7 @@
 #   ai-dotfiles check               verify live state (scripts/healthcheck.sh)
 #   ai-dotfiles worktree <command>  agents' linked worktrees: list, done, rm, prune, release, share
 #   ai-dotfiles commit check [args]  the size and message `git commit [args]` would get past the hook
+#   ai-dotfiles approve [flags]     land the reviewed branch: every git step below, in order
 #   ai-dotfiles git <step> [flags]  one step: push, pr, review, reviewer, tag, merge, prune
 #   Flags pass through, e.g. --dry-run, --target=claude; see each script's --help.
 
@@ -22,7 +23,7 @@ while [ -L "$SELF" ]; do
 done
 SCRIPTS="$(cd "$(dirname "$SELF")" && pwd)"
 
-usage() { sed -n '2,12p' "$SELF" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,13p' "$SELF" | sed 's/^# \{0,1\}//'; }
 
 COMMAND="${1:-install}"
 case "$COMMAND" in
@@ -38,6 +39,7 @@ case "$COMMAND" in
   check) exec bash "$SCRIPTS/healthcheck.sh" "$@" ;;
   worktree) exec python3 "$SCRIPTS/../skills/worktree-guard/scripts/worktree_guard.py" "$@" ;;
   commit) exec python3 "$SCRIPTS/../skills/small-commits/scripts/small_commits.py" "$@" ;;
+  approve) exec python3 "$SCRIPTS/../skills/git/approve/scripts/approve.py" "$@" ;;
   git)
     GIT="$SCRIPTS/../skills/git"
     STEP="${1:-}"
