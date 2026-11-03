@@ -284,3 +284,62 @@ def measure(commit, cwd):
                      key=lambda item: (-item[1], item[0]))
     binaries = [path for path, added, deleted in lines if (added is None or deleted is None) and path not in out]
     return Size(tuple(counted), sum(n for _, n in counted), tuple(sorted(out) + binaries))
+
+
+# --- the message -------------------------------------------------------------------------
+
+def unwrap(text):
+    """The message in one -m value, or None when the shell computes it (`$(...)`) and it is not
+    a heredoc we can read."""
+    match = HEREDOC.match(text.strip())
+    if match:
+        return match.group(2)
+    return None if text.lstrip().startswith(('$(', '`')) else text
+
+
+def message_of(commit, cwd):
+    """The commit message these options give, or None when it is not known before the commit
+    (an editor, stdin, a file not yet written)."""
+    if commit.messages:
+        parts = [part for part in map(unwrap, commit.messages) if part is not None]
+        return '\n\n'.join(parts) if len(parts) == len(commit.messages) else None
+    if commit.file is not None:
+        try:
+            return Path(cwd, commit.file).read_text()
+        except (OSError, ValueError):
+            return None
+    if commit.reuse or commit.amend:
+        out = git(cwd, 'log', '-1', '--format=%B', commit.reuse or 'HEAD', check=False)
+        return out if out is not None else None
+    return None
+
+
+def trailers_of(message, given=()):
+    """{key (lower): value} of the message's trailer block and any --trailer options."""
+    out = git('.', 'interpret-trailers', '--parse', stdin=message) or ''
+    found = {}
+    for line in [*out.splitlines(), *given]:
+        key, sep, value = line.partition(':')
+        if not sep:
+            key, sep, value = line.partition('=')
+        if sep and key.strip():
+            found[key.strip().lower()] = value.strip()
+    return found
+
+
+def message_problems(message, given, large):
+    """What a reviewer would send back: the subject's shape, the missing trailers."""
+    subject = message.strip().split('\n', 1)[0].strip() if message.strip() else ''
+    problems = []
+    match = SUBJECT.match(subject)
+    if not match or match.group('type') not in TYPES:
+        problems.append(f'the subject is not `type(scope): outcome` (types: {", ".join(TYPES)})')
+    if len(subject) > SUBJECT_MAX:
+        problems.append(f'the subject has {len(subject)} characters; {SUBJECT_MAX} at most')
+    trailers = trailers_of(message, given)
+    missing = [key for key in REQUIRED + ((LARGE,) if large else ()) if not trailers.get(key.lower())]
+    if missing:
+        problems.append('missing trailer' + ('s ' if len(missing) > 1 else ' ') + ', '.join(f'{k}:' for k in missing))
+    if trailers.get(PART.lower()) and not PART_VALUE.match(trailers[PART.lower()]):
+        problems.append(f'{PART}: is n/m, as in 2/4')
+    return problems

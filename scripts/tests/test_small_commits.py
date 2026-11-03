@@ -57,10 +57,31 @@ class ParsingTest(unittest.TestCase):
         for command in ('git status && echo "git commit"', 'git log --oneline', 'echo commit', 'git -C x stash'):
             self.assertEqual(sc.commits_in(command), [], command)
 
+    def test_the_heredoc_message_and_computed_ones(self):
+        (commit,) = sc.commits_in(HEREDOC)
+        self.assertEqual(sc.message_of(commit, '.').splitlines()[0], 'fix(daily-log): keep one entry per project')
+        self.assertIn('Verified: unittest 3 passed', sc.message_of(commit, '.'))
+        (computed,) = sc.commits_in('git commit -m "$(printf "x")"')
+        self.assertIsNone(sc.message_of(computed, '.'))
+
     def test_the_override_is_read_from_the_command_line(self):
         self.assertTrue(sc.OVERRIDE_SET.search('ALLOW_LARGE_COMMIT="a vendored file" git commit -m x'))
         self.assertTrue(sc.OVERRIDE_SET.search('export ALLOW_LARGE_COMMIT=why; git commit'))
         self.assertFalse(sc.OVERRIDE_SET.search('echo $ALLOW_LARGE_COMMIT; git commit'))
+
+    def test_message_problems(self):
+        self.assertEqual(sc.message_problems(GOOD, [], large=False), [])
+        self.assertEqual(sc.message_problems('feat(x): add\n\nWhy: a\nScope: b', ['Verified=none'], False), [])
+        problems = sc.message_problems('Add the thing', [], large=True)
+        self.assertEqual(len(problems), 2)
+        self.assertIn('type(scope): outcome', problems[0])
+        self.assertIn('Why:, Scope:, Verified:, Large-commit:', problems[1])
+        (long,) = sc.message_problems('feat(x): ' + 'a' * 70 + '\n\nWhy: a\nScope: b\nVerified: c', [], False)
+        self.assertIn('79 characters', long)
+        (part,) = sc.message_problems(GOOD + '\nPart: two', [], False)
+        self.assertIn('n/m', part)
+        (unknown,) = sc.message_problems('wip(x): thing\n\nWhy: a\nScope: b\nVerified: c', [], False)
+        self.assertIn('types:', unknown)
 
 
 class Repo(unittest.TestCase):
