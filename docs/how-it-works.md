@@ -16,7 +16,7 @@ config/              the sources the installers apply
   upstream-docs.json   the documentation sources mirrored into docs/upstream/
 skills/              shared skills; skills.lock pins adapted ones; daily-log/ holds the
                      daily-log command and the day pass; worktree-guard/ and small-commits/
-                     their hooks
+                     their hooks; git/ a bundle: the git step skills and approve
 scripts/             ai-dotfiles, install.sh, uninstall.sh, healthcheck.sh (entry points);
                      agent_hooks.py and agent_sessions.py (the CLIs' hook formats and
                      session stores behind one interface); agent_hooks.ts (Pi's extension)
@@ -209,6 +209,38 @@ commit); `scripts/small_commits.py` in it is the hook.
 - **Installed by `scripts/install/hooks.py`** as a second feature beside worktree-guard: one
   PreToolUse entry per CLI with the shell matcher (Antigravity: `ai-dotfiles-small-commits-pre`).
   State, the sizes a session was warned about, is in `~/.local/state/ai-dotfiles/small-commits/`.
+
+## Approve
+
+When the user has reviewed an agent's branch and says "approve", the `approve` skill lands
+it. The agent commits (small-commits) and writes the PR body (pr skill); then
+`ai-dotfiles approve --title T --body-file F` runs the git step skills in order.
+
+```text
+skills/git/                          a bundle; the installer links each skill by its own name
+  scripts/git_run.py                 the runner every step shares; tests fake git and gh here
+  push-branch/   ai-dotfiles git push      origin gets the branch
+  open-pr/       ai-dotfiles git pr        the PR, opened or reused
+  approve-pr/    ai-dotfiles git review    approval as the repo's reviewer (git reviewer: the cache)
+  archive-tag/   ai-dotfiles git tag       archive/<name> at the tip; worktree-guard imports it too
+  merge-pr/      ai-dotfiles git merge     a merge commit
+  prune-branch/  ai-dotfiles git prune     base pulled; branch deleted locally and on origin
+  approve/       ai-dotfiles approve       preflight, then the six above, in that order
+```
+
+- **Steps:** preflight (a branch other than the base, no tracked changes), then the six.
+  Each is skipped when done, so a stopped run is rerun as is; nothing is undone on failure.
+  Each step's skill holds the fix for its own stops.
+- **The reviewer:** GitHub refuses self-approval, so each repo names its own reviewer login,
+  cached in `git config --local approve.reviewer`. None cached: exit 3, and the agent asks
+  the user and reruns with `--reviewer LOGIN`. A login is cached only once it has a `gh auth`
+  token, is not the PR's author, and can read the repo. The script never invites an account;
+  `ai-dotfiles git reviewer [LOGIN | --unset]` shows, sets or clears it.
+- **The record:** an annotated `archive/<branch without its first segment>` tag at the branch
+  tip, pushed before the merge commit, in the one format `archive-tag` owns: the commits' date
+  span, the PR title, "merged and deleted", and a `PR:` line. A name taken by another commit
+  gets the date; a tag already at the tip is reused.
+- **`--dry-run`** prints each change it would make; read-only commands still run.
 
 ## Upstream updates
 
