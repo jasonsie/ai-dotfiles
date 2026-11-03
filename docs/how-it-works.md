@@ -38,7 +38,7 @@ config/cli-settings.json      ─►  settings.py (merges listed keys)         �
 config/mcp-servers.json       ─►  mcp.py (native `mcp add`, or a merge)    ─►  Claude Code, Codex, Pi, Antigravity
 skills/<name>/                ─►  skills.py (links)                        ─►  every CLI's skill folder
 scripts/ai-dotfiles           ─►  skills.py (link)                         ─►  ~/.local/bin
-skills/daily-log/scripts/     ─►  skills.py (link); launchd.py (plist)     ─►  ~/.local/bin/daily-log; ~/Library/LaunchAgents (07:30)
+skills/daily-log/scripts/     ─►  skills.py (link); launchd.py (plist)     ─►  ~/.local/bin/daily-log; ~/Library/LaunchAgents (04:00)
 skills/worktree-guard/scripts/ ─► hooks.py (merge)                         ─►  each CLI's hook file
 scripts/agent_hooks.ts        ─►  skills.py (link)                         ─►  Pi's extension folder
                                   installer.py: reads ai-clis.json; the safe writes every step shares
@@ -154,22 +154,31 @@ refreshed by `scripts/vendor_daily_log.py` and checked by a test), and every
 `<key>-tutor-daily` Cowork task is `TUTOR-DAILY.md` rendered for one key (`daily-log tutor-daily`).
 
 ```text
-07:30  launchd ─► claude -p "/daily-log day" (sonnet; Bash(daily-log *) and Read only)
-       ─► daily-log day: yesterday + 3 days back, 04:00 to 04:00; per day the existing block, the
+04:00  launchd ─► daily-log day --write
+       ─► the evidence: yesterday + 3 days back, 04:00 to 04:00; per day the existing block, the
           keywords in use, then per working folder its git facts and its sessions (Claude Code, Codex,
-          Pi stores read by scripts/agent_sessions.py; temp folders dropped)
+          Pi stores read by scripts/agent_sessions.py; temp folders dropped); no sessions, no run
+       ─► piped into claude -p "/daily-log day" (sonnet; the Bash tool only, daily-log add only; 15 turns)
        ─► the model names the projects from the content and writes the uncovered ones:
           daily-log add --date D --done "<project>: ..." "keyword: ..." "description: ..."
 ```
 
+- **One writer:** the pass. No session logs a turn or a unit of work on its own, and
+  `daily-log add` refuses a work entry whose lines are not `keyword:` then `description:`,
+  so a session that remembers an older shape cannot write it. "Log it" by hand still works.
 - **Fill gaps only:** an entry the block already has, by hand or by machine, is never
   touched; `daily-log add` refuses a second label for the same project (`ai_dotfiles` and
   `ai-dotfiles` are one) and `--rewrite` replaces it on purpose (`daily-log day --rewrite`).
-  A day the Mac was off is caught up by the next run; launchd runs a job missed in sleep at wake.
+  A Mac asleep at 04:00 runs the job at its next wake, so it lands whenever the day starts;
+  a day the Mac was off is caught up by the next run.
+- **The evidence is piped, not fetched:** the model gets the day's evidence with its prompt
+  and only writes. Letting it run `daily-log day` itself met the Bash tool's timeout on a
+  cold cache, a background wait, and a fallback wakeup that ran the pass twice (2026-11-03).
 - **Installed by `scripts/install/launchd.py`:** `~/Library/LaunchAgents/com.ai-dotfiles.daily-log-day.plist`,
-  the `claude` path and PATH rendered at install; log in `~/Library/Logs/ai-dotfiles/`. The
-  healthcheck checks the job is loaded. Before November 2026 a Stop hook nudged every session
-  that edited files; `hooks.py` takes its entries and state folder out when it finds them.
+  the PATH (`daily-log`, `claude`, python3, git) rendered at install; log in
+  `~/Library/Logs/ai-dotfiles/`. The healthcheck checks the job is loaded. Before November
+  2026 a Stop hook nudged every session that edited files; `hooks.py` takes its entries and
+  state folder out when it finds them.
 
 ## Upstream updates
 

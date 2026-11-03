@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 """Schedule the daily-log pass as a macOS LaunchAgent; writes unless --dry-run.
 
-Every morning at 07:30 launchd runs one headless Claude Code session, `claude -p '/daily-log day'`,
-which reads the evidence of yesterday's work that `daily-log day` prints and writes the journal
-entries. This step only schedules that run. It writes one file,
-~/Library/LaunchAgents/com.ai-dotfiles.daily-log-day.plist, and loads it with `launchctl bootstrap
-gui/<uid>`, booting out a copy that is already loaded first, so a changed plist takes effect at once.
-The plist runs the `claude` found on PATH when the step runs, as found: a symlink is not resolved,
-so the job follows Claude Code's updates. Output and errors go to
+Every day at 04:00, when the journal's day closes, launchd runs `daily-log day --write`: the
+evidence of the day's work, piped into one headless Claude Code session, `claude -p '/daily-log
+day'`, which writes the journal entries. A Mac asleep at 04:00 runs it at its next wake. This step
+only schedules that run. It writes one file, ~/Library/LaunchAgents/com.ai-dotfiles.daily-log-day.plist,
+and loads it with `launchctl bootstrap gui/<uid>`, booting out a copy that is already loaded first,
+so a changed plist takes effect at once. Output and errors go to
 ~/Library/Logs/ai-dotfiles/daily-log-day.log. With no claude on PATH nothing is scheduled.
 
 launchd starts a job with a minimal PATH, so the plist sets one: ~/.local/bin, where `daily-log` is
-linked; the folder of the python3 on PATH when the step runs (daily-log needs 3.11+, and the system
-python3 is older; a pyenv shim folder stays valid across versions); then /usr/bin and /bin, for git.
-Run the step again after either moves and the plist is rewritten to match.
+linked; the folder of the `claude` found on PATH when the step runs, as found (a symlink is not
+resolved, so the job follows Claude Code's updates); the folder of the python3 on PATH when the step
+runs (daily-log needs 3.11+, and the system python3 is older; a pyenv shim folder stays valid across
+versions); then /usr/bin and /bin, for git. Run the step again after any of them moves and the plist
+is rewritten to match.
 
 The plist carries an `ai-dotfiles` key. One without it or with another Label, and a symlink or
 folder in its place, are refused, on install and on uninstall. The old plist is backed up before it
@@ -37,15 +38,14 @@ LABEL = 'com.ai-dotfiles.daily-log-day'
 PLIST = f'Library/LaunchAgents/{LABEL}.plist'
 LOG = 'Library/Logs/ai-dotfiles/daily-log-day.log'
 MARKER = {'ai-dotfiles': 'daily-log day'}  # a key only this step writes: how it knows its own plist
-HOUR, MINUTE = 7, 30
+HOUR, MINUTE = 4, 0  # the hour the journal's day closes (day_pass.CUTOFF)
 BACKUP = 'launchd'  # folder name under installer.STATE
+COMMAND = '.local/bin/daily-log'  # where skills.py links the command
 
 
-def arguments(claude):
-    """The command launchd runs. The prompt stays ahead of --allowedTools, which takes a list of
-    values and would swallow it; the two rules go as one comma-joined value."""
-    return [claude, '-p', '/daily-log day', '--model', 'sonnet',
-            '--allowedTools', 'Bash(daily-log *),Read', '--max-turns', '40']
+def arguments(home):
+    """The command launchd runs: the day pass, evidence and writing session both (day_pass.py)."""
+    return [str(home / COMMAND), 'day', '--write']
 
 
 def python_folder():
@@ -61,9 +61,10 @@ def python_folder():
     return folder
 
 
-def search_path(home):
+def search_path(home, claude=None):
     """The job's PATH, without repeats or an empty entry (which would mean the current folder)."""
-    folders = [str(home / '.local/bin'), python_folder(), '/usr/bin', '/bin']
+    folders = [str(home / '.local/bin'), os.path.dirname(claude) if claude else '', python_folder(),
+               '/usr/bin', '/bin']
     return ':'.join(dict.fromkeys(folder for folder in folders if folder))
 
 
@@ -79,11 +80,11 @@ def content(home, claude):
     return plistlib.dumps({
         'Label': LABEL,
         **MARKER,
-        'ProgramArguments': arguments(claude),
+        'ProgramArguments': arguments(home),
         'StartCalendarInterval': {'Hour': HOUR, 'Minute': MINUTE},
         'RunAtLoad': False,
         'WorkingDirectory': str(home),
-        'EnvironmentVariables': {'HOME': str(home), 'PATH': search_path(home)},
+        'EnvironmentVariables': {'HOME': str(home), 'PATH': search_path(home, claude)},
         'StandardOutPath': log,
         'StandardErrorPath': log,
     })

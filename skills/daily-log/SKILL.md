@@ -6,7 +6,8 @@ description: Record what was done in the daily logger (the journal at ~/Document
 # Daily log
 
 One work entry per project per day, written once by the day pass (below) or by hand when
-the user says "log it". A question answered in chat is not work.
+the user says "log it". Never log a turn or a unit of work on your own: the pass reads the
+day's sessions and writes what the day was about. A question answered in chat is not work.
 
 ```
 daily-log add --done "<project>: <what the day was about>" "keyword: <tags>" "description: <one line>"
@@ -18,6 +19,8 @@ daily-log add --done "<project>: <what the day was about>" "keyword: <tags>" "de
   has before coining one.
 - `description:` one line, about 160 characters, telegraphic: what exists now and its
   state (merged, installed, uncommitted, in review). No `next:`, no counts, no hashes.
+- Exactly these two lines: a work entry with any other line is refused. A bare label
+  (`leetcode`) is free-form.
 - The same label merges; another label for a project already in the block is refused:
   `--rewrite` replaces that entry instead. `--open` for work in progress, `--date` for
   another day, `--if-absent` to touch nothing when the label exists. `daily-log show` prints
@@ -33,15 +36,18 @@ writer follows it; the learning-tutor engine writes its day block through this c
 
 ## Day pass
 
-Each morning at 07:30 a LaunchAgent (installed by ai-dotfiles) runs
-`claude -p "/daily-log day"`, which lands here. Do this:
+At 04:00, when the day closes, a LaunchAgent (installed by ai-dotfiles) runs
+`daily-log day --write`: the evidence below, piped into `claude -p "/daily-log day"`, which
+lands here. A Mac asleep at 04:00 runs it at its next wake. Do this:
 
-1. Run `daily-log day`. It prints, for yesterday and the three days before it, each day
-   with sessions: the day's existing block, the keywords in use, then one group per
-   working folder with its repository's facts (commits, reflog, uncommitted files) and
-   its sessions (CLI, span, title, what was asked and answered, files edited). A day runs
-   from 04:00 to 04:00. Sessions come from Claude Code, Codex and Pi; Antigravity's
-   transcripts name no folder and are not read.
+1. Read the evidence that came with this prompt (by hand, run `daily-log day` first). It
+   holds, for yesterday and the three days before it, each day with sessions: the day's
+   existing block, the keywords in use, then one group per working folder with its
+   repository's facts (commits, reflog, uncommitted files) and its sessions (CLI, span,
+   title, what was asked and answered, files edited). A day runs from 04:00 to 04:00.
+   Sessions come from Claude Code, Codex and Pi; Antigravity's transcripts name no folder
+   and are not read. Do not run anything else, and never schedule or wait: the evidence is
+   complete.
 2. For each day, decide the projects from the content, not the folder: the folder
    `ai_dotfiles` is the project `ai-dotfiles`, the Obsidian vault is `CS vault`, one folder
    may hold two projects, two folders one. Skip chat-only sessions and probes in temp
@@ -54,7 +60,7 @@ Each morning at 07:30 a LaunchAgent (installed by ai-dotfiles) runs
 4. Reply with the entries written, one line each, or "nothing to add".
 
 Run it by hand any time: `daily-log day --date today`, `daily-log day --date 2026-11-02
---back 0 --rewrite`.
+--back 0 --rewrite`; with `--write`, the whole pass as the LaunchAgent runs it.
 
 ## Tutor-daily tasks
 

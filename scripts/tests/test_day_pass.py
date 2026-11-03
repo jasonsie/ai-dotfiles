@@ -2,7 +2,7 @@
 
 Run: python3 -m unittest discover -s scripts/tests -p 'test_day_pass.py' -v
 """
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
 from datetime import date, timedelta, timezone
 import importlib.util
 import io
@@ -137,6 +137,53 @@ class DayPassTest(unittest.TestCase):
     def test_no_sessions_anywhere_is_said_in_one_line(self):
         out = self.run_pass('--date', '2026-10-01', '--back', '2')
         self.assertEqual(out, '# Day pass 2026-09-29 to 2026-10-01; days with sessions: none\n')
+
+    def fake_claude(self, status):
+        """subprocess.run with `claude` faked: git runs for real, a claude call is recorded and exits `status`."""
+        real = subprocess.run
+
+        def run(command, **options):
+            if command[0] == '/fake/bin/claude':
+                self.claude_calls.append((command, options))
+                return subprocess.CompletedProcess(command, status)
+            return real(command, **options)
+        self.claude_calls = []
+        return patch.object(day_pass.subprocess, 'run', run)
+
+    def test_write_pipes_the_evidence_into_one_writing_session(self):
+        evidence = self.run_pass('--date', '2026-11-02', '--back', '1')
+        with patch.object(day_pass.shutil, 'which', return_value='/fake/bin/claude') as which, self.fake_claude(3):
+            out = io.StringIO()
+            with redirect_stdout(out):
+                code = day_pass.main(['--home', str(self.home), '--root', str(self.root),
+                                      '--date', '2026-11-02', '--back', '1', '--write'])
+        self.assertEqual(code, 3)  # the session's exit status is the pass's
+        which.assert_called_once_with('claude')
+        (command, options), = self.claude_calls
+        self.assertEqual(command, ['/fake/bin/claude', *day_pass.CLAUDE_ARGS])
+        self.assertEqual(options, {'input': evidence, 'text': True})  # the whole evidence, header included
+        self.assertEqual(out.getvalue(), evidence.splitlines()[0] + '\n')  # the log gets the header, then the reply
+        self.assertEqual(command[1:3], ['-p', '/daily-log day'])  # the skill's "Day pass" section
+        self.assertEqual(command[command.index('--tools') + 1], 'Bash')
+        self.assertEqual(command[command.index('--allowedTools') + 1], 'Bash(daily-log add *)')
+        self.assertNotIn('Read', command)
+        self.assertLessEqual(int(command[command.index('--max-turns') + 1]), 15)
+
+    def test_write_starts_no_session_when_no_day_has_sessions(self):
+        with patch.object(day_pass.shutil, 'which', return_value='/fake/bin/claude'), self.fake_claude(0):
+            out = self.run_pass('--date', '2026-10-01', '--back', '2', '--write')
+        self.assertEqual(out, '# Day pass 2026-09-29 to 2026-10-01; days with sessions: none\n')
+        self.assertEqual(self.claude_calls, [])
+
+    def test_write_without_claude_on_path_says_so_and_fails(self):
+        err = io.StringIO()
+        with patch.object(day_pass.shutil, 'which', return_value=None), redirect_stderr(err), \
+                self.fake_claude(0), redirect_stdout(io.StringIO()):
+            code = day_pass.main(['--home', str(self.home), '--root', str(self.root),
+                                  '--date', '2026-11-02', '--back', '0', '--write'])
+        self.assertEqual(code, 1)
+        self.assertEqual(err.getvalue(), 'daily-log day: claude not on PATH; nothing written\n')
+        self.assertEqual(self.claude_calls, [])
 
     def test_dates(self):
         self.assertEqual(day_pass.parse_date('yesterday'), date.today() - timedelta(days=1))

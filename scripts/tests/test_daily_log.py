@@ -77,12 +77,12 @@ class JournalTest(unittest.TestCase):
         self.assertIsNone(daily_log.normalize('   '))
 
     def test_entry_after_content_is_set_off_by_a_blank_line(self):
-        out = self.add('--date', '2026-10-23', '--done', 'ai-dotfiles: daily-log', 'skill + hook', 'tests green')
+        out = self.add('--date', '2026-10-23', '--done', 'ai-dotfiles: daily-log', 'keyword: hooks', 'description: tests green')
         text = self.week4.read_text()
         self.assertIn('- [] G-DOC extracter: Obsidian-web-clipper\n\n- [X] ai-dotfiles: daily-log\n'
-                      '\t- skill + hook\n\t- tests green\n\n\n' + SEP + '\n', text)
+                      '\t- keyword: hooks\n\t- description: tests green\n\n\n' + SEP + '\n', text)
         self.assertTrue(out.startswith('# 10/23 (Fri)\n' + RULE + '\n- [] leetcode\n'))
-        self.assertTrue(out.endswith('\t- tests green\n'))  # the block, trailing blanks trimmed
+        self.assertTrue(out.endswith('\t- description: tests green\n'))  # the block, trailing blanks trimmed
 
     def test_entry_under_the_tutor_block_and_first_entry_flush_under_the_rule(self):
         self.add('--date', '2026-10-24', 'reading')
@@ -94,13 +94,62 @@ class JournalTest(unittest.TestCase):
         self.assertIn('# 11/2 (Mon)\n' + RULE + '\n- [X] first\n\n\n' + SEP + '\n', empty.read_text())
 
     def test_same_label_merges_drops_duplicates_and_flips_to_done(self):
-        self.add('--date', '2026-10-23', 'ai-dotfiles: daily-log', 'skill + hook')
-        self.add('--date', '2026-10-23', '--done', 'ai-dotfiles: daily-log', 'skill + hook', 'docs')
+        self.add('--date', '2026-10-23', 'notes', 'skill + hook')
+        self.add('--date', '2026-10-23', '--done', 'notes', 'skill + hook', 'docs')
         text = self.week4.read_text()
-        self.assertEqual(text.count('ai-dotfiles: daily-log'), 1)
-        self.assertIn('- [X] ai-dotfiles: daily-log\n\t- skill + hook\n\t- docs\n', text)
+        self.assertEqual(text.count('] notes'), 1)
+        self.assertIn('- [X] notes\n\t- skill + hook\n\t- docs\n', text)
         self.add('--date', '2026-10-23', '--open', '/obnoard skill', 'still done')  # --open never un-checks
         self.assertIn('- [X] /obnoard skill\n\t- still done\n', self.week4.read_text())
+        self.add('--date', '2026-10-23', 'ai-dotfiles: daily-log', 'keyword: hooks', 'description: built')
+        self.add('--date', '2026-10-23', '--done', 'ai-dotfiles: daily-log', 'keyword: hooks', 'description: built')
+        text = self.week4.read_text()
+        self.assertEqual(text.count('ai-dotfiles: daily-log'), 1)
+        self.assertIn('- [X] ai-dotfiles: daily-log\n\t- keyword: hooks\n\t- description: built\n', text)
+
+    def test_a_work_entry_takes_keyword_then_description_and_nothing_else(self):
+        before = self.week4.read_bytes()
+        wrong = (  # what a session remembering the older shape, or a careless one, writes
+            ('wrote docs/status.md', 'next: verify M1'),
+            ('keyword: docs',),
+            ('description: only this',),
+            ('description: swapped', 'keyword: docs'),
+            ('keyword: docs', 'description: fine', 'next: more'),
+            ('keyword: docs', 'description: fine', '↳ a note'),
+            ('keyword: one, two, three, four', 'description: too many tags'),
+            ('keyword: docs,, hooks', 'description: an empty tag'),
+            ('keyword:', 'description: no tags'),
+            (),
+        )
+        for lines in wrong:
+            with self.subTest(lines):
+                code, out, err = self.run_cli('add', '--date', '2026-10-24', '--done', 'moodlens: status report', *lines)
+                self.assertEqual(code, 1)
+                self.assertRegex(err, r'^daily-log: (a work entry takes exactly two lines|keyword: takes one to 3 tags)')
+                self.assertIn('a bare label is free-form', err)
+                self.assertEqual((out, self.week4.read_bytes()), ('', before))
+        self.assertEqual(daily_log.is_work('moodlens: status report'), True)
+        for label in ('leetcode', '/onboard skill', 'reading:a book', 'G-DOC extracter'):
+            self.assertFalse(daily_log.is_work(label), label)
+        self.add('--date', '2026-10-24', '--done', 'moodlens: status report', 'keyword: docs, status',
+                 'description: wrote docs/status.md; M1 unverified')
+        self.assertIn('- [X] moodlens: status report\n\t- keyword: docs, status\n\t- description: wrote docs/status.md; M1 unverified\n',
+                      self.week4.read_text())
+        # the same label with another description would leave two: refused, --rewrite replaces
+        before = self.week4.read_bytes()
+        code, _, err = self.run_cli('add', '--date', '2026-10-24', '--done', 'moodlens: status report', 'keyword: docs, status',
+                                    'description: a second description')
+        self.assertEqual(code, 1)
+        self.assertIn('already has a description: line', err)
+        self.assertIn('--rewrite', err)
+        self.assertEqual(self.week4.read_bytes(), before)
+        self.add('--date', '2026-10-24', '--done', '--rewrite', 'moodlens: status report', 'keyword: status',
+                 'description: a second description')
+        self.assertEqual(self.week4.read_text().count('description:'), 1)
+        # a hand-written work entry takes the pair once, under its own label
+        self.add('--date', '2026-10-23', 'G-DOC extracter: Obsidian-web-clipper', 'keyword: clipper', 'description: added')
+        self.assertIn('- [] G-DOC extracter: Obsidian-web-clipper\n\t- keyword: clipper\n\t- description: added\n',
+                      self.week4.read_text())
 
     def test_the_project_is_the_text_before_the_colon(self):
         self.assertEqual(daily_log.project('ai-dotfiles: daily-log'), 'ai-dotfiles')
@@ -113,7 +162,8 @@ class JournalTest(unittest.TestCase):
     def test_another_label_for_the_same_project_is_refused_and_names_the_entry(self):
         self.add('--date', '2026-10-23', '--done', 'ai-dotfiles: daily-log', 'keyword: hooks', 'description: nudge')
         before = self.week4.read_bytes()
-        code, out, err = self.run_cli('add', '--date', '2026-10-23', '--done', 'ai_dotfiles: verify flow', 'keyword: tests')
+        code, out, err = self.run_cli('add', '--date', '2026-10-23', '--done', 'ai_dotfiles: verify flow',
+                                      'keyword: tests', 'description: verified')
         self.assertEqual(code, 1)
         self.assertIn('2026-10-23 already has an entry for this project: - [X] ai-dotfiles: daily-log', err)
         self.assertIn('--rewrite', err)
@@ -140,10 +190,10 @@ class JournalTest(unittest.TestCase):
 
     def test_other_projects_and_the_study_block_are_untouched_by_the_guard(self):
         self.add('--date', '2026-10-24', '--open', 'leetcode', stdin='\t- [ ] 1-Two Sum(new)\n')
-        self.add('--date', '2026-10-24', '--done', 'reading: a book')
-        self.add('--date', '2026-10-24', '--done', 'ai-dotfiles: x')
-        self.assertIn('- [] leetcode\n\t- [ ] 1-Two Sum(new)\n\n- [X] reading: a book\n\n- [X] ai-dotfiles: x\n',
-                      self.week4.read_text())
+        self.add('--date', '2026-10-24', '--done', 'reading: a book', 'keyword: books', 'description: read')
+        self.add('--date', '2026-10-24', '--done', 'ai-dotfiles: x', 'keyword: x', 'description: y')
+        self.assertIn('- [] leetcode\n\t- [ ] 1-Two Sum(new)\n\n- [X] reading: a book\n\t- keyword: books\n\t- description: read\n\n'
+                      '- [X] ai-dotfiles: x\n\t- keyword: x\n\t- description: y\n', self.week4.read_text())
 
     def test_if_absent_leaves_the_file_byte_identical(self):
         before = self.week4.read_bytes()

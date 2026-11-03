@@ -18,7 +18,7 @@
 #                    Pi's hooks extension
 #   5. hooks         worktree-guard's hook command → merged into each CLI's hook file;
 #                    retired hooks (daily-log's old nudge) taken out
-#   6. launchd       the daily-log pass            → ~/Library/LaunchAgents, 07:30 each day
+#   6. launchd       the daily-log pass            → ~/Library/LaunchAgents, 04:00 each day
 #
 # Requires Python 3.11+ (macOS /usr/bin/python3 is older; use Homebrew/pyenv).
 # Steps live in scripts/install/. Undo with scripts/uninstall.sh. See docs/how-it-works.md.

@@ -14,9 +14,12 @@ $DAILY_LOGGER_ROOT, else ~/Documents/Claude/Projects/daily-logger; year and mont
 are created, the root never is. One entry per project and day: a label's project is the text
 before ': ', else the whole label. `add` merges into the entry with the same label, refuses a
 second entry for a project the block already holds, and replaces that entry with --rewrite.
+A work entry, a label of the form `<project>: <what>`, takes exactly two lines, `keyword:`
+(one to three tags) then `description:`; other lines are refused, so a session that remembers
+an older shape cannot write it. A bare label (`leetcode`, `/onboard skill`) is free-form.
 `day` runs day_pass.py beside this script: the evidence the daily pass reads before it writes
-the entries. This file imports nothing from the repo, so a copy of it is a complete writer
-(the learning-tutor vendors one). Python 3.11+, stdlib only.
+the entries, and with --write the pass itself. This file imports nothing from the repo, so a
+copy of it is a complete writer (the learning-tutor vendors one). Python 3.11+, stdlib only.
 """
 from __future__ import annotations
 
@@ -39,6 +42,8 @@ RULE = '-' * 12
 HEADING = re.compile(r'^#\s*(\d{1,2})/(\d{1,2})\s*\(')
 ENTRY = re.compile(r'^-\s*\[(?P<mark>[^\]]*)\]\s*(?P<label>.+?)\s*$')
 DONE_MARKS = {'x', 'ｘ'}
+WORK_LINE = re.compile(r'^\t- (?P<field>keyword|description): (?P<value>\S.*)$')
+TAGS = 3  # keyword: at most this many
 TEMPLATE_FIELDS = ('key', 'subject', 'item', 'items', 'tutor', 'paste_hint', 'weekend_day', 'resolves', 'notes')
 
 
@@ -48,6 +53,10 @@ class Duplicate(ValueError):
     def __init__(self, existing):
         super().__init__(existing)
         self.existing = existing
+
+
+class BadShape(ValueError):
+    """A work entry's lines are not `keyword:` then `description:`."""
 
 
 # --- the journal -------------------------------------------------------------------------
@@ -90,6 +99,32 @@ def project(label):
 def key(label):
     """What two labels for one project share: its name lowercased, without '_', '-' or spaces."""
     return re.sub(r'[\s_-]+', '', project(label).lower())
+
+
+def is_work(label):
+    """A work entry: `<project>: <what the day was about>`."""
+    return project(label) != label.strip()
+
+
+def check_work_lines(sub_lines):
+    """Raise BadShape unless `sub_lines` is one `keyword:` line of one to three tags, then one
+    `description:` line. The shape in LOG-FORMAT.md, "Work entry"."""
+    fields = [WORK_LINE.match(line) for line in sub_lines]
+    if len(fields) != 2 or None in fields or [m.group('field') for m in fields] != ['keyword', 'description']:
+        raise BadShape('a work entry takes exactly two lines, "keyword: <one to three tags>" then '
+                       '"description: <one line>"; got ' + (', '.join(repr(line.strip()) for line in sub_lines) or 'none'))
+    tags = [tag.strip() for tag in fields[0].group('value').split(',')]
+    if not 1 <= len(tags) <= TAGS or not all(tags):
+        raise BadShape(f'keyword: takes one to {TAGS} tags, comma-separated; got {fields[0].group("value")!r}')
+
+
+def check_work_entry(lines):
+    """Raise BadShape when a work entry's lines hold more than one `keyword:` or `description:`,
+    which a merge of two writes would leave behind."""
+    for field in ('keyword', 'description'):
+        if sum(1 for line in lines if (m := WORK_LINE.match(line)) and m.group('field') == field) > 1:
+            raise BadShape(f'the entry already has a {field}: line; the same work merges only identical lines,'
+                           ' a replacement: add --rewrite')
 
 
 def find_day(lines, day):
@@ -137,7 +172,12 @@ def entry_end(lines, index, end):
 
 def add_entry(text, day, label, sub_lines, done=False, if_absent=False, rewrite=False):
     """(new text, changed): `label` and its sub-bullets in `day`'s block. The same label merges;
-    another label for a project already there raises Duplicate, or replaces it with `rewrite`."""
+    another label for a project already there raises Duplicate, or replaces it with `rewrite`.
+    A work label's lines must be `keyword:` then `description:` (BadShape otherwise), before and
+    after a merge."""
+    work = is_work(label)
+    if work:
+        check_work_lines(sub_lines)
     lines = text.splitlines()
     label_line = f'- [{"X" if done else ""}] {label}'
     start = find_day(lines, day)
@@ -177,6 +217,8 @@ def add_entry(text, day, label, sub_lines, done=False, if_absent=False, rewrite=
         if done and mark not in DONE_MARKS:
             lines[index] = re.sub(r'^(\s*-\s*)\[[^\]]*\]', r'\g<1>[X]', lines[index], count=1)
             changed = True
+        if work:
+            check_work_entry(lines[index + 1:last] + added)
         lines = lines[:last] + added + lines[last:]
         return '\n'.join(lines) + '\n', changed
     tail = end
@@ -233,6 +275,10 @@ def cmd_add(args):
         print(f'daily-log: {day.isoformat()} already has an entry for this project: {duplicate.existing}\n'
               '  the same work: use that label, and the lines merge into it;'
               ' a replacement: add --rewrite.', file=sys.stderr)
+        return 1
+    except BadShape as shape:
+        print(f'daily-log: {shape}\n  a work entry ("<project>: <what>") is written once a day by the day pass;'
+              ' a bare label is free-form.', file=sys.stderr)
         return 1
     if changed and not args.dry_run:
         write_text(path, new_text)
@@ -308,7 +354,8 @@ def parser():
     add.add_argument('--dry-run', action='store_true', help='print the result, write nothing')
     add.add_argument('--show', choices=('block', 'file'), default='block', help='what to print (default: block)')
     add.add_argument('label')
-    add.add_argument('lines', nargs='*', help='sub-bullets; or one per line on stdin')
+    add.add_argument('lines', nargs='*',
+                     help='sub-bullets, or one per line on stdin; for "<project>: <what>" exactly "keyword: ..." then "description: ..."')
     add.set_defaults(run=cmd_add)
 
     show = sub.add_parser('show', help="print a day's block")

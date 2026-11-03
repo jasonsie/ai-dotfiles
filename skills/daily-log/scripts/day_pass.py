@@ -2,7 +2,7 @@
 """day_pass: the evidence the daily pass reads before it writes the journal's work entries.
 
   daily-log day [--date YYYY-MM-DD|yesterday|today] [--back N] [--cutoff H] [--rewrite]
-                [--root DIR] [--home DIR]
+                [--root DIR] [--home DIR] [--write]
 
 For each day from D-N to D (default: yesterday and the 3 days before it) that has sessions,
 prints the day's existing block, the keyword vocabulary (this and last month's `keyword:`
@@ -11,9 +11,15 @@ reflog moves, uncommitted files) and its sessions (CLI, span, title, what was as
 answered, files edited). The model running the pass (skills/daily-log/SKILL.md, "Day pass")
 then writes one entry per project for the work no entry covers, through `daily-log add`.
 
+With --write, what the LaunchAgent runs, the evidence is not printed but piped as the prompt
+into one headless Claude Code session, `claude -p "/daily-log day"` (Sonnet; the Bash tool
+alone, allowed for `daily-log add` only; 15 turns), whose reply goes to stdout. The pass thus
+runs exactly once, outside any tool timeout, and a day range without sessions starts no
+session at all. `claude` is found on PATH.
+
 A day runs from the cutoff hour (04:00) to the next day's, in local time. Sessions come from
 scripts/agent_sessions.py (Claude Code, Codex, Pi); Antigravity's transcripts name no working
-folder and are not read. Nothing here writes. Python 3.11+, stdlib only.
+folder and are not read. Nothing here writes the journal. Python 3.11+, stdlib only.
 """
 from __future__ import annotations
 
@@ -22,6 +28,7 @@ import calendar
 from datetime import date, timedelta
 from pathlib import Path
 import re
+import shutil
 import subprocess
 import sys
 
@@ -41,6 +48,11 @@ COMMITS = 15
 MOVES = 8
 GIT_TIMEOUT = 20
 KEYWORD = re.compile(r'^\s*-\s*keyword:\s*(.+?)\s*$')
+PROMPT = '/daily-log day'  # the skill, whose "Day pass" section the model follows
+# The writing session's leash: one tool, one command, few turns. --tools limits what exists,
+# --allowedTools what runs unasked; under a permissive permission mode only the first bites.
+CLAUDE_ARGS = ['-p', PROMPT, '--model', 'sonnet', '--tools', 'Bash',
+               '--allowedTools', 'Bash(daily-log add *)', '--max-turns', '15']
 
 
 def parse_date(value):
@@ -175,6 +187,16 @@ def render_day(day, root, home, cutoff, rewrite):
     return out
 
 
+def write(evidence):
+    """Run the writing session with `evidence` as the piped part of its prompt; its exit status."""
+    claude = shutil.which('claude')
+    if not claude:
+        print('daily-log day: claude not on PATH; nothing written', file=sys.stderr)
+        return 1
+    sys.stdout.flush()
+    return subprocess.run([claude, *CLAUDE_ARGS], input=evidence, text=True).returncode
+
+
 def main(argv=None):
     options = argparse.ArgumentParser(prog='daily-log day', description=__doc__,
                                       formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -184,6 +206,8 @@ def main(argv=None):
     options.add_argument('--rewrite', action='store_true', help='have the pass replace existing entries')
     options.add_argument('--root', help='journal root (default: $DAILY_LOGGER_ROOT or ' + daily_log.DEFAULT_ROOT + ')')
     options.add_argument('--home', help='home folder holding the session stores (default: ~)')
+    options.add_argument('--write', action='store_true',
+                         help='pipe the evidence into one claude -p session that writes the entries (the LaunchAgent)')
     args = options.parse_args(argv)
     root = daily_log.root_dir(args.root)
     home = Path(args.home).expanduser() if args.home else None
@@ -191,13 +215,16 @@ def main(argv=None):
     days = [last - timedelta(days=i) for i in range(max(args.back, 0), -1, -1)]
     rendered = [(day, render_day(day, root, home, args.cutoff, args.rewrite)) for day in days]
     with_sessions = [day.isoformat() for day, lines in rendered if lines]
-    print(f'# Day pass {days[0].isoformat()} to {last.isoformat()}; days with sessions: '
-          + (', '.join(with_sessions) or 'none'))
-    for _, lines in rendered:
-        if lines:
-            print()
-            print('\n'.join(lines))
-    return 0
+    head = (f'# Day pass {days[0].isoformat()} to {last.isoformat()}; days with sessions: '
+            + (', '.join(with_sessions) or 'none'))
+    body = ''.join('\n' + '\n'.join(lines) + '\n' for _, lines in rendered if lines)
+    print(head)
+    if not args.write:
+        print(body, end='')
+        return 0
+    if not with_sessions:
+        return 0  # nothing to read: no session to start
+    return write(head + '\n' + body)
 
 
 if __name__ == '__main__':

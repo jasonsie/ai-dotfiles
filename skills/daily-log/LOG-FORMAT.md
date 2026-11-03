@@ -72,7 +72,8 @@ reads by it.
 - `keyword:` one to three lowercase tags, comma-separated, reused from the journal before
   a new one is coined. `description:` one line, about 160 characters, what exists now and
   its state (merged, installed, uncommitted, in review). Nothing else: no `next:`, counts
-  or hashes. Box `[X]`.
+  or hashes. Box `[X]`. `daily-log add` refuses a work entry (a label with `: `) whose
+  lines are not exactly these two, and a merge that would leave two of either.
 - Written once a day by the day pass (`daily-log day`, the `daily-log` skill), or by hand.
 
 ## Study item line

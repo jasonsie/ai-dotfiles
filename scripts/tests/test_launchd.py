@@ -13,6 +13,8 @@ from support import ROOT, load
 import installer
 
 launchd = load('install/launchd.py')
+skills = load('install/skills.py')
+day_pass = load('../skills/daily-log/scripts/day_pass.py')
 
 CLAUDE = '/fake/bin/claude'
 LABEL = 'com.ai-dotfiles.daily-log-day'  # healthcheck.sh asks launchd for this name
@@ -83,12 +85,13 @@ class LaunchdTest(unittest.TestCase):
             status = launchd.main()
         return status, out.getvalue(), err.getvalue()
 
-    def test_the_command_is_the_daily_pass(self):
-        arguments = launchd.arguments(CLAUDE)
-        self.assertEqual(arguments, [CLAUDE, '-p', '/daily-log day', '--model', 'sonnet',
-                                     '--allowedTools', 'Bash(daily-log *),Read', '--max-turns', '40'])
-        # --allowedTools takes a list of values, so the prompt has to come first
-        self.assertLess(arguments.index('/daily-log day'), arguments.index('--allowedTools'))
+    def test_the_command_is_the_daily_pass_evidence_and_writer_both(self):
+        self.assertEqual(launchd.arguments(self.home), [f'{self.home}/.local/bin/daily-log', 'day', '--write'])
+        self.assertEqual(launchd.COMMAND, f"{skills.BIN}/daily-log")  # where skills.py links it
+        self.assertIn('daily-log', skills.COMMANDS)
+
+    def test_the_job_fires_when_the_journals_day_closes(self):
+        self.assertEqual((launchd.HOUR, launchd.MINUTE), (day_pass.CUTOFF, 0))
 
     def test_a_pyenv_version_folder_gives_way_to_the_shims_folder(self):
         root = self.home / 'pyenv'
@@ -132,17 +135,16 @@ class LaunchdTest(unittest.TestCase):
         self.assertEqual(self.data(), {
             'Label': LABEL,
             'ai-dotfiles': 'daily-log day',
-            'ProgramArguments': [CLAUDE, '-p', '/daily-log day', '--model', 'sonnet',
-                                 '--allowedTools', 'Bash(daily-log *),Read', '--max-turns', '40'],
-            'StartCalendarInterval': {'Hour': 7, 'Minute': 30},
+            'ProgramArguments': [f'{self.home}/.local/bin/daily-log', 'day', '--write'],
+            'StartCalendarInterval': {'Hour': 4, 'Minute': 0},
             'RunAtLoad': False,
             'WorkingDirectory': str(self.home),
-            'EnvironmentVariables': {'HOME': str(self.home), 'PATH': launchd.search_path(self.home)},
+            'EnvironmentVariables': {'HOME': str(self.home), 'PATH': launchd.search_path(self.home, CLAUDE)},
             'StandardOutPath': log,
             'StandardErrorPath': log,
         })
         path = self.data()['EnvironmentVariables']['PATH'].split(':')
-        self.assertEqual((path[0], path[-2:]), (f'{self.home}/.local/bin', ['/usr/bin', '/bin']))
+        self.assertEqual((path[0], path[1], path[-2:]), (f'{self.home}/.local/bin', '/fake/bin', ['/usr/bin', '/bin']))
         self.assertIn(launchd.python_folder(), path)
         self.assertEqual(self.logs.stat().st_mode & 0o777, 0o700)  # launchd will not make the folder
         self.assertEqual(self.calls, [])  # a temp home is not the user's: launchctl never runs
@@ -158,6 +160,10 @@ class LaunchdTest(unittest.TestCase):
             with self.subTest(executable), patch.object(launchd.sys, 'executable', executable):
                 wanted = [f'{self.home}/.local/bin', *middle, '/usr/bin', '/bin']
                 self.assertEqual(launchd.search_path(self.home), ':'.join(wanted))
+                wanted = [f'{self.home}/.local/bin', '/fake/bin', *middle, '/usr/bin', '/bin']
+                self.assertEqual(launchd.search_path(self.home, CLAUDE), ':'.join(wanted))
+                self.assertEqual(launchd.search_path(self.home, f'{self.home}/.local/bin/claude'),
+                                 ':'.join([f'{self.home}/.local/bin', *middle, '/usr/bin', '/bin']))  # no repeat
 
     def test_claude_is_recorded_as_found_and_made_absolute(self):
         real = self.home / 'versions/1.2.3/claude'
@@ -168,10 +174,12 @@ class LaunchdTest(unittest.TestCase):
         link.symlink_to(real)
         self.claude = str(link)
         self.install(apply=True)
-        self.assertEqual(self.data()['ProgramArguments'][0], str(link))  # the link, so updates are followed
+        folders = self.data()['EnvironmentVariables']['PATH'].split(':')
+        self.assertIn(str(link.parent), folders)  # the link's folder, so updates are followed
+        self.assertNotIn(str(real.parent), folders)
         self.claude = 'bin/claude'  # found through a relative PATH entry
         self.install(apply=True)
-        self.assertTrue(os.path.isabs(self.data()['ProgramArguments'][0]))
+        self.assertTrue(all(os.path.isabs(folder) for folder in self.data()['EnvironmentVariables']['PATH'].split(':')))
 
     def test_another_claude_rewrites_the_file_and_the_old_one_is_backed_up(self):
         self.install(apply=True)
@@ -180,7 +188,7 @@ class LaunchdTest(unittest.TestCase):
         self.assertEqual(self.install(), 1)
         self.assertEqual(self.plist.read_bytes(), old)
         self.assertEqual(self.install(apply=True), 1)
-        self.assertEqual(self.data()['ProgramArguments'][0], '/elsewhere/claude')
+        self.assertIn('/elsewhere', self.data()['EnvironmentVariables']['PATH'].split(':'))
         (backup,) = self.backups()
         self.assertEqual((backup / 'Library/LaunchAgents' / self.plist.name).read_bytes(), old)
         self.assertIn(f'Update: {self.plist}', self.output)
@@ -194,7 +202,7 @@ class LaunchdTest(unittest.TestCase):
                 edited = {**self.data(), 'StartCalendarInterval': {'Hour': 9, 'Minute': 0}}
                 self.plist.write_bytes(plistlib.dumps(edited, fmt=fmt))
                 self.assertEqual(self.install(apply=True), 1)
-                self.assertEqual(self.data()['StartCalendarInterval'], {'Hour': 7, 'Minute': 30})
+                self.assertEqual(self.data()['StartCalendarInterval'], {'Hour': 4, 'Minute': 0})
                 self.assertEqual(self.install(), 0)
 
     def test_a_plist_others_can_write_is_put_right(self):
