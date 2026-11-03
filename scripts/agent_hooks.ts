@@ -1,8 +1,8 @@
 // Pi extension for ai-dotfiles' hooks. Pi has no hook files, so this one extension plays them
-// all, handing each event to a feature's script in the shape scripts/agent_hooks.py reads:
-// worktree-guard before each tool call and when the session shuts down. Linked into
-// ~/.pi/agent/extensions/ by scripts/install/skills.py; the link resolves back to scripts/, so
-// the repo is one folder up.
+// all, handing each event to every feature's script in the shape scripts/agent_hooks.py reads:
+// worktree-guard and small-commits before each tool call, worktree-guard when the session shuts
+// down. Linked into ~/.pi/agent/extensions/ by scripts/install/skills.py; the link resolves back
+// to scripts/, so the repo is one folder up.
 // A failed call is ignored: the extension never blocks a session on its own.
 import { spawnSync } from "node:child_process";
 import { realpathSync } from "node:fs";
@@ -10,7 +10,10 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repo = dirname(dirname(realpathSync(fileURLToPath(import.meta.url))));
-const guard = join(repo, "skills", "worktree-guard", "scripts", "worktree_guard.py");
+const features = [
+  { script: join(repo, "skills", "worktree-guard", "scripts", "worktree_guard.py"), end: true, timeout: 60_000 },
+  { script: join(repo, "skills", "small-commits", "scripts", "small_commits.py"), end: false, timeout: 30_000 },
+];
 
 function ask(script: string, kind: string, payload: Record<string, unknown>, timeout = 10_000): Record<string, any> | undefined {
   try {
@@ -31,14 +34,19 @@ function session(ctx: any): Record<string, unknown> {
 }
 
 export default function (pi: any) {
-  const notes = new Map<string, string>(); // worktree-guard's word to the model, shown with the tool's result
+  const notes = new Map<string, string>(); // the features' words to the model, shown with the tool's result
 
   pi.on("tool_call", (event: any, ctx: any) => {
-    const reply = ask(guard, "pre", { ...session(ctx), tool_name: event.toolName ?? "", tool_input: event.input ?? {} }, 60_000);
-    if (!reply) return;
-    if (reply.block) return { block: true, reason: reply.reason };
-    if (reply.input && event.input) Object.assign(event.input, reply.input); // Pi: mutate the input in place
-    if (reply.note) notes.set(event.toolCallId, reply.note);
+    const said: string[] = [];
+    for (const feature of features) {
+      // Each feature sees the input as the one before it left it (worktree-guard may steer it).
+      const reply = ask(feature.script, "pre", { ...session(ctx), tool_name: event.toolName ?? "", tool_input: event.input ?? {} }, feature.timeout);
+      if (!reply) continue;
+      if (reply.block) return { block: true, reason: reply.reason };
+      if (reply.input && event.input) Object.assign(event.input, reply.input); // Pi: mutate the input in place
+      if (reply.note) said.push(reply.note);
+    }
+    if (said.length) notes.set(event.toolCallId, said.join("\n"));
   });
 
   pi.on("tool_result", (event: any) => {
@@ -49,6 +57,6 @@ export default function (pi: any) {
   });
 
   pi.on("session_shutdown", (_event: any, ctx: any) => {
-    ask(guard, "end", session(ctx));
+    for (const feature of features) if (feature.end) ask(feature.script, "end", session(ctx));
   });
 }

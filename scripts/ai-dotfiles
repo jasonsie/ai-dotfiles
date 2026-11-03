@@ -7,6 +7,7 @@
 #   ai-dotfiles uninstall [flags]   remove what points into this repo (scripts/uninstall.sh)
 #   ai-dotfiles check               verify live state (scripts/healthcheck.sh)
 #   ai-dotfiles worktree <command>  agents' linked worktrees: list, done, rm, prune, release, share
+#   ai-dotfiles commit check [args]  the size and message `git commit [args]` would get past the hook
 #   Flags pass through, e.g. --dry-run, --target=claude; see each script's --help.
 
 set -euo pipefail
@@ -20,7 +21,7 @@ while [ -L "$SELF" ]; do
 done
 SCRIPTS="$(cd "$(dirname "$SELF")" && pwd)"
 
-usage() { sed -n '2,10p' "$SELF" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,11p' "$SELF" | sed 's/^# \{0,1\}//'; }
 
 COMMAND="${1:-install}"
 case "$COMMAND" in
@@ -35,5 +36,6 @@ case "$COMMAND" in
   uninstall) exec bash "$SCRIPTS/uninstall.sh" "$@" ;;
   check) exec bash "$SCRIPTS/healthcheck.sh" "$@" ;;
   worktree) exec python3 "$SCRIPTS/../skills/worktree-guard/scripts/worktree_guard.py" "$@" ;;
+  commit) exec python3 "$SCRIPTS/../skills/small-commits/scripts/small_commits.py" "$@" ;;
   *) printf '[ERR] Unknown command: %s\n' "$COMMAND" >&2; usage >&2; exit 1 ;;
 esac
