@@ -6,13 +6,13 @@ description: Record what was done in the daily logger (the journal at ~/Document
 # Daily log
 
 One work entry per project per day, written once by the day pass (below) or by hand when
-Jason says "log it". A question answered in chat is not work.
+the user says "log it". A question answered in chat is not work.
 
 ```
 daily-log add --done "<project>: <what the day was about>" "keyword: <tags>" "description: <one line>"
 ```
 
-- Label: the project as Jason names it (`ai-dotfiles`, `CS vault`, `moodlens_web`), a colon,
+- Label: the project as the user names it (`ai-dotfiles`, `CS vault`, `moodlens_web`), a colon,
   what the day was about in a few words.
 - `keyword:` one to three lowercase tags, comma-separated; reuse a tag the journal already
   has before coining one.

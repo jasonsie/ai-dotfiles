@@ -18,11 +18,11 @@ the day block through its `daily-log` command.
    - Writes today's block by reserved slots: one new {item} (the floor), one weak {item} due for remediation, one solved {item} due for retention; an empty slot spills to new, and the key's daily cap bounds the total. Assignment lines are blacked out: no topic shown until tomorrow's reveal.
    {weekend_day}: weekend concluding session — no new {items}; {resolves} unlabeled cold re-do(s) drawn from this week's attempts (shaky first) + a week-recap block + one metrics row appended to the key's metrics file.
 
-3. Report to Jason, concisely:
+3. Report to the user, concisely:
    - Outcomes the parser applied (e.g. "<id>: weak — review due <date>", "<id>: review clean — graduated").
    - Today's assigned {items} EXACTLY as written to the log: id + name + kind (new/weak/solved) only. NEVER name the topic or pattern in the report — identifying it is part of the practice; it gets revealed tomorrow.
    - One-line reminder of the contract: mark each {item}'s own box when done ([x] clean, [~] shaky, [tutored] with help); leave it unchecked if untouched. No reply needed — tomorrow's run reads the file.
-   - He can still paste {paste_hint} here anytime for a {tutor}-style review.
+   - The user can still paste {paste_hint} here anytime for a {tutor}-style review.
    - On {weekend_day} also report the metrics row (attempted / clean / shaky / weak_open).
 
 Notes:

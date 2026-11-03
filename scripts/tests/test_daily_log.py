@@ -209,7 +209,7 @@ class JournalTest(unittest.TestCase):
         self.assertTrue(out.startswith('---\nname: dsa-tutor-daily\n'))
         self.assertIn('run --key dsa', out)
         self.assertIn('one new problem (the floor), one weak problem due', out)
-        self.assertIn("He can still paste a TypeScript solution here anytime for a leetcode-tutor-style review.", out)
+        self.assertIn("The user can still paste a TypeScript solution here anytime for a leetcode-tutor-style review.", out)
         self.assertTrue(out.endswith('- Keep the report concise.\n- Hards are parked.\n'))
         self.assertNotIn('{', out.replace('{notes-blank}', ''))
         code, out, _ = self.run_cli('tutor-daily', '--key', 'system-design', '--subject', 'System Design',
