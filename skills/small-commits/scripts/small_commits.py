@@ -343,3 +343,143 @@ def message_problems(message, given, large):
     if trailers.get(PART.lower()) and not PART_VALUE.match(trailers[PART.lower()]):
         problems.append(f'{PART}: is n/m, as in 2/4')
     return problems
+
+
+# --- the verdict -------------------------------------------------------------------------
+
+@dataclass(frozen=True)
+class Verdict:
+    size: Size | None
+    denied: tuple = ()   # reasons to block, in prose
+    note: str = ''       # a word to the model when the commit runs
+
+
+def listing(size, limit=5):
+    rows = [f'  {n:>5}  {path}' for path, n in size.files[:limit]]
+    if len(size.files) > limit:
+        rows.append(f'         ... {len(size.files) - limit} more')
+    return '\n'.join(rows)
+
+
+def judge(commit, cwd, allowed, state):
+    """The verdict on one commit: what blocks it and what to say. `allowed`: the command sets
+    ALLOW_LARGE_COMMIT. The session's state remembers the sizes it was warned about."""
+    if toplevel(cwd) is None or in_progress(cwd):
+        return Verdict(None)
+    size = measure(commit, cwd)
+    message = message_of(commit, cwd)
+    problems = [] if message is None or commit.fixup else message_problems(message, commit.trailers, size.lines > WALL)
+    denied, note = [], ''
+    count = f'{size.lines} lines across {len(size.files)} file{"s" if len(size.files) != 1 else ""}'
+    if size.lines > WALL:
+        if allowed:
+            note = f'small-commits: {count}, over {WALL}, let through on {OVERRIDE}.'
+        else:
+            denied.append(f'{count}: over {WALL}, the wall. Split it (load the small-commits skill); if it cannot '
+                          f'be split, ask the user and, with their go, rerun with {OVERRIDE}="<reason>" and a '
+                          f'{LARGE}: <reason> trailer.\n{listing(size)}')
+    elif size.lines > WARN:
+        warned = state.get(WARNED) if isinstance(state.get(WARNED), list) else []
+        if size.fingerprint in warned:
+            note = f'small-commits: {count}, over {WARN}, let through on retry.'
+        else:
+            state[WARNED] = (warned + [size.fingerprint])[-WARNED_KEPT:]
+            denied.append(f'{count}: over {WARN}. Split it into commits of one concern each (load the '
+                          f'small-commits skill), or rerun the same command to commit as is.\n{listing(size)}')
+    if problems:
+        denied.append('the message needs work: ' + '; '.join(problems) + '.')
+    return Verdict(size, tuple(denied), note)
+
+
+def decide(event, state):
+    if event.action != 'shell':
+        return None
+    command = command_of(event)
+    if 'commit' not in command:
+        return None
+    commits = commits_in(command)
+    if not commits:
+        return None
+    folder, allowed = shell_folder(event), bool(OVERRIDE_SET.search(command))
+    denied, notes = [], []
+    for commit in commits:
+        verdict = judge(commit, os.path.normpath(os.path.join(folder, commit.where)), allowed, state)
+        denied.extend(verdict.denied)
+        if verdict.note:
+            notes.append(verdict.note)
+    if denied:
+        return Deny('small-commits blocked this commit. ' + ' Also, '.join(denied))
+    return Note(' '.join(notes)) if notes else None
+
+
+def answer(cli, kind):
+    return lambda data: agent_hooks.call(cli, kind, data, decide, SESSIONS)
+
+
+def failed(error):
+    return Note(f'small-commits failed ({error}); this commit was not checked.')
+
+
+def cmd_hook(args):
+    return agent_hooks.serve(args.cli, args.kind, answer(args.cli, args.kind), on_error=failed)
+
+
+def cmd_check(args):
+    """What the hook would say to `git commit ARGS` run here, with the size by file."""
+    commit = Commit()
+    commit_options(commit, list(args), 0)
+    cwd = os.getcwd()
+    if toplevel(cwd) is None:
+        print('not in a git repository')
+        return 1
+    if in_progress(cwd):
+        print('a merge, cherry-pick, revert or rebase is in progress: git writes this commit; nothing to check')
+        return 0
+    verdict = judge(commit, cwd, bool(os.environ.get(OVERRIDE)), {})
+    size = verdict.size
+    assert size is not None
+    print(f'{size.lines} lines across {len(size.files)} file{"s" if len(size.files) != 1 else ""}'
+          f' (limit {WARN}, wall {WALL})')
+    if size.files:
+        print(listing(size, limit=len(size.files)))
+    for path in size.left_out:
+        print(f'   skip  {path}')
+    for reason in verdict.denied:
+        print(f'BLOCKED: {reason.splitlines()[0]}')
+    if message_of(commit, cwd) is None:
+        print('message: not given (-m or -F), not checked')
+    if not verdict.denied:
+        print('ok')
+    return 1 if verdict.denied else 0
+
+
+def parser():
+    top = argparse.ArgumentParser(prog='small-commits', description=__doc__,
+                                  formatter_class=argparse.RawDescriptionHelpFormatter)
+    sub = top.add_subparsers(dest='command', required=True)
+    hook = sub.add_parser('hook', help='the CLI hook: JSON on stdin')
+    hook.add_argument('kind', choices=('pre',))
+    hook.add_argument('--cli', choices=agent_hooks.CLIS, required=True)
+    hook.set_defaults(run=cmd_hook)
+    check = sub.add_parser('check', help="what the hook would say to `git commit ARGS` run here; ARGS are git "
+                                         "commit's own (-a, --amend, paths, -m MSG), passed through untouched")
+    check.set_defaults(run=None)
+    return top
+
+
+def main(argv=None):
+    argv = sys.argv[1:] if argv is None else list(argv)
+    if argv[:1] == ['check'] and argv[1:2] not in (['-h'], ['--help']):
+        return cmd_check(argv[1:])  # git commit's options are not ours to parse
+    is_hook = argv[:1] == ['hook']
+    try:
+        # A bad hook call must stay silent and exit 0: status 2 and stderr would steer the CLI.
+        with contextlib.redirect_stderr(io.StringIO() if is_hook else sys.stderr):
+            args = parser().parse_args(argv)
+    except SystemExit as error:
+        return 0 if is_hook else int(error.code or 0)
+    return args.run(args)
+
+
+if __name__ == '__main__':
+    sys.exit(main())

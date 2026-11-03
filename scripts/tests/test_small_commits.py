@@ -184,3 +184,149 @@ class MeasureTest(Repo):
         self.assertEqual(sc.measure(commit, fresh).lines, 2)
         commit.all = True
         self.assertEqual(sc.measure(commit, fresh).lines, 2)
+
+
+class HookTest(Repo):
+    def test_a_small_well_formed_commit_passes_in_every_cli(self):
+        self.write('b.py', lines=10)
+        self.stage()
+        for cli in sc.agent_hooks.CLIS:
+            self.assertIsNone(self.denied(self.hook(cli, f'git commit -m {shlex.quote(GOOD)}'), cli), cli)
+        self.assertIsNone(self.hook('claude', 'git status; ls'))
+
+    def test_the_message_is_checked_in_every_cli(self):
+        self.write('b.py', lines=10)
+        self.stage()
+        for cli in sc.agent_hooks.CLIS:
+            reason = self.denied(self.hook(cli, 'git commit -m "add b"'), cli)
+            self.assertIn('the message needs work', reason, cli)
+            self.assertIn('Why:, Scope:, Verified:', reason)
+        # Several -m are paragraphs; git reads trailers from the last one only.
+        reason = self.denied(self.hook('claude', "git commit -m 'feat(x): add' -m 'Why: a' -m 'Scope: b'"))
+        self.assertIn('missing trailers Why:, Verified:', reason)
+        reason = self.denied(self.hook('claude', "git commit -m 'feat(x): add' -m 'Why: a\nScope: b'"))
+        self.assertIn('missing trailer Verified:', reason)
+        self.assertIsNone(self.hook('claude', "git commit -m 'feat(x): add' -m 'Why: a\nScope: b\nVerified: none'"))
+        self.assertIsNone(self.hook('claude', HEREDOC))
+
+    def test_over_300_blocks_once_then_lets_the_same_commit_through(self):
+        self.write('b.py', lines=350)
+        self.stage()
+        command = f'git commit -m {shlex.quote(GOOD)}'
+        reason = self.denied(self.hook('claude', command))
+        self.assertIn('350 lines across 1 file: over 300', reason)
+        self.assertIn('  350  b.py', reason)
+        self.assertIn('small-commits skill', reason)
+        again = self.hook('claude', command)
+        self.assertIsNone(self.denied(again))
+        self.assertIn('let through on retry', self.note(again))
+        self.assertIn('over 300', self.denied(self.hook('claude', command, session='s2')))  # another session: warned anew
+        self.write('c.py', lines=20)  # the diff changed: warned again
+        self.stage()
+        self.assertIn('370 lines across 2 files', self.denied(self.hook('claude', command)))
+
+    def test_over_600_is_a_wall_the_user_opens(self):
+        self.write('b.py', lines=650)
+        self.stage()
+        command = f'git commit -m {shlex.quote(GOOD)}'
+        for _ in range(2):
+            reason = self.denied(self.hook('claude', command))
+            self.assertIn('over 600, the wall', reason)
+            self.assertIn('ALLOW_LARGE_COMMIT="<reason>"', reason)
+            self.assertIn('missing trailer Large-commit:', reason)
+        allowed = f'ALLOW_LARGE_COMMIT="vendored" git commit -m {shlex.quote(GOOD + chr(10) + "Large-commit: vendored")}'
+        reply = self.hook('claude', allowed)
+        self.assertIsNone(self.denied(reply))
+        self.assertIn('let through on ALLOW_LARGE_COMMIT', self.note(reply))
+        half = f'ALLOW_LARGE_COMMIT=1 git commit -m {shlex.quote(GOOD)}'  # the env alone: the trailer is still owed
+        self.assertIn('missing trailer Large-commit:', self.denied(self.hook('claude', half)))
+
+    def test_a_commit_git_writes_and_a_fixup_pass_untouched(self):
+        self.write('b.py', lines=10)
+        self.stage()
+        git(self.repo, 'commit', '-q', '-m', 'b')
+        git(self.repo, 'checkout', '-q', '-b', 'side', 'HEAD~1')
+        self.write('a.txt', 'side\n')
+        git(self.repo, 'commit', '-q', '-am', 'side')
+        git(self.repo, 'checkout', '-q', 'main')
+        self.write('a.txt', 'main\n')
+        git(self.repo, 'commit', '-q', '-am', 'main')
+        subprocess.run(['git', '-C', str(self.repo), 'merge', 'side'], capture_output=True)  # conflicts
+        self.assertTrue((self.repo / '.git/MERGE_HEAD').exists())
+        self.assertIsNone(self.hook('claude', 'git commit --no-edit'))
+        git(self.repo, 'merge', '--abort')
+        self.write('a.txt', 'fix\n')
+        self.stage()
+        self.assertIsNone(self.hook('claude', 'git commit --fixup HEAD'))
+        self.assertIsNone(self.hook('claude', 'git commit -m "no shape" --squash HEAD'))
+
+    def test_the_folder_follows_cd_and_dash_c(self):
+        self.write('b.py', lines=350)
+        self.stage()
+        outside = self.repo.parent
+        command = f'cd {shlex.quote(str(self.repo))} && git commit -m {shlex.quote(GOOD)}'
+        self.assertIn('over 300', self.denied(self.hook('claude', command, cwd=outside)))
+        command = f'git -C repo commit -m {shlex.quote(GOOD)}'
+        self.assertIn('over 300', self.denied(self.hook('codex', command, session='s3', cwd=outside), 'codex'))
+        self.assertIsNone(self.hook('claude', 'git commit -m x', cwd=outside))  # not a repository: nothing to say
+
+    def test_an_amend_without_trailers_is_sent_back(self):
+        self.write('b.py', lines=3)
+        self.stage()
+        reason = self.denied(self.hook('claude', 'git commit --amend --no-edit'))
+        self.assertIn('the subject is not', reason)  # HEAD's message, "init", is what --no-edit keeps
+        self.assertIsNone(self.hook('claude', f'git commit --amend -m {shlex.quote(GOOD)}'))
+
+    def test_a_failure_says_the_commit_was_not_checked(self):
+        broken = Path(tempfile.mkstemp()[1])  # the state "folder" is a file
+        self.addCleanup(broken.unlink)
+        self.write('b.py', lines=350)
+        self.stage()
+        data = {'session_id': 's', 'cwd': str(self.repo), 'tool_name': 'Bash',
+                'tool_input': {'command': f'git commit -m {shlex.quote(GOOD)}'}}
+        run = subprocess.run([sys.executable, str(SCRIPT), 'hook', 'pre', '--cli', 'claude'], input=json.dumps(data),
+                             capture_output=True, text=True, env={**os.environ, sc.ENV: str(broken)})
+        self.assertEqual((run.returncode, run.stderr), (0, ''))
+        self.assertIn('this commit was not checked', json.loads(run.stdout)['hookSpecificOutput']['additionalContext'])
+
+    def test_the_command_never_fails_or_speaks_outside_json(self):
+        for stdin, args in (('not json', ['hook', 'pre', '--cli', 'codex']), ('{}', ['hook', 'end', '--cli', 'claude']),
+                            ('{}', ['hook', 'pre'])):
+            run = subprocess.run([sys.executable, str(SCRIPT), *args], input=stdin, capture_output=True, text=True)
+            self.assertEqual((run.returncode, run.stderr), (0, ''), args)
+            if run.stdout.strip():
+                json.loads(run.stdout)
+
+
+class CheckTest(Repo):
+    def check(self, *args):
+        out = io.StringIO()
+        with redirect_stdout(out), patch('os.getcwd', return_value=str(self.repo)):
+            status = sc.main(['check', *args])
+        return status, out.getvalue()
+
+    def test_check_shows_the_size_by_file_and_the_verdict(self):
+        self.write('b.py', lines=350)
+        self.write('uv.lock', lines=5)
+        self.stage()
+        status, text = self.check('-m', 'add b')
+        self.assertEqual(status, 1)
+        self.assertIn('350 lines across 1 file (limit 300, wall 600)', text)
+        self.assertIn('  350  b.py', text)
+        self.assertIn('skip  uv.lock', text)
+        self.assertIn('BLOCKED: 350 lines', text)
+        self.assertIn('BLOCKED: the message needs work', text)
+        status, text = self.check()
+        self.assertIn('message: not given', text)
+        self.write('b.py', lines=30)
+        self.stage()
+        status, text = self.check('-m', GOOD)
+        self.assertEqual((status, text.strip().splitlines()[-1]), (0, 'ok'))
+
+    def test_check_outside_a_repository(self):
+        with patch('os.getcwd', return_value=str(self.repo.parent)), redirect_stdout(io.StringIO()):
+            self.assertEqual(sc.main(['check']), 1)
+
+
+if __name__ == '__main__':
+    unittest.main()
