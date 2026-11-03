@@ -68,7 +68,7 @@ case ":$PATH:" in
   *) fail "$HOME/.local/bin is not on PATH; ai-dotfiles only runs by its full path" ;;
 esac
 
-echo "-- launchd (the daily-log pass, 07:30 each day)"
+echo "-- launchd (the daily-log pass, 04:00 each day)"
 PLIST="$HOME/Library/LaunchAgents/com.ai-dotfiles.daily-log-day.plist"
 if ! command -v claude >/dev/null 2>&1; then
   skip "claude not on PATH: nothing to schedule"

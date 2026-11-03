@@ -188,6 +188,31 @@ class JournalTest(unittest.TestCase):
         self.assertEqual(self.week4.read_bytes(), before)
         self.assertIn('- [] G-DOC extracter: Obsidian-web-clipper\n', text)  # the other entries stay
 
+    def test_rewrite_leaves_the_project_one_entry_whatever_the_block_held(self):
+        text = self.week4.read_text()  # two ai-dotfiles entries, written before the rule, around another project
+        legacy = ('- [X] ai-dotfiles: guard\n\t- built\n\n- [X] moodlens: onboard\n\t- keyword: docs\n\t- description: report\n\n'
+                  '- [X] ai_dotfiles: public launch prep\n\t- README rewritten\n\t- license audit\n\n'
+                  '- [X] ai-dotfiles: a third\n\t- more\n')
+        text = text.replace('- [] G-DOC extracter: Obsidian-web-clipper\n', '- [] G-DOC extracter: Obsidian-web-clipper\n\n' + legacy)
+        self.week4.write_text(text)
+        for first in (True, False):  # the kept entry's label may match the first or none of them
+            with self.subTest(first=first):
+                self.week4.write_text(text)
+                label = 'ai-dotfiles: guard' if first else 'ai-dotfiles: guard, launch prep'
+                out = self.add('--date', '2026-10-23', '--done', '--rewrite', label, 'keyword: hooks', 'description: one entry')
+                block = daily_log.day_block(self.week4.read_text(), date(2026, 10, 23))
+                self.assertEqual(block.count('ai-dotfiles') + block.count('ai_dotfiles'), 1)
+                self.assertIn('- [] G-DOC extracter: Obsidian-web-clipper\n\n- [X] ' + label + '\n\t- keyword: hooks\n'
+                              '\t- description: one entry\n\n- [X] moodlens: onboard\n\t- keyword: docs\n\t- description: report\n', block)
+                self.assertNotIn('README rewritten', block)
+                self.assertNotIn('a third', block)
+                self.assertTrue(block.endswith('description: report\n'))  # no blank lines left behind
+                self.assertEqual(out, block)
+        before = self.week4.read_bytes()
+        self.add('--date', '2026-10-23', '--done', '--rewrite', label, 'keyword: hooks', 'description: one entry')
+        self.assertEqual(self.week4.read_bytes(), before)  # identical again: nothing written
+        self.assertIn('- [] leetcode\n\t- [ ] 72-Edit Distance(new)', self.week4.read_text())  # the rest of the file stays
+
     def test_other_projects_and_the_study_block_are_untouched_by_the_guard(self):
         self.add('--date', '2026-10-24', '--open', 'leetcode', stdin='\t- [ ] 1-Two Sum(new)\n')
         self.add('--date', '2026-10-24', '--done', 'reading: a book', 'keyword: books', 'description: read')

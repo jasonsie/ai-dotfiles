@@ -172,8 +172,8 @@ def entry_end(lines, index, end):
 
 def add_entry(text, day, label, sub_lines, done=False, if_absent=False, rewrite=False):
     """(new text, changed): `label` and its sub-bullets in `day`'s block. The same label merges;
-    another label for a project already there raises Duplicate, or replaces it with `rewrite`.
-    A work label's lines must be `keyword:` then `description:` (BadShape otherwise), before and
+    another label for a project already there raises Duplicate, or replaces it with `rewrite`,
+    which leaves the project one entry whatever the block held. A work label's lines must be `keyword:` then `description:` (BadShape otherwise), before and
     after a merge."""
     work = is_work(label)
     if work:
@@ -201,8 +201,18 @@ def add_entry(text, day, label, sub_lines, done=False, if_absent=False, rewrite=
             return text if text.endswith('\n') else text + '\n', False
         last = entry_end(lines, index, end)
         if rewrite:
+            removed = False  # other entries for the project, written before the one-per-project rule
+            for k in reversed([k for k, found in entries(lines, start, end) if k != index and key(found) == key(label)]):
+                stop = entry_end(lines, k, end)
+                cut = k - 1 if lines[k - 1].strip() == '' else k  # its blank line goes with it
+                del lines[cut:stop]
+                removed = True
+                if k < index:
+                    index -= stop - cut
+            end = block_end(lines, start)
+            last = entry_end(lines, index, end)
             wanted = [label_line, *sub_lines]
-            changed = lines[index:last] != wanted
+            changed = removed or lines[index:last] != wanted
             lines = lines[:index] + wanted + lines[last:]
             return '\n'.join(lines) + '\n', changed
         present = {line.rstrip() for line in lines[index + 1:last]}
