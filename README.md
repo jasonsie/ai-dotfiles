@@ -25,6 +25,7 @@ skill list to taste.
 | `skills/<name>/` | Shared skills. Skills adapted from other repos are pinned in `skills/skills.lock` with source, commit and license | Symlinked into `~/.claude/skills`, `~/.agents/skills` (Codex and Pi), `~/.gemini/config/skills` |
 | `skills/daily-log/` | The `daily-log` command, which writes a daily work journal, and the day pass that writes yesterday's entries from the CLIs' sessions | `~/.local/bin/daily-log`; a LaunchAgent, `~/Library/LaunchAgents/com.ai-dotfiles.daily-log-day.plist`, that runs the pass at 04:00 |
 | `skills/worktree-guard/` | A hook that moves a second session working in the same checkout into its own git worktree | Hook entries in each CLI's hook file (Codex runs it only after approval in `/hooks`); a Pi extension; `ai-dotfiles worktree` commands |
+| `skills/small-commits/` | A hook that gates `git commit` on size, subject and trailers | Hook entries in each CLI's hook file (Codex runs it only after approval in `/hooks`); a Pi extension; `ai-dotfiles commit check` |
 | `config/upstream-docs.json` | The documentation sources mirrored into `docs/upstream/` | Refreshed weekly by a GitHub Action |
 | `docs/upstream/` | Machine-written mirrors of each CLI's official docs and of Google's and Meta's style guides, with indexes | Read by agents through the `upstream-docs` skill; never installed |
 
@@ -55,6 +56,7 @@ ai-dotfiles update        # fast-forward this repo on main, then install
 ai-dotfiles uninstall     # remove every link and hook that points into this repo
 ai-dotfiles check         # healthcheck
 ai-dotfiles worktree ...  # list, merge or remove agents' linked worktrees
+ai-dotfiles commit check  # what the commit hook would say to a `git commit`
 ```
 
 Flags for `install`: `--dry-run` previews, `--target=<cli>` limits a run to one CLI,
@@ -90,12 +92,12 @@ yours. After an uninstall, deleting the clone breaks nothing.
 
 ## Skills included
 
-Thirty-seven skills install into every CLI. Most come from
+Thirty-eight skills install into every CLI. Most come from
 [mattpocock/skills](https://github.com/mattpocock/skills) (MIT), lightly adapted so the same
 file works in all four CLIs, and one from [affaan-m/ECC](https://github.com/affaan-m/ECC)
 (MIT). `skills/skills.lock` records each adaptation. The `which-skill` skill routes between
-them. Skills written for this repo include `daily-log`, `worktree-guard`, `upstream-docs`,
-`collect-docs`, `house-style`, `tutor` and `web-clipper`.
+them. Skills written for this repo include `daily-log`, `worktree-guard`, `small-commits`,
+`upstream-docs`, `collect-docs`, `house-style`, `tutor` and `web-clipper`.
 
 ## Verify a change
 
