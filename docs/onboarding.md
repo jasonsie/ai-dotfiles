@@ -54,7 +54,6 @@ ai_dotfiles/
 │   ├── how-it-works.md       ★ the mechanism and each CLI's paths
 │   ├── onboarding.md         this report, written by /onboard
 │   └── upstream/             machine-written docs mirror and skill catalogs
-├── .scratch/worktree-guard/  design decisions, prior art, CLI hook research
 ├── reference/                local only (.git/info/exclude): upstream checkouts
 └── .github/workflows/        ci.yml (tests, shellcheck); sync-cli-docs.yml
 ```
@@ -201,8 +200,8 @@ cron ──▶ sync job ──▶ docs mirror ──▶ mirror files ──▶ u
 | support a new CLI's hooks, or a tool name | `TOOLS`, `MATCHERS`, `read()`, `render()` in `scripts/agent_hooks.py` |
 | add a hooked skill | a `Feature` in `scripts/install/hooks.py`, a handler in `scripts/agent_hooks.ts` |
 | change when sessions clash or how they move | `decide()`, `clash()`, `steer()` in `skills/worktree-guard/scripts/worktree_guard.py` |
-| why worktree-guard is built this way | `.scratch/worktree-guard/decisions.md` |
-| change the nudge rules or its text | `on_stop()` and `NUDGE` in `skills/daily-log/scripts/daily_log.py` |
+| why worktree-guard is built this way | git history: `git log --oneline -- .scratch/worktree-guard` (decisions, prior art, CLI hook research) |
+| change the day pass's evidence or its writing session | `render_day()` and `CLAUDE_ARGS` in `skills/daily-log/scripts/day_pass.py` |
 | change the journal grammar | `skills/daily-log/LOG-FORMAT.md`, then `add_entry()` |
 | add or change a docs source | `config/upstream-docs.json`, `scripts/upstream/sync-upstream.py`, the `collect-docs` skill |
 | change the weekly PR report | `scripts/upstream/report-upstream.py`, `.github/workflows/sync-cli-docs.yml` |
