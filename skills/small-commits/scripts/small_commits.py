@@ -185,3 +185,102 @@ def command_of(event):
 def shell_folder(event):
     cwd = event.tool_input.get('Cwd') if event.cli == 'agy' else None
     return cwd if isinstance(cwd, str) and cwd else (event.folder or os.getcwd())
+
+
+# --- git ---------------------------------------------------------------------------------
+
+def git(cwd, *args, check=True, stdin=None):
+    run = subprocess.run(['git', '-C', str(cwd), *args], capture_output=True, text=True, input=stdin)
+    if run.returncode:
+        if check:
+            raise RuntimeError(f'git {" ".join(args[:2])}: {run.stderr.strip()}')
+        return None
+    return run.stdout
+
+
+def toplevel(cwd):
+    out = git(cwd, 'rev-parse', '--show-toplevel', check=False)
+    return out.strip() if out else None
+
+
+def in_progress(cwd):
+    """A merge, cherry-pick, revert or rebase waits for this commit: git writes it, not the agent."""
+    git_dir = Path(cwd, git(cwd, 'rev-parse', '--git-dir').strip())
+    return any((git_dir / name).exists() for name in IN_PROGRESS)
+
+
+def numstat(cwd, *args):
+    """[(path, added, deleted)] for `git diff --numstat ARGS`; binaries count None."""
+    out = git(cwd, 'diff', '--numstat', '-z', '-M', *args) or ''
+    parts, files, i = out.split('\0'), [], 0
+    while i < len(parts):
+        fields = parts[i].split('\t')
+        i += 1
+        if len(fields) < 3:
+            continue
+        added, deleted, path = fields[0], fields[1], '\t'.join(fields[2:])
+        if path == '' and i + 1 < len(parts):  # a rename: old and new paths follow
+            path, i = parts[i + 1], i + 2
+        files.append((path, None if added == '-' else int(added), None if deleted == '-' else int(deleted)))
+    return files
+
+
+def base_of(commit, cwd):
+    """The tree the commit is measured against: HEAD, or the parent on --amend; the empty tree
+    in a repository without commits."""
+    if commit.amend:
+        parent = git(cwd, 'rev-parse', '-q', '--verify', 'HEAD^', check=False)
+        return parent.strip() if parent else EMPTY_TREE
+    head = git(cwd, 'rev-parse', '-q', '--verify', 'HEAD', check=False)
+    return 'HEAD' if head else EMPTY_TREE
+
+
+def changes(commit, cwd):
+    """What `git commit` with these options would put in the commit, as numstat lines."""
+    base = base_of(commit, cwd)
+    if commit.pathspecs and not commit.include:  # -o, or paths alone: those paths as in the tree
+        return numstat(cwd, base, '--', *commit.pathspecs)
+    if commit.all:
+        return numstat(cwd, base)
+    staged = numstat(cwd, '--cached', base)
+    if commit.include and commit.pathspecs:  # -i: the index, plus those paths as in the tree
+        named = {path: line for path, *_ in (line for line in numstat(cwd, base, '--', *commit.pathspecs))
+                 for line in [(path, *_)]}
+        return [line for line in staged if line[0] not in named] + list(named.values())
+    return staged
+
+
+def skipped(top, paths):
+    """The paths a reviewer does not read: lockfiles, and what .gitattributes marks
+    `linguist-generated` or `-diff`."""
+    skip = {p for p in paths if any(fnmatch(Path(p).name, pattern) for pattern in LOCKFILES)}
+    rest = [p for p in paths if p not in skip]
+    if rest:
+        out = git(top, 'check-attr', '-z', '--stdin', 'linguist-generated', 'diff', stdin='\0'.join(rest) + '\0') or ''
+        parts = out.split('\0')
+        for k in range(0, len(parts) - 2, 3):
+            path, attr, value = parts[k:k + 3]
+            if (attr == 'linguist-generated' and value in ('set', 'true')) or (attr == 'diff' and value == 'unset'):
+                skip.add(path)
+    return skip
+
+
+@dataclass(frozen=True)
+class Size:
+    files: tuple    # (path, added + deleted) for every counted file, largest first
+    lines: int
+    left_out: tuple  # the paths not counted: binaries, lockfiles, generated
+
+    @property
+    def fingerprint(self):
+        return hashlib.sha1(repr(self.files).encode()).hexdigest()[:16]
+
+
+def measure(commit, cwd):
+    lines = changes(commit, cwd)
+    out = skipped(toplevel(cwd), [path for path, *_ in lines])
+    counted = sorted(((path, added + deleted) for path, added, deleted in lines
+                      if path not in out and added is not None and deleted is not None),
+                     key=lambda item: (-item[1], item[0]))
+    binaries = [path for path, added, deleted in lines if (added is None or deleted is None) and path not in out]
+    return Size(tuple(counted), sum(n for _, n in counted), tuple(sorted(out) + binaries))
