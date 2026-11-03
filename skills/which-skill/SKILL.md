@@ -111,6 +111,9 @@ has the reasoning and each CLI's commands.
 - **`small-commits`**: commit the way the hook accepts: under 300 changed lines, one
   concern, `type(scope): outcome` and the Why:, Scope:, Verified: trailers; the plan to
   show first, how to split, and what a block means.
+- **`approve`**: the user reviewed the branch and said "approve": commit, PR body, then
+  `ai-dotfiles approve` pushes, opens the PR, approves it as the repo's reviewer account,
+  tags the tip `archive/<name>`, merges and deletes the branch; what exit 3 asks for.
 
 ## Repository setup
 
