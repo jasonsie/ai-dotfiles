@@ -237,8 +237,12 @@ Run the script after both elements exist:
 ```
 
 ```javascript
-const summary = document.getElementById("delivery-summary");
-const button = document.getElementById("discuss-delivery");
+const summary = /** @type {HTMLElement} */ (
+  document.getElementById("delivery-summary")
+);
+const button = /** @type {HTMLButtonElement} */ (
+  document.getElementById("discuss-delivery")
+);
 
 button.hidden = typeof document.oai?.annotation?.request !== "function";
 
@@ -251,6 +255,7 @@ button.addEventListener("click", () => {
   });
 });
 ```
+
 
 Selecting **Explain more** asks the browser to open an annotation with the
 paragraph selected and an editable comment. The person can edit, save, and send it with
@@ -331,8 +336,12 @@ an `oai-annotation-container-text` attribute:
 Run this script after both elements exist:
 
 ```javascript
-const passage = document.getElementById("draft-passage");
-const button = document.getElementById("discuss-passage");
+const passage = /** @type {HTMLElement} */ (
+  document.getElementById("draft-passage")
+);
+const button = /** @type {HTMLButtonElement} */ (
+  document.getElementById("discuss-passage")
+);
 
 button.hidden = typeof document.oai?.annotation?.request !== "function";
 
@@ -347,6 +356,7 @@ button.addEventListener("click", () => {
   });
 });
 ```
+
 
 <div
   id="try-annotation-text-range"
@@ -452,9 +462,12 @@ the cards directly; selection attributes aren't required:
 Run this script after creating the preview:
 
 ```javascript
-const preview = document.getElementById("component-preview");
+const preview = /** @type {HTMLElement} */ (
+  document.getElementById("component-preview")
+);
 const annotation = document.oai?.annotation;
 
+/** @param {CustomEvent<{ callback: string; value: number | string }>} event */
 function previewSpacing(event) {
   const { callback, value } = event.detail;
   if (callback === "setCardPadding") {
@@ -462,6 +475,7 @@ function previewSpacing(event) {
   }
 }
 
+/** @type {{ dispose(): void } | undefined} */
 let registration;
 if (typeof annotation?.registerControls === "function") {
   preview.addEventListener("oaiannotationcontrolchange", previewSpacing);
@@ -490,6 +504,7 @@ function disposeAnnotationControls() {
   preview.removeEventListener("oaiannotationcontrolchange", previewSpacing);
 }
 ```
+
 
 <div
   id="try-annotation-spacing"
@@ -541,7 +556,9 @@ selection attributes or metadata. Run the script after the paragraph exists:
 ```
 
 ```javascript
-const draft = document.getElementById("email-draft");
+const draft = /** @type {HTMLElement} */ (
+  document.getElementById("email-draft")
+);
 const registration = document.oai?.annotation?.registerControls?.({
   targets: draft,
   controlsHeading: "Email options",
@@ -561,6 +578,7 @@ const registration = document.oai?.annotation?.registerControls?.({
   ],
 });
 ```
+
 
 This control doesn't need an event handler because it doesn't preview a page
 change. Omitting `currentValue` tells the browser to include the selected tone
@@ -747,8 +765,12 @@ and a stable object ID. Put the script after the canvas:
 ```
 
 ```javascript
-const canvas = document.getElementById("revenue-canvas");
-const context = canvas.getContext("2d");
+const canvas = /** @type {HTMLCanvasElement} */ (
+  document.getElementById("revenue-canvas")
+);
+const context = /** @type {CanvasRenderingContext2D} */ (
+  canvas.getContext("2d")
+);
 const bar = { x: 40, y: 60, width: 320, height: 100 };
 
 context.fillStyle = "#2563eb";
@@ -780,6 +802,7 @@ const surface = document.oai?.annotation?.registerSurface?.({
   },
 });
 ```
+
 
 <div
   id="try-annotation-canvas"
@@ -875,6 +898,7 @@ For the canvas above, define this function and add
 `renderSelection: renderRevenueSelection` to the `registerSurface()` options:
 
 ```javascript
+/** @param {{ hoveredId: string | null; selectedId: string | null }} selection */
 function renderRevenueSelection({ hoveredId, selectedId }) {
   context.clearRect(0, 0, canvas.width, canvas.height);
   context.fillStyle = "#2563eb";
@@ -890,6 +914,7 @@ function renderRevenueSelection({ hoveredId, selectedId }) {
   }
 }
 ```
+
 
 This callback redraws the bar with an outline while it's hovered or selected.
 When both IDs are `null`, it redraws the bar without an outline.
@@ -925,17 +950,21 @@ then run the script after it exists:
 ```
 
 ```javascript
-const button = document.getElementById("toggle-annotations");
+const button = /** @type {HTMLButtonElement} */ (
+  document.getElementById("toggle-annotations")
+);
 const annotation = document.oai?.annotation;
 
+/** @param {boolean} active */
 function renderMode(active) {
   button.textContent = active
     ? "Exit annotation mode"
     : "Enter annotation mode";
 }
 
+/** @param {CustomEvent<{ active: boolean }>} event */
 const onModeChange = (event) => renderMode(event.detail.active);
-const onClick = () => annotation.toggle(!annotation.isActive());
+const onClick = () => annotation?.toggle(!annotation.isActive());
 
 if (
   typeof annotation?.toggle === "function" &&
@@ -953,6 +982,7 @@ function cleanupAnnotationButton() {
   button.hidden = true;
 }
 ```
+
 
 `toggle()` inverts the mode. Pass `true` to ensure it's on or `false` to ensure
 it's off. Repeated requests with the same boolean are idempotent. Passing

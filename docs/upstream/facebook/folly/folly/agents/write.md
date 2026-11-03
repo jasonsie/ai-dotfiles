@@ -9,6 +9,9 @@ Resolve package paths relative to this file's directory.
 When writing or reviewing `CONTRIB.md` or `*.contrib.md`, follow
 `{FA}/write/contributor-notes.md`.
 
+When writing or reviewing a commit or diff Summary, follow
+`{FA}/write/commit-summary/author.md`, with or without critic-iterate.
+
 ## Critic-iterate
 
 To author prose under critic-iterate, follow `{FA}/write/prose/c-i-review.md`,
@@ -18,10 +21,6 @@ To prepare a prose fresh review, follow the generic base
 `{FA}/critic-iterate/fresh-review.md`, then the prose extension
 `{FA}/write/prose/c-i-fresh-review.md`. For a commit or diff message, then
 follow `{FA}/write/commit-summary/c-i-fresh-review.md`.
-
-To revise prose after a usable review, follow the generic base
-`{FA}/critic-iterate/revise.md`, then the prose extension
-`{FA}/write/prose/c-i-revise.md`.
 
 ## General maxims (apply to all prose)
 
@@ -90,21 +89,20 @@ The author must adopt a persona free from cognitive biases like rationalization
 
 ## Substance
 
-**Cut unneeded content; make the rest easy to read.** Keep only the facts and
-connections the reader needs for the artifact's purpose and their task. Use
-sources to get those facts right. Being true, related, or non-obvious is not
-enough to earn space.
+**Establish the reader's understanding before cutting.** Assume the intended
+reader's normal background, not knowledge of this artifact or its discussion.
+Explain the starting situation and connections needed to understand the point or
+use the text. For actions or behavior, say who does what and why before relying
+on names or shorthand. Use sources to get the facts right; a definition alone
+may leave a needed connection unexplained.
 
-Explain the selected content clearly. Then cut words that add nothing to meaning
-or flow. Preserve the concrete details and connections the reader needs to
-understand the point or do the task. Reread the whole passage after cuts, using
-only the reader's expected knowledge. A shorter version that is choppy or harder
-to follow is worse.
+Check that the reader can explain the starting situation and how the relevant
+parts relate from the text and their expected knowledge. Add only the missing
+facts or connections needed for that understanding. Then cut facts and words the
+reader's task does not need. Being true, related, or non-obvious is not enough
+to earn space. Reread the whole passage after cuts; a shorter version that is
+harder to follow is worse.
 
-- Assume the intended reader's normal background, but not this artifact or its
-  drafting history. State the question or problem and enough framing and
-  reasoning to follow the conclusion; process labels and bare verdicts do not
-  suffice.
 - Be direct: each word earns its place, but not telegraphic. Prose should read
   naturally.
 - Avoid wordiness: cut filler, hedging, and restatement (don't say the same
@@ -294,11 +292,12 @@ below — don't re-enumerate here.
 
 ## Iterate — inner loop, until convergence
 
-Run this loop only for commit messages selected for c-i. After convergence, run
-any required Fresh Review from `{FA}/critic-iterate.md`.
+Use the writing criteria below for every commit or diff message. When
+critic-iterate runs, apply them in its author cycle and follow its convergence,
+review and closure rules.
 
-Per round: explanation → shape → cut (including the test plan) → plain language
-→ cold re-read. Converge when a full round makes no edit.
+Under critic-iterate, repeat: explanation → shape → cut (including the test
+plan) → plain language → cold re-read, until a full round makes no edit.
 
 ### Cut test — per sentence
 
@@ -342,18 +341,19 @@ read alone.
 Commit Summaries usually don't need these sections:
 
 - **Roadmap / implementation status.** Track future work outside the commit.
-- **File-by-file / shape-of-diff.** Let the diff carry file shape.
+- **File inventories and change counts.** Let the diff carry these.
 - **"What survives" / mission-preserved.** Keep the invariant once, not as a
   section.
 
 ### Cold re-read and loop
 
-Cold re-read the WHOLE message after each round of cuts. If any paragraph scans
-as dense, jargon-heavy, or "I had to re-read that" — restart the loop.
+Under critic-iterate, cold re-read the WHOLE message after each round of cuts.
+If any paragraph scans as dense, jargon-heavy, or "I had to re-read that" —
+restart the loop.
 
-**Convergence = a full round that makes no edit.** Before declaring convergence,
-confirm every must-know fact named by the context packet is still locatable in
-the draft.
+For every finished Summary, check it against
+`{FA}/write/commit-summary/author.md`. If a context packet was supplied, confirm
+its "Reader must know" facts remain clear in the message.
 
 ### Banned patterns
 
@@ -363,8 +363,8 @@ passes the sentence Cut test, and lead with the content that earns it.
 - Empirical checks in Summary prose: "we verified that …", "tested that …", "no
   production caller actually depends on …". These are Test Plan bullets, not
   Summary prose.
-- Shape-of-diff: "Source diff is N lines per file", "this extracts ... into a
-  helper", "renamed parameter X to Y", "the 13k-line diff is mechanical".
+- Change counts and mechanical inventories: "Source diff is N lines per file",
+  "renamed parameter X to Y", "the 13k-line diff is mechanical".
 - Jargon that hides the actor, action, or outcome: "enables analysis of",
   "supports future extensibility", "provides a robust foundation". State the
   concrete outcome instead.

@@ -14,13 +14,13 @@ Pages: 34
 | writing C++ in a folly-style library: coding and documentation style | [folly/folly/CODING_GUIDELINES.md](folly/folly/CODING_GUIDELINES.md) | 2 |
 | loading folly's writing rule package | [folly/folly/agents/write.loader.md](folly/folly/agents/write.loader.md) | 1 |
 | writing prose, contributor notes and commit summaries (folly's writing rule package) | [folly/folly/agents/write.md](folly/folly/agents/write.md) | 22 |
-| folly writing rules: author and review checklists for prose and commit summaries | [folly/folly/agents/write/commit-summary/c-i-author.md](folly/folly/agents/write/commit-summary/c-i-author.md) | 2 |
+| folly writing rules: author and review checklists for prose and commit summaries | [folly/folly/agents/write/commit-summary/author.md](folly/folly/agents/write/commit-summary/author.md) | 2 |
+| folly writing rules: author and review checklists for prose and commit summaries | [folly/folly/agents/write/commit-summary/c-i-author.md](folly/folly/agents/write/commit-summary/c-i-author.md) | 1 |
 | folly writing rules: author and review checklists for prose and commit summaries | [folly/folly/agents/write/commit-summary/c-i-fresh-review.md](folly/folly/agents/write/commit-summary/c-i-fresh-review.md) | 1 |
 | folly writing rules: author and review checklists for prose and commit summaries | [folly/folly/agents/write/contributor-notes.md](folly/folly/agents/write/contributor-notes.md) | 3 |
-| folly writing rules: author and review checklists for prose and commit summaries | [folly/folly/agents/write/prose/c-i-author.md](folly/folly/agents/write/prose/c-i-author.md) | 1 |
+| folly writing rules: author and review checklists for prose and commit summaries | [folly/folly/agents/write/prose/c-i-author.md](folly/folly/agents/write/prose/c-i-author.md) | 2 |
 | folly writing rules: author and review checklists for prose and commit summaries | [folly/folly/agents/write/prose/c-i-fresh-review.md](folly/folly/agents/write/prose/c-i-fresh-review.md) | 2 |
 | folly writing rules: author and review checklists for prose and commit summaries | [folly/folly/agents/write/prose/c-i-review.md](folly/folly/agents/write/prose/c-i-review.md) | 1 |
-| folly writing rules: author and review checklists for prose and commit summaries | [folly/folly/agents/write/prose/c-i-revise.md](folly/folly/agents/write/prose/c-i-revise.md) | 1 |
 
 ## hhvm (`master`, PHP-3.01)
 
@@ -78,7 +78,7 @@ Pages: 34
 | FBOSS patterns: agent, contributing, general, platform config, SAI SDK, testing, Thrift/COW/FSDB | [fboss/fboss/skills/fboss-code-standards/references/general-patterns.md](fboss/fboss/skills/fboss-code-standards/references/general-patterns.md) | 9 |
 | FBOSS patterns: agent, contributing, general, platform config, SAI SDK, testing, Thrift/COW/FSDB | [fboss/fboss/skills/fboss-code-standards/references/platform-config-patterns.md](fboss/fboss/skills/fboss-code-standards/references/platform-config-patterns.md) | 2 |
 | FBOSS patterns: agent, contributing, general, platform config, SAI SDK, testing, Thrift/COW/FSDB | [fboss/fboss/skills/fboss-code-standards/references/sai-sdk-patterns.md](fboss/fboss/skills/fboss-code-standards/references/sai-sdk-patterns.md) | 7 |
-| FBOSS patterns: agent, contributing, general, platform config, SAI SDK, testing, Thrift/COW/FSDB | [fboss/fboss/skills/fboss-code-standards/references/testing-patterns.md](fboss/fboss/skills/fboss-code-standards/references/testing-patterns.md) | 11 |
+| FBOSS patterns: agent, contributing, general, platform config, SAI SDK, testing, Thrift/COW/FSDB | [fboss/fboss/skills/fboss-code-standards/references/testing-patterns.md](fboss/fboss/skills/fboss-code-standards/references/testing-patterns.md) | 12 |
 | FBOSS patterns: agent, contributing, general, platform config, SAI SDK, testing, Thrift/COW/FSDB | [fboss/fboss/skills/fboss-code-standards/references/thrift-cow-fsdb-patterns.md](fboss/fboss/skills/fboss-code-standards/references/thrift-cow-fsdb-patterns.md) | 2 |
 
 ## astryx (`main`, MIT)

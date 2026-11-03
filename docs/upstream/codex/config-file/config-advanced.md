@@ -183,8 +183,7 @@ Set `project_root_markers = []` to skip searching parent directories and treat t
 ## Custom model providers
 
 If your organization provides a model gateway, follow
-[Sign in with ChatGPT through a gateway](https://learn.chatgpt.com/docs/enterprise/sign-in-with-chatgpt-through-a-gateway)
-or [Use API/provider credentials](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway)
+[Connect to a gateway](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway)
 for client setup and verification. For organization-wide deployment, see
 [Roll out a gateway](https://learn.chatgpt.com/docs/enterprise/roll-out-a-gateway).
 
@@ -234,6 +233,14 @@ Add request headers when needed:
 http_headers = { "X-Example-Header" = "example-value" }
 env_http_headers = { "X-Example-Features" = "EXAMPLE_FEATURES" }
 ```
+
+For browser sign-in through your organization's identity provider, use
+[native gateway OAuth](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway#use-native-gateway-oauth).
+Configure `[model_providers.<id>.gateway_oauth]` with the authorization and token
+URLs, public client ID, and token delivery settings. This works with
+`requires_openai_auth = false`; ChatGPT sign-in, PowerShell, the Azure CLI, and
+an external credential helper aren't required. The gateway must accept the OAuth
+token in the configured cookie or custom header.
 
 Use command-backed authentication when a provider needs Codex to fetch bearer tokens from an external credential helper:
 
@@ -698,26 +705,42 @@ Example `notify.py` (truncated) that reacts to `agent-turn-complete`:
 
 ```python
 #!/usr/bin/env python3
-import json, subprocess, sys
+import argparse
+import json
+import subprocess
+import sys
+
 
 def main() -> int:
-    notification = json.loads(sys.argv[1])
+    parser = argparse.ArgumentParser(
+        description="Show a Codex turn-completion notification on macOS."
+    )
+    parser.add_argument("notification", type=json.loads, help="Codex notification JSON")
+    notification = parser.parse_args().notification
     if notification.get("type") != "agent-turn-complete":
         return 0
     title = f"Codex: {notification.get('last-assistant-message', 'Turn Complete!')}"
     message = " ".join(notification.get("input-messages", []))
-    subprocess.check_output([
-        "terminal-notifier",
-        "-title", title,
-        "-message", message,
-        "-group", "codex-" + notification.get("thread-id", ""),
-        "-activate", "com.googlecode.iterm2",
-    ])
+    subprocess.check_output(
+        [
+            "terminal-notifier",
+            "-title",
+            title,
+            "-message",
+            message,
+            "-group",
+            "codex-" + notification.get("thread-id", ""),
+            "-activate",
+            "com.googlecode.iterm2",
+        ]
+    )
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())
 ```
+
 
 The script receives a single JSON argument. Common fields include:
 

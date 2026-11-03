@@ -5,37 +5,6 @@
 
 > For the complete documentation index, see [llms.txt](https://learn.chatgpt.com/llms.txt). Markdown versions of documentation pages are available by appending `.md` to the page URL.
 
-<span
-  id="does-turning-off-library-file-sharing-remove-existing-access"
-  data-localization-body-anchor
-/>
-
-
-
-
-<span
-  id="how-should-we-handle-malicious-incoming-content"
-  data-localization-body-anchor
-/>
-
-<span
-  id="how-can-we-reduce-data-exfiltration-risk"
-  data-localization-body-anchor
-/>
-
-<span
-  id="is-enterprise-data-used-to-train-models"
-  data-localization-body-anchor
-/>
-
-<span
-  id="what-if-information-was-shared-unintentionally"
-  data-localization-body-anchor
-/>
-
-
-
-
 ## What is ChatGPT Space?
 
 ChatGPT Space (formerly Library) brings together pages, slide decks, uploaded files, and shared content so people and agents can collaborate. Teams can draft documents, [edit pages](https://learn.chatgpt.com/docs/space/pages#revise-the-content), [create presentations](https://learn.chatgpt.com/docs/space/getting-started#create-and-refine-slides), or [ask ChatGPT for revisions](https://learn.chatgpt.com/docs/space/agents#start-with-a-bounded-request).
@@ -54,10 +23,8 @@ An Admin role alone does not grant [sensitive compliance access](https://help.op
 
 
 
-<span
-  id="what-if-a-file-will-not-save-or-upload"
-  data-localization-body-anchor
-/>
+
+
 
 
 

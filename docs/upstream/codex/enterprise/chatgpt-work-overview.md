@@ -56,10 +56,8 @@ See [Code and shell sandboxing](https://learn.chatgpt.com/docs/sandboxing?surfac
 
 Local computer access with Work Cloud applies only to tasks created after you enable sync. Existing tasks, including tasks in projects, keep their original mode: locally only, or in the cloud without access to local files. Start a new task to use this feature.
 
-<span
-  id="enable-and-govern-local-computer-access"
-  data-localization-body-anchor
-/>
+
+
 
 ## Enable and govern Local computer access with Work Cloud
 

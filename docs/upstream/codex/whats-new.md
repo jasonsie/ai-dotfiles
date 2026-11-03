@@ -9,6 +9,30 @@ For every versioned update, bug fix, and minor improvement, see the [ChatGPT and
 
 
 
+## [October 26–30, 2026](https://learn.chatgpt.com/docs/whats-new/october-26-30-2026)
+
+
+
+
+### [Text your dot](https://learn.chatgpt.com/docs/whats-new/dots-october-28-2026)
+
+Reach your dot through iMessage or RCS on Android for one-to-one conversations
+with text, photos, and voice messages. Texting is rolling out in beta to ChatGPT
+Pro users in the U.S.
+
+
+
+
+### Use GPT-6.1 Terra for visual reasoning and computer use
+
+[GPT-6.1 Terra](https://learn.chatgpt.com/docs/models?surface=app#app-gpt-61-terra) is now available in ChatGPT Work
+and Codex on Plus, Pro, Business, Enterprise, and Edu plans. This fast, efficient model for professional work combines
+strong image understanding with precise computer use. Match product photos to
+catalog entries, review design assets, and act on what you find across your
+browser, desktop, and apps.
+
+[Read the full update →](https://learn.chatgpt.com/docs/whats-new/october-26-30-2026)
+
 ## October 12–16, 2026
 
 
@@ -177,7 +201,7 @@ Add sidebar apps, panels, editors, and forms to ChatGPT. Composer mentions requi
 
 ### MCP Events
 
-Let users ask ChatGPT to act on updates from your MCP server. Requires MCP 2.0 and webhook delivery.
+Let users ask ChatGPT to act on updates from your MCP server. ChatGPT supports webhook delivery.
 
 [Build event subscriptions](https://developers.openai.com/plugins/build/mcp-events)
 
@@ -362,7 +386,7 @@ Add [ChatGPT sign-in and eligible plan usage](https://developers.openai.com/siwc
 
 ### Respond to MCP events
 
-Build [webhook subscriptions](https://developers.openai.com/plugins/build/mcp-events) so users can ask ChatGPT to act on updates from your MCP server. Requires MCP 2.0.
+Build [webhook subscriptions](https://developers.openai.com/plugins/build/mcp-events) so users can ask ChatGPT to act on updates from your MCP server.
 
 
 

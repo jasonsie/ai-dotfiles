@@ -9,10 +9,8 @@ For current workspace setup, permissions, and availability, see
   [Managing ChatGPT Sites for your workspace](https://help.openai.com/en/articles/20001338-managing-chatgpt-sites-for-your-workspace) 
   in the Help Center.
 
-<span
-  id="what-costs-and-limits-should-we-plan-for"
-  data-localization-body-anchor
-/>
+
+
 
 
 
@@ -62,10 +60,8 @@ For hosting and processing providers, see OpenAI's [sub-processor list](https://
 
 
 
-<span
-  id="enable-sites-and-choose-sharing-permissions"
-  data-localization-body-anchor
-/>
+
+
 
 
 
@@ -119,30 +115,22 @@ For example, a request tracker might let every workspace member open the site wh
 
 
 
-<span
-  id="enable-tenant-access-to-connected-apps"
-  data-localization-body-anchor
-/>
 
 
 
 
-<span
-  id="check-tenant-access-if-plugins-are-blocked"
-  data-localization-body-anchor
-/>
 
 
 
 
-<span
-  id="allow-an-additional-destination-for-one-site"
-  data-localization-body-anchor
-/>
-<span
-  id="credentials-and-connected-service-access"
-  data-localization-body-anchor
-/>
+
+
+
+
+
+
+
+
 
 Creating or sharing a site does not itself authorize connected-app access. Review organization approval, plugin settings, and each visitor's connected account and permissions in the [Help Center connected-app guidance](https://help.openai.com/en/articles/20001338-managing-chatgpt-sites-for-your-workspace).
 
@@ -162,14 +150,10 @@ Also check the experience when a visitor does not grant the requested connection
 
 
 
-<span
-  id="workspace-visibility-and-audit-records"
-  data-localization-body-anchor
-/>
-<span
-  id="publishing-approval-and-network-controls"
-  data-localization-body-anchor
-/>
+
+
+
+
 
 
 
@@ -246,16 +230,12 @@ To review available workspace controls or troubleshoot access, follow the [Help 
 
 
 
-<span
-  id="certifications-encryption-and-customer-managed-keys"
-  data-localization-body-anchor
-/>
 
 
-<span
-  id="applicable-terms-and-data-processing-agreements"
-  data-localization-body-anchor
-/>
+
+
+
+
 
 
 
@@ -278,10 +258,8 @@ For responsibilities and privacy guidance, review these resources:
 
 
 
-<span
-  id="what-happens-when-a-site-is-deleted-or-an-owner-leaves"
-  data-localization-body-anchor
-/>
+
+
 
 <ToggleSection title="How should I plan an ownership handoff or site retirement?">
 
@@ -289,10 +267,8 @@ Before an owner changes roles or leaves, identify who will maintain the site and
 
 </ToggleSection>
 
-<span
-  id="how-long-is-site-data-retained-including-backups"
-  data-localization-body-anchor
-/>
+
+
 
 <ToggleSection title="Where can I confirm retention and deletion requirements?">
 
@@ -300,10 +276,8 @@ For retention or deletion questions, [contact OpenAI Support](https://help.opena
 
 </ToggleSection>
 
-<span
-  id="how-do-i-report-an-access-issue-or-incident"
-  data-localization-body-anchor
-/>
+
+
 
 <ToggleSection title="How do I report an access issue?">
 

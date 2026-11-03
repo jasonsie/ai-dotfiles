@@ -17,6 +17,7 @@ The parent agent calls the `invoke_subagent` tool to spawn a new concurrent sess
 *   **Context isolation**: The subagent runs using the specified model tier but does not inherit the parent’s existing conversation history (context window), starting with a clean slate.
 *   **Execution**: Once invoked, the subagent immediately begins executing its task. A parent agent can invoke multiple subagents concurrently.
 *   **Monitoring**: You can directly monitor the progress of any subagent by clicking into its conversation in the subagent panel or pressing `Alt+J` in the CLI.
+*   **Direct messages**: To give a subagent new instructions without going through the parent agent, open its conversation and type in its message box. Refer to [Mentions and quoting](/docs/at-mentions).
 
 ### Built-in subagents
 
@@ -148,19 +149,19 @@ Note
 
 Invoking [`/boost`](/docs/boost) launches a three-tier multi-agent reasoning hierarchy (`Orchestrator` -> `DeepCoder` / `DeepInvestigator` coordinators -> isolated execution workers). It tackles tough concurrency bugs, algorithmic challenges, and non-trivial refactoring within interactive coding sessions (seconds to hours) with independent verification loops. Learn more in the [Boost documentation](/docs/boost).
 
-#### Multi-agent teamwork (`/teamwork-preview`)
+#### Multi-agent teamwork (`/teamwork`)
 
 Note
 
-**Plan availability**: The `/teamwork-preview` command is available on **paid plans** across the Google Antigravity App and the Antigravity CLI.
+**Plan availability**: The `/teamwork` command is available on **paid plans** across the Google Antigravity App and the Antigravity CLI.
 
-Using [`/teamwork-preview`](/docs/teamwork) coordinates a team of specialized AI agents designed for large software projects, multi-file refactoring, and complex research. The team handles milestone decomposition, parallel implementation, and independent verification checks, allowing you to define the high-level goals while the platform manages agent coordination. Learn more in the [Teamwork documentation](/docs/teamwork).
+Using [`/teamwork`](/docs/teamwork) coordinates a team of specialized AI agents designed for large software projects, multi-file refactoring, and complex research. The team handles milestone decomposition, parallel implementation, and independent verification checks, allowing you to define the high-level goals while the platform manages agent coordination. Learn more in the [Teamwork documentation](/docs/teamwork).
 
 ## Antigravity CLI
 
 ### Asynchronous execution model
 
-To maximize developer velocity, Antigravity CLI leverages a multi-threaded asynchronous execution architecture. Instead of locking your terminal session during long-running builds, massive codebase search sweeps, or complex multi-file edits, the primary agent delegates these operations to parallel **subagents** or background **tasks**.
+To maximize developer velocity, Antigravity CLI leverages a multi-threaded asynchronous execution architecture. Instead of locking your terminal session during long-running builds, massive codebase search sweeps, or complex multi-file edits, the primary agent delegates these operations to parallel **subagents** or background **tasks**. The main agent decides which tools and permissions each subagent gets, including whether it can use MCP tools and whether it can write files.
 
 This delegation model ensures you never have to wait on high-latency AI processes. You can continue drafting code, submitting prompts, or inspecting files while multiple autonomous background threads execute validation tasks in parallel.
 
@@ -205,6 +206,10 @@ To inspect the inner reasoning, thoughts, and logs of a specific background agen
 3.  Inspect the subagent’s entire reasoning log, including its private internal thoughts, tool calls, and execution outputs.
 4.  Press Esc to exit and return to the main Agent Manager list.
 
+### Sending a message to a subagent
+
+To give a subagent new instructions without going through the parent agent, start your prompt with `@` followed by the subagent’s name and your message, such as `@research:API-Key-Header-Researcher Also check the tests.` Refer to [Mentions and quoting](/docs/at-mentions?tab=cli).
+
 ### Monitoring background tasks with `/tasks`
 
 For non-agentic background operations, such as direct shell commands, testing suites, or simple background queries initiated using `/btw`, use the `/tasks` command:
@@ -242,7 +247,7 @@ To authorize an agent action immediately without leaving your active workspace:
 Explore related documentation and guides:
 
 *   **[Boost deep reasoning (`/boost`)](/docs/boost)**: Explore on-demand multi-agent reasoning.
-*   **[Teamwork agent teams (`/teamwork-preview`)](/docs/teamwork)**: Launch collaborative multi-agent teams for long-horizon projects.
+*   **[Teamwork agent teams (`/teamwork`)](/docs/teamwork)**: Launch collaborative multi-agent teams for long-horizon projects.
 *   **[Settings, rendering, and keybindings](/docs/settings)**: Customize key maps, buffering, and JSON rules.
 *   **[Permissions and sandbox](/docs/sandbox)**: Enforce security containment rings on background processes.
 *   **[Plugins and skills](/docs/plugins)**: Create your own custom skills and slash commands.

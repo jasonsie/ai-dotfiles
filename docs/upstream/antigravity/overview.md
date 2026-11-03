@@ -15,7 +15,7 @@ agy · v1.2+
 
 Antigravity CLITerminal client
 
-5 IDEs
+6 IDEs
 
 For IDEsEditor extensions
 
@@ -330,11 +330,11 @@ SDK
 | --- | --- | --- | --- | --- |
 | Desktop application |  |  |  |  |
 | Terminal user interface (TUI) |  |  |  |  |
-| [Editor extensions (VS Code, JetBrains, VS, Zed, Xcode)](/docs/ide/extensions/) |  |  |  |  |
+| [Editor extensions (VS Code, JetBrains, VS, Zed, Xcode, Eclipse)](/docs/ide/extensions/) |  |  |  |  |
 | [Programmatic Python SDK](/docs/sdk/overview/) |  |  |  |  |
 | [Remote control & headless execution](/docs/remote-control/) |  |  |  |  |
 | [Workspace & Git worktree isolation](/docs/projects/) |  |  |  |  |
-| [Multi-agent swarms (/teamwork-preview)](/docs/teamwork/) |  |  |  |  |
+| [Multi-agent swarms (/teamwork)](/docs/teamwork/) |  |  |  |  |
 | [Deep reasoning mode (/boost)](/docs/boost/) |  |  |  |  |
 | [Interactive visual artifacts & diffs](/docs/artifacts/) |  |  |  |  |
 | [Sandboxed Chromium browser automation](/docs/ide/browser/) |  |  |  |  |

@@ -5,12 +5,14 @@ Antigravity CLI and IDE docs: agent settings, rules, skills, MCP, artifacts, bro
 
 Consult through the `upstream-docs` skill (`find`, `outline`, `show`): read a section, not a file.
 
-Pages: 86
+Pages: 91
 
 - [agent-settings.md](agent-settings.md): Learn about Agent settings.
 - [artifact-review.md](artifact-review.md): Learn about Artifact review.
 - [artifacts.md](artifacts.md): Learn about Artifacts.
+- [at-mentions.md](at-mentions.md): Learn about Mentions and quoting.
 - [boost.md](boost.md): Learn about Boost deep reasoning (/boost).
+- [build-plugins.md](build-plugins.md): Learn about Build plugins.
 - [build-with-google.md](build-with-google.md): Learn about Build with Google.
 - [changelog.md](changelog.md): Learn about Changelog.
 - [cli/artifacts.md](cli/artifacts.md): Learn about Reviewing artifacts.
@@ -31,7 +33,6 @@ Pages: 86
 - [cli/commands/voice.md](cli/commands/voice.md): Learn about Voice dictation (/voice).
 - [cli/conversations.md](cli/conversations.md): Learn about Managing conversations.
 - [cli/credits.md](cli/credits.md): Learn about CLI AI credits.
-- [cli/features.md](cli/features.md): Learn about Features.
 - [cli/gcli-migration.md](cli/gcli-migration.md): Learn about Migration.
 - [cli/headless.md](cli/headless.md): Learn about Headless mode.
 - [cli/modes.md](cli/modes.md): Learn about Choose an execution mode.
@@ -43,10 +44,12 @@ Pages: 86
 - [cli/using.md](cli/using.md): Learn about CLI settings and tips.
 - [cli/vim-editor-mode.md](cli/vim-editor-mode.md): Learn about Vim editor mode.
 - [commands/browser.md](commands/browser.md): Learn about Browser command (/browser).
+- [commands/generative-ui.md](commands/generative-ui.md): Learn about Generative UI command (/generative_ui).
 - [commands/goal.md](commands/goal.md): Learn about Goal command (/goal).
 - [commands/grill-me.md](commands/grill-me.md): Learn about Grill me command (/grill-me).
 - [commands/learn.md](commands/learn.md): Learn about Learn command (/learn).
 - [commands/schedule.md](commands/schedule.md): Learn about Schedule command (/schedule).
+- [customization-discovery.md](customization-discovery.md): Learn about Customization discovery.
 - [enterprise.md](enterprise.md): Learn about Enterprise.
 - [faq.md](faq.md): Learn about FAQ.
 - [features.md](features.md): Learn about Feature overview.
@@ -74,6 +77,7 @@ Pages: 86
 - [plugins.md](plugins.md): Learn about Plugins.
 - [projects.md](projects.md): Learn about Projects.
 - [remote-control.md](remote-control.md): Learn about Remote Control.
+- [review-changes.md](review-changes.md): Learn about Review changes.
 - [rules.md](rules.md): Learn about Rules.
 - [sandbox.md](sandbox.md): Learn about Terminal sandbox.
 - [screenshots.md](screenshots.md): Learn about Screenshots.
@@ -86,6 +90,7 @@ Pages: 86
 - [sdk/structured-output.md](sdk/structured-output.md): Learn about Structured output.
 - [sdk/subagents.md](sdk/subagents.md): Learn about Subagents.
 - [sdk/tools.md](sdk/tools.md): Learn about Tools and skills.
+- [search.md](search.md): Learn about Search and command palette.
 - [settings.md](settings.md): Learn about Settings.
 - [sidecars.md](sidecars.md): Learn about Sidecars.
 - [skills.md](skills.md): Learn about Agent skills.

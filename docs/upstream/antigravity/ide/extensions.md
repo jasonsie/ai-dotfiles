@@ -49,6 +49,12 @@ Native agentic development inside Xcode for macOS, iOS, iPadOS, watchOS, and vis
 
 ![Antigravity in Xcode](/assets/image/blog/xcode-extension-marketplace.png)
 
+### Eclipse
+
+Agentic workflows, multi-step task execution, and diff reviews inside Eclipse on macOS, Linux, and Windows (Public Preview).
+
+[Install & Eclipse Guide](/docs/ide/extensions/eclipse)
+
 * * *
 
 ## Authentication and licensing
@@ -67,7 +73,7 @@ If you are an individual developer, you can sign in with any personal Google Acc
 
 ### Enterprise teams and organizations
 
-For enterprise developers, Antigravity integrates directly with **Gemini Enterprise** and Google Cloud governance (currently in **Preview** for JetBrains and Zed):
+For enterprise developers, Antigravity integrates directly with **Gemini Enterprise** and Google Cloud governance (currently in **Preview** for JetBrains, Zed, Xcode, and Eclipse):
 
 1.  Click **Sign In** and select **Sign in with Gemini Enterprise**.
 2.  Authenticate using your corporate identity (including BYOID and Workforce Identity Federation).

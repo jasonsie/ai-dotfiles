@@ -23,10 +23,8 @@ plan, workspace settings, source permissions, and surface.
 
 <a id="what-does-work-sync-enable"></a>
 
-<span
-  id="what-does-local-computer-access-enable"
-  data-localization-body-anchor
-/>
+
+
 
 ### What does Local computer access with Work Cloud enable?
 
@@ -46,10 +44,8 @@ To enable this feature for the intended users:
 
 If `enforce_residency` is enabled in any cloud policy, **Allow local computer access** is disabled for both Work and dots. This safeguard does not configure workspace residency or, by itself, disable Work Cloud or dots.
 
-<span
-  id="can-we-enable-sync-if-our-policies-are-delivered-only-through-mdm"
-  data-localization-body-anchor
-/>
+
+
 
 ### Can we use this feature if our policies are delivered only through MDM?
 
@@ -65,10 +61,8 @@ Existing policies, assignments, and ordering are preserved. Review your existing
 
 Use the policy API to manage Global settings. To manage Local or Codex Cloud settings, use the Agent Security UI. Existing Global API workflows remain available after migration. Test your scripts and Terraform integrations, and confirm that policy assignments and ordering are unchanged.
 
-<span
-  id="which-hooks-are-supported-in-synced-work"
-  data-localization-body-anchor
-/>
+
+
 
 ### Which hooks are supported in Local computer access with Work Cloud?
 
@@ -96,10 +90,8 @@ Keep the computer online and connected for steps that need its local files or to
 
 <a id="what-happens-if-an-admin-turns-work-sync-off"></a>
 
-<span
-  id="what-happens-if-an-admin-turns-local-computer-access-off"
-  data-localization-body-anchor
-/>
+
+
 
 ### What happens if an admin turns Local computer access with Work Cloud off?
 
