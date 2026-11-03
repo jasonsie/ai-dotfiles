@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Link skills, the ai-dotfiles and daily-log commands, and Pi's hooks extension; writes unless --dry-run.
 
-Every folder under skills/ that has a SKILL.md is linked by name into the skill folder of
-each CLI that config/ai-clis.json switches on. A folder several CLIs read
+Every folder under skills/ that has a SKILL.md, or sits in a bundle folder (skills/git/)
+one level down, is linked by name into the skill folder of each CLI that config/ai-clis.json switches on. A folder several CLIs read
 (~/.agents/skills, for Codex and Pi) stays linked while any of them is on; a folder only
 switched-off CLIs read loses its links. scripts/ai-dotfiles and the daily-log skill's
 script are linked as ~/.local/bin/ai-dotfiles and ~/.local/bin/daily-log, so both commands
@@ -39,8 +39,21 @@ PI_RETIRED = ('ai-dotfiles-daily-log.ts',)  # extensions this script linked befo
 
 
 def skills(source):
-    """{name: folder} of every skill in this repo."""
-    return {p.name: p for p in sorted(source.iterdir()) if (p / 'SKILL.md').is_file()} if source.is_dir() else {}
+    """{name: folder} of every skill in this repo, a bundle's (skills/git/) flattened by name.
+
+    The CLIs read one level of skill folders, so a bundle is the repo's grouping only: each
+    skill in it is linked by its own name, and two skills with one name are refused.
+    """
+    found = {}
+    tops = sorted(p for p in source.iterdir() if p.is_dir()) if source.is_dir() else []
+    for top in tops:
+        inner = [top] if (top / 'SKILL.md').is_file() else sorted(
+            c for c in top.iterdir() if (c / 'SKILL.md').is_file())
+        for folder in inner:
+            if folder.name in found:
+                raise ValueError(f'Two skills named {folder.name}: {found[folder.name]} and {folder}')
+            found[folder.name] = folder
+    return found
 
 
 def owns_commands(selected, uninstall):

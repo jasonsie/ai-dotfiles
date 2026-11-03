@@ -55,6 +55,19 @@ class InstallSkillsTest(unittest.TestCase):
         for target in (*skills.COMMANDS.values(), skills.PI_EXTENSION_TARGET):
             self.assertTrue((skills.WORKSPACE / target).is_file(), target)
 
+    def test_a_bundle_is_flattened_and_a_clash_refused(self):
+        (self.repo / 'skills/git/push-branch').mkdir(parents=True)
+        (self.repo / 'skills/git/push-branch/SKILL.md').write_text('---\nname: push-branch\n---\n')
+        (self.repo / 'skills/git/scripts').mkdir()  # the bundle's shared code: not a skill
+        found = skills.skills(self.repo / 'skills')
+        self.assertEqual(sorted(found), ['alpha', 'beta', 'push-branch'])
+        self.install(apply=True)
+        self.assertEqual(os.readlink(self.home / '.claude/skills/push-branch'), str(self.repo / 'skills/git/push-branch'))
+        (self.repo / 'skills/git/alpha').mkdir()
+        (self.repo / 'skills/git/alpha/SKILL.md').write_text('---\nname: alpha\n---\n')
+        with self.assertRaisesRegex(ValueError, 'Two skills named alpha'):
+            skills.skills(self.repo / 'skills')
+
     def test_repo_skills_are_valid(self):
         names = skills.skills(skills.WORKSPACE / 'skills')
         self.assertIn('grilling', names)

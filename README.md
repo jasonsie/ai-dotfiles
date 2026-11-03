@@ -26,6 +26,7 @@ skill list to taste.
 | `skills/daily-log/` | The `daily-log` command, which writes a daily work journal, and the day pass that writes yesterday's entries from the CLIs' sessions | `~/.local/bin/daily-log`; a LaunchAgent, `~/Library/LaunchAgents/com.ai-dotfiles.daily-log-day.plist`, that runs the pass at 04:00 |
 | `skills/worktree-guard/` | A hook that moves a second session working in the same checkout into its own git worktree | Hook entries in each CLI's hook file (Codex runs it only after approval in `/hooks`); a Pi extension; `ai-dotfiles worktree` commands |
 | `skills/small-commits/` | A hook that gates `git commit` on size, subject and trailers | Hook entries in each CLI's hook file (Codex runs it only after approval in `/hooks`); a Pi extension; `ai-dotfiles commit check` |
+| `skills/git/` | The git skills: `approve` lands a branch the user reviewed (push, PR, approval by the repo's reviewer account, archive tag, merge, branch deleted), each step a skill of its own | Linked by name like every skill; `ai-dotfiles approve`, `ai-dotfiles git <step>`; the reviewer is cached per repo in `git config --local approve.reviewer` |
 | `config/upstream-docs.json` | The documentation sources mirrored into `docs/upstream/` | Refreshed weekly by a GitHub Action |
 | `docs/upstream/` | Machine-written mirrors of each CLI's official docs and of Google's and Meta's style guides, with indexes | Read by agents through the `upstream-docs` skill; never installed |
 
@@ -92,12 +93,12 @@ yours. After an uninstall, deleting the clone breaks nothing.
 
 ## Skills included
 
-Thirty-eight skills install into every CLI. Most come from
+Forty-four skills install into every CLI. Most come from
 [mattpocock/skills](https://github.com/mattpocock/skills) (MIT), lightly adapted so the same
 file works in all four CLIs, and one from [affaan-m/ECC](https://github.com/affaan-m/ECC)
 (MIT). `skills/skills.lock` records each adaptation. The `which-skill` skill routes between
 them. Skills written for this repo include `daily-log`, `worktree-guard`, `small-commits`,
-`upstream-docs`, `collect-docs`, `house-style`, `tutor` and `web-clipper`.
+the git skills (`approve` and its steps), `upstream-docs`, `collect-docs`, `house-style`, `tutor` and `web-clipper`.
 
 ## Verify a change
 

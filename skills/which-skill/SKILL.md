@@ -111,6 +111,13 @@ has the reasoning and each CLI's commands.
 - **`small-commits`**: commit the way the hook accepts: under 300 changed lines, one
   concern, `type(scope): outcome` and the Why:, Scope:, Verified: trailers; the plan to
   show first, how to split, and what a block means.
+- **`approve`**: once the user has reviewed a branch and said "approve": commit, PR body,
+  then `ai-dotfiles approve` runs the git steps below in order, resumable.
+- The git steps, each alone as `ai-dotfiles git <step>`: **`push-branch`** (to origin),
+  **`open-pr`** (open or reuse), **`approve-pr`** (approve as the repo's cached reviewer
+  account), **`archive-tag`** (`archive/<name>` at the tip before a branch goes; also
+  worktree-guard's), **`merge-pr`** (merge commit), **`prune-branch`** (branch deleted
+  locally and on origin).
 
 ## Repository setup
 
