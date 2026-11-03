@@ -108,6 +108,9 @@ has the reasoning and each CLI's commands.
 - **`worktree-guard`**: sessions sharing one checkout stay apart: a second session's first
   edit moves it into a linked worktree; the skill is what a moved session does, and
   `ai-dotfiles worktree` lists, archives and removes those worktrees.
+- **`small-commits`**: commit the way the hook accepts: under 300 changed lines, one
+  concern, `type(scope): outcome` and the Why:, Scope:, Verified: trailers; the plan to
+  show first, how to split, and what a block means.
 
 ## Repository setup
 
