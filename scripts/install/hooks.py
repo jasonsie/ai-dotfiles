@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Install the skills' hooks into each CLI: worktree-guard; writes unless --dry-run.
+"""Install the skills' hooks into each CLI: worktree-guard, small-commits; writes unless --dry-run.
 
 worktree-guard (skills/worktree-guard/scripts/worktree_guard.py) runs before edits and shell
 commands (PreToolUse; Antigravity also before reads) and when a session ends (SessionEnd).
-Its hooks are merged into the CLI's own hook file as one entry per event; every other hook
-stays as it is:
+small-commits (skills/small-commits/scripts/small_commits.py) runs before shell commands, for
+`git commit`. Each feature's hooks are merged into the CLI's own hook file as one entry per
+event; every other hook stays as it is:
   Claude Code   ~/.claude/settings.json      "hooks": PreToolUse, SessionEnd
   Codex         ~/.codex/hooks.json          the same (approve once in /hooks)
   Antigravity   ~/.gemini/config/hooks.json  a named entry per feature and event (no SessionEnd)
@@ -40,6 +41,9 @@ GUARD_WANTS = {  # before edits and shell commands, and at session end; Claude C
     'agy': (('pre', ('edit', 'shell', 'read')),),
 }
 GUARD_TIMEOUT = 60  # making a linked worktree in a big repository takes a while
+COMMITS_MARK = 'skills/small-commits/scripts/small_commits.py'
+COMMITS_WANTS = {cli: (('pre', ('shell',)),) for cli in agent_hooks.HOOK_FILE_CLIS}  # before `git commit`
+COMMITS_TIMEOUT = 30  # a diff of a big repository
 # Retired: the daily-log Stop nudge (PostToolUse + Stop in every CLI), replaced by the daily
 # pass in November 2026. Its entries, Antigravity names and state folder go on the next run.
 RETIRED_MARKS = ('skills/daily-log/scripts/daily_log.py',)
@@ -60,9 +64,14 @@ def worktree_guard(repo=WORKSPACE):
     return Feature('worktree-guard', Path(repo) / GUARD_MARK, GUARD_MARK, events, GUARD_TIMEOUT)
 
 
+def small_commits(repo=WORKSPACE):
+    events = {cli: agent_hooks.native_events(cli, wants) for cli, wants in COMMITS_WANTS.items()}
+    return Feature('small-commits', Path(repo) / COMMITS_MARK, COMMITS_MARK, events, COMMITS_TIMEOUT)
+
+
 def features(repo=WORKSPACE):
     """The features whose hooks are installed, found in the checkout at `repo`."""
-    return [worktree_guard(repo)]
+    return [worktree_guard(repo), small_commits(repo)]
 
 
 def handler(cli, mode, script, timeout):

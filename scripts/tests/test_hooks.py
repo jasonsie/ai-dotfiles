@@ -18,6 +18,7 @@ agent_hooks = load('agent_hooks.py')
 OTHERS = {'type': 'command', 'command': 'echo mine'}  # a handler this script did not write
 THEIRS = {'hooks': [OTHERS]}  # and a group holding only it
 AGY_PRE = 'ai-dotfiles-worktree-guard-pre'
+AGY_COMMITS = 'ai-dotfiles-small-commits-pre'
 OLD_MARK = 'skills/daily-log/scripts/daily_log.py'  # the retired Stop nudge
 OLD_TOOL, OLD_STOP = 'ai-dotfiles-daily-log-tool', 'ai-dotfiles-daily-log-stop'
 
@@ -43,6 +44,10 @@ class InstallHooksTest(unittest.TestCase):
     def guard(self):
         return self.repo / hooks.GUARD_MARK
 
+    @property
+    def commits(self):
+        return self.repo / hooks.COMMITS_MARK
+
     def install(self, clis=agent_hooks.HOOK_FILE_CLIS, apply=False, uninstall=False):
         out = io.StringIO()
         with redirect_stdout(out):
@@ -60,14 +65,15 @@ class InstallHooksTest(unittest.TestCase):
     def write(self, cli, data):
         self.path(cli).write_text(json.dumps(data))
 
-    def command(self, cli, mode):
-        return shlex.join(['python3', str(self.guard), 'hook', mode, '--cli', cli]) + ' || true'
+    def command(self, cli, mode, script=None):
+        return shlex.join(['python3', str(script or self.guard), 'hook', mode, '--cli', cli]) + ' || true'
 
     def test_the_marker_names_the_script_the_hooks_run(self):
-        (feature,) = hooks.features()
-        self.assertEqual(feature.script, ROOT / hooks.GUARD_MARK)
-        self.assertEqual(feature.mark, hooks.GUARD_MARK)
-        self.assertTrue(feature.script.is_file())
+        guard, commits = hooks.features()
+        for feature, mark in ((guard, hooks.GUARD_MARK), (commits, hooks.COMMITS_MARK)):
+            self.assertEqual(feature.script, ROOT / mark)
+            self.assertEqual(feature.mark, mark)
+            self.assertTrue(feature.script.is_file())
 
     def test_the_registry_and_the_hook_formats_agree_on_which_clis_have_a_hook_file(self):
         have = {cli for cli in installer.clis() if installer.path(self.home, cli, 'hooks')}
@@ -82,25 +88,32 @@ class InstallHooksTest(unittest.TestCase):
         self.assertEqual(self.install(), 0)  # agy too: its entry is recognised as ours
         claude = self.read('claude')['hooks']
         self.assertEqual(claude, {
-            'PreToolUse': [{'matcher': 'Edit|Write|NotebookEdit|Bash', 'hooks': [
-                {'type': 'command', 'command': self.command('claude', 'pre'), 'timeout': 60}]}],
+            'PreToolUse': [
+                {'matcher': 'Edit|Write|NotebookEdit|Bash', 'hooks': [
+                    {'type': 'command', 'command': self.command('claude', 'pre'), 'timeout': 60}]},
+                {'matcher': 'Bash', 'hooks': [
+                    {'type': 'command', 'command': self.command('claude', 'pre', self.commits), 'timeout': 30}]}],
             'SessionEnd': [{'hooks': [{'type': 'command', 'command': self.command('claude', 'end'), 'timeout': 60}]}],
         })
         self.assertIn(str(self.guard), claude['SessionEnd'][0]['hooks'][0]['command'].replace("'", ''))
         codex = self.read('codex')['hooks']
-        self.assertEqual(codex['PreToolUse'][0]['matcher'], 'Edit|Write|Bash')
+        self.assertEqual([g['matcher'] for g in codex['PreToolUse']], ['Edit|Write|Bash', 'Bash'])
         self.assertIn('hook pre --cli codex', codex['PreToolUse'][0]['hooks'][0]['command'])
+        self.assertIn(str(self.commits), codex['PreToolUse'][1]['hooks'][0]['command'].replace("'", ''))
         self.assertNotIn('matcher', codex['SessionEnd'][0])
         self.assertIn('hook end --cli codex', codex['SessionEnd'][0]['hooks'][0]['command'])
 
     def test_antigravity_gets_one_named_entry_with_a_matcher_group_and_no_session_end(self):
         self.install(('agy',), apply=True)
         data = self.read('agy')
-        self.assertEqual(list(data), [AGY_PRE])
+        self.assertEqual(list(data), [AGY_PRE, AGY_COMMITS])
         (pre,) = data[AGY_PRE]['PreToolUse']
         for tool in ('write_to_file', 'run_command', 'view_file'):
             self.assertIn(tool, pre['matcher'])
         self.assertEqual(pre['hooks'], [{'type': 'command', 'command': self.command('agy', 'pre'), 'timeout': 60}])
+        (commits,) = data[AGY_COMMITS]['PreToolUse']
+        self.assertEqual(commits, {'matcher': 'run_command', 'hooks': [
+            {'type': 'command', 'command': self.command('agy', 'pre', self.commits), 'timeout': 30}]})
 
     def test_pi_has_no_hook_file(self):
         self.assertIsNone(self.path('pi'))
@@ -125,18 +138,20 @@ class InstallHooksTest(unittest.TestCase):
         self.assertEqual(data['hooks']['SessionEnd'][0], THEIRS)  # theirs first, ours appended
         self.assertEqual(len(data['hooks']['SessionEnd']), 2)
         self.assertEqual(data['hooks']['PreToolUse'][0], bash)
-        self.assertEqual(len(data['hooks']['PreToolUse']), 2)
+        self.assertEqual(len(data['hooks']['PreToolUse']), 3)  # theirs, then one group per feature
         self.assertEqual(self.read('agy')['lint'], {'Stop': [OTHERS]})
 
     def test_moved_repo_replaces_its_own_entry_in_place(self):
         self.install(apply=True)
         self.repo = self.home / 'moved'
         self.assertEqual(self.install(apply=True), 3)
-        for event in ('PreToolUse', 'SessionEnd'):
+        for event, count in (('PreToolUse', 2), ('SessionEnd', 1)):
             groups = self.read('codex')['hooks'][event]
-            self.assertEqual(len(groups), 1)
-            self.assertIn('moved', groups[0]['hooks'][0]['command'])
-        self.assertIn('moved', self.read('agy')[AGY_PRE]['PreToolUse'][0]['hooks'][0]['command'])
+            self.assertEqual(len(groups), count)
+            for group in groups:
+                self.assertIn('moved', group['hooks'][0]['command'])
+        for name in (AGY_PRE, AGY_COMMITS):
+            self.assertIn('moved', self.read('agy')[name]['PreToolUse'][0]['hooks'][0]['command'])
         self.assertEqual(self.install(), 0)
 
     def test_a_foreign_handler_in_our_group_survives_a_reinstall_and_stays_put(self):
@@ -379,7 +394,7 @@ class InstallHooksTest(unittest.TestCase):
         self.assertEqual(codex['PostToolUse'], [{'matcher': 'Edit|Write', 'hooks': [OTHERS]}])  # theirs kept
         self.assertNotIn('Stop', codex)
         agy = self.read('agy')
-        self.assertEqual(sorted(agy), [AGY_PRE, 'lint'])
+        self.assertEqual(sorted(agy), [AGY_COMMITS, AGY_PRE, 'lint'])
         self.assertEqual(self.install(), 0)
 
     def test_uninstall_retires_the_daily_log_nudge_too(self):

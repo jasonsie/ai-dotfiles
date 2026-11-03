@@ -15,7 +15,8 @@ config/              the sources the installers apply
   mcp-servers.json     MCP servers shared by the CLIs
   upstream-docs.json   the documentation sources mirrored into docs/upstream/
 skills/              shared skills; skills.lock pins adapted ones; daily-log/ holds the
-                     daily-log command and the day pass; worktree-guard/ its hook
+                     daily-log command and the day pass; worktree-guard/ and small-commits/
+                     their hooks
 scripts/             ai-dotfiles, install.sh, uninstall.sh, healthcheck.sh (entry points);
                      agent_hooks.py and agent_sessions.py (the CLIs' hook formats and
                      session stores behind one interface); agent_hooks.ts (Pi's extension)
@@ -40,6 +41,7 @@ skills/<name>/                ─►  skills.py (links)                        �
 scripts/ai-dotfiles           ─►  skills.py (link)                         ─►  ~/.local/bin
 skills/daily-log/scripts/     ─►  skills.py (link); launchd.py (plist)     ─►  ~/.local/bin/daily-log; ~/Library/LaunchAgents (04:00)
 skills/worktree-guard/scripts/ ─► hooks.py (merge)                         ─►  each CLI's hook file
+skills/small-commits/scripts/ ─►  hooks.py (merge)                         ─►  each CLI's hook file
 scripts/agent_hooks.ts        ─►  skills.py (link)                         ─►  Pi's extension folder
                                   installer.py: reads ai-clis.json; the safe writes every step shares
                                   scripts/healthcheck.sh checks the live state
@@ -179,6 +181,34 @@ refreshed by `scripts/vendor_daily_log.py` and checked by a test), and every
   `~/Library/Logs/ai-dotfiles/`. The healthcheck checks the job is loaded. Before November
   2026 a Stop hook nudged every session that edited files; `hooks.py` takes its entries and
   state folder out when it finds them.
+
+## Small commits
+
+A hook on every shell command gates `git commit` (PreToolUse on Bash / `run_command`; Pi
+through `scripts/agent_hooks.ts`, which plays both hooked features). There is no rule text
+in `config/global-agents.md`: the hook is the rule, and its block message points at the
+`small-commits` skill, which holds the protocol an agent follows (measure, plan, split,
+commit); `scripts/small_commits.py` in it is the hook.
+
+- **What it measures:** added plus deleted lines of what the commit would hold: the staged
+  diff; with `-a`, every tracked change; with paths, those paths; with `--amend`, the result
+  against the parent.
+- **Two tiers:** over 300 lines the first attempt is blocked with a split hint, and an
+  identical retry in the same session passes. Over 600 it is blocked unless the command sets
+  `ALLOW_LARGE_COMMIT="<reason>"` and the message carries a `Large-commit: <reason>` trailer;
+  the override is the user's to grant.
+- **The message:** a subject `type(scope): outcome` of at most 72 characters, and the
+  trailers `Why:`, `Scope:`, `Verified:` (`Part: n/m` when the change is split).
+- **Left out of the count:** binaries, lockfiles, and files `.gitattributes` marks
+  `linguist-generated` or `-diff`; this repo marks `docs/upstream/**`. A commit that finishes a
+  merge, cherry-pick, revert or rebase passes untouched.
+- **Fails open:** a failure never blocks a commit; the hook says "not checked" and the agent
+  reports it.
+- **`ai-dotfiles commit check [git commit args]`:** prints what the hook would say, the size by
+  file and the verdict, without committing.
+- **Installed by `scripts/install/hooks.py`** as a second feature beside worktree-guard: one
+  PreToolUse entry per CLI with the shell matcher (Antigravity: `ai-dotfiles-small-commits-pre`).
+  State, the sizes a session was warned about, is in `~/.local/state/ai-dotfiles/small-commits/`.
 
 ## Upstream updates
 

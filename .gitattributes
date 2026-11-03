@@ -1,0 +1,2 @@
+# Mirrors the weekly sync writes; reviewers and the small-commits hook leave them out.
+docs/upstream/** linguist-generated

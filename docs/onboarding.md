@@ -3,7 +3,7 @@
 
 ## 1. Goal
 
-**What:** The single source of the owner's global AI-CLI setup on macOS: one rules file, per-CLI settings keys, shared MCP servers, 36 skills and two hooked skills (daily-log, worktree-guard), applied to Claude Code, Codex CLI, Pi and Antigravity so every CLI behaves the same way in every project.
+**What:** The single source of the owner's global AI-CLI setup on macOS: one rules file, per-CLI settings keys, shared MCP servers, 37 skills and two hooked skills (worktree-guard, small-commits), applied to Claude Code, Codex CLI, Pi and Antigravity so every CLI behaves the same way in every project.
 
 **How:** `config/ai-clis.json` says which CLIs are on and where each reads things. `ai-dotfiles install` runs five Python steps that link what is read-only (the rules file, every skill folder, two commands, Pi's extension) and merge what a CLI writes back (settings keys, hook entries; MCP servers through `<cli> mcp add`). Every write is validated first, backed up, atomic, and rolled back on failure. Hooks go through one adapter, `scripts/agent_hooks.py`, that turns each CLI's hook JSON into one `Event` and back; Pi, which has no hook files, gets `scripts/agent_hooks.ts` as its extension. `ai-dotfiles check` compares the live state with the repo, CI runs the unittest suites and shellcheck on every push, and a weekly GitHub Action mirrors each CLI's docs and reports upstream skill changes in a pull request.
 
@@ -35,14 +35,15 @@ ai_dotfiles/
 │   ├── cli-settings.json     per-CLI settings keys: enforce and default
 │   ├── mcp-servers.json      shared MCP servers (context7)
 │   └── upstream-docs.json    the docs sources mirrored weekly
-├── skills/                   36 skill folders, linked into every CLI
+├── skills/                   37 skill folders, linked into every CLI
 │   ├── which-skill/          ★ the router: which skill fits which situation
 │   ├── daily-log/            journal grammar; daily_log.py: command + hook
 │   ├── worktree-guard/       worktree_guard.py: hook + worktree commands
+│   ├── small-commits/        small_commits.py: hook + commit check
 │   ├── onboard/              this report's skill; facts.py is its scanner
 │   └── skills.lock           upstream pin and local edits for adapted skills
 ├── scripts/
-│   ├── ai-dotfiles           ★ install, update, uninstall, check, worktree
+│   ├── ai-dotfiles           ★ install, update, uninstall, check, worktree, commit
 │   ├── agent_hooks.py        ★ every CLI's hook format behind one Event API
 │   ├── agent_hooks.ts        Pi's extension: forwards Pi events to both hooks
 │   ├── install.sh            the five steps; uninstall.sh reverses them
@@ -70,7 +71,7 @@ ai_dotfiles/
 ┌─ repo ────┴──────────────────────────────────────────────────────────────┐
 │ this checkout: the desired state and the scripts that apply it           │
 │ config/     CLIs on, the rules file, settings keys, MCP servers, sources │
-│ skills/     36 skill folders; daily-log/, worktree-guard/ hold hooks     │
+│ skills/     37 skill folders; worktree-guard/, small-commits/ hold hooks │
 │ scripts/    ai-dotfiles, install/ (5 steps), agent_hooks.{py,ts}         │
 │ docs/       how-it-works.md; upstream/, fetched weekly from outside      │
 └───────────┬──────────────────────────────────────────────────────────────┘
@@ -86,7 +87,7 @@ ai_dotfiles/
             │ read at start-up; hooks fire before/after tools, at Stop, end
 ┌─ CLIs ────┴──────────────────────────────────────────────────────────────┐
 │ the claude, codex, pi and antigravity processes                          │
-│ /which-skill, /onboard, …     36 skills, loaded from home                │
+│ /which-skill, /onboard, …     37 skills, loaded from home                │
 │ Pre/PostToolUse, Stop, SessionEnd   run a hook script; Pi: the extension │
 │ <cli> mcp add, <cli> mcp list the MCP registry                           │
 └───────────┬──────────────────────────────────────────────────────────────┘
@@ -114,7 +115,7 @@ ai-dotfiles check ──▶ healthcheck ──▶ dry-run install (expect 0 chan
 - desired state (repo): which CLIs are on and where each reads things, incl. optional `hooks` and `extensions` paths — `config/ai-clis.json:4`, `scripts/install/installer.py:27`
 - installer (repo): `install.sh` checks the registry, then runs one step per source; `update` fast-forwards `main` first — `scripts/ai-dotfiles:33`, `scripts/install.sh:86`, `:94`, `:98`, `:101`, `:104`, `:107`
 - global files (home): links to the rules file, each skill, `~/.local/bin/{ai-dotfiles,daily-log}` and Pi's `ai-dotfiles-hooks.ts` (the old daily-log extension is removed); settings keys merged; writes backed up, atomic, rolled back — `scripts/install/skills.py:31`, `:36`, `scripts/install/settings.py:150`, `scripts/install/installer.py:136`
-- hook files (home): per feature (daily-log, worktree-guard) one entry per native event, from `agent_hooks.native_events`; found again by the script path in the command, which ends in `|| true` — `scripts/install/hooks.py:41`, `:68`, `:75`, `:112`, `:149`, `scripts/agent_hooks.py:246`
+- hook files (home): per feature (worktree-guard, small-commits) one entry per native event, from `agent_hooks.native_events`; found again by the script path in the command, which ends in `|| true` — `scripts/install/hooks.py:41`, `:68`, `:75`, `:112`, `:149`, `scripts/agent_hooks.py:246`
 - MCP registry (CLIs): `<cli> mcp add` for each missing server; Antigravity's file merged; never removed — `scripts/install/mcp.py:62`, `:99`
 - CI job (GitHub): shellcheck and the tests on Python 3.12 — `.github/workflows/ci.yml:23`, `:38`
 - healthcheck (repo): dry-run install, `mcp list`, machine-path scan, tests — `scripts/healthcheck.sh:22`, `:54`, `:72`, `:80`
