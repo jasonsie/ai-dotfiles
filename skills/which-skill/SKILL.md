@@ -113,6 +113,8 @@ has the reasoning and each CLI's commands.
   show first, how to split, and what a block means.
 - **`archive-tag`**: keep a branch's record as an `archive/<name>` tag at its tip before
   it is deleted; the one archive format, worktree-guard's too.
+- **`push-branch`**, **`open-pr`**, **`merge-pr`**, **`prune-branch`**: the git steps
+  that land a branch: push to origin, open or reuse its PR, merge commit, branch deleted.
 
 ## Repository setup
 

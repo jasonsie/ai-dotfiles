@@ -16,9 +16,9 @@ from support import ROOT
 
 sys.path.insert(0, str(ROOT / 'skills/git/scripts'))
 import git_run  # noqa: E402
-STEPS = ('archive-tag',)
+STEPS = ('push-branch', 'open-pr', 'archive-tag', 'merge-pr', 'prune-branch')
 git_run.use(*STEPS)
-archive_tag, = (importlib.import_module(s.replace('-', '_')) for s in STEPS)
+push_branch, open_pr, archive_tag, merge_pr, prune_branch = (importlib.import_module(s.replace('-', '_')) for s in STEPS)
 TODAY = time.strftime('%Y-%m-%d')
 
 TIP = 'a' * 40
@@ -148,6 +148,47 @@ class ArchiveTagTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class StepTest(unittest.TestCase):
+    """Each step skill runs alone as `ai-dotfiles git <step>`."""
+
+
+    def test_merge_alone_finds_the_pr_and_merges(self):
+        code, output, err, fake = land([], merge_pr.main)
+        self.assertEqual(code, 0, err)
+        self.assertEqual(output.strip(), 'merge      #7 merged')
+        self.assertTrue(fake.ran('gh pr merge 7 --merge'))
+        self.assertEqual(fake.ran('git push') + fake.ran('gh pr review'), [])
+
+    def test_merge_alone_without_a_pr_stops(self):
+        code, _, err, _ = land([], merge_pr.main, **{'gh pr list': '[]'})
+        self.assertEqual(code, 1)
+        self.assertIn('merge stopped at pr: no open PR for feat/x', err)
+
+    def test_push_and_prune_alone_in_a_dry_run(self):
+        code, output, _, fake = land(['--dry-run'], push_branch.main)
+        self.assertEqual(code, 0)
+        self.assertIn('would  git push -q -u origin feat/x', output)
+        code, output, _, fake = land(['--dry-run'], prune_branch.main)
+        self.assertEqual(code, 0)
+        self.assertIn('would  git push -q origin --delete feat/x', output)
+        self.assertEqual(fake.ran('git push'), [])
+
+    def test_prune_in_a_linked_worktree_detaches_at_the_base(self):
+        worktrees = 'worktree /main\nHEAD 1\nbranch refs/heads/main\n\nworktree /repo\nHEAD 2\nbranch refs/heads/feat/x'
+        code, output, err, fake = land([], prune_branch.main, **{'git worktree list --porcelain': worktrees})
+        self.assertEqual(code, 0, err)
+        self.assertTrue(fake.ran('git checkout -q --detach origin/main'))
+        self.assertEqual(fake.ran('git checkout -q main') + fake.ran('git pull'), [])
+        self.assertIn('detached at origin/main', output)
+        self.assertTrue(fake.ran('git branch -q -D feat/x'))
+
+    def test_a_diverged_remote_branch_stops_before_push(self):
+        code, _, err, _ = land([], push_branch.main, **{'git rev-parse --verify -q refs/remotes/origin/feat/x': OLD,
+                                                    'git merge-base --is-ancestor': FAIL})
+        self.assertEqual(code, 1)
+        self.assertIn('push: origin/feat/x is at bbbbbbb', err)
 
 
 if __name__ == '__main__':
