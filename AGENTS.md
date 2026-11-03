@@ -19,8 +19,9 @@ Codex CLI, Pi, and Antigravity. The mechanism and layout are in
 | `scripts/agent_sessions.py` | Every CLI's session store (transcripts) behind one interface, for the day pass | — |
 | `skills/worktree-guard/` | The hook that moves a session clashing with another in one worktree into a linked worktree, and the `ai-dotfiles worktree` commands | `scripts/install/hooks.py` (hook entries) |
 | `skills/small-commits/` | The hook that gates `git commit` on size (300 lines warn, 600 wall), subject and trailers, and the `ai-dotfiles commit check` command | `scripts/install/hooks.py` (hook entries), `scripts/ai-dotfiles` (`commit check`) |
+| `skills/approve/` | What "approve" means after the user reviews a branch, and `ai-dotfiles approve`: push, PR, approval by the repo's cached reviewer account, archive tag, merge commit, branch deleted | `scripts/install/skills.py` (link), `scripts/ai-dotfiles` (`approve`) |
 | `scripts/agent_hooks.py` | Every CLI's hook format behind one interface, for the skills' hooks; `agent_hooks.ts` is Pi's extension for all of them | `scripts/install/skills.py` (Pi's link) |
-| `scripts/ai-dotfiles` | Global command: `install`, `update`, `uninstall`, `check`, `worktree`, `commit` | `scripts/install/skills.py` |
+| `scripts/ai-dotfiles` | Global command: `install`, `update`, `uninstall`, `check`, `worktree`, `commit`, `approve` | `scripts/install/skills.py` |
 | `scripts/install/installer.py` | What every step shares: reading `ai-clis.json`, safe writes | — |
 | `scripts/install/hooks.py` | One hook entry per event in each CLI's native hook file; ours are found by their command; retired ones taken out | — |
 | `scripts/install/launchd.py` | The daily-log pass as a LaunchAgent, `claude` path and PATH rendered at install | — |

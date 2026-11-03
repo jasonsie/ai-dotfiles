@@ -16,7 +16,7 @@ config/              the sources the installers apply
   upstream-docs.json   the documentation sources mirrored into docs/upstream/
 skills/              shared skills; skills.lock pins adapted ones; daily-log/ holds the
                      daily-log command and the day pass; worktree-guard/ and small-commits/
-                     their hooks
+                     their hooks; approve/ the script that lands a reviewed branch
 scripts/             ai-dotfiles, install.sh, uninstall.sh, healthcheck.sh (entry points);
                      agent_hooks.py and agent_sessions.py (the CLIs' hook formats and
                      session stores behind one interface); agent_hooks.ts (Pi's extension)
@@ -42,6 +42,7 @@ scripts/ai-dotfiles           ─►  skills.py (link)                         �
 skills/daily-log/scripts/     ─►  skills.py (link); launchd.py (plist)     ─►  ~/.local/bin/daily-log; ~/Library/LaunchAgents (04:00)
 skills/worktree-guard/scripts/ ─► hooks.py (merge)                         ─►  each CLI's hook file
 skills/small-commits/scripts/ ─►  hooks.py (merge)                         ─►  each CLI's hook file
+skills/approve/scripts/       ─►  scripts/ai-dotfiles (approve)             ─►  run by hand, in any repo
 scripts/agent_hooks.ts        ─►  skills.py (link)                         ─►  Pi's extension folder
                                   installer.py: reads ai-clis.json; the safe writes every step shares
                                   scripts/healthcheck.sh checks the live state
@@ -209,6 +210,28 @@ commit); `scripts/small_commits.py` in it is the hook.
 - **Installed by `scripts/install/hooks.py`** as a second feature beside worktree-guard: one
   PreToolUse entry per CLI with the shell matcher (Antigravity: `ai-dotfiles-small-commits-pre`).
   State, the sizes a session was warned about, is in `~/.local/state/ai-dotfiles/small-commits/`.
+
+## Approve
+
+When the user has reviewed the uncommitted work on a branch and says "approve", the `approve`
+skill has the agent commit (small-commits), write the PR body (pr skill), and run
+`ai-dotfiles approve --title T --body-file F`; `scripts/approve.py` in the skill does the rest.
+No hook and no rule text: the skill is the trigger, the script the pipe.
+
+- **Steps, in order:** preflight (a branch other than the base, no tracked changes, commits
+  ahead of the base), reviewer, push, PR (open or reuse), approval, tag, merge commit, cleanup
+  (base checked out and pulled, branch deleted locally and on origin). Each step is skipped
+  when already done, so a stopped run is rerun with the same command.
+- **The reviewer** is per repository, never hard-coded: `git config --local approve.reviewer`.
+  Unset, the script exits 3 and the agent asks the user which GitHub login reviews there; the
+  rerun's `--reviewer LOGIN` is verified (a `gh auth` token, not the PR's author, can read the
+  repo) and cached. The approval runs with that account's token in `GH_TOKEN`. The script never
+  invites an account to a repository; "cannot read" is the user's to fix.
+- **The tag** is annotated, `archive/<branch without its type/ prefix>`, at the branch tip and
+  pushed before the merge, with the message the earlier hand-made archive tags use.
+- **On failure** nothing is undone: a pushed branch or an open PR is harmless and shows what
+  happened. `--dry-run` prints every changing command; read-only ones still run.
+- **`ai-dotfiles approve reviewer [LOGIN | --unset]`** shows, sets (verified) or clears the cache.
 
 ## Upstream updates
 
