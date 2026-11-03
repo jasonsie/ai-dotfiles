@@ -111,6 +111,8 @@ has the reasoning and each CLI's commands.
 - **`small-commits`**: commit the way the hook accepts: under 300 changed lines, one
   concern, `type(scope): outcome` and the Why:, Scope:, Verified: trailers; the plan to
   show first, how to split, and what a block means.
+- **`archive-tag`**: keep a branch's record as an `archive/<name>` tag at its tip before
+  it is deleted; the one archive format, worktree-guard's too.
 
 ## Repository setup
 

@@ -44,6 +44,10 @@ SKILL = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(SKILL.parents[1] / 'scripts'))
 import agent_hooks  # noqa: E402  (the CLIs' hook formats, in the repo's scripts folder)
 from agent_hooks import Deny, Note, Rewrite  # noqa: E402
+sys.path.insert(0, str(SKILL.parent / 'git' / 'scripts'))
+import git_run  # noqa: E402  (the git bundle's runner)
+git_run.use('archive-tag')
+import archive_tag  # noqa: E402  (the one archive format, shared with approve)
 
 ENV = 'WORKTREE_GUARD_STATE'
 DEFAULT_STATE = '~/.local/state/ai-dotfiles/worktree-guard'
@@ -587,48 +591,17 @@ def owner_of(worktree):
     return claim if claim and alive(claim) else None
 
 
-def day(text):
-    stamp = time.strptime(text, '%Y-%m-%d')
-    return time.strftime('%b', stamp) + f' {stamp.tm_mday}', stamp.tm_year
-
-
 def span(main, base, branch):
-    """'Oct 26, 2026' or 'Jul 31 to Oct 5, 2026' for the branch's own commits; '' for none."""
-    dates = (git(main, 'log', '--format=%ad', '--date=format:%Y-%m-%d', f'{base}..{branch}', check=False) or '').split()
-    if not dates:
-        return ''
-    (last, last_year), (first, first_year) = day(dates[0]), day(dates[-1])
-    if (first, first_year) == (last, last_year):
-        return f'{first}, {first_year}'
-    if first_year == last_year:
-        return f'{first} to {last}, {last_year}'
-    return f'{first}, {first_year} to {last}, {last_year}'
-
-
-def tag_name(main, branch):
-    stem = 'archive/' + (branch.split('/', 1)[1] if '/' in branch else branch)
-    name, n = stem, 1
-    if git(main, 'rev-parse', '-q', '--verify', f'refs/tags/{name}', check=False):
-        name = f"{stem}-{time.strftime('%Y-%m-%d')}"
-    while git(main, 'rev-parse', '-q', '--verify', f'refs/tags/{name}', check=False):
-        n += 1
-        name = f"{stem}-{time.strftime('%Y-%m-%d')}-{n}"
-    return name
+    """The branch's commit dates, in archive-tag's words; '' for no commits of its own."""
+    return archive_tag.span(base, branch, cwd=main)
 
 
 def archive(main, name, meta, branch, was_merged):
-    """Tag the branch tip in the owner's archive format; None when it has no commits of its own."""
-    when = span(main, meta.get('base', ''), branch)
-    if not when:
-        return None
+    """Tag the branch tip with archive-tag; None when it has no commits of its own."""
     description = meta.get('description') or git(main, 'log', '-1', '--format=%s', branch)
     agent = ' '.join(x for x in (meta.get('cli', 'agent'), meta.get('model', '')) if x)
-    message = (f"Archive of branch {branch} ({when}; {description}), kept before the branch was "
-               f"{'merged and ' if was_merged else ''}deleted{'' if was_merged else ' unmerged'}.\n\n"
-               f"Agent: {agent}, session {meta.get('session', '?')}; redirected from branch {meta.get('from', '?')}.")
-    tag = tag_name(main, branch)
-    git(main, 'tag', '-a', tag, '-m', message, branch)
-    return tag
+    extra = (f"Agent: {agent}, session {meta.get('session', '?')}; redirected from branch {meta.get('from', '?')}.",)
+    return archive_tag.archive(branch, description, was_merged, meta.get('base', ''), cwd=main, extra=extra)
 
 
 def remove(main, name, force=False, quiet_refusal=False):
@@ -660,10 +633,10 @@ def remove(main, name, force=False, quiet_refusal=False):
     lines = [f'worktree-guard: removed {name} and branch {branch}' + (f'; archived as {tag}' if tag else
                                                                        '; no commits of its own, no tag')]
     if tag and git(main, 'remote', 'get-url', 'origin', check=False):
-        push = subprocess.run(['git', '-C', str(main), 'push', '-q', 'origin', f'refs/tags/{tag}'],
-                              capture_output=True, text=True)
-        lines.append(f'pushed {tag} to origin' if push.returncode == 0 else
-                     f'could not push {tag}: {push.stderr.strip()}; run: git push origin {tag}')
+        try:
+            lines.append(archive_tag.push_tag(tag, cwd=main).replace(' pushed', ' pushed to origin', 1))
+        except git_run.Stop as error:
+            lines.append(f'could not push {tag}: {error}; run: git push origin {tag}')
     return True, lines
 
 
