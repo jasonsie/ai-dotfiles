@@ -94,9 +94,6 @@ has the reasoning and each CLI's commands.
   writes nothing.
 - **`house-style`**: learn the company's document style from a sample: one template per
   document type, global, with per-project deltas; every CLI then writes documents in it.
-- **`web-clipper`**: clip a web page into an Obsidian vault the way Obsidian Web
-  Clipper does, images, SVG and canvas graphs stored locally; a page it cannot fetch
-  headlessly is saved from your browser and passed back with `--html`.
 - **`upstream-docs`**: look a rule up in the mirrored Google and Meta style guides,
   Google's code review guide, the docs-writing guides and the Claude Code, Codex, Pi and
   Antigravity docs: find a page, outline it, show one section.
