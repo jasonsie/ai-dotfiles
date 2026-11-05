@@ -6,6 +6,7 @@ Run: python3 -m unittest discover -s scripts/tests -p 'test_plugins.py' -v
 from contextlib import redirect_stdout
 import io
 import json
+import os
 from pathlib import Path
 import re
 import tempfile
@@ -260,24 +261,42 @@ class FakeClaude:
 
 
 class FakeGit:
-    """Plugin repos at their release tags: `git clone ... --branch <tag> ... <url> <folder>`, then
-    `git -C <folder> show HEAD:.claude-plugin/plugin.json` answers the manifest set for that repo
-    and tag, else one named after the repo with no dependencies."""
+    """Plugin repos at their release tags. A clone with --no-checkout is a look at a tag: `show`
+    answers the manifest set for that repo and tag (else one named after the repo, no
+    dependencies) and `ls-tree HEAD bin/` the commands set for the repo. Any other clone is the
+    step's checkout: a real folder whose tag `describe` reports and `fetch` plus `checkout` move."""
 
     def __init__(self):
-        self.manifests, self.cloned = {}, {}
+        self.manifests, self.bins, self.looked, self.checkouts = {}, {}, {}, {}
 
     def answers(self):
-        return {'git clone': self.clone, 'git -C': self.show}
+        return {'git clone': self.clone, 'git -C': self.git}
 
     def clone(self, args):
-        self.cloned[args[-1]] = (args[-2].split('github.com/')[1], args[args.index('--branch') + 1])
+        repo, tag, folder = args[-2].split('github.com/')[1], args[args.index('--branch') + 1], args[-1]
+        if '--no-checkout' in args:
+            self.looked[folder] = (repo, tag)
+        else:
+            for name in self.bins.get(repo, []):
+                (Path(folder) / 'bin').mkdir(parents=True, exist_ok=True)
+                (Path(folder) / 'bin' / name).write_text('#!/bin/sh\n')
+            Path(folder).mkdir(parents=True, exist_ok=True)
+            self.checkouts[folder] = (repo, tag)
         return 0, '', ''
 
-    def show(self, args):
-        repo, tag = self.cloned[args[2]]
-        default = {'name': repo.split('/')[1], 'version': tag.rsplit('--v', 1)[1]}
-        return 0, json.dumps(self.manifests.get((repo, tag), default)), ''
+    def git(self, args):
+        folder, command = args[2], args[3]
+        if command == 'show':
+            repo, tag = self.looked[folder]
+            default = {'name': repo.split('/')[1], 'version': tag.rsplit('--v', 1)[1]}
+            return 0, json.dumps(self.manifests.get((repo, tag), default)), ''
+        if command == 'ls-tree':
+            return 0, ''.join(f'100755 blob abc\tbin/{name}\n' for name in self.bins.get(self.looked[folder][0], [])), ''
+        if command == 'describe':
+            return (0, self.checkouts[folder][1] + '\n', '') if folder in self.checkouts else (128, '', 'no tag')
+        if command == 'checkout':
+            self.checkouts[folder] = (self.checkouts[folder][0], args[-1])
+        return 0, '', ''
 
 
 class PluginsStepTest(unittest.TestCase):
@@ -381,7 +400,7 @@ class PluginsStepTest(unittest.TestCase):
         self.assertEqual(self.fake.ran('pi '), [f'pi install {GIT}@web-clipper--v2.3.0'])
         self.assertEqual(self.fake.packages(), [f'{GIT}@web-clipper--v2.3.0'])
         self.assertEqual(self.receipt(), {'web-clipper': {'pi': 'installed'}})
-        self.assertEqual(count, 1)
+        self.assertEqual(count, 2)  # the move, and the receipt records the new tag's commands
 
     def test_a_missing_release_tag_stops_before_any_change(self):
         self.fake.answers[TAGS] = (2, '', '')
@@ -432,7 +451,7 @@ class PluginsStepTest(unittest.TestCase):
     def test_a_plugin_already_at_its_pin_is_taken_over_without_a_command(self):
         self.fake.save([f'{GIT}@web-clipper--v2.2.0'])
         count, _ = self.step()
-        self.assertEqual(self.fake.calls, [])
+        self.assertEqual(self.fake.ran('pi '), [])
         self.assertEqual(self.receipt(), {'web-clipper': {'pi': 'taken over'}})
         self.assertEqual(count, 1)
 
@@ -588,7 +607,7 @@ class PluginsStepTest(unittest.TestCase):
         count, out = self.step(write=False)
         self.assertIn(f'Would update: {self.home / CODEX_CONFIG}', out)
         self.assertIn('Would run: codex plugin marketplace upgrade web-clipper-marketplace', out)
-        self.assertEqual(count, 2)
+        self.assertEqual(count, 3)  # the ref, the upgrade, the receipt
         self.assertEqual(self.codex.config()['marketplaces']['web-clipper-marketplace']['ref'], 'web-clipper--v2.2.0')
 
     def test_a_failed_codex_listing_stops_before_any_change(self):
@@ -808,6 +827,78 @@ class PluginsStepTest(unittest.TestCase):
             with self.subTest(range=version_range, version=version):
                 self.assertIs(plugins.satisfies(version, version_range), expected)
         self.assertIsNone(plugins.satisfies('2.2.0', '>=2.1 <3'))
+
+    # Commands on PATH
+
+    def link(self, name='web-clipper'):
+        return self.home / plugins.BIN / name
+
+    def checkout(self, name='web-clipper'):
+        return self.home / plugins.SHARE / name
+
+    def test_a_plugins_commands_are_linked_from_its_checkout_at_the_pin(self):
+        self.git.bins['jasonsie/web-clipper'] = ['web-clipper']
+        count, out = self.step()
+        self.assertEqual(self.fake.ran(f'git clone --quiet --depth 1 --branch web-clipper--v2.2.0 https'),
+                         [f'git clone --quiet --depth 1 --branch web-clipper--v2.2.0 https://github.com/jasonsie/web-clipper {self.checkout()}'])
+        self.assertEqual(os.readlink(self.link()), str(self.checkout() / 'bin/web-clipper'))
+        self.assertTrue(self.link().resolve().is_file())
+        self.assertIn(f'Link: {self.link()} -> {self.checkout() / "bin/web-clipper"}', out)
+        receipt = json.loads((self.home / plugins.RECEIPT).read_text())
+        self.assertEqual(receipt['bin'], {'web-clipper': {'tag': 'web-clipper--v2.2.0', 'files': ['web-clipper']}})
+        self.assertEqual(count, 4)  # pi install, the clone, the link, the receipt
+        self.fake.calls.clear()
+        self.assertEqual(self.step()[0], 0)
+        self.assertEqual([c for c in self.fake.ran('git') if 'describe' not in c], [])  # offline: a local describe only
+
+    def test_a_command_name_something_else_owns_stops_the_run_before_any_change(self):
+        self.git.bins['jasonsie/web-clipper'] = ['web-clipper']
+        self.link().parent.mkdir(parents=True)
+        self.link().write_text('#!/bin/sh\necho mine\n')
+        with self.assertRaisesRegex(ValueError, f'refusing to replace: {self.link()}'):
+            self.step()
+        self.assertEqual((self.fake.ran('pi install'), self.fake.ran('git clone --quiet --depth 1 --branch web-clipper--v2.2.0 https')), ([], []))
+        self.assertEqual(self.link().read_text(), '#!/bin/sh\necho mine\n')
+
+    def test_a_changed_pin_moves_the_checkout_and_keeps_the_link(self):
+        self.git.bins['jasonsie/web-clipper'] = ['web-clipper']
+        self.step()
+        self.listed({'web-clipper': {**WEB_CLIPPER, 'version': '2.3.0'}})
+        self.fake.calls.clear()
+        self.step()
+        self.assertEqual(self.fake.ran(f'git -C {self.checkout()} fetch') + self.fake.ran(f'git -C {self.checkout()} checkout'),
+                         [f'git -C {self.checkout()} fetch --quiet --depth 1 origin tag web-clipper--v2.3.0',
+                          f'git -C {self.checkout()} checkout --quiet web-clipper--v2.3.0'])
+        self.assertEqual(os.readlink(self.link()), str(self.checkout() / 'bin/web-clipper'))
+        self.assertEqual(self.step()[0], 0)
+
+    def test_dropping_the_plugin_removes_its_links_and_checkout_and_uninstall_leaves_them(self):
+        self.git.bins['jasonsie/web-clipper'] = ['web-clipper']
+        self.step()
+        _, out = self.step(uninstall=True)
+        self.assertIn(f'Left in place: {self.link()} (web-clipper\'s command)', out)
+        self.assertIn(f'Left in place: {self.checkout()}', out)
+        self.assertTrue(self.link().is_symlink())
+        self.listed({})
+        _, out = self.step()
+        self.assertFalse(self.link().is_symlink() or self.checkout().exists())
+        self.assertIn(f'Remove folder: {self.checkout()}', out)
+        self.assertNotIn('bin', json.loads((self.home / plugins.RECEIPT).read_text()))
+
+    def test_a_plugin_without_commands_gets_no_checkout_and_is_not_looked_at_again(self):
+        self.step()
+        self.assertFalse(self.checkout().exists() or self.link().exists())
+        self.fake.calls.clear()
+        self.step()
+        self.assertEqual(self.fake.ran('git'), [])
+
+    def test_a_dry_run_shows_the_checkout_and_the_link_and_writes_nothing(self):
+        self.git.bins['jasonsie/web-clipper'] = ['web-clipper']
+        count, out = self.step(write=False)
+        self.assertIn(f'Would run: git clone --quiet --depth 1 --branch web-clipper--v2.2.0 https://github.com/jasonsie/web-clipper {self.checkout()}', out)
+        self.assertIn(f'Would link: {self.link()} -> {self.checkout() / "bin/web-clipper"}', out)
+        self.assertEqual(count, 4)
+        self.assertFalse(self.checkout().exists() or self.link().is_symlink())
 
     # Switched off, uninstall, --target
 
