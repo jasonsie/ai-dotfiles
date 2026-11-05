@@ -659,8 +659,8 @@ def commands_plan(home, selected, listed, records, look, runner, which, full):
         folder = home / SHARE / name
         mine = {home / BIN / f for f in record.get('files', [])}
         wanted = {home / BIN / f: str(folder / 'bin' / f) for f in files}
-        for path, target in wanted.items():
-            if installer.state(path) not in (('absent',), ('link', target)) and path not in mine:
+        for path, target in wanted.items():  # a recorded name counts as ours only while it holds our link
+            if installer.state(path) not in (('absent',), ('link', target)):
                 raise ValueError(f'Not created by the plugins step; refusing to replace: {path}')
         steps = [Checkout(folder, name, entry)] if files and current_tag(folder, runner) != want else []
         links = [(path, installer.state(path), ('link', target)) for path, target in wanted.items()

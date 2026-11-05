@@ -860,6 +860,20 @@ class PluginsStepTest(unittest.TestCase):
         self.assertEqual((self.fake.ran('pi install'), self.fake.ran('git clone --quiet --depth 1 --branch web-clipper--v2.2.0 https')), ([], []))
         self.assertEqual(self.link().read_text(), '#!/bin/sh\necho mine\n')
 
+    def test_a_recorded_name_that_no_longer_holds_our_link_is_refused_too(self):
+        self.git.bins['jasonsie/web-clipper'] = ['web-clipper']
+        self.step()
+        self.link().unlink()
+        self.link().write_text('#!/bin/sh\necho mine\n')
+        with self.assertRaisesRegex(ValueError, f'refusing to replace: {self.link()}'):
+            self.step()
+        self.assertEqual(self.link().read_text(), '#!/bin/sh\necho mine\n')
+        self.link().unlink()
+        os.symlink('/elsewhere/web-clipper', self.link())
+        with self.assertRaisesRegex(ValueError, f'refusing to replace: {self.link()}'):
+            self.step()
+        self.assertEqual(os.readlink(self.link()), '/elsewhere/web-clipper')
+
     def test_a_changed_pin_moves_the_checkout_and_keeps_the_link(self):
         self.git.bins['jasonsie/web-clipper'] = ['web-clipper']
         self.step()
