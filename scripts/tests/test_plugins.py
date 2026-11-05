@@ -504,6 +504,11 @@ class PluginsStepTest(unittest.TestCase):
         self.assertEqual((count, self.fake.calls), (0, []))
         self.assertIn('plugins: skip pi (not on PATH)', out.getvalue())
 
+    def test_an_install_that_leaves_a_plugin_off_its_pin_stops_the_run(self):
+        self.fake.answers['pi install'] = (0, '', '')  # says done, changes nothing
+        with self.assertRaisesRegex(ValueError, r'not at its pin.*pi web-clipper'):
+            self.step()
+
     def test_a_failed_command_stops_and_the_receipt_keeps_what_was_done(self):
         self.listed({'web-clipper': WEB_CLIPPER, 'zkfy': {**WEB_CLIPPER, 'source': 'jasonsie/zkfy'}})
         self.fake.answers['git ls-remote'] = (0, 'abc\trefs/tags/x\n', '')

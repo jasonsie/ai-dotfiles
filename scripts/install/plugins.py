@@ -357,6 +357,25 @@ def recorded(owned, done):
     return {name: clis for name, clis in result.items() if clis}
 
 
+def verify(home, listed, actions, runner):
+    """Read each CLI back after the step installed or moved plugins in it; stop when one is not
+    at its pin, since a CLI can report success and keep the old version."""
+    acted = {}
+    for command, name, cli, record in actions:
+        if command and record:
+            acted.setdefault(cli, []).append(name)
+    off = []
+    for cli, names in acted.items():
+        manager = CLIS[cli]
+        present = manager.installed(home, runner)
+        for name in names:
+            marker, _ = present.get(manager.key(name, listed[name]['source']), (None, None))
+            if marker != manager.pin(name, listed[name]):
+                off.append(f'{cli} {name} reads {marker}, its pin is {manager.pin(name, listed[name])}')
+    if off:
+        raise ValueError('not at its pin after the step: ' + '; '.join(off))
+
+
 def run(home, target, write, uninstall, runner=shell, which=shutil.which):
     """Install, move and remove listed plugins in the CLIs switched on; print what stays."""
     listed = plugins()
@@ -398,6 +417,7 @@ def run(home, target, write, uninstall, runner=shell, which=shutil.which):
             if action[0]:
                 step(action[0]).run(runner)
             done.append(action)
+        verify(home, listed, actions, runner)
     finally:
         if content(done) != old:
             change = (receipt, installer.state(receipt), installer.receipt(content(done)))
