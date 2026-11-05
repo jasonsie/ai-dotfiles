@@ -259,6 +259,27 @@ class FakeClaude:
         return 0, '{}', ''
 
 
+class FakeGit:
+    """Plugin repos at their release tags: `git clone ... --branch <tag> ... <url> <folder>`, then
+    `git -C <folder> show HEAD:.claude-plugin/plugin.json` answers the manifest set for that repo
+    and tag, else one named after the repo with no dependencies."""
+
+    def __init__(self):
+        self.manifests, self.cloned = {}, {}
+
+    def answers(self):
+        return {'git clone': self.clone, 'git -C': self.show}
+
+    def clone(self, args):
+        self.cloned[args[-1]] = (args[-2].split('github.com/')[1], args[args.index('--branch') + 1])
+        return 0, '', ''
+
+    def show(self, args):
+        repo, tag = self.cloned[args[2]]
+        default = {'name': repo.split('/')[1], 'version': tag.rsplit('--v', 1)[1]}
+        return 0, json.dumps(self.manifests.get((repo, tag), default)), ''
+
+
 class PluginsStepTest(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -272,6 +293,8 @@ class PluginsStepTest(unittest.TestCase):
         self.claude = FakeClaude(self.home)
         self.fake.answers.update(self.claude.answers())
         self.fake.answers['git ls-remote --exit-code --tags https://github.com/jasonsie/zkfy'] = (0, 'abc\trefs/tags/x\n', '')
+        self.git = FakeGit()
+        self.fake.answers.update(self.git.answers())
         self.listed({'web-clipper': WEB_CLIPPER})
         self.switch()
 
@@ -391,7 +414,7 @@ class PluginsStepTest(unittest.TestCase):
             self.fake.calls.clear()
             self.listed({'web-clipper': {**WEB_CLIPPER, 'targets': ['codex']}})
             self.step()
-        self.assertEqual(self.fake.calls, [f'pi remove {GIT}@web-clipper--v2.2.0'])
+        self.assertEqual(self.fake.ran('pi '), [f'pi remove {GIT}@web-clipper--v2.2.0'])
         self.assertEqual(self.receipt(), {'web-clipper': {'codex': 'taken over'}})
 
     def test_a_plugin_already_in_pi_is_taken_over_moved_and_never_removed(self):
@@ -717,6 +740,74 @@ class PluginsStepTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'claude plugin marketplace list --json failed: boom'):
             self.step()
         self.assertEqual(self.claude_runs(), [])
+
+    # Dependencies, read from each plugin's manifest at its tag
+
+    ZKFY = {'source': 'jasonsie/zkfy', 'version': '1.6.0', 'targets': ['pi']}
+
+    def needs(self, version_range, **web_clipper):
+        dependency = {'name': 'web-clipper', 'marketplace': 'web-clipper-marketplace', 'version': version_range}
+        self.git.manifests[('jasonsie/zkfy', 'zkfy--v1.6.0')] = {'name': 'zkfy', 'version': '1.6.0', 'dependencies': [dependency]}
+        self.listed({'zkfy': self.ZKFY, 'web-clipper': {**WEB_CLIPPER, **web_clipper}})
+
+    def test_zkfy_with_the_web_clipper_it_needs_installs(self):
+        self.needs('^2.2')
+        self.step()
+        self.assertEqual(sorted(self.fake.ran('pi install')), [f'pi install {GIT}@web-clipper--v2.2.0',
+                                                               'pi install git:github.com/jasonsie/zkfy@zkfy--v1.6.0'])
+
+    def test_a_dependency_problem_stops_the_run_before_any_change_naming_both_pins(self):
+        cases = {
+            r'zkfy 1\.6\.0 needs web-clipper \^2\.2, pinned at 2\.1\.0': ('^2.2', {'version': '2.1.0'}),
+            r'zkfy 1\.6\.0 needs web-clipper ~2\.1\.0, pinned at 2\.2\.0': ('~2.1.0', {}),
+            r'zkfy 1\.6\.0 needs web-clipper =2\.2\.1, pinned at 2\.2\.0': ('=2.2.1', {}),
+            r'needs web-clipper \^2\.2 in agy too': ('^2.2', {}),
+        }
+        for message, (version_range, web_clipper) in cases.items():
+            with self.subTest(message):
+                self.needs(version_range, **web_clipper)
+                if 'agy too' in message:
+                    self.listed({'zkfy': {**self.ZKFY, 'targets': ['pi', 'agy']}, 'web-clipper': WEB_CLIPPER})
+                self.fake.calls.clear()
+                with self.assertRaisesRegex(ValueError, message):
+                    self.step()
+                self.assertEqual(self.fake.ran('pi install') + self.fake.ran('agy plugin install'), [])
+
+    def test_an_unlisted_dependency_stops_the_run(self):
+        self.needs('^2.2')
+        self.listed({'zkfy': self.ZKFY})
+        with self.assertRaisesRegex(ValueError, r'zkfy 1\.6\.0 needs web-clipper \^2\.2, which is not listed'):
+            self.step()
+        self.assertEqual(self.fake.ran('pi install'), [])
+
+    def test_a_dependency_as_a_bare_name_needs_only_to_be_listed(self):
+        self.git.manifests[('jasonsie/zkfy', 'zkfy--v1.6.0')] = {'name': 'zkfy', 'dependencies': ['web-clipper@web-clipper-marketplace']}
+        self.listed({'zkfy': self.ZKFY, 'web-clipper': {**WEB_CLIPPER, 'version': '1.0.0'}})
+        self.step()
+        self.assertEqual(len(self.fake.ran('pi install')), 2)
+
+    def test_a_manifest_named_otherwise_than_its_key_stops_the_run(self):
+        self.git.manifests[('jasonsie/web-clipper', 'web-clipper--v2.2.0')] = {'name': 'clipper'}
+        with self.assertRaisesRegex(ValueError, r"web-clipper: jasonsie/web-clipper at web-clipper--v2\.2\.0 is named 'clipper'"):
+            self.step()
+
+    def test_a_run_with_nothing_to_change_reads_no_manifest(self):
+        self.step()
+        self.fake.calls.clear()
+        self.step()
+        self.assertEqual(self.fake.ran('git'), [])
+
+    def test_ranges_read_as_claude_and_npm_read_them(self):
+        table = [('^2.2', '2.2.0', True), ('^2.2', '2.9.1', True), ('^2.2', '3.0.0', False), ('^2.2', '2.1.9', False),
+                 ('^0.2.3', '0.2.9', True), ('^0.2.3', '0.3.0', False), ('^0.0.3', '0.0.4', False), ('^0', '0.9.0', True),
+                 ('~2.1.0', '2.1.7', True), ('~2.1.0', '2.2.0', False), ('~2', '2.9.0', True), ('~2', '3.0.0', False),
+                 ('2.1.0', '2.1.0', True), ('=2.1.0', '2.1.1', False), ('2.1', '2.1.5', True), ('2.1', '2.2.0', False),
+                 ('>=1.4', '1.4.0', True), ('>=1.4', '1.3.9', False), ('<2', '1.9.9', True), ('>1.4', '1.4.9', False),
+                 ('>1.4', '1.5.0', True), ('<=1.4', '1.4.9', True), ('<=1.4', '1.5.0', False), ('^2.2', '2.3.0-beta.1', False)]
+        for version_range, version, expected in table:
+            with self.subTest(range=version_range, version=version):
+                self.assertIs(plugins.satisfies(version, version_range), expected)
+        self.assertIsNone(plugins.satisfies('2.2.0', '>=2.1 <3'))
 
     # Switched off, uninstall, --target
 

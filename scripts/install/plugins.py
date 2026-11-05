@@ -4,7 +4,9 @@
 Each listed plugin has a pin (an exact version) and the CLIs that should get it. For each
 targeted CLI that config/ai-clis.json switches on, the step installs the pin's release tag
 `<name>--v<version>` through the CLI's own plugin manager, and moves a CLI whose version
-differs. Before any install or move, every tag it needs must exist on GitHub. A plugin the
+differs. Before any install or move, every tag it needs must exist on GitHub, and each
+listed plugin's manifest at its tag must agree with the list: named as its key, and every
+dependency it declares listed for the same CLIs and pinned inside its range. A plugin the
 CLI already had when first listed is taken over: moved to its pin, never removed.
 
 A receipt records, per plugin and CLI, whether the step installed it or took it over.
@@ -23,6 +25,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import tomllib
 
 import installer
@@ -506,6 +509,75 @@ def recorded(owned, done):
     return {name: clis for name, clis in result.items() if clis}
 
 
+RANGE = re.compile(r'(\^|~|>=|<=|>|<|=)?v?(\d+)(?:\.(\d+))?(?:\.(\d+))?(-[0-9A-Za-z.-]+)?')
+
+
+def satisfies(version, spec):
+    """Whether an exact version meets a dependency's range, read as Claude and npm read it: ^, ~,
+    an exact or partial version, or one comparator (>=, >, <=, <). None for any other form."""
+    match = RANGE.fullmatch(spec.strip())
+    if not match:
+        return None
+    op, parts = match[1] or '=', [int(part) for part in match.groups()[1:4] if part is not None]
+    pinned = SEMVER.fullmatch(version)
+    if pinned[4] and not match[5]:
+        return False  # a range matches a pre-release only when it names one
+    core, low, last = tuple(int(pinned[i]) for i in (1, 2, 3)), tuple(parts + [0] * (3 - len(parts))), len(parts) - 1
+
+    def above(i):
+        return low[:i] + (low[i] + 1,) + (0,) * (2 - i)
+
+    if op == '^':
+        return low <= core < above(next((i for i, part in enumerate(parts) if part), last))
+    if op == '~':
+        return low <= core < above(1 if len(parts) > 1 else 0)
+    full = len(parts) == 3
+    return {'=': core == low if full else low <= core < above(last),
+            '>=': core >= low, '<': core < low,
+            '>': core > low if full else core >= above(last),
+            '<=': core <= low if full else core < above(last)}[op]
+
+
+def manifest(name, entry, runner):
+    """The plugin's Claude manifest at its release tag, from a shallow clone without files."""
+    with tempfile.TemporaryDirectory(prefix='ai-dotfiles-plugin-') as folder:
+        clone = ['git', 'clone', '--quiet', '--depth', '1', '--branch', tag(name, entry), '--no-checkout',
+                 '--filter=blob:none', f'https://github.com/{entry["source"]}', folder]
+        for args in (clone, ['git', '-C', folder, 'show', 'HEAD:.claude-plugin/plugin.json']):
+            code, out, err = runner(args)
+            if code != 0:
+                raise ValueError(f'cannot read {entry["source"]} at {tag(name, entry)}: {(err or out).strip()}')
+    data = json.loads(out)
+    return data if isinstance(data, dict) else {}
+
+
+def dependency_problems(listed, runner):
+    """Each listed plugin's manifest at its tag against the list: named as its key, and each
+    dependency it declares listed, aimed at every CLI it is, and pinned inside its range."""
+    problems = []
+    for name, entry in sorted(listed.items()):
+        data = manifest(name, entry, runner)
+        if data.get('name') != name:
+            problems.append(f'{name}: {entry["source"]} at {tag(name, entry)} is named {data.get("name")!r}; '
+                            f'list it under that name')
+        for dependency in data.get('dependencies') or []:
+            wanted, spec = (dependency, None) if isinstance(dependency, str) else (dependency.get('name'), dependency.get('version'))
+            wanted = str(wanted).split('@')[0]
+            needs = f'{name} {entry["version"]} needs {wanted}' + (f' {spec}' if spec else '')
+            if wanted not in listed:
+                problems.append(f'{needs}, which is not listed')
+                continue
+            fewer = sorted(set(entry['targets']) - set(listed[wanted]['targets']))
+            if fewer:
+                problems.append(f'{needs} in {", ".join(fewer)} too; add them to its targets')
+            fits = satisfies(listed[wanted]['version'], spec) if spec else True
+            if fits is None:
+                problems.append(f'{needs}: a range this step cannot read (^, ~, =, >=, >, <=, < or a version)')
+            elif not fits:
+                problems.append(f'{needs}, pinned at {listed[wanted]["version"]}')
+    return problems
+
+
 def verify(home, listed, actions, runner):
     """Read each CLI back after the step installed or moved plugins in it; stop when one is not
     at its pin, since a CLI can report success and keep the old version."""
@@ -546,6 +618,9 @@ def run(home, target, write, uninstall, runner=shell, which=shutil.which):
     if missing:
         raise ValueError(f'no release tag on GitHub for {", ".join(missing)}; make it in the plugin '
                          f'repo with `claude plugin tag --push`, then run again')
+    problems = dependency_problems(listed, runner) if any(command for command, *_ in actions) else []
+    if problems:
+        raise ValueError('dependencies: ' + '; '.join(problems))
     steps = [step(command) for command, *_ in actions if command]
     changes = sum(len(s.preview()) for s in steps)
 
