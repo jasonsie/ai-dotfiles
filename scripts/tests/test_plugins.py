@@ -761,12 +761,12 @@ class PluginsStepTest(unittest.TestCase):
             r'zkfy 1\.6\.0 needs web-clipper \^2\.2, pinned at 2\.1\.0': ('^2.2', {'version': '2.1.0'}),
             r'zkfy 1\.6\.0 needs web-clipper ~2\.1\.0, pinned at 2\.2\.0': ('~2.1.0', {}),
             r'zkfy 1\.6\.0 needs web-clipper =2\.2\.1, pinned at 2\.2\.0': ('=2.2.1', {}),
-            r'needs web-clipper \^2\.2 in agy too': ('^2.2', {}),
+            r'zkfy 1\.6\.0 needs web-clipper \^2\.2, pinned at 2\.2\.0, in agy too': ('^2.2', {}),
         }
         for message, (version_range, web_clipper) in cases.items():
             with self.subTest(message):
                 self.needs(version_range, **web_clipper)
-                if 'agy too' in message:
+                if 'in agy too' in message:
                     self.listed({'zkfy': {**self.ZKFY, 'targets': ['pi', 'agy']}, 'web-clipper': WEB_CLIPPER})
                 self.fake.calls.clear()
                 with self.assertRaisesRegex(ValueError, message):

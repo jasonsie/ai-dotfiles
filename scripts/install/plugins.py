@@ -569,7 +569,8 @@ def dependency_problems(listed, runner):
                 continue
             fewer = sorted(set(entry['targets']) - set(listed[wanted]['targets']))
             if fewer:
-                problems.append(f'{needs} in {", ".join(fewer)} too; add them to its targets')
+                problems.append(f'{needs}, pinned at {listed[wanted]["version"]}, in {", ".join(fewer)} too; '
+                                f'add them to its targets')
             fits = satisfies(listed[wanted]['version'], spec) if spec else True
             if fits is None:
                 problems.append(f'{needs}: a range this step cannot read (^, ~, =, >=, >, <=, < or a version)')
