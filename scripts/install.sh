@@ -17,7 +17,7 @@
 #                    scripts/ai-dotfiles and the daily-log command → ~/.local/bin, and
 #                    Pi's hooks extension
 #   5. plugins       config/plugins.json           → each CLI's own plugin manager, at the
-#                    pinned release tag (Pi so far)
+#                    pinned release tag (Pi and Antigravity so far)
 #   6. hooks         worktree-guard's hook command → merged into each CLI's hook file;
 #                    retired hooks (daily-log's old nudge) taken out
 #   7. launchd       the daily-log pass            → ~/Library/LaunchAgents, 04:00 each day

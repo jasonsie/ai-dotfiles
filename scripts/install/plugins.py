@@ -12,7 +12,10 @@ Dropping a plugin, or a CLI from its targets, removes it there only where the st
 installed it. A CLI switched off, and --uninstall, leave every plugin in place and list it.
 Plugins the list does not name are never touched.
 
-Every outside command goes through one runner, `shell`, which tests replace.
+Every outside command goes through one runner, `shell`, which tests replace. Each CLI's
+class answers the same five questions: what it has installed ({key: (marker, handle)}),
+the key a plugin has there, the marker that means "at its pin", and the commands that
+install (or move) and remove one.
 """
 import json
 from pathlib import Path
@@ -78,11 +81,7 @@ def plugins():
 class Pi:
     """Pi's packages: install and move with `pi install git:github.com/<repo>@<tag>`, which
     replaces the entry and moves the checkout; remove with `pi remove`; read the installed
-    ones from the packages in Pi's settings, keyed by repo, the tag as their marker.
-
-    Each CLI's class answers the same five questions: what it has installed ({key: (marker,
-    handle)}), the key a plugin has there, the marker that means "at its pin", and the
-    commands that install (or move) and remove one."""
+    ones from the packages in Pi's settings, keyed by repo, the tag as their marker."""
 
     GIT = re.compile(r'git:github\.com/([^@]+?)(?:\.git)?(?:@(.+))?')
 
