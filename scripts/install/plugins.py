@@ -111,7 +111,36 @@ class Pi:
         return ['pi', 'remove', source]
 
 
-CLIS = {'pi': Pi()}  # the CLIs this step knows how to install into
+class Antigravity:
+    """Antigravity's plugins: install and move with `agy plugin install <repo URL>/tree/<tag>`
+    (a `#<tag>` suffix is ignored and installs the latest), which replaces the installed copy
+    and keeps a plugin the user disabled disabled; remove with `agy plugin uninstall <name>`;
+    read the installed ones with `agy plugin list --json`, keyed by name, the version as their
+    marker. A plugin's name there is its manifest name, which the list uses as its key."""
+
+    def installed(self, home, runner):
+        """{name: (version or None, name)}."""
+        code, out, err = runner(['agy', 'plugin', 'list', '--json'])
+        if code != 0:
+            raise ValueError(f'agy plugin list --json failed: {(err or out).strip()}')
+        listing = json.loads(out or '[]')
+        return {p['name']: (p.get('version'), p['name']) for p in listing
+                if isinstance(p, dict) and isinstance(p.get('name'), str)}
+
+    def key(self, name, repo):
+        return name
+
+    def pin(self, name, entry):
+        return entry['version']
+
+    def install(self, name, entry):
+        return ['agy', 'plugin', 'install', f'https://github.com/{entry["source"]}/tree/{tag(name, entry)}']
+
+    def remove(self, name):
+        return ['agy', 'plugin', 'uninstall', name]
+
+
+CLIS = {'pi': Pi(), 'agy': Antigravity()}  # the CLIs this step knows how to install into
 
 
 def released(name, entry, runner):

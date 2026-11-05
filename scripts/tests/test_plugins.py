@@ -7,6 +7,7 @@ from contextlib import redirect_stdout
 import io
 import json
 from pathlib import Path
+import re
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -20,6 +21,7 @@ WEB_CLIPPER = {'source': 'jasonsie/web-clipper', 'version': '2.2.0', 'targets': 
 PI_SETTINGS = where('pi', 'settings')
 GIT = 'git:github.com/jasonsie/web-clipper'
 TAGS = 'git ls-remote --exit-code --tags https://github.com/jasonsie/web-clipper'
+AGY_URL = 'https://github.com/jasonsie/web-clipper'
 
 
 class FakePi:
@@ -64,12 +66,43 @@ class FakePi:
         return 0, '', ''
 
 
+class FakeAgy:
+    """Antigravity's plugins in memory, the way `agy plugin` keeps them: `install` of a
+    `/tree/<name>--v<version>` URL replaces the plugin by name and keeps its enabled state."""
+
+    URL = re.compile(r'https://github\.com/[^/]+/[^/]+/tree/(.+)--v(.+)')
+
+    def __init__(self):
+        self.plugins = {}
+
+    def answers(self):
+        return {'agy plugin list --json': self.list, 'agy plugin install': self.install,
+                'agy plugin uninstall': self.uninstall}
+
+    def have(self, name, version, enabled=True):
+        self.plugins[name] = {'name': name, 'enabled': enabled, 'version': version, 'source': 'claude-code'}
+
+    def list(self, args):
+        return 0, json.dumps(list(self.plugins.values())), ''
+
+    def install(self, args):
+        name, version = self.URL.fullmatch(args[3]).groups()
+        self.have(name, version, self.plugins.get(name, {}).get('enabled', True))
+        return 0, '', ''
+
+    def uninstall(self, args):
+        self.plugins.pop(args[3], None)
+        return 0, '', ''
+
+
 class PluginsStepTest(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.home = Path(self.temp.name) / 'home'
         self.home.mkdir()
         self.fake = FakePi(self.home)
+        self.agy = FakeAgy()
+        self.fake.answers.update(self.agy.answers())
         self.listed({'web-clipper': WEB_CLIPPER})
         self.switch()
 
@@ -204,6 +237,73 @@ class PluginsStepTest(unittest.TestCase):
         self.assertEqual(self.fake.calls, [])
         self.assertEqual(self.receipt(), {'web-clipper': {'pi': 'taken over'}})
         self.assertEqual(count, 1)
+
+    # Antigravity
+
+    def test_install_puts_the_pin_into_antigravity_and_a_second_run_makes_no_changes(self):
+        self.listed({'web-clipper': {**WEB_CLIPPER, 'targets': ['agy']}})
+        count, out = self.step()
+        self.assertEqual(self.fake.ran('agy plugin install'), [f'agy plugin install {AGY_URL}/tree/web-clipper--v2.2.0'])
+        self.assertEqual(self.agy.plugins['web-clipper']['version'], '2.2.0')
+        self.assertEqual(self.receipt(), {'web-clipper': {'agy': 'installed'}})
+        self.assertEqual(count, 2)
+        self.fake.calls.clear()
+        self.assertEqual(self.step()[0], 0)
+        self.assertEqual(self.fake.ran('agy plugin install'), [])
+
+    def test_a_changed_pin_reinstalls_in_antigravity_and_a_disabled_plugin_stays_disabled(self):
+        self.listed({'web-clipper': {**WEB_CLIPPER, 'targets': ['agy']}})
+        self.step()
+        self.agy.plugins['web-clipper']['enabled'] = False
+        self.assertEqual(self.step()[0], 0)  # disabled is the user's choice, not a change
+        self.listed({'web-clipper': {**WEB_CLIPPER, 'version': '2.3.0', 'targets': ['agy']}})
+        self.fake.calls.clear()
+        self.step()
+        self.assertEqual(self.fake.ran('agy plugin install'), [f'agy plugin install {AGY_URL}/tree/web-clipper--v2.3.0'])
+        self.assertEqual(self.agy.plugins['web-clipper'], {**self.agy.plugins['web-clipper'], 'version': '2.3.0', 'enabled': False})
+        self.assertEqual(self.fake.ran('agy plugin enable'), [])
+
+    def test_dropping_the_plugin_or_antigravity_from_its_targets_uninstalls_it(self):
+        for dropped in ({}, {'web-clipper': WEB_CLIPPER}):  # gone, or Pi only
+            with self.subTest(dropped=dropped):
+                self.listed({'web-clipper': {**WEB_CLIPPER, 'targets': ['agy']}})
+                self.step()
+                self.fake.calls.clear()
+                self.listed(dropped)
+                self.step()
+                self.assertEqual(self.fake.ran('agy plugin uninstall'), ['agy plugin uninstall web-clipper'])
+                self.assertNotIn('web-clipper', self.agy.plugins)
+                self.assertNotIn('agy', self.receipt().get('web-clipper', {}))
+                self.fake.save([])
+                self.agy.plugins.clear()
+
+    def test_a_plugin_already_in_antigravity_is_taken_over_moved_and_never_removed(self):
+        self.agy.have('web-clipper', '2.1.0')
+        self.agy.have('firebase', None)  # the user's own, unlisted: untouched
+        self.listed({'web-clipper': {**WEB_CLIPPER, 'targets': ['agy']}})
+        self.step()
+        self.assertEqual(self.fake.ran('agy plugin install'), [f'agy plugin install {AGY_URL}/tree/web-clipper--v2.2.0'])
+        self.assertEqual(self.receipt(), {'web-clipper': {'agy': 'taken over'}})
+        self.fake.calls.clear()
+        self.listed({})
+        _, out = self.step()
+        self.assertEqual(self.fake.ran('agy plugin'), ['agy plugin list --json'])
+        self.assertIn('Left in place: agy plugin web-clipper (taken over)', out)
+        self.assertEqual(sorted(self.agy.plugins), ['firebase', 'web-clipper'])
+
+    def test_one_pin_installs_into_pi_and_antigravity_alike(self):
+        self.listed({'web-clipper': {**WEB_CLIPPER, 'targets': ['pi', 'agy']}})
+        self.step()
+        self.assertEqual(self.receipt(), {'web-clipper': {'agy': 'installed', 'pi': 'installed'}})
+        self.assertEqual(self.fake.packages(), [f'{GIT}@web-clipper--v2.2.0'])
+        self.assertEqual(self.agy.plugins['web-clipper']['version'], '2.2.0')
+
+    def test_a_failed_antigravity_listing_stops_before_any_change(self):
+        self.listed({'web-clipper': {**WEB_CLIPPER, 'targets': ['agy']}})
+        self.fake.answers['agy plugin list --json'] = (1, '', 'not signed in')
+        with self.assertRaisesRegex(ValueError, 'agy plugin list --json failed: not signed in'):
+            self.step()
+        self.assertEqual(self.fake.ran('agy plugin install'), [])
 
     # Switched off, uninstall, --target
 
