@@ -9,6 +9,7 @@ import json
 from pathlib import Path
 import re
 import tempfile
+import tomllib
 import unittest
 from unittest.mock import patch
 
@@ -22,6 +23,8 @@ PI_SETTINGS = where('pi', 'settings')
 GIT = 'git:github.com/jasonsie/web-clipper'
 TAGS = 'git ls-remote --exit-code --tags https://github.com/jasonsie/web-clipper'
 AGY_URL = 'https://github.com/jasonsie/web-clipper'
+CODEX_CONFIG = where('codex', 'settings')
+CODEX_ADD = 'codex plugin marketplace add jasonsie/web-clipper --ref web-clipper--v2.2.0 --json'
 
 
 class FakePi:
@@ -95,6 +98,78 @@ class FakeAgy:
         return 0, '', ''
 
 
+class FakeCodex:
+    """Codex's plugins the way `codex plugin` keeps them: GitHub marketplaces in Codex's TOML
+    config (pinned with `ref`), installed plugins in memory. `plugin add` installs the version
+    the marketplace's ref holds and enables the plugin; `marketplace upgrade` refreshes the
+    installed ones and keeps their enabled state; a second `marketplace add` from another
+    source is refused. A plugin named in `hooks` ships hooks in its installed copy."""
+
+    LATEST = '2.4.0'  # what an unpinned marketplace holds
+
+    def __init__(self, home):
+        self.home, self.plugins, self.hooks = home, {}, set()
+
+    def answers(self):
+        return {'codex plugin list --json': self.list, 'codex plugin marketplace add': self.add_marketplace,
+                'codex plugin marketplace upgrade': self.upgrade, 'codex plugin add': self.add,
+                'codex plugin remove': self.remove}
+
+    def config(self):
+        path = self.home / CODEX_CONFIG
+        return tomllib.loads(path.read_text()) if path.is_file() else {}
+
+    def marketplace(self, repo, ref=None):
+        name = repo.split('/')[1] + '-marketplace'
+        path = self.home / CODEX_CONFIG
+        path.parent.mkdir(parents=True, exist_ok=True)
+        text = path.read_text() if path.is_file() else ''
+        text += (f'\n[marketplaces.{name}]\nsource_type = "git"\nsource = "https://github.com/{repo}.git"\n'
+                 + (f'ref = "{ref}"\n' if ref else ''))
+        path.write_text(text)
+        return name
+
+    def version_at(self, marketplace):
+        ref = self.config()['marketplaces'][marketplace].get('ref')
+        return ref.rsplit('--v', 1)[1] if ref else self.LATEST
+
+    def put(self, name, marketplace, version, enabled=True):
+        self.plugins[name] = {'pluginId': f'{name}@{marketplace}', 'name': name, 'marketplaceName': marketplace,
+                              'version': version, 'installed': True, 'enabled': enabled}
+        if name in self.hooks:
+            hooks = self.home / CODEX_CONFIG.rsplit('/', 1)[0] / 'plugins/cache' / marketplace / name / version / 'hooks'
+            hooks.mkdir(parents=True, exist_ok=True)
+            (hooks / 'hooks.json').write_text('{"hooks": {}}')
+
+    def list(self, args):
+        remote = {'pluginId': 'work-pets@openai-curated-remote', 'name': 'work-pets',
+                  'marketplaceName': 'openai-curated-remote', 'version': '0.1.6', 'installed': True, 'enabled': True}
+        return 0, json.dumps({'installed': [remote, *self.plugins.values()], 'available': []}), ''
+
+    def add_marketplace(self, args):
+        repo, ref = args[4], args[6]
+        name = repo.split('/')[1] + '-marketplace'
+        if name in self.config().get('marketplaces', {}):
+            return 1, '', f"Error: marketplace '{name}' is already added from a different source"
+        self.marketplace(repo, ref)
+        return 0, json.dumps({'marketplaceName': name, 'installedRoot': '/x', 'alreadyAdded': False}), ''
+
+    def upgrade(self, args):
+        for plugin in list(self.plugins.values()):
+            if plugin['marketplaceName'] == args[4]:
+                self.put(plugin['name'], args[4], self.version_at(args[4]), plugin['enabled'])
+        return 0, '{}', ''
+
+    def add(self, args):
+        name, marketplace = args[3].split('@')
+        self.put(name, marketplace, self.version_at(marketplace))
+        return 0, json.dumps({'pluginId': args[3], 'version': self.plugins[name]['version']}), ''
+
+    def remove(self, args):
+        self.plugins.pop(args[3].split('@')[0], None)
+        return 0, '{}', ''
+
+
 class PluginsStepTest(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -103,6 +178,8 @@ class PluginsStepTest(unittest.TestCase):
         self.fake = FakePi(self.home)
         self.agy = FakeAgy()
         self.fake.answers.update(self.agy.answers())
+        self.codex = FakeCodex(self.home)
+        self.fake.answers.update(self.codex.answers())
         self.listed({'web-clipper': WEB_CLIPPER})
         self.switch()
 
@@ -143,7 +220,7 @@ class PluginsStepTest(unittest.TestCase):
             'web-clipper.*missing "version"': ({'web-clipper': {'source': 'a/b', 'targets': ['pi']}}, 1),
             'web-clipper.*non-empty': ({'web-clipper': {**WEB_CLIPPER, 'targets': []}}, 1),
             'web-clipper.*emacs.*ai-clis.json': ({'web-clipper': {**WEB_CLIPPER, 'targets': ['emacs']}}, 1),
-            'web-clipper.*no plugins support for codex': ({'web-clipper': {**WEB_CLIPPER, 'targets': ['codex']}}, 1),
+            'web-clipper.*no plugins support for claude': ({'web-clipper': {**WEB_CLIPPER, 'targets': ['claude']}}, 1),
         }
         for message, (entries, version) in cases.items():
             with self.subTest(message):
@@ -304,6 +381,101 @@ class PluginsStepTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'agy plugin list --json failed: not signed in'):
             self.step()
         self.assertEqual(self.fake.ran('agy plugin install'), [])
+
+    # Codex
+
+    def codex_listed(self, version='2.2.0'):
+        self.listed({'web-clipper': {**WEB_CLIPPER, 'version': version, 'targets': ['codex']}})
+
+    def test_install_puts_the_pin_into_codex_and_a_second_run_makes_no_changes(self):
+        self.codex_listed()
+        count, out = self.step()
+        self.assertEqual(self.fake.ran('codex plugin m') + self.fake.ran('codex plugin add'),
+                         [CODEX_ADD, 'codex plugin add web-clipper@web-clipper-marketplace --json'])
+        self.assertEqual(self.codex.config()['marketplaces']['web-clipper-marketplace']['ref'], 'web-clipper--v2.2.0')
+        self.assertEqual(self.codex.plugins['web-clipper']['version'], '2.2.0')
+        self.assertEqual(self.receipt(), {'web-clipper': {'codex': 'installed'}})
+        self.assertNotIn('/hooks', out)
+        self.assertEqual(count, 3)  # two commands and the receipt
+        self.fake.calls.clear()
+        self.assertEqual(self.step()[0], 0)
+        self.assertEqual(self.fake.ran('codex plugin'), ['codex plugin list --json'])
+
+    def test_a_changed_pin_moves_codex_by_its_config_ref_and_keeps_a_disabled_plugin_disabled(self):
+        path = self.home / CODEX_CONFIG
+        path.parent.mkdir(parents=True)
+        path.write_text('model = "gpt-6"\n\n[mcp_servers.context7]\ncommand = "npx"\n')
+        self.codex_listed()
+        self.step()
+        self.codex.plugins['web-clipper']['enabled'] = False
+        before = path.read_text()
+        self.codex_listed('2.3.0')
+        self.fake.calls.clear()
+        _, out = self.step()
+        self.assertEqual(self.fake.ran('codex plugin m') + self.fake.ran('codex plugin add'),
+                         ['codex plugin marketplace upgrade web-clipper-marketplace'])
+        self.assertEqual(path.read_text(), before.replace('web-clipper--v2.2.0', 'web-clipper--v2.3.0'))
+        self.assertEqual(self.codex.plugins['web-clipper']['version'], '2.3.0')
+        self.assertFalse(self.codex.plugins['web-clipper']['enabled'])
+        backups = list((self.home / installer.STATE / 'settings').glob('backup-*/' + CODEX_CONFIG))
+        self.assertEqual(len(backups), 1)
+        self.assertEqual(backups[0].read_text(), before)
+        self.assertIn(f'Update: {path}', out)
+
+    def test_installing_a_plugin_with_hooks_into_codex_prints_the_hooks_reminder(self):
+        self.codex.hooks.add('web-clipper')
+        self.codex_listed()
+        _, out = self.step()
+        self.assertIn('approve web-clipper\'s hooks once with /hooks', out)
+
+    def test_dropping_the_plugin_or_codex_from_its_targets_removes_it_from_codex(self):
+        for dropped in ({}, {'web-clipper': WEB_CLIPPER}):  # gone, or Pi only
+            with self.subTest(dropped=dropped):
+                self.codex_listed()
+                self.step()
+                self.fake.calls.clear()
+                self.listed(dropped)
+                self.step()
+                self.assertEqual(self.fake.ran('codex plugin remove'), ['codex plugin remove web-clipper@web-clipper-marketplace'])
+                self.assertNotIn('web-clipper', self.codex.plugins)
+                self.assertNotIn('codex', self.receipt().get('web-clipper', {}))
+                self.fake.save([])
+
+    def test_a_plugin_already_in_codex_is_taken_over_pinned_and_never_removed(self):
+        self.codex.put('web-clipper', self.codex.marketplace('jasonsie/web-clipper'), '2.2.0')  # added by hand, no ref
+        self.codex_listed()
+        self.step()
+        self.assertEqual(self.fake.ran('codex plugin m') + self.fake.ran('codex plugin add'),
+                         ['codex plugin marketplace upgrade web-clipper-marketplace'])
+        self.assertEqual(self.codex.config()['marketplaces']['web-clipper-marketplace']['ref'], 'web-clipper--v2.2.0')
+        self.assertEqual(self.receipt(), {'web-clipper': {'codex': 'taken over'}})
+        self.fake.calls.clear()
+        self.listed({})
+        _, out = self.step()
+        self.assertEqual(self.fake.ran('codex plugin remove'), [])
+        self.assertIn('Left in place: codex plugin web-clipper (taken over)', out)
+
+    def test_a_dry_run_for_codex_prints_each_step_and_writes_nothing(self):
+        self.codex_listed()
+        count, out = self.step(write=False)
+        self.assertIn(f'Would run: {CODEX_ADD}', out)
+        self.assertIn('Would run: codex plugin add web-clipper@<its marketplace> --json', out)
+        self.assertEqual(count, 3)
+        self.assertFalse((self.home / CODEX_CONFIG).exists())
+        self.step()
+        self.codex_listed('2.3.0')
+        count, out = self.step(write=False)
+        self.assertIn(f'Would update: {self.home / CODEX_CONFIG}', out)
+        self.assertIn('Would run: codex plugin marketplace upgrade web-clipper-marketplace', out)
+        self.assertEqual(count, 2)
+        self.assertEqual(self.codex.config()['marketplaces']['web-clipper-marketplace']['ref'], 'web-clipper--v2.2.0')
+
+    def test_a_failed_codex_listing_stops_before_any_change(self):
+        self.codex_listed()
+        self.fake.answers['codex plugin list --json'] = (1, '', 'not logged in')
+        with self.assertRaisesRegex(ValueError, 'codex plugin list --json failed: not logged in'):
+            self.step()
+        self.assertEqual(self.fake.ran('codex plugin m'), [])
 
     # Switched off, uninstall, --target
 

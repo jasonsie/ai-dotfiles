@@ -14,8 +14,8 @@ Plugins the list does not name are never touched.
 
 Every outside command goes through one runner, `shell`, which tests replace. Each CLI's
 class answers the same five questions: what it has installed ({key: (marker, handle)}),
-the key a plugin has there, the marker that means "at its pin", and the commands that
-install (or move) and remove one.
+the key a plugin has there, the marker that means "at its pin", the command (or step) that
+installs or moves one, and the command that removes one.
 """
 import json
 from pathlib import Path
@@ -23,6 +23,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tomllib
 
 import installer
 
@@ -162,7 +163,139 @@ class Antigravity:
         return ['agy', 'plugin', 'uninstall', name]
 
 
-CLIS = {'pi': Pi(), 'agy': Antigravity()}  # the CLIs this step knows how to install into
+def with_ref(text, marketplace, ref):
+    """Codex's config with `ref` set in one marketplace's table, every other line kept; checked
+    to parse to the same config but that key."""
+    lines = text.splitlines(keepends=True)
+    name = re.escape(marketplace)
+    header = re.compile(rf'\s*\[\s*marketplaces\s*\.\s*(?:"{name}"|{name})\s*\]\s*(?:#.*)?')
+    start = next((i for i, line in enumerate(lines) if header.fullmatch(line.rstrip('\r\n'))), None)
+    if start is None:
+        raise ValueError(f'Codex config has no [marketplaces.{marketplace}] table to pin')
+    end = next((i for i in range(start + 1, len(lines)) if lines[i].lstrip().startswith('[')), len(lines))
+    line = f'ref = {json.dumps(ref)}\n'
+    at = next((i for i in range(start + 1, end) if re.match(r'\s*ref\s*=', lines[i])), None)
+    if at is None:
+        at = max(i for i in range(start, end) if lines[i].strip()) + 1
+        if not lines[at - 1].endswith('\n'):
+            lines[at - 1] += '\n'
+        lines.insert(at, line)
+    else:
+        lines[at] = line
+    result = ''.join(lines)
+    before, after = tomllib.loads(text), tomllib.loads(result)
+    pinned = after['marketplaces'][marketplace].pop('ref', None)
+    before['marketplaces'][marketplace].pop('ref', None)
+    if pinned != ref or after != before:
+        raise ValueError(f'Codex config did not round-trip pinning {marketplace}')
+    return result
+
+
+class Codex:
+    """Codex's plugins, each from its GitHub marketplace pinned to the release tag. Install with
+    `codex plugin marketplace add <repo> --ref <tag> --json`, then `codex plugin add
+    <name>@<marketplace>`, the marketplace named by the first command's output. Move by setting
+    the marketplace's `ref` in Codex's config, backed up, then `codex plugin marketplace
+    upgrade`, which refreshes the installed plugin: Codex refuses a second `marketplace add`
+    with a new ref, and another `plugin add` would re-enable a plugin the user disabled. Remove
+    with `codex plugin remove <name>@<marketplace>`. Read `codex plugin list --json` and the
+    marketplaces in Codex's config, keyed by name and repo, (version, ref) as the marker."""
+
+    GITHUB = re.compile(r'https://github\.com/([^/]+/[^/]+?)(?:\.git)?/?')
+
+    def marketplaces(self, home):
+        """{owner/repo (lowercase): (marketplace, ref or None)} of Codex's GitHub marketplaces."""
+        path = installer.path(home, 'codex', 'settings')
+        data = tomllib.loads(path.read_text()) if path.is_file() else {}
+        found = {}
+        for marketplace, conf in (data.get('marketplaces') or {}).items():
+            match = self.GITHUB.fullmatch(str(conf.get('source', ''))) if isinstance(conf, dict) else None
+            if match:
+                found[match[1].lower()] = (marketplace, conf.get('ref'))
+        return found
+
+    def installed(self, home, runner):
+        """{(name, owner/repo): ((version, ref), (name, marketplace))}, plugins from those marketplaces."""
+        code, out, err = runner(['codex', 'plugin', 'list', '--json'])
+        if code != 0:
+            raise ValueError(f'codex plugin list --json failed: {(err or out).strip()}')
+        sources = {mp: (repo, ref) for repo, (mp, ref) in self.marketplaces(home).items()}
+        found = {}
+        for plugin in json.loads(out or '{}').get('installed', []):
+            repo, ref = sources.get(plugin.get('marketplaceName'), (None, None))
+            if repo and isinstance(plugin.get('name'), str):
+                found[(plugin['name'], repo)] = ((plugin.get('version'), ref), (plugin['name'], plugin['marketplaceName']))
+        return found
+
+    def key(self, name, repo):
+        return (name, repo.lower())
+
+    def pin(self, name, entry):
+        return (entry['version'], tag(name, entry))
+
+    def install(self, home, name, entry, current):
+        return CodexInstall(self, home, name, entry, installed=current is not None)
+
+    def remove(self, handle):
+        name, marketplace = handle
+        return ['codex', 'plugin', 'remove', f'{name}@{marketplace}']
+
+
+class CodexInstall:
+    """The step that installs or moves one plugin in Codex, as Codex's class says: the
+    marketplace's name comes from Codex, and a move edits Codex's config."""
+
+    def __init__(self, codex, home, name, entry, installed):
+        self.codex, self.home, self.name, self.entry, self.installed = codex, home, name, entry, installed
+        self.config = installer.path(home, 'codex', 'settings')
+
+    def todo(self):
+        """(marketplace or None until Codex names it, the operations in order)."""
+        want = tag(self.name, self.entry)
+        marketplace, ref = self.codex.marketplaces(self.home).get(self.entry['source'].lower(), (None, None))
+        if marketplace is None:
+            return None, ['add', 'plugin']
+        ops = (['ref'] if ref != want else []) + (['upgrade'] if self.installed or ref != want else [])
+        return marketplace, ops + ([] if self.installed else ['plugin'])
+
+    def command(self, op, marketplace):
+        if op == 'add':
+            return ['codex', 'plugin', 'marketplace', 'add', self.entry['source'], '--ref', tag(self.name, self.entry), '--json']
+        if op == 'upgrade':
+            return ['codex', 'plugin', 'marketplace', 'upgrade', marketplace]
+        return ['codex', 'plugin', 'add', f'{self.name}@{marketplace}', '--json']
+
+    def preview(self):
+        marketplace, ops = self.todo()
+        return [f'Would update: {self.config}' if op == 'ref' else
+                'Would run: ' + ' '.join(self.command(op, marketplace or '<its marketplace>')) for op in ops]
+
+    def run(self, runner):
+        marketplace, ops = self.todo()
+        for op in ops:
+            if op == 'ref':
+                self.pin_ref(marketplace)
+                continue
+            args = self.command(op, marketplace)
+            print('Run: ' + ' '.join(args))
+            code, out, err = runner(args)
+            if code != 0:
+                raise ValueError(f'{" ".join(args)} failed: {(err or out).strip()}')
+            if op == 'add':
+                marketplace = json.loads(out)['marketplaceName']
+        hooks = self.config.parent / 'plugins/cache' / marketplace / self.name / self.entry['version'] / 'hooks/hooks.json'
+        if hooks.is_file():
+            print(f"Codex: approve {self.name}'s hooks once with /hooks; Codex runs no unreviewed hook.")
+
+    def pin_ref(self, marketplace):
+        want = tag(self.name, self.entry)
+        change = installer.edit(self.config, lambda old: with_ref(old.decode(), marketplace, want).encode())
+        if change:
+            installer.show([change], True)
+            print(f'Backup: {installer.apply(self.home, [change], backup="settings")}')
+
+
+CLIS = {'pi': Pi(), 'agy': Antigravity(), 'codex': Codex()}  # the CLIs this step knows how to install into
 
 
 def released(name, entry, runner):
