@@ -197,5 +197,6 @@ Proposed, to confirm: each plugin's release steps end with bumping its pin here.
 
 ## Open
 
-None. Every branch is settled; the user confirmed the summary on 2026-11-05 and chose `to-spec`
-and `to-tickets` next. Still to confirm: the release-step proposal under Work.
+None. Every branch is settled; the user confirmed the summary on 2026-11-05. The spec is issue
+#37; its tickets are #38 to #47, with their blocking links on GitHub. Still to confirm: the
+release-step proposal under Work.
