@@ -27,12 +27,14 @@ Codex CLI, Pi, and Antigravity. The mechanism and layout are in
 | `scripts/install/launchd.py` | The daily-log pass as a LaunchAgent, `claude` path and PATH rendered at install | — |
 | `docs/upstream/` | Machine-written docs mirrors with their indexes (`INDEX.md`, `MIRROR-INDEX.*`), and skill catalogs | `scripts/upstream/` (weekly workflow) |
 | `docs/onboarding.md` | This repo's onboarding report | `skills/onboard/` (`/onboard`) |
+| `docs/agents/` | Where the engineering skills (`to-spec`, `to-tickets`, `triage`) publish and read: issue tracker, triage labels, domain docs | `skills/setup-agent-skills/` (`/setup-agent-skills`) |
 | `scripts/tests/` | Unit tests for the scripts and the skills' helpers | — |
 | `LICENSE`, `THIRD-PARTY-NOTICES.md`, `LICENSES/` | This repo's MIT license; every other author's license (adapted skills, docs mirrors) and the license texts | — |
 
 `scripts/install.sh` runs the six install steps, `scripts/uninstall.sh` reverses them;
-`scripts/healthcheck.sh` verifies live state. `docs/` holds `how-it-works.md`, the mirror, and
-`onboarding.md`, this repo's report from `/onboard`.
+`scripts/healthcheck.sh` verifies live state. `docs/` holds `how-it-works.md`, the mirror,
+`onboarding.md`, this repo's report from `/onboard`, and `agents/`, the engineering skills'
+setup.
 
 ## Rules for changes
 
@@ -68,3 +70,17 @@ shellcheck scripts/*.sh scripts/ai-dotfiles
 bash scripts/install.sh --dry-run                  # expect 0 changes on a configured Mac
 bash scripts/healthcheck.sh
 ```
+
+## Agent skills
+
+### Issue tracker
+
+GitHub Issues on `jasonsie/ai-dotfiles`, through `gh`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five defaults: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: the glossary and standing decisions are in `docs/how-it-works.md`; a design in progress is in `docs/plans/`. See `docs/agents/domain.md`.
