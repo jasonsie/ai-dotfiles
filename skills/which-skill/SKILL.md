@@ -99,6 +99,9 @@ has the reasoning and each CLI's commands.
   Antigravity docs: find a page, outline it, show one section.
 - **`collect-docs`**: add a source to that mirror: survey an org, repository or docs site,
   write its entry in `config/upstream-docs.json`, sync and index it.
+- **`portable-plugin`**: a plugin that runs in Claude Code, Codex, Pi and Antigravity from one
+  repo: the rules its files follow, the check and the release; ai-dotfiles installs each
+  plugin in `config/plugins.json` at its pin.
 - **`daily-log`**: record finished work in the daily logger through the `daily-log`
   command; its grammar is what the learning-tutor and every `<subject>-tutor-daily`
   task write; its hook nudges a session that changed files but logged nothing.
