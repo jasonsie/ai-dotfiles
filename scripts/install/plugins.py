@@ -78,6 +78,29 @@ def plugins():
     return data['plugins']
 
 
+class Command:
+    """One outside command as a step. A CLI's install may instead return a step of its own
+    that takes several commands or a file edit; every step offers the same two methods: the
+    lines a dry run prints (one per change), and doing it."""
+
+    def __init__(self, args):
+        self.args = args
+
+    def preview(self):
+        return ['Would run: ' + ' '.join(self.args)]
+
+    def run(self, runner):
+        print('Run: ' + ' '.join(self.args))
+        code, _, err = runner(self.args)
+        if code != 0:
+            raise ValueError(f'{" ".join(self.args)} failed: {err.strip()}')
+
+
+def step(command):
+    """The step for an action's command: a CLI's own step as is, a plain command wrapped."""
+    return command if hasattr(command, 'run') else Command(command)
+
+
 class Pi:
     """Pi's packages: install and move with `pi install git:github.com/<repo>@<tag>`, which
     replaces the entry and moves the checkout; remove with `pi remove`; read the installed
@@ -103,7 +126,7 @@ class Pi:
     def pin(self, name, entry):
         return tag(name, entry)
 
-    def install(self, name, entry):
+    def install(self, home, name, entry, current):
         return ['pi', 'install', f'git:github.com/{entry["source"]}@{tag(name, entry)}']
 
     def remove(self, source):
@@ -132,7 +155,7 @@ class Antigravity:
     def pin(self, name, entry):
         return entry['version']
 
-    def install(self, name, entry):
+    def install(self, home, name, entry, current):
         return ['agy', 'plugin', 'install', f'https://github.com/{entry["source"]}/tree/{tag(name, entry)}']
 
     def remove(self, name):
@@ -173,7 +196,7 @@ def plan(home, selected, listed, owned, sources, which, runner):
             marker, _ = present.get(manager.key(name, entry['source']), (None, None))
             record = owned.get(name, {}).get(cli) or (INSTALLED if marker is None else TAKEN_OVER)
             if marker != manager.pin(name, entry):
-                actions.append((manager.install(name, entry), name, cli, record))
+                actions.append((manager.install(home, name, entry, marker), name, cli, record))
             elif owned.get(name, {}).get(cli) != record:
                 actions.append((None, name, cli, record))
         for name in sorted(owned):
@@ -222,7 +245,8 @@ def run(home, target, write, uninstall, runner=shell, which=shutil.which):
     if missing:
         raise ValueError(f'no release tag on GitHub for {", ".join(missing)}; make it in the plugin '
                          f'repo with `claude plugin tag --push`, then run again')
-    commands = [command for command, *_ in actions if command]
+    steps = [step(command) for command, *_ in actions if command]
+    changes = sum(len(s.preview()) for s in steps)
 
     def content(done):
         after = recorded(owned, done)
@@ -231,26 +255,22 @@ def run(home, target, write, uninstall, runner=shell, which=shutil.which):
 
     files = [] if content(actions) == old else [(receipt, installer.state(receipt), installer.receipt(content(actions)))]
     if not write:
-        for command in commands:
-            print('Would run: ' + ' '.join(command))
+        for line in (line for s in steps for line in s.preview()):
+            print(line)
         installer.show(files, False)
-        return len(commands) + len(files)
+        return changes + len(files)
     done = []
     try:
         for action in actions:
-            command = action[0]
-            if command:
-                print('Run: ' + ' '.join(command))
-                code, _, err = runner(command)
-                if code != 0:
-                    raise ValueError(f'{" ".join(command)} failed: {err.strip()}')
+            if action[0]:
+                step(action[0]).run(runner)
             done.append(action)
     finally:
         if content(done) != old:
             change = (receipt, installer.state(receipt), installer.receipt(content(done)))
             installer.show([change], True)
             installer.apply(home, [change])
-    return len(commands) + len(files)
+    return changes + len(files)
 
 
 def main():
