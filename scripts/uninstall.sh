@@ -8,8 +8,9 @@
 #
 # Steps, in reverse install order (each removes only what its installer created,
 # backs up before writing, and rolls back on failure):
-#   6. launchd       the daily-log pass's LaunchAgent
-#   5. hooks         worktree-guard's hook entries, and any retired ones
+#   7. launchd       the daily-log pass's LaunchAgent
+#   6. hooks         worktree-guard's hook entries, and any retired ones
+#   5. plugins       left in place, listed: plugins work without this repo
 #   4. skills        links in the receipt: skills, Pi's hooks extension, and the
 #                    ai-dotfiles and daily-log commands (those with --target=all only)
 #   3. mcp           left in place, listed: servers do not depend on this repo
@@ -25,7 +26,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TARGET="all"
 DRY_RUN=0
 
-usage() { sed -n '2,19p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,20p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
 
 for arg in "$@"; do
   case "$arg" in
@@ -52,6 +53,9 @@ echo "== launchd"
 
 echo "== hooks"
 "$PYTHON" "$SCRIPT_DIR/install/hooks.py" --uninstall --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
+
+echo "== plugins"
+"$PYTHON" "$SCRIPT_DIR/install/plugins.py" --uninstall --target "$TARGET"
 
 echo "== skills"
 "$PYTHON" "$SCRIPT_DIR/install/skills.py" --uninstall --target "$TARGET" ${DRY[@]+"${DRY[@]}"}

@@ -20,7 +20,7 @@ the `house-style` skill's "Plain words" rule (`STYLE.md`) and its `tutor-reply` 
    2. pasted text (next message)
    3. a URL
    4. the current workspace: cwd, `teach` files if present, today's day block
-   5. the vault on the topic (`zkfy:query`)
+   5. the vault on the topic (zkfy's `query` skill)
    Claude Code asks through its question tool; Codex, Pi and Antigravity print the list.
 3. Announce once: `Tutor on. Source: <name>.`
 
@@ -33,7 +33,7 @@ Read-only; everything stays as found. The learner keeps the journal and the `tea
 - Today's block in the daily logger (`daily-log show`, else the week file under
   `~/Documents/Claude/Projects/daily-logger`): only to spot a **live item**, a study line
   whose box is still `[ ]` and matches the question.
-- The vault (`zkfy:query`), when the topic is CS and the vault answers.
+- The vault (zkfy's `query` skill), when the topic is CS and the vault answers.
 
 ## Knowledge order
 

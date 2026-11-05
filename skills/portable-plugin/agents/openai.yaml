@@ -1,0 +1,3 @@
+interface:
+  display_name: "Portable Plugin"
+  short_description: "Make a plugin run in all four AI CLIs"

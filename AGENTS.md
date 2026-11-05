@@ -13,6 +13,7 @@ Codex CLI, Pi, and Antigravity. The mechanism and layout are in
 | `config/global-agents.md` | Global rules for every CLI, live through links | `scripts/install/instructions.py` |
 | `config/cli-settings.json` | Per-CLI `enforce` and `default` keys | `scripts/install/settings.py` |
 | `config/mcp-servers.json` | Shared MCP servers | `scripts/install/mcp.py` |
+| `config/plugins.json` | The plugin list: each plugin's GitHub source, pin (exact version) and target CLIs | `scripts/install/plugins.py` |
 | `config/upstream-docs.json` | The documentation sources mirrored for agents: each CLI's docs, Google's and Meta's style and docs-writing guides, a `when` label per page | `scripts/upstream/sync-upstream.py` (weekly workflow) |
 | `skills/` | Shared skills; `skills.lock` pins adapted upstream skills | `scripts/install/skills.py` |
 | `skills/daily-log/` | The `daily-log` command (the daily logger's grammar and writer) and `day_pass.py`, the day pass: the evidence and, with `--write`, the session that writes from it | `scripts/install/skills.py` (links), `scripts/install/launchd.py` (the 04:00 LaunchAgent) |
@@ -24,15 +25,18 @@ Codex CLI, Pi, and Antigravity. The mechanism and layout are in
 | `scripts/ai-dotfiles` | Global command: `install`, `update`, `uninstall`, `check`, `worktree`, `commit`, `approve`, `git` | `scripts/install/skills.py` |
 | `scripts/install/installer.py` | What every step shares: reading `ai-clis.json`, safe writes | — |
 | `scripts/install/hooks.py` | One hook entry per event in each CLI's native hook file; ours are found by their command; retired ones taken out | — |
+| `scripts/install/plugins.py` | Each listed plugin at its release tag through each CLI's own plugin manager, read back after; each manifest checked at its tag (name, dependencies); a receipt tells installed from taken over; every outside command through one runner | — |
 | `scripts/install/launchd.py` | The daily-log pass as a LaunchAgent, `claude` path and PATH rendered at install | — |
 | `docs/upstream/` | Machine-written docs mirrors with their indexes (`INDEX.md`, `MIRROR-INDEX.*`), and skill catalogs | `scripts/upstream/` (weekly workflow) |
 | `docs/onboarding.md` | This repo's onboarding report | `skills/onboard/` (`/onboard`) |
+| `docs/agents/` | Where the engineering skills (`to-spec`, `to-tickets`, `triage`) publish and read: issue tracker, triage labels, domain docs | `skills/setup-agent-skills/` (`/setup-agent-skills`) |
 | `scripts/tests/` | Unit tests for the scripts and the skills' helpers | — |
 | `LICENSE`, `THIRD-PARTY-NOTICES.md`, `LICENSES/` | This repo's MIT license; every other author's license (adapted skills, docs mirrors) and the license texts | — |
 
-`scripts/install.sh` runs the six install steps, `scripts/uninstall.sh` reverses them;
-`scripts/healthcheck.sh` verifies live state. `docs/` holds `how-it-works.md`, the mirror, and
-`onboarding.md`, this repo's report from `/onboard`.
+`scripts/install.sh` runs the seven install steps, `scripts/uninstall.sh` reverses them;
+`scripts/healthcheck.sh` verifies live state. `docs/` holds `how-it-works.md`, the mirror,
+`onboarding.md`, this repo's report from `/onboard`, and `agents/`, the engineering skills'
+setup.
 
 ## Rules for changes
 
@@ -68,3 +72,17 @@ shellcheck scripts/*.sh scripts/ai-dotfiles
 bash scripts/install.sh --dry-run                  # expect 0 changes on a configured Mac
 bash scripts/healthcheck.sh
 ```
+
+## Agent skills
+
+### Issue tracker
+
+GitHub Issues on `jasonsie/ai-dotfiles`, through `gh`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five defaults: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: the glossary and standing decisions are in `docs/how-it-works.md`; a design in progress is in `docs/plans/`. See `docs/agents/domain.md`.

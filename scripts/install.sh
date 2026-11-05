@@ -16,9 +16,11 @@
 #   4. skills        skills/<name>/                → each CLI's skill folder (links); also
 #                    scripts/ai-dotfiles and the daily-log command → ~/.local/bin, and
 #                    Pi's hooks extension
-#   5. hooks         worktree-guard's hook command → merged into each CLI's hook file;
+#   5. plugins       config/plugins.json           → each CLI's own plugin manager, at the
+#                    pinned release tag, each read back after
+#   6. hooks         worktree-guard's hook command → merged into each CLI's hook file;
 #                    retired hooks (daily-log's old nudge) taken out
-#   6. launchd       the daily-log pass            → ~/Library/LaunchAgents, 04:00 each day
+#   7. launchd       the daily-log pass            → ~/Library/LaunchAgents, 04:00 each day
 #
 # Requires Python 3.11+ (macOS /usr/bin/python3 is older; use Homebrew/pyenv).
 # Steps live in scripts/install/. Undo with scripts/uninstall.sh. See docs/how-it-works.md.
@@ -35,7 +37,7 @@ INSTRUCTIONS_ONLY=0
 REPLACE_INSTRUCTIONS=0
 PASS=()
 
-usage() { sed -n '2,24p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,26p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
 
 for arg in "$@"; do
   case "$arg" in
@@ -104,6 +106,9 @@ echo "== mcp"
 
 echo "== skills"
 "$PYTHON" "$SCRIPT_DIR/install/skills.py" --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
+
+echo "== plugins"
+"$PYTHON" "$SCRIPT_DIR/install/plugins.py" --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
 
 echo "== hooks"
 "$PYTHON" "$SCRIPT_DIR/install/hooks.py" --target "$TARGET" ${DRY[@]+"${DRY[@]}"}

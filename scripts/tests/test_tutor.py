@@ -22,6 +22,10 @@ class TutorTest(unittest.TestCase):
         have = {p.stem for p in TEMPLATES.glob('*.md')}
         self.assertEqual(sorted(set(names) - have), [], 'templates missing from house-style/templates/')
 
+    def test_plugin_skills_cited_by_bare_name(self):
+        # Only Claude Code and Codex prefix a plugin's skills (zkfy:query); Pi and Antigravity do not.
+        self.assertNotIn('zkfy:', TUTOR.read_text())
+
     def test_hand_invoked_with_argument_hint(self):
         fm = frontmatter(TUTOR.read_text())
         self.assertEqual(fm.get('disable-model-invocation'), 'true')

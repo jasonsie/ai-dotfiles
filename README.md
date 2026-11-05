@@ -93,12 +93,13 @@ yours. After an uninstall, deleting the clone breaks nothing.
 
 ## Skills included
 
-Forty-three skills install into every CLI. Most come from
+Forty-four skills install into every CLI. Most come from
 [mattpocock/skills](https://github.com/mattpocock/skills) (MIT), lightly adapted so the same
 file works in all four CLIs, and one from [affaan-m/ECC](https://github.com/affaan-m/ECC)
 (MIT). `skills/skills.lock` records each adaptation. The `which-skill` skill routes between
 them. Skills written for this repo include `daily-log`, `worktree-guard`, `small-commits`,
-the git skills (`approve` and its steps), `upstream-docs`, `collect-docs`, `house-style` and `tutor`.
+the git skills (`approve` and its steps), `upstream-docs`, `collect-docs`, `house-style`, `tutor`
+and `portable-plugin`.
 
 ## Verify a change
 
