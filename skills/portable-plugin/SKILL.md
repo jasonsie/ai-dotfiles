@@ -26,10 +26,12 @@ The facts below were checked on 2026-11-05 with Claude Code 2.1.318, Codex 0.166
    - Every frontmatter (skills, agents, commands) loads with a strict YAML parser, such as
      PyYAML's `safe_load` on the block between the `---` lines. Pi skips a skill that fails,
      silently, and `claude plugin validate` flags only agents.
-   - The trial install below lists every skill in every CLI.
+   - The trial install below lists every skill in every CLI. Codex and Pi have no validator:
+     this listing is their check.
 3. **Release**: bump `version` in `.claude-plugin/plugin.json`, merge, then run
    `claude plugin tag --push` from the plugin folder. Then edit the plugin's pin in ai-dotfiles'
-   `config/plugins.json` and run `ai-dotfiles install`.
+   `config/plugins.json` and run `ai-dotfiles install`. Done when the tag is on GitHub and
+   `ai-dotfiles check` is healthy.
 
 ## Rules
 
