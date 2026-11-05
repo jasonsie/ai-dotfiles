@@ -25,7 +25,7 @@ Codex CLI, Pi, and Antigravity. The mechanism and layout are in
 | `scripts/ai-dotfiles` | Global command: `install`, `update`, `uninstall`, `check`, `worktree`, `commit`, `approve`, `git` | `scripts/install/skills.py` |
 | `scripts/install/installer.py` | What every step shares: reading `ai-clis.json`, safe writes | — |
 | `scripts/install/hooks.py` | One hook entry per event in each CLI's native hook file; ours are found by their command; retired ones taken out | — |
-| `scripts/install/plugins.py` | Each listed plugin at its release tag through each CLI's own plugin manager (Pi, Antigravity and Codex so far); a receipt tells installed from taken over; every outside command through one runner | — |
+| `scripts/install/plugins.py` | Each listed plugin at its release tag through each CLI's own plugin manager, read back after; a receipt tells installed from taken over; every outside command through one runner | — |
 | `scripts/install/launchd.py` | The daily-log pass as a LaunchAgent, `claude` path and PATH rendered at install | — |
 | `docs/upstream/` | Machine-written docs mirrors with their indexes (`INDEX.md`, `MIRROR-INDEX.*`), and skill catalogs | `scripts/upstream/` (weekly workflow) |
 | `docs/onboarding.md` | This repo's onboarding report | `skills/onboard/` (`/onboard`) |

@@ -102,6 +102,20 @@ def step(command):
     return command if hasattr(command, 'run') else Command(command)
 
 
+class Commands:
+    """Several outside commands as one step, run in order."""
+
+    def __init__(self, *commands):
+        self.commands = [Command(args) for args in commands if args]
+
+    def preview(self):
+        return [line for command in self.commands for line in command.preview()]
+
+    def run(self, runner):
+        for command in self.commands:
+            command.run(runner)
+
+
 class Pi:
     """Pi's packages: install and move with `pi install git:github.com/<repo>@<tag>`, which
     replaces the entry and moves the checkout; remove with `pi remove`; read the installed
@@ -295,7 +309,142 @@ class CodexInstall:
             print(f'Backup: {installer.apply(self.home, [change], backup="settings")}')
 
 
-CLIS = {'pi': Pi(), 'agy': Antigravity(), 'codex': Codex()}  # the CLIs this step knows how to install into
+def with_declaration(text, marketplace, repo, ref):
+    """Claude's settings with one marketplace declared in `extraKnownMarketplaces`: its GitHub
+    source at `ref`, auto-update off; every other key and the entry's other fields kept."""
+    data = json.loads(text) if text.strip() else {}
+    declared = data.setdefault('extraKnownMarketplaces', {}) if isinstance(data, dict) else None
+    if not isinstance(declared, dict):
+        raise ValueError('Claude settings: "extraKnownMarketplaces" is not an object')
+    old = declared.get(marketplace) if isinstance(declared.get(marketplace), dict) else {}
+    declared[marketplace] = {**old, 'source': {'source': 'github', 'repo': repo, 'ref': ref}, 'autoUpdate': False}
+    return json.dumps(data, indent=2, ensure_ascii=False) + '\n'
+
+
+class Claude:
+    """Claude Code's plugins, each from its GitHub marketplace pinned to the release tag with
+    auto-update off, declared in `extraKnownMarketplaces` in Claude's settings. Install with
+    `claude plugin marketplace add '<repo>#<tag>' --json`, which names the marketplace and
+    declares it, turn auto-update off in that declaration, then `claude plugin install`. Move,
+    or take over a plugin from an unpinned marketplace (declared, or known from a git URL), by
+    writing the declaration, running the same `marketplace add`, then `claude plugin update`:
+    Claude refuses an add its declaration does not match, and removing a marketplace deletes its
+    plugins' data. Remove with `claude plugin uninstall`, then `claude plugin marketplace remove
+    --scope user` when no other plugin comes from that marketplace. Read `claude plugin
+    marketplace list --json`, the declarations and `claude plugin list --json` (user scope; a
+    version Claude resolved as a dependency carries a 12-character commit suffix), keyed by name
+    and repo, (version, ref, auto-update off) as the marker. installed() runs first in each plan
+    and keeps the marketplaces it found for install()."""
+
+    GITHUB = re.compile(r'https://github\.com/([^/]+/[^/]+?)(?:\.git)?/?')
+    SUFFIX = re.compile(r'-[0-9a-f]{12}$')
+
+    def __init__(self):
+        self.catalog = {}
+
+    def call(self, runner, args):
+        code, out, err = runner(args)
+        if code != 0:
+            raise ValueError(f'{" ".join(args)} failed: {(err or out).strip()}')
+        return json.loads(out or '[]')
+
+    def installed(self, home, runner):
+        """{(name, owner/repo): ((version, ref, auto-update off), (name, marketplace, alone))}."""
+        path = installer.path(home, 'claude', 'settings')
+        declared = (json.loads(path.read_text() or '{}') if path.is_file() else {}).get('extraKnownMarketplaces') or {}
+        self.catalog = {}
+        for m in self.call(runner, ['claude', 'plugin', 'marketplace', 'list', '--json']):
+            match = self.GITHUB.fullmatch(m.get('url') or '') if m.get('source') == 'git' else None
+            repo = m.get('repo') if m.get('source') == 'github' else (match[1] if match else None)
+            if repo:
+                off = (declared.get(m['name']) or {}).get('autoUpdate') is False
+                self.catalog[repo.lower()] = (m['name'], m.get('ref'), off)
+        repos = {mp: (repo, ref, off) for repo, (mp, ref, off) in self.catalog.items()}
+        listing = [p for p in self.call(runner, ['claude', 'plugin', 'list', '--json'])
+                   if isinstance(p, dict) and '@' in str(p.get('id', ''))]
+        found = {}
+        for plugin in listing:
+            name, marketplace = plugin['id'].rsplit('@', 1)
+            if plugin.get('scope') != 'user' or marketplace not in repos:
+                continue
+            repo, ref, off = repos[marketplace]
+            alone = all(p is plugin or not p['id'].endswith('@' + marketplace) for p in listing)
+            version = self.SUFFIX.sub('', str(plugin.get('version', '')))
+            found[(name, repo)] = ((version, ref, off), (name, marketplace, alone))
+        return found
+
+    def key(self, name, repo):
+        return (name, repo.lower())
+
+    def pin(self, name, entry):
+        return (entry['version'], tag(name, entry), True)
+
+    def install(self, home, name, entry, current):
+        return ClaudeInstall(home, name, entry, current, self.catalog.get(entry['source'].lower()))
+
+    def remove(self, handle):
+        name, marketplace, alone = handle
+        return Commands(['claude', 'plugin', 'uninstall', f'{name}@{marketplace}', '--json'],
+                        ['claude', 'plugin', 'marketplace', 'remove', marketplace, '--scope', 'user', '--json']
+                        if alone else None)
+
+
+class ClaudeInstall:
+    """The step that installs or moves one plugin in Claude Code, as Claude's class says. An
+    `add` that re-registers a marketplace rewrites its declaration without `autoUpdate`, so the
+    declaration is written again after it; `install` and `update` keep it."""
+
+    def __init__(self, home, name, entry, current, known):
+        self.home, self.name, self.entry, self.current, self.known = home, name, entry, current, known
+        self.settings = installer.path(home, 'claude', 'settings')
+
+    def todo(self):
+        """(marketplace or None until Claude names it, the operations in order)."""
+        if self.known is None:
+            return None, ['add', 'declare', 'install']
+        marketplace, ref, off = self.known
+        moved = ref != tag(self.name, self.entry)
+        ops = ['declare', 'add', 'declare'] if moved else ([] if off else ['declare'])
+        if self.current is None:
+            ops.append('install')
+        elif moved or self.current[0] != self.entry['version']:
+            ops.append('update')
+        return marketplace, ops
+
+    def command(self, op, marketplace):
+        if op == 'add':
+            return ['claude', 'plugin', 'marketplace', 'add', f'{self.entry["source"]}#{tag(self.name, self.entry)}', '--json']
+        return ['claude', 'plugin', op, f'{self.name}@{marketplace}', '--json']
+
+    def preview(self):
+        marketplace, ops = self.todo()
+        return [f'Would update: {self.settings}' if op == 'declare' else
+                'Would run: ' + ' '.join(self.command(op, marketplace or '<its marketplace>')) for op in ops]
+
+    def run(self, runner):
+        marketplace, ops = self.todo()
+        for op in ops:
+            if op == 'declare':
+                want = tag(self.name, self.entry)
+                change = installer.edit(self.settings, lambda old: with_declaration(
+                    old.decode(), marketplace, self.entry['source'], want).encode())
+                if change:
+                    installer.show([change], True)
+                    print(f'Backup: {installer.apply(self.home, [change], backup="settings")}')
+                continue
+            args = self.command(op, marketplace)
+            print('Run: ' + ' '.join(args))
+            code, out, err = runner(args)
+            if code != 0:
+                raise ValueError(f'{" ".join(args)} failed: {(err or out).strip()}')
+            result = json.loads(out.strip().splitlines()[-1]) if out.strip() else {}
+            if op == 'add':
+                marketplace = result['marketplace']
+            if op == 'update' and Claude.SUFFIX.sub('', str(result.get('newVersion', ''))) != self.entry['version']:
+                print(f'Claude: {result.get("message", "the update stopped short of the pin")}')
+
+
+CLIS = {'pi': Pi(), 'agy': Antigravity(), 'codex': Codex(), 'claude': Claude()}  # the CLIs this step serves
 
 
 def released(name, entry, runner):

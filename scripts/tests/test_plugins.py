@@ -24,6 +24,7 @@ GIT = 'git:github.com/jasonsie/web-clipper'
 TAGS = 'git ls-remote --exit-code --tags https://github.com/jasonsie/web-clipper'
 AGY_URL = 'https://github.com/jasonsie/web-clipper'
 CODEX_CONFIG = where('codex', 'settings')
+CLAUDE_SETTINGS = where('claude', 'settings')
 CODEX_ADD = 'codex plugin marketplace add jasonsie/web-clipper --ref web-clipper--v2.2.0 --json'
 
 
@@ -170,6 +171,94 @@ class FakeCodex:
         return 0, '{}', ''
 
 
+class FakeClaude:
+    """Claude Code's plugins the way `claude plugin` keeps them: marketplaces in memory, their
+    declarations in `extraKnownMarketplaces` in Claude's settings (written by `marketplace
+    add`), installed plugins in memory. `marketplace add` is refused when a declaration names
+    another source, as Claude refuses it; `install` and `update` take the version the
+    marketplace's ref holds; `marketplace remove` drops the declaration and the plugins."""
+
+    LATEST = '2.4.0'
+
+    def __init__(self, home):
+        self.home, self.marketplaces, self.plugins, self.held = home, {}, {}, {}
+
+    def answers(self):
+        return {'claude plugin marketplace list --json': self.list_marketplaces,
+                'claude plugin list --json': self.list_plugins, 'claude plugin marketplace add': self.add,
+                'claude plugin marketplace remove': self.remove_marketplace, 'claude plugin install': self.install,
+                'claude plugin update': self.update, 'claude plugin uninstall': self.uninstall}
+
+    def settings(self):
+        path = self.home / CLAUDE_SETTINGS
+        return json.loads(path.read_text()) if path.is_file() else {}
+
+    def save(self, data):
+        path = self.home / CLAUDE_SETTINGS
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(data, indent=2) + '\n')
+
+    def declare(self, marketplace, source, auto_update=None):
+        data = self.settings()
+        entry = {'source': source, **({} if auto_update is None else {'autoUpdate': auto_update})}
+        data.setdefault('extraKnownMarketplaces', {})[marketplace] = entry
+        self.save(data)
+
+    def know(self, repo, ref=None, url=False):
+        name = repo.split('/')[1] + '-marketplace'
+        self.marketplaces[name] = ({'source': 'git', 'url': f'https://github.com/{repo}.git'} if url
+                                   else {'source': 'github', 'repo': repo, **({'ref': ref} if ref else {})})
+        return name
+
+    def put(self, name, marketplace, version, enabled=True, scope='user'):
+        self.plugins[(name, scope)] = {'id': f'{name}@{marketplace}', 'version': version, 'scope': scope, 'enabled': enabled}
+
+    def version_at(self, marketplace):
+        ref = self.marketplaces[marketplace].get('ref')
+        return ref.rsplit('--v', 1)[1] if ref else self.LATEST
+
+    def list_marketplaces(self, args):
+        return 0, json.dumps([{'name': n, **m, 'installLocation': '/x'} for n, m in self.marketplaces.items()]), ''
+
+    def list_plugins(self, args):
+        return 0, json.dumps(list(self.plugins.values())), ''
+
+    def add(self, args):
+        repo, ref = args[4].split('#')
+        name = repo.split('/')[1] + '-marketplace'
+        declared = self.settings().get('extraKnownMarketplaces', {}).get(name)
+        if declared and declared['source'] != {'source': 'github', 'repo': repo, 'ref': ref}:
+            return 1, json.dumps({'command': 'marketplace-add', 'outcome': 'error', 'message': 'its source does not match'}), ''
+        self.know(repo, ref)
+        self.declare(name, {'source': 'github', 'repo': repo, 'ref': ref})  # as Claude does: autoUpdate dropped
+        return 0, 'Cloning...\n' + json.dumps({'command': 'marketplace-add', 'outcome': 'ok', 'marketplace': name}), ''
+
+    def remove_marketplace(self, args):
+        self.marketplaces.pop(args[4], None)
+        data = self.settings()
+        data.get('extraKnownMarketplaces', {}).pop(args[4], None)
+        self.save(data)
+        self.plugins = {k: p for k, p in self.plugins.items() if not p['id'].endswith('@' + args[4])}
+        return 0, '{}', ''
+
+    def install(self, args):
+        name, marketplace = args[3].split('@')
+        self.put(name, marketplace, self.version_at(marketplace))
+        return 0, '{}', ''
+
+    def update(self, args):
+        name, marketplace = args[3].split('@')
+        plugin = self.plugins[(name, 'user')]
+        version = self.held.get(name) or self.version_at(marketplace)
+        self.put(name, marketplace, version, plugin['enabled'])
+        message = f'{name} is already at the latest version satisfying ^2.2 (required by zkfy).' if name in self.held else 'updated'
+        return 0, json.dumps({'command': 'update', 'outcome': 'ok', 'message': message, 'newVersion': version}), ''
+
+    def uninstall(self, args):
+        self.plugins.pop((args[3].split('@')[0], 'user'), None)
+        return 0, '{}', ''
+
+
 class PluginsStepTest(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -180,6 +269,9 @@ class PluginsStepTest(unittest.TestCase):
         self.fake.answers.update(self.agy.answers())
         self.codex = FakeCodex(self.home)
         self.fake.answers.update(self.codex.answers())
+        self.claude = FakeClaude(self.home)
+        self.fake.answers.update(self.claude.answers())
+        self.fake.answers['git ls-remote --exit-code --tags https://github.com/jasonsie/zkfy'] = (0, 'abc\trefs/tags/x\n', '')
         self.listed({'web-clipper': WEB_CLIPPER})
         self.switch()
 
@@ -220,7 +312,6 @@ class PluginsStepTest(unittest.TestCase):
             'web-clipper.*missing "version"': ({'web-clipper': {'source': 'a/b', 'targets': ['pi']}}, 1),
             'web-clipper.*non-empty': ({'web-clipper': {**WEB_CLIPPER, 'targets': []}}, 1),
             'web-clipper.*emacs.*ai-clis.json': ({'web-clipper': {**WEB_CLIPPER, 'targets': ['emacs']}}, 1),
-            'web-clipper.*no plugins support for claude': ({'web-clipper': {**WEB_CLIPPER, 'targets': ['claude']}}, 1),
         }
         for message, (entries, version) in cases.items():
             with self.subTest(message):
@@ -228,6 +319,13 @@ class PluginsStepTest(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, message):
                     self.step()
         self.assertEqual(self.fake.calls, [])
+
+    def test_a_cli_the_step_cannot_serve_yet_stops_the_run(self):
+        with patch.dict(plugins.CLIS):
+            del plugins.CLIS['claude']
+            self.listed({'web-clipper': {**WEB_CLIPPER, 'targets': ['claude']}})
+            with self.assertRaisesRegex(ValueError, 'web-clipper.*no plugins support for claude'):
+                self.step()
 
     def test_the_repo_plugin_list_passes_the_check(self):
         self.assertIsInstance(plugins.plugins(), dict)
@@ -476,6 +574,149 @@ class PluginsStepTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'codex plugin list --json failed: not logged in'):
             self.step()
         self.assertEqual(self.fake.ran('codex plugin m'), [])
+
+    # Claude Code
+
+    def claude_listed(self, version='2.2.0', **more):
+        self.listed({'web-clipper': {**WEB_CLIPPER, 'version': version, 'targets': ['claude']}, **more})
+
+    def claude_runs(self):
+        return [c for c in self.fake.ran('claude plugin') if 'list --json' not in c]
+
+    def declared(self, marketplace='web-clipper-marketplace'):
+        return self.claude.settings()['extraKnownMarketplaces'][marketplace]
+
+    def test_install_puts_the_pin_into_claude_with_auto_update_off(self):
+        self.claude_listed()
+        count, out = self.step()
+        self.assertEqual(self.claude_runs(), [
+            'claude plugin marketplace add jasonsie/web-clipper#web-clipper--v2.2.0 --json',
+            'claude plugin install web-clipper@web-clipper-marketplace --json'])
+        self.assertEqual(self.declared(), {'source': {'source': 'github', 'repo': 'jasonsie/web-clipper',
+                                                      'ref': 'web-clipper--v2.2.0'}, 'autoUpdate': False})
+        self.assertEqual(self.claude.plugins[('web-clipper', 'user')]['version'], '2.2.0')
+        self.assertEqual(self.receipt(), {'web-clipper': {'claude': 'installed'}})
+        self.assertIn(f'Update: {self.home / CLAUDE_SETTINGS}', out)
+        self.assertEqual(count, 4)  # two commands, the settings and the receipt
+        self.fake.calls.clear()
+        self.assertEqual(self.step()[0], 0)
+        self.assertEqual(self.claude_runs(), [])
+
+    def test_a_changed_pin_moves_claude_and_keeps_a_disabled_plugin_and_other_settings(self):
+        self.claude.save({'model': 'opus', 'hooks': {'PreToolUse': []}, 'enabledPlugins': {'other@x': True}})
+        self.claude_listed()
+        self.step()
+        self.claude.plugins[('web-clipper', 'user')]['enabled'] = False
+        before = self.claude.settings()
+        self.claude_listed('2.3.0')
+        self.fake.calls.clear()
+        self.step()
+        self.assertEqual(self.claude_runs(), [
+            'claude plugin marketplace add jasonsie/web-clipper#web-clipper--v2.3.0 --json',
+            'claude plugin update web-clipper@web-clipper-marketplace --json'])
+        plugin = self.claude.plugins[('web-clipper', 'user')]
+        self.assertEqual((plugin['version'], plugin['enabled']), ('2.3.0', False))
+        after = self.claude.settings()
+        self.assertEqual(after['extraKnownMarketplaces']['web-clipper-marketplace']['source']['ref'], 'web-clipper--v2.3.0')
+        self.assertEqual({k: v for k, v in after.items() if k != 'extraKnownMarketplaces'},
+                         {k: v for k, v in before.items() if k != 'extraKnownMarketplaces'})
+        backups = (self.home / installer.STATE / 'settings').glob('backup-*/' + CLAUDE_SETTINGS)
+        self.assertIn(before, [json.loads(b.read_text()) for b in backups])
+        self.assertIs(self.declared()['autoUpdate'], False)
+
+    def test_a_version_with_a_commit_suffix_counts_as_its_pin(self):
+        marketplace = self.claude.know('jasonsie/web-clipper', 'web-clipper--v2.2.0')
+        self.claude.declare(marketplace, {'source': 'github', 'repo': 'jasonsie/web-clipper',
+                                          'ref': 'web-clipper--v2.2.0'}, auto_update=False)
+        self.claude.put('web-clipper', marketplace, '2.2.0-b1f6b17dca62')
+        self.claude_listed()
+        count, _ = self.step()
+        self.assertEqual((count, self.claude_runs()), (1, []))  # only the receipt
+        self.assertEqual(self.receipt(), {'web-clipper': {'claude': 'taken over'}})
+
+    def test_todays_hand_installs_are_taken_over_pinned_and_never_removed(self):
+        # As on this Mac: web-clipper declared without a ref, auto-update on, installed as zkfy's
+        # dependency; zkfy's marketplace known from a git URL only.
+        web = self.claude.know('jasonsie/web-clipper')
+        self.claude.declare(web, {'source': 'github', 'repo': 'jasonsie/web-clipper'}, auto_update=True)
+        self.claude.put('web-clipper', web, '2.4.0-b1f6b17dca62')
+        zkfy = self.claude.know('jasonsie/zkfy', url=True)
+        self.claude.put('zkfy', zkfy, '1.6.0')
+        self.claude_listed('2.4.0', zkfy={'source': 'jasonsie/zkfy', 'version': '1.6.0', 'targets': ['claude']})
+        self.step()
+        self.assertEqual(self.claude_runs(), [
+            'claude plugin marketplace add jasonsie/web-clipper#web-clipper--v2.4.0 --json',
+            'claude plugin update web-clipper@web-clipper-marketplace --json',
+            'claude plugin marketplace add jasonsie/zkfy#zkfy--v1.6.0 --json',
+            'claude plugin update zkfy@zkfy-marketplace --json'])
+        for name, marketplace in (('web-clipper', web), ('zkfy', zkfy)):
+            self.assertEqual(self.declared(marketplace)['autoUpdate'], False)
+            self.assertEqual(self.claude.marketplaces[marketplace]['source'], 'github')
+        self.assertEqual(self.receipt(), {'web-clipper': {'claude': 'taken over'}, 'zkfy': {'claude': 'taken over'}})
+        self.fake.calls.clear()
+        self.assertEqual(self.step()[0], 0)
+        self.listed({})
+        _, out = self.step()
+        self.assertEqual(self.claude_runs(), [])
+        self.assertIn('Left in place: claude plugin zkfy (taken over)', out)
+
+    def test_dropping_a_plugin_from_claude_uninstalls_it_and_its_marketplace_when_alone(self):
+        self.claude_listed()
+        self.step()
+        self.fake.calls.clear()
+        self.listed({})
+        self.step()
+        self.assertEqual(self.claude_runs(), [
+            'claude plugin uninstall web-clipper@web-clipper-marketplace --json',
+            'claude plugin marketplace remove web-clipper-marketplace --scope user --json'])
+        self.assertEqual((self.claude.plugins, self.claude.marketplaces), ({}, {}))
+        self.assertNotIn('web-clipper-marketplace', self.claude.settings()['extraKnownMarketplaces'])
+        self.assertEqual(self.receipt(), {})
+
+    def test_a_marketplace_another_plugin_still_uses_stays(self):
+        self.claude_listed()
+        self.step()
+        self.claude.put('web-clipper-extras', 'web-clipper-marketplace', '1.0.0')  # the user's own
+        self.fake.calls.clear()
+        self.listed({'web-clipper': WEB_CLIPPER})  # Claude dropped from its targets
+        self.step()
+        self.assertEqual(self.claude_runs(), ['claude plugin uninstall web-clipper@web-clipper-marketplace --json'])
+        self.assertIn('web-clipper-marketplace', self.claude.marketplaces)
+
+    def test_auto_update_turned_back_on_is_turned_off_without_a_reinstall(self):
+        self.claude_listed()
+        self.step()
+        entry = self.declared()
+        self.claude.declare('web-clipper-marketplace', entry['source'], auto_update=True)  # toggled in /plugin
+        self.fake.calls.clear()
+        count, _ = self.step()
+        self.assertEqual((count, self.claude_runs()), (1, []))
+        self.assertIs(self.declared()['autoUpdate'], False)
+
+    def test_a_move_claude_will_not_make_stops_the_run_with_its_reason(self):
+        self.claude_listed()
+        self.step()
+        self.claude.held['web-clipper'] = '2.2.0-b1f6b17dca62'  # zkfy needs ^2.2
+        self.claude_listed('2.1.0')
+        with self.assertRaisesRegex(ValueError, r'not at its pin.*claude web-clipper.*2\.1\.0'):
+            _, out = self.step()
+        self.assertEqual(self.receipt(), {'web-clipper': {'claude': 'installed'}})
+
+    def test_a_dry_run_for_claude_prints_each_step_and_writes_nothing(self):
+        self.claude_listed()
+        count, out = self.step(write=False)
+        self.assertIn('Would run: claude plugin marketplace add jasonsie/web-clipper#web-clipper--v2.2.0 --json', out)
+        self.assertIn(f'Would update: {self.home / CLAUDE_SETTINGS}', out)
+        self.assertIn('Would run: claude plugin install web-clipper@<its marketplace> --json', out)
+        self.assertEqual(count, 4)
+        self.assertEqual((self.claude.marketplaces, self.claude.settings()), ({}, {}))
+
+    def test_a_failed_claude_listing_stops_before_any_change(self):
+        self.claude_listed()
+        self.fake.answers['claude plugin marketplace list --json'] = (1, '', 'boom')
+        with self.assertRaisesRegex(ValueError, 'claude plugin marketplace list --json failed: boom'):
+            self.step()
+        self.assertEqual(self.claude_runs(), [])
 
     # Switched off, uninstall, --target
 
