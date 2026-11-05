@@ -173,8 +173,8 @@ class PluginsStepTest(unittest.TestCase):
                 self.fake.save([])
 
     def test_dropping_pi_from_the_targets_removes_it_from_pi_only(self):
-        class Codex:  # a second CLI that already has the plugin at its pin
-            def installed(self, home):
+        class Codex(plugins.Pi):  # a second CLI that already has the plugin at its pin
+            def installed(self, home, runner):
                 return {'jasonsie/web-clipper': ('web-clipper--v2.2.0', 'codex-source')}
 
         with patch.dict(plugins.CLIS, {'codex': Codex()}):

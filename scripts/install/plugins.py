@@ -78,11 +78,15 @@ def plugins():
 class Pi:
     """Pi's packages: install and move with `pi install git:github.com/<repo>@<tag>`, which
     replaces the entry and moves the checkout; remove with `pi remove`; read the installed
-    ones from the packages in Pi's settings."""
+    ones from the packages in Pi's settings, keyed by repo, the tag as their marker.
+
+    Each CLI's class answers the same five questions: what it has installed ({key: (marker,
+    handle)}), the key a plugin has there, the marker that means "at its pin", and the
+    commands that install (or move) and remove one."""
 
     GIT = re.compile(r'git:github\.com/([^@]+?)(?:\.git)?(?:@(.+))?')
 
-    def installed(self, home):
+    def installed(self, home, runner):
         """{owner/repo (lowercase): (ref or None, the source as Pi has it)}."""
         path = installer.path(home, 'pi', 'settings')
         data = json.loads(path.read_text() or '{}') if path.is_file() else {}
@@ -93,6 +97,12 @@ class Pi:
             if match:
                 found[match[1].lower()] = (match[2], source)
         return found
+
+    def key(self, name, repo):
+        return repo.lower()
+
+    def pin(self, name, entry):
+        return tag(name, entry)
 
     def install(self, name, entry):
         return ['pi', 'install', f'git:github.com/{entry["source"]}@{tag(name, entry)}']
@@ -111,7 +121,7 @@ def released(name, entry, runner):
     return code == 0 and bool(out.strip())
 
 
-def plan(home, selected, listed, owned, sources, which):
+def plan(home, selected, listed, owned, sources, which, runner):
     """(actions, notes): each action is (command, name, cli, record), where record is the
     receipt's new value for that plugin and CLI (None drops it); notes are printed as is."""
     actions, notes = [], []
@@ -127,13 +137,14 @@ def plan(home, selected, listed, owned, sources, which):
         if not which(cli):
             notes.append(f'plugins: skip {cli} (not on PATH)')
             continue
-        manager, present = CLIS[cli], CLIS[cli].installed(home)
+        manager = CLIS[cli]
+        present = manager.installed(home, runner)
         for name, entry in listed.items():
             if cli not in entry['targets']:
                 continue
-            ref, _ = present.get(entry['source'].lower(), (None, None))
-            record = owned.get(name, {}).get(cli) or (INSTALLED if ref is None else TAKEN_OVER)
-            if ref != tag(name, entry):
+            marker, _ = present.get(manager.key(name, entry['source']), (None, None))
+            record = owned.get(name, {}).get(cli) or (INSTALLED if marker is None else TAKEN_OVER)
+            if marker != manager.pin(name, entry):
                 actions.append((manager.install(name, entry), name, cli, record))
             elif owned.get(name, {}).get(cli) != record:
                 actions.append((None, name, cli, record))
@@ -146,8 +157,8 @@ def plan(home, selected, listed, owned, sources, which):
                 actions.append((None, name, cli, None))
                 continue
             repo = (entry or {}).get('source') or sources.get(name, '')
-            _, source = present.get(repo.lower(), (None, None))
-            actions.append((manager.remove(source) if source else None, name, cli, None))
+            _, handle = present.get(manager.key(name, repo), (None, None))
+            actions.append((manager.remove(handle) if handle else None, name, cli, None))
     return actions, notes
 
 
@@ -175,7 +186,7 @@ def run(home, target, write, uninstall, runner=shell, which=shutil.which):
                 print(f'Left in place: {cli} plugin {name} ({owned[name][cli]})')
         print('Plugins stay; remove them with each CLI\'s own uninstall if unwanted.')
         return 0
-    actions, notes = plan(home, selected, listed, owned, sources, which)
+    actions, notes = plan(home, selected, listed, owned, sources, which, runner)
     for note in notes:
         print(note)
     pins = {name for command, name, _, record in actions if command and record}
