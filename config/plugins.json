@@ -3,13 +3,13 @@
   "plugins": {
     "web-clipper": {
       "source": "jasonsie/web-clipper",
-      "version": "2.2.0",
+      "version": "2.2.1",
       "targets": ["claude", "codex", "pi", "agy"]
     },
     "zkfy": {
       "source": "jasonsie/zkfy",
-      "version": "1.6.0",
-      "targets": ["claude"]
+      "version": "1.7.0",
+      "targets": ["claude", "codex", "pi", "agy"]
     }
   }
 }
