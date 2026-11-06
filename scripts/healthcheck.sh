@@ -6,6 +6,7 @@
 #     and command link is in place, and every managed setting is applied
 #   - shared MCP servers are listed by each CLI's own `mcp list`
 #   - ~/.local/bin is on PATH, so `ai-dotfiles` runs from any folder
+#   - `ai-dotfiles statusline`, the status line Claude Code and Antigravity run, renders a line
 #   - the daily-log pass's LaunchAgent is loaded (when claude is installed)
 #   - repo sources contain no machine-specific paths; unit tests pass
 
@@ -67,6 +68,13 @@ case ":$PATH:" in
   *":$HOME/.local/bin:"*|*":$HOME/.local/bin/:"*) pass "$HOME/.local/bin on PATH" ;;
   *) fail "$HOME/.local/bin is not on PATH; ai-dotfiles only runs by its full path" ;;
 esac
+
+echo "-- status line (ai-dotfiles statusline, run by Claude Code and Antigravity)"
+if OUT="$(printf '{"model":{"display_name":"check"},"version":"0"}' | "$PYTHON" "$ROOT/scripts/statusline.py" 2>&1)" && [ -n "$OUT" ]; then
+  pass "statusline renders a line"
+else
+  fail "statusline failed: $OUT"
+fi
 
 echo "-- launchd (the daily-log pass, 04:00 each day)"
 PLIST="$HOME/Library/LaunchAgents/com.ai-dotfiles.daily-log-day.plist"
