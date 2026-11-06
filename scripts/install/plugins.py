@@ -14,6 +14,11 @@ Dropping a plugin, or a CLI from its targets, removes it there only where the st
 installed it. A CLI switched off, and --uninstall, leave every plugin in place and list it.
 Plugins the list does not name are never touched.
 
+A plugin's commands, the executables in its bin/ at the tag, are linked into ~/.local/bin from
+one checkout at the tag under ~/.local/share/ai-dotfiles/plugins/<name>, like an npm global
+install, for every CLI and the shell; a name the step did not create is refused. A dropped
+plugin loses its links and checkout on a full run; --uninstall leaves them and lists them.
+
 Every outside command goes through one runner, `shell`, which tests replace. Each CLI's
 class answers the same five questions: what it has installed ({key: (marker, handle)}),
 the key a plugin has there, the marker that means "at its pin", the command (or step) that
@@ -38,6 +43,8 @@ NAME = re.compile(r'[a-z0-9][a-z0-9-]*')
 SOURCE = re.compile(r'[A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9._-]+')
 SEMVER = re.compile(r'(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?')
 INSTALLED, TAKEN_OVER = 'installed', 'taken over'
+SHARE = '.local/share/ai-dotfiles/plugins'  # one checkout per plugin whose bin/ holds commands
+BIN = '.local/bin'  # where those commands are linked, beside ai-dotfiles and daily-log
 
 
 def shell(args):
@@ -538,25 +545,31 @@ def satisfies(version, spec):
             '<=': core <= low if full else core < above(last)}[op]
 
 
-def manifest(name, entry, runner):
-    """The plugin's Claude manifest at its release tag, from a shallow clone without files."""
+def inspect(name, entry, runner):
+    """(manifest, the command files in bin/) of the plugin at its release tag, from one shallow
+    clone without files: the Claude manifest, and bin/'s executables and links."""
     with tempfile.TemporaryDirectory(prefix='ai-dotfiles-plugin-') as folder:
         clone = ['git', 'clone', '--quiet', '--depth', '1', '--branch', tag(name, entry), '--no-checkout',
                  '--filter=blob:none', f'https://github.com/{entry["source"]}', folder]
-        for args in (clone, ['git', '-C', folder, 'show', 'HEAD:.claude-plugin/plugin.json']):
+        outs = []
+        for args in (clone, ['git', '-C', folder, 'show', 'HEAD:.claude-plugin/plugin.json'],
+                     ['git', '-C', folder, 'ls-tree', 'HEAD', 'bin/']):
             code, out, err = runner(args)
             if code != 0:
                 raise ValueError(f'cannot read {entry["source"]} at {tag(name, entry)}: {(err or out).strip()}')
-    data = json.loads(out)
-    return data if isinstance(data, dict) else {}
+            outs.append(out)
+    data = json.loads(outs[1])
+    files = sorted(Path(line.split('\t', 1)[1]).name for line in outs[2].splitlines()
+                   if '\t' in line and line.split()[0] in ('100755', '120000'))
+    return (data if isinstance(data, dict) else {}), files
 
 
-def dependency_problems(listed, runner):
+def dependency_problems(listed, look):
     """Each listed plugin's manifest at its tag against the list: named as its key, and each
     dependency it declares listed, aimed at every CLI it is, and pinned inside its range."""
     problems = []
     for name, entry in sorted(listed.items()):
-        data = manifest(name, entry, runner)
+        data = look(name)[0]
         if data.get('name') != name:
             problems.append(f'{name}: {entry["source"]} at {tag(name, entry)} is named {data.get("name")!r}; '
                             f'list it under that name')
@@ -579,12 +592,100 @@ def dependency_problems(listed, runner):
     return problems
 
 
+def current_tag(folder, runner):
+    """The release tag a checkout stands at, read locally; None without one."""
+    if not folder.is_dir():
+        return None
+    code, out, _ = runner(['git', '-C', str(folder), 'describe', '--tags', '--exact-match', 'HEAD'])
+    return out.strip() if code == 0 else None
+
+
+class Checkout:
+    """The step that puts a plugin's checkout at its release tag: a shallow clone the first time,
+    then a fetch of the tag and a checkout of it."""
+
+    def __init__(self, folder, name, entry):
+        self.folder, self.name, self.entry = folder, name, entry
+
+    def commands(self):
+        want = tag(self.name, self.entry)
+        if not self.folder.is_dir():
+            return [['git', 'clone', '--quiet', '--depth', '1', '--branch', want,
+                     f'https://github.com/{self.entry["source"]}', str(self.folder)]]
+        return [['git', '-C', str(self.folder), 'fetch', '--quiet', '--depth', '1', 'origin', 'tag', want],
+                ['git', '-C', str(self.folder), 'checkout', '--quiet', want]]
+
+    def preview(self):
+        return ['Would run: ' + ' '.join(args) for args in self.commands()]
+
+    def run(self, runner):
+        for args in self.commands():
+            Command(args).run(runner)
+
+
+class Links:
+    """The step that sets links in ~/.local/bin, through the installer's safe writes, and takes
+    away a checkout no longer needed."""
+
+    def __init__(self, home, changes, gone=None):
+        self.home, self.changes, self.gone = home, changes, gone
+
+    def preview(self):
+        lines = [f'Would link: {path} -> {after[1]}' if after[0] == 'link' else f'Would remove: {path}'
+                 for path, _, after in self.changes]
+        return lines + ([f'Would remove folder: {self.gone}'] if self.gone else [])
+
+    def run(self, runner):
+        installer.show(self.changes, True)
+        installer.apply(self.home, self.changes)
+        if self.gone:
+            print(f'Remove folder: {self.gone}')
+            shutil.rmtree(self.gone)
+
+
+def commands_plan(home, selected, listed, records, look, runner, which, full):
+    """Actions (step or None, name, 'bin', record) that keep each listed plugin's commands, the
+    executables in bin/ at its tag, linked from ~/.local/bin into its checkout, for plugins one
+    of whose CLIs this run serves; a dropped plugin loses links and checkout on a full run.
+    records: {name: {'tag': tag, 'files': [...]}}, so an unchanged pin needs no remote look."""
+    entries = installer.clis()
+    served = {cli for cli in selected if entries[cli]['on'] and which(cli)}
+    actions = []
+    for name, entry in sorted(listed.items()):
+        if not served & set(entry['targets']):
+            continue
+        want, record = tag(name, entry), records.get(name) or {}
+        files = record['files'] if record.get('tag') == want else look(name)[1]
+        folder = home / SHARE / name
+        mine = {home / BIN / f for f in record.get('files', [])}
+        wanted = {home / BIN / f: str(folder / 'bin' / f) for f in files}
+        for path, target in wanted.items():  # a recorded name counts as ours only while it holds our link
+            if installer.state(path) not in (('absent',), ('link', target)):
+                raise ValueError(f'Not created by the plugins step; refusing to replace: {path}')
+        steps = [Checkout(folder, name, entry)] if files and current_tag(folder, runner) != want else []
+        links = [(path, installer.state(path), ('link', target)) for path, target in wanted.items()
+                 if installer.state(path) != ('link', target)]
+        links += [(path, installer.state(path), ('absent',)) for path in sorted(mine - set(wanted))
+                  if installer.state(path) == ('link', str(folder / 'bin' / path.name))]
+        gone = folder if not files and folder.is_dir() and record.get('files') else None
+        steps += [Links(home, links, gone)] if links or gone else []
+        new = {'tag': want, 'files': files}
+        actions += [(s, name, 'bin', new) for s in steps] or ([(None, name, 'bin', new)] if record != new else [])
+    for name in sorted(set(records) - set(listed)) if full else ():
+        folder = home / SHARE / name
+        links = [(path, installer.state(path), ('absent',)) for path in (home / BIN / f for f in records[name]['files'])
+                 if installer.state(path) == ('link', str(folder / 'bin' / path.name))]
+        gone = folder if folder.is_dir() else None
+        actions.append((Links(home, links, gone) if links or gone else None, name, 'bin', None))
+    return actions
+
+
 def verify(home, listed, actions, runner):
     """Read each CLI back after the step installed or moved plugins in it; stop when one is not
     at its pin, since a CLI can report success and keep the old version."""
     acted = {}
     for command, name, cli, record in actions:
-        if command and record:
+        if command and record and cli != 'bin':
             acted.setdefault(cli, []).append(name)
     off = []
     for cli, names in acted.items():
@@ -609,6 +710,11 @@ def run(home, target, write, uninstall, runner=shell, which=shutil.which):
         for name in sorted(owned):
             for cli in sorted(set(owned[name]) & set(selected)):
                 print(f'Left in place: {cli} plugin {name} ({owned[name][cli]})')
+        for name, record in sorted(old.get('bin', {}).items()) if target == 'all' else ():
+            for file in record['files']:
+                print(f'Left in place: {home / BIN / file} ({name}\'s command)')
+            if (home / SHARE / name).is_dir():
+                print(f'Left in place: {home / SHARE / name}')
         print('Plugins stay; remove them with each CLI\'s own uninstall if unwanted.')
         return 0
     actions, notes = plan(home, selected, listed, owned, sources, which, runner)
@@ -619,16 +725,31 @@ def run(home, target, write, uninstall, runner=shell, which=shutil.which):
     if missing:
         raise ValueError(f'no release tag on GitHub for {", ".join(missing)}; make it in the plugin '
                          f'repo with `claude plugin tag --push`, then run again')
-    problems = dependency_problems(listed, runner) if any(command for command, *_ in actions) else []
+    seen = {}
+
+    def look(name):
+        if name not in seen:
+            seen[name] = inspect(name, listed[name], runner)
+        return seen[name]
+
+    problems = dependency_problems(listed, look) if any(command for command, *_ in actions) else []
     if problems:
         raise ValueError('dependencies: ' + '; '.join(problems))
+    actions += commands_plan(home, selected, listed, old.get('bin', {}), look, runner, which, target == 'all')
     steps = [step(command) for command, *_ in actions if command]
     changes = sum(len(s.preview()) for s in steps)
 
     def content(done):
-        after = recorded(owned, done)
-        return {'version': 1, 'plugins': after,
+        after = recorded(owned, [a for a in done if a[2] != 'bin'])
+        bins = dict(old.get('bin', {}))
+        for _, name, cli, record in done:
+            if cli == 'bin' and record is None:
+                bins.pop(name, None)
+            elif cli == 'bin':
+                bins[name] = record
+        data = {'version': 1, 'plugins': after,
                 'sources': {name: listed[name]['source'] if name in listed else sources[name] for name in after}}
+        return {**data, 'bin': bins} if bins else data
 
     files = [] if content(actions) == old else [(receipt, installer.state(receipt), installer.receipt(content(actions)))]
     if not write:
