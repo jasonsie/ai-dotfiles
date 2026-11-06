@@ -22,7 +22,9 @@ The facts below were checked on 2026-11-05 with Claude Code 2.1.318, Codex 0.166
    README's support table.
 2. **Check**, from the plugin folder. Done when all four pass:
    - `claude plugin validate .` reports no error.
-   - `agy plugin validate --strict .` reports no error and no warning.
+   - `agy plugin validate --strict .` reports no error. Three warnings are expected in a repo that also
+     serves Claude Code and Codex, and only these: `.mcp.json`, `hooks/hooks.json` and a root `AGENTS.md`
+     are "never loaded" by Antigravity. Any other warning is a defect.
    - Every frontmatter (skills, agents, commands) loads with a strict YAML parser, such as
      PyYAML's `safe_load` on the block between the `---` lines. Pi skips a skill that fails,
      silently, and `claude plugin validate` flags only agents.
@@ -76,7 +78,8 @@ The facts below were checked on 2026-11-05 with Claude Code 2.1.318, Codex 0.166
   `version`, `description`, `author`) makes `agy plugin install` load the plugin as is, reading
   `skills/`, `agents/`, `rules/`, `hooks.json` and `mcp_config.json` at the root. Without it,
   Antigravity converts the Claude format, which breaks hooks and remote MCP servers.
-- **Agents Antigravity accepts**: `model` is `inherit` or left out. Claude's `sonnet` and
+- **Agents Antigravity accepts**: `name` in the frontmatter (Claude takes it from the filename;
+  Antigravity skips a nameless agent) and `model` `inherit` or left out. Claude's `sonnet` and
   `opus` are not Antigravity tiers, so it skips such an agent. A prompt file that a general
   subagent reads can live outside `agents/`, where no CLI loads it as an agent.
 - **Skill bodies under 24000 bytes**: Antigravity loads only the first 24000 bytes of a
