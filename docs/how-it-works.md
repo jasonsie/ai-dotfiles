@@ -13,6 +13,7 @@ config/              the sources the installers apply
   global-agents.md     the rules every CLI loads in every project
   cli-settings.json    per-CLI `enforce` and `default` settings keys
   mcp-servers.json     MCP servers shared by the CLIs
+  plugins.json         the plugin list: each plugin's GitHub source, pin and target CLIs
   upstream-docs.json   the documentation sources mirrored into docs/upstream/
 skills/              shared skills; skills.lock pins adapted ones; daily-log/ holds the
                      daily-log command and the day pass; worktree-guard/ and small-commits/
@@ -38,6 +39,7 @@ config/ai-clis.json           ─►  every step: which CLIs, and their paths  �
 config/global-agents.md       ─►  instructions.py (symlinks)               ─►  each CLI's global instruction file
 config/cli-settings.json      ─►  settings.py (merges listed keys)         ─►  settings.json / config.toml
 config/mcp-servers.json       ─►  mcp.py (native `mcp add`, or a merge)    ─►  Claude Code, Codex, Pi, Antigravity
+config/plugins.json           ─►  plugins.py (each CLI's plugin manager)   ─►  each CLI's plugin store; ~/.local/bin/<command>
 skills/<name>/                ─►  skills.py (links)                        ─►  every CLI's skill folder
 scripts/ai-dotfiles           ─►  skills.py (link)                         ─►  ~/.local/bin
 skills/daily-log/scripts/     ─►  skills.py (link); launchd.py (plist)     ─►  ~/.local/bin/daily-log; ~/Library/LaunchAgents (04:00)
@@ -103,6 +105,58 @@ disagrees with the file.
 Checked at runtime on 2026-10-16 and 2026-10-17: every CLI loads the global file and a
 project `AGENTS.md`, and lists the `grilling` skill. Codex can be checked
 without a model call: `codex debug prompt-input "hi"` prints what it would send.
+
+## Plugins: config/plugins.json
+
+A plugin is an installable bundle (skills, commands, agents, hooks, MCP servers, commands
+for PATH) kept in its own GitHub repo. `config/plugins.json` lists the ones every Mac gets,
+the way `package.json` lists dependencies; npm's `install` and `uninstall` are the model,
+nothing more. Each entry names a plugin (its key is the manifest's `name`), its GitHub
+`source` (a repo whose root is the plugin), an exact `version` (the pin) and the `targets`
+it goes to. The plugins step installs the pin's release tag, `<name>--v<version>`, through
+each CLI's own plugin manager, and reads the CLI back afterwards: a CLI can report success
+and keep the old version.
+
+| | Claude Code | Codex CLI | Pi | Antigravity |
+|---|---|---|---|---|
+| Install | `plugin marketplace add <repo>#<tag>`, then `plugin install` | `plugin marketplace add <repo> --ref <tag>`, then `plugin add` | `pi install git:github.com/<repo>@<tag>` | `agy plugin install <repo URL>/tree/<tag>` |
+| Move to a new pin | set the ref in `extraKnownMarketplaces`, `marketplace add` again, `plugin update` | set `ref` under `[marketplaces.<name>]`, `plugin marketplace upgrade` | `pi install` at the new tag | `agy plugin install` at the new tag |
+| Remove | `plugin uninstall`; the marketplace too when nothing else uses it | `plugin remove` | `pi remove` | `agy plugin uninstall` |
+| Read back | `plugin list --json` | `plugin list --json` | `settings.json` (`packages`) | `plugin list --json` |
+| Plugin `bin/` on PATH | yes, after the user's own entries | no | no | no |
+
+Rules the step follows:
+
+- **Before any change:** every tag it needs exists on GitHub (a missing one stops the run
+  and prints `claude plugin tag --push`), and each plugin's manifest at its tag agrees with
+  the list: named as its key, every dependency it declares listed, aimed at the same CLIs,
+  pinned inside its range (`^`, `~`, exact, `>=`). Dependencies are listed with their own
+  pin, like strict peer dependencies; nothing is resolved.
+- **Only ai-dotfiles moves versions.** Claude's managed marketplaces get `autoUpdate: false`;
+  Claude's own auto-update would otherwise move a dependency past its pin.
+- **Commands on PATH, like an npm global install.** For a plugin whose `bin/` holds
+  executables, one checkout at the tag lives in `~/.local/share/ai-dotfiles/plugins/<name>`
+  and each command is linked into `~/.local/bin`, so it runs the same in every CLI and the
+  shell. A name there that is not absent or our link stops the run. An unchanged pin is
+  checked offline (`git describe` in the checkout).
+- **The list controls only what it names.** Dropping a plugin, or a CLI from its targets,
+  removes it there on the next install, only where the receipt says the step installed it.
+  A plugin a CLI already had when first listed is taken over: moved to its pin, recorded as
+  such, never removed. A CLI switched off, and `ai-dotfiles uninstall`, leave plugins, links
+  and checkouts in place and list them, like MCP servers.
+- **A plugin the user disabled stays disabled;** the step never runs a command that would
+  re-enable it.
+- **Gaps are the plugin's job.** ai-dotfiles distributes; it never adapts content. A feature a
+  CLI cannot load as shipped is filled with that CLI's own feature where one exists (commands
+  as skills, Antigravity's own `hooks.json` and `mcp_config.json`, a Pi extension for hooks
+  and MCP), else documented. The rules, with the facts behind them and the trial-install
+  commands, are the `portable-plugin` skill. Today web-clipper goes to all four CLIs; zkfy
+  goes to Claude only until its portable release.
+
+Adding, bumping or removing a plugin is a hand edit of `config/plugins.json`, applied by
+`ai-dotfiles install`; a release in a plugin repo ends by bumping its pin here. `ai-dotfiles
+check` needs nothing plugin-specific: the step is idempotent, so a missing plugin, a wrong
+version or a plugin to remove shows up as a pending change.
 
 ## Principles
 
@@ -277,6 +331,7 @@ skills/git/                          a bundle; the installer links each skill by
 | Settings | `~/.local/state/ai-dotfiles/settings/backup-*` | Copy the backed-up file back |
 | MCP (Antigravity's file) | `~/.local/state/ai-dotfiles/mcp/backup-*` | Copy the backed-up file back |
 | Skills, commands, Pi extension | `~/.local/state/ai-dotfiles/skills.json` (links this repo created) | `python3 scripts/install/skills.py --uninstall` |
+| Plugins | `~/.local/state/ai-dotfiles/plugins.json` (installed or taken over, per plugin and CLI; each `bin/` checkout's tag and commands); `settings/backup-*` for the edits to Claude's `settings.json` and Codex's `config.toml` | Empty the list and run `ai-dotfiles install`; `--uninstall` only lists what stays |
 | Everything | the records above | `ai-dotfiles uninstall` |
 
 ## Glossary
@@ -292,5 +347,14 @@ skills/git/                          a bundle; the installer links each skill by
   by hand. A **docs source** is one entry in `config/upstream-docs.json`, one folder there.
 - **Floor:** the minimum number of pages a source must yield before its mirror is replaced.
 - **Receipt:** a record of what a script created, so it never touches anything else.
+- **Plugin:** an installable bundle (skills, commands, agents, hooks, MCP servers, commands
+  for PATH) in its own GitHub repo; here, one listed in `config/plugins.json`.
+- **Pin:** a plugin's exact version in `config/plugins.json`. Every CLI runs that version.
+- **Release tag:** the git tag `<name>--v<version>` that marks a plugin release; a pin
+  installs it.
+- **Taken over:** a listed plugin that a CLI already had when first listed. Moved to the
+  pin like any other, never removed.
+- **Gap:** a plugin feature a CLI cannot load as shipped. Filled with the CLI's own feature
+  where one exists, else documented; the plugin's job, not this repo's.
 - **Emitted vs verified:** writing a config is not proof that it works. Verified means the
   CLI itself reports it (`mcp list`, a session listing the skill, `codex debug prompt-input`).

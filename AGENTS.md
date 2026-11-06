@@ -20,6 +20,7 @@ Codex CLI, Pi, and Antigravity. The mechanism and layout are in
 | `scripts/agent_sessions.py` | Every CLI's session store (transcripts) behind one interface, for the day pass | — |
 | `skills/worktree-guard/` | The hook that moves a session clashing with another in one worktree into a linked worktree, and the `ai-dotfiles worktree` commands | `scripts/install/hooks.py` (hook entries) |
 | `skills/small-commits/` | The hook that gates `git commit` on size (300 lines warn, 600 wall), subject and trailers, and the `ai-dotfiles commit check` command | `scripts/install/hooks.py` (hook entries), `scripts/ai-dotfiles` (`commit check`) |
+| `skills/portable-plugin/` | The rules a plugin's files follow to run in all four CLIs, the check, and the release step | `scripts/install/skills.py` |
 | `skills/git/` | A bundle: the git step skills (`push-branch`, `open-pr`, `approve-pr`, `archive-tag`, `merge-pr`, `prune-branch`), each with its own script, and `approve`, which runs them in order; `scripts/git_run.py` is the runner they share | `scripts/install/skills.py` (each linked by its own name), `scripts/ai-dotfiles` (`approve`, `git <step>`) |
 | `scripts/agent_hooks.py` | Every CLI's hook format behind one interface, for the skills' hooks; `agent_hooks.ts` is Pi's extension for all of them | `scripts/install/skills.py` (Pi's link) |
 | `scripts/ai-dotfiles` | Global command: `install`, `update`, `uninstall`, `check`, `worktree`, `commit`, `approve`, `git` | `scripts/install/skills.py` |
@@ -85,4 +86,4 @@ The five defaults: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-h
 
 ### Domain docs
 
-Single-context: the glossary and standing decisions are in `docs/how-it-works.md`; a design in progress is in `docs/plans/`. See `docs/agents/domain.md`.
+Single-context: the glossary and standing decisions are in `docs/how-it-works.md`; a design in progress, when there is one, is in `docs/plans/`. See `docs/agents/domain.md`.

@@ -22,6 +22,7 @@ skill list to taste.
 | `config/global-agents.md` | Rules loaded in every project by every CLI | Symlinked as `~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, `~/.pi/agent/AGENTS.md`, `~/.gemini/GEMINI.md` |
 | `config/cli-settings.json` | `enforce`: safety settings, restored on every install. `default`: model choices, written only when the CLI has none | Merged into each CLI's settings file (never symlinked, because CLIs write to these files) |
 | `config/mcp-servers.json` | MCP servers every CLI should have (today: context7 for library docs) | `claude`, `codex` and `pi mcp add`; merged into Antigravity's `mcp_config.json` |
+| `config/plugins.json` | The plugins every Mac gets: each one's GitHub repo, exact version and target CLIs (today: web-clipper for all four, zkfy for Claude) | Each CLI's own plugin manager at the release tag; a plugin's `bin/` commands in `~/.local/bin` from a checkout at that tag |
 | `skills/<name>/` | Shared skills. Skills adapted from other repos are pinned in `skills/skills.lock` with source, commit and license | Symlinked into `~/.claude/skills`, `~/.agents/skills` (Codex and Pi), `~/.gemini/config/skills` |
 | `skills/daily-log/` | The `daily-log` command, which writes a daily work journal, and the day pass that writes yesterday's entries from the CLIs' sessions | `~/.local/bin/daily-log`; a LaunchAgent, `~/Library/LaunchAgents/com.ai-dotfiles.daily-log-day.plist`, that runs the pass at 04:00 |
 | `skills/worktree-guard/` | A hook that moves a second session working in the same checkout into its own git worktree | Hook entries in each CLI's hook file (Codex runs it only after approval in `/hooks`); a Pi extension; `ai-dotfiles worktree` commands |
@@ -30,8 +31,8 @@ skill list to taste.
 | `config/upstream-docs.json` | The documentation sources mirrored into `docs/upstream/` | Refreshed weekly by a GitHub Action |
 | `docs/upstream/` | Machine-written mirrors of each CLI's official docs and of Google's and Meta's style guides, with indexes | Read by agents through the `upstream-docs` skill; never installed |
 
-Not managed, on purpose: credentials, sessions, plugin choices, local approvals and trust
-decisions, and per-project rules. Each project keeps its own `AGENTS.md`.
+Not managed, on purpose: credentials, sessions, plugins outside the list, local approvals and
+trust decisions, and per-project rules. Each project keeps its own `AGENTS.md`.
 
 ## Requirements
 
