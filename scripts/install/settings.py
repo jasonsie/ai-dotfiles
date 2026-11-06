@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """Merge workspace-managed keys into each CLI's live settings; writes unless --dry-run.
 
-config/cli-settings.json lists, per CLI, `enforce` keys (safety settings, put
-back on every run) and `default` keys (model choices, written only while the CLI
-has no value of its own, so a later pick made in the CLI stays). Every other key,
-credential, and runtime value is preserved. Settings files are never symlinked
-because each CLI writes back to them. Backs up privately before writing and
-rolls back on failure. --uninstall only lists the managed keys left in place.
-Requires Python 3.11+ for tomllib.
+config/cli-settings.json lists, per CLI, `enforce` keys (settings this repo owns: safety
+settings and the status line, put back on every run) and `default` keys (model choices,
+written only while the CLI has no value of its own, so a later pick made in the CLI stays).
+Every other key, credential, and runtime value is preserved. Settings files are never
+symlinked because each CLI writes back to them. A key is a dotted path into JSON; for Codex's
+TOML it is a top-level key, or `table.key` inside that table. Backs up privately before
+writing and rolls back on failure. --uninstall removes a managed key whose live value runs
+this repo's command (the status line's `ai-dotfiles statusline`), which would dangle once the
+repo is gone, and lists the rest, which stay. Requires Python 3.11+ for tomllib.
 """
 import copy
 import fnmatch
@@ -66,6 +68,15 @@ def get_dotted(data, dotted):
     return node
 
 
+def del_dotted(data, dotted):
+    *parents, leaf = dotted.split('.')
+    node = data
+    for key in parents:
+        node = node.get(key) if isinstance(node, dict) else None
+    if isinstance(node, dict):
+        node.pop(leaf, None)
+
+
 def check_pi(data):
     """Refuse a managed default that Pi's own enabledModels scope would hide."""
     patterns = data.get('enabledModels') or []
@@ -92,34 +103,93 @@ def toml_value(value):
     return json.dumps(value)
 
 
+def toml_section(lines, table):
+    """The (start, end) line range of `table` ('' for the keys before the first table), or None when absent."""
+    start = 0
+    if table:
+        header = re.compile(r'^\s*\[\s*' + re.escape(table) + r'\s*\]\s*(#.*)?$')
+        starts = [i + 1 for i, line in enumerate(lines) if header.match(line)]
+        if not starts:
+            return None
+        start = starts[0]
+    end = next((i for i in range(start, len(lines)) if lines[i].lstrip().startswith('[')), len(lines))
+    return start, end
+
+
+def upsert_toml(lines, table, leaf, value):
+    """The lines with `leaf = value` set in `table`, which is added at the end when absent."""
+    line = f'{leaf} = {toml_value(value)}\n'
+    section = toml_section(lines, table)
+    if section is None:
+        if lines and not lines[-1].endswith('\n'):
+            lines[-1] += '\n'
+        return lines + (['\n'] if lines else []) + [f'[{table}]\n', line]
+    start, end = section
+    pattern = re.compile(rf'^\s*{re.escape(leaf)}\s*=')
+    index = next((i for i in range(start, end) if pattern.match(lines[i])), None)
+    if index is not None:
+        lines[index] = line
+        return lines
+    body = lines[start:end]
+    while body and not body[-1].strip():
+        body.pop()
+    if body and not body[-1].endswith('\n'):
+        body[-1] += '\n'
+    body.append(line)
+    if end < len(lines):
+        body.append('\n')
+    return lines[:start] + body + lines[end:]
+
+
 def merge_toml(text, keys):
-    """Upsert top-level scalar keys before the first table; tables are untouched."""
+    """Upsert each key: a plain key before the first table, `table.key` inside that table; other tables untouched."""
     tomllib.loads(text)
     lines = text.splitlines(keepends=True)
-    first_table = next((i for i, line in enumerate(lines) if line.lstrip().startswith('[')), len(lines))
-    header, rest = lines[:first_table], lines[first_table:]
     for key, value in keys.items():
-        if '.' in key:
-            raise ValueError(f'Codex managed keys must be top-level: {key}')
-        line = f'{key} = {toml_value(value)}\n'
-        pattern = re.compile(rf'^\s*{re.escape(key)}\s*=')
-        index = next((i for i, existing in enumerate(header) if pattern.match(existing)), None)
-        if index is not None:
-            header[index] = line
-            continue
-        while header and not header[-1].strip():
-            header.pop()
-        if header and not header[-1].endswith('\n'):
-            header[-1] += '\n'
-        header.append(line)
-        if rest:
-            header.append('\n')
-    result = ''.join(header + rest)
+        table, _, leaf = key.rpartition('.')
+        if '.' in table:
+            raise ValueError(f'Codex managed keys are top-level or one table deep: {key}')
+        lines = upsert_toml(lines, table, leaf, value)
+    result = ''.join(lines)
     parsed = tomllib.loads(result)
     for key, value in keys.items():
-        if parsed.get(key) != value:
+        if get_dotted(parsed, key) != value:
             raise ValueError(f'Codex key did not round-trip: {key}')
     return result
+
+
+def drop_toml(text, keys):
+    """The TOML without the lines that set `keys`; a value spanning lines fails the round trip and is refused."""
+    lines = text.splitlines(keepends=True)
+    for key in keys:
+        table, _, leaf = key.rpartition('.')
+        section = toml_section(lines, table)
+        if section is None:
+            continue
+        start, end = section
+        pattern = re.compile(rf'^\s*{re.escape(leaf)}\s*=')
+        lines = [line for i, line in enumerate(lines) if not (start <= i < end and pattern.match(line))]
+    result = ''.join(lines)
+    parsed = tomllib.loads(result)
+    for key in keys:
+        if get_dotted(parsed, key) is not MISSING:
+            raise ValueError(f'Codex key could not be removed: {key}')
+    return result
+
+
+def drop(cli, text, keys):
+    """The settings text without the managed `keys`."""
+    if cli == 'codex':
+        return drop_toml(text, keys)
+    data = json.loads(text) if text.strip() else {}
+    for key in keys:
+        del_dotted(data, key)
+    return json.dumps(data, indent=2, ensure_ascii=False) + '\n'
+
+
+def depends_on_repo(value):
+    """A live value that runs this repo's command works only while the repo is installed."""
+    return 'ai-dotfiles' in json.dumps(value)
 
 
 def split_keys(cli, text, spec):
@@ -161,7 +231,8 @@ def plan(home, clis, managed):
 
 
 def leftovers(home, clis, managed):
-    """(path, managed keys present): uninstall leaves them; they do not depend on this repo."""
+    """(cli, path, remove, keep) per settings file: the managed keys present, split into those whose
+    live value runs this repo's command, which an uninstall removes, and the rest, which stay."""
     found = []
     for cli in clis:
         spec = managed.get(cli) or {}
@@ -169,10 +240,10 @@ def leftovers(home, clis, managed):
         if not spec or not path.is_file():
             continue
         current = parse(cli, path.read_text())
-        keys = [key for key in (*spec.get('enforce', {}), *spec.get('default', {}))
-                if get_dotted(current, key) is not MISSING]
-        if keys:
-            found.append((path, keys))
+        present = [key for key in (*spec.get('enforce', {}), *spec.get('default', {}))
+                   if get_dotted(current, key) is not MISSING]
+        remove = [key for key in present if depends_on_repo(get_dotted(current, key))]
+        found.append((cli, path, remove, [key for key in present if key not in remove]))
     return found
 
 
@@ -188,15 +259,24 @@ def local_choices(home, clis, managed):
 
 
 def run(home, target, managed_path, write, uninstall):
-    """Merge the keys for the CLIs switched on. Keys are never removed: --uninstall lists
-    them, and a CLI switched off keeps them."""
+    """Merge the keys for the CLIs switched on. --uninstall removes the keys that run this repo's
+    command and lists the others, which stay; a CLI switched off keeps them all."""
     managed = load_managed(managed_path)
     selected = installer.scope(target)
     if uninstall:
-        for path, keys in leftovers(home, selected, managed):
-            print(f'Left in place: {path}: {", ".join(keys)}')
-        print('Managed keys stay; remove them by hand if unwanted.')
-        return 0
+        changes = []
+        for cli, path, remove, keep in leftovers(home, selected, managed):
+            if remove:
+                change = installer.edit(path, lambda old, cli=cli, remove=remove: drop(cli, old.decode(), remove).encode())
+                if change:
+                    changes.append(change)
+            if keep:
+                print(f'Left in place: {path}: {", ".join(keep)}')
+        installer.show(changes, write)
+        if write and changes:
+            print(f'Backup: {installer.apply(home, changes, backup="settings")}')
+        print('Managed keys stay unless they run this repo; remove them by hand if unwanted.')
+        return len(changes)
     clis = installer.split(selected)[0]
     changes = plan(home, clis, managed)
     for cli, key, mine, default in local_choices(home, clis, managed):

@@ -14,7 +14,8 @@
 #   4. skills        links in the receipt: skills, Pi's hooks extension, and the
 #                    ai-dotfiles and daily-log commands (those with --target=all only)
 #   3. mcp           left in place, listed: servers do not depend on this repo
-#   2. settings      left in place, listed: managed keys hold no repo paths
+#   2. settings      a key that runs this repo's command (the status line) is removed;
+#                    the other managed keys are left in place and listed
 #   1. instructions  links removed; the file from before the first install is restored
 #
 # Afterwards, deleting this repo breaks nothing. Reinstall with scripts/install.sh.
@@ -64,7 +65,7 @@ echo "== mcp"
 "$PYTHON" "$SCRIPT_DIR/install/mcp.py" --uninstall --target "$TARGET"
 
 echo "== settings"
-"$PYTHON" "$SCRIPT_DIR/install/settings.py" --uninstall --target "$TARGET"
+"$PYTHON" "$SCRIPT_DIR/install/settings.py" --uninstall --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
 
 echo "== instructions"
 "$PYTHON" "$SCRIPT_DIR/install/instructions.py" --uninstall --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
