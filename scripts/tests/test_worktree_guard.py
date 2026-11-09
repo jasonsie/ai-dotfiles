@@ -124,84 +124,13 @@ class Repo(unittest.TestCase):
     def linked(self, name):
         return self.repo / '.claude/worktrees' / name
 
+    def plain(self, reply):
+        """Whether `reply` lets the call through untouched and unannounced, in any CLI's format."""
+        return reply is None or reply == {'decision': 'allow'}
+
 
 class GuardTest(Repo):
-    def test_a_lone_session_claims_its_worktree_and_is_left_alone(self):
-        self.assertIsNone(self.edit('claude', 'aaaa1111', ME))
-        self.assertIsNone(self.edit('claude', 'aaaa1111', ME))
-        self.assertIsNone(self.shell('claude', 'aaaa1111', ME, 'git commit -am x'))
-        claim = json.loads(guard.claim_file(self.repo).read_text())
-        self.assertEqual((claim['session'], claim['cli'], claim['pid']), ('aaaa1111', 'claude', ME))
-
-    def test_a_second_codex_session_is_moved_into_a_linked_worktree(self):
-        self.edit('claude', 'aaaa1111', ME)
-        reply = self.edit('codex', 'bbbb2222', PARENT)['hookSpecificOutput']
-        linked = self.linked('codex-bbbb2222')
-        self.assertEqual(reply['permissionDecision'], 'allow')
-        self.assertIn('*** Update File: .claude/worktrees/codex-bbbb2222/a.txt', reply['updatedInput']['command'])
-        self.assertIn('is busy: claude session aaaa1111', reply['additionalContext'])
-        self.assertIn('branch agent/codex-bbbb2222, from main at ' + self.base[:7], reply['additionalContext'])
-        self.assertEqual(git(linked, 'rev-parse', 'HEAD'), self.base)
-        self.assertEqual(git(linked, 'symbolic-ref', '--short', 'HEAD'), 'agent/codex-bbbb2222')
-        self.assertIn('/.claude/worktrees/', (self.repo / '.git/info/exclude').read_text())
-        self.assertEqual(git(self.repo, 'status', '--porcelain'), '')  # the linked worktree stays out of it
-        # From now on its calls follow it there; no second worktree is made.
-        again = self.edit('codex', 'bbbb2222', PARENT)['hookSpecificOutput']
-        self.assertIn('.claude/worktrees/codex-bbbb2222/a.txt', again['updatedInput']['command'])
-        self.assertNotIn('additionalContext', again)
-        command = self.shell('codex', 'bbbb2222', PARENT, f'git commit -am x && cat {self.repo}/a.txt')
-        steered = command['hookSpecificOutput']['updatedInput']['command']
-        self.assertTrue(steered.startswith(f"cd '{linked}' && git commit"), steered)
-        self.assertIn(f'cat {linked}/a.txt', steered)
-        self.assertEqual(sorted(p.name for p in (self.repo / '.claude/worktrees').iterdir()),
-                         ['codex-bbbb2222', 'codex-bbbb2222.json'])
-        meta = json.loads((self.repo / '.claude/worktrees/codex-bbbb2222.json').read_text())
-        self.assertEqual({k: meta[k] for k in ('branch', 'from', 'base', 'cli', 'session')},
-                         {'branch': 'agent/codex-bbbb2222', 'from': 'main', 'base': self.base, 'cli': 'codex',
-                          'session': 'bbbb2222'})
-
-    def test_claude_is_told_to_enter_the_linked_worktree(self):
-        self.edit('codex', 'aaaa1111', ME)
-        reply = self.edit('claude', 'cccc3333', PARENT)['hookSpecificOutput']
-        linked = self.linked('claude-cccc3333')
-        self.assertEqual(reply['permissionDecision'], 'deny')
-        self.assertIn(f'Call EnterWorktree with path "{linked}"', reply['permissionDecisionReason'])
-        self.assertIn('git merge agent/claude-cccc3333', reply['permissionDecisionReason'])
-        self.assertTrue(linked.is_dir())
-        entered = self.run_hook('claude', {'session_id': 'cccc3333', 'cwd': str(linked), 'pid': PARENT,
-                                           'tool_name': 'Write', 'tool_input': {'file_path': str(linked / 'b.txt')}})
-        self.assertIsNone(entered)
-
-    def test_pi_and_agy_reads_and_writes_follow_the_move(self):
-        self.edit('claude', 'aaaa1111', ME)
-        moved = self.edit('pi', 'dddd4444', PARENT)
-        self.assertEqual(moved['input'], {'path': str(self.linked('pi-dddd4444') / 'a.txt')})
-        self.assertIn('is busy', moved['note'])
-        read = self.run_hook('pi', {'session_id': 'dddd4444', 'cwd': str(self.repo), 'pid': PARENT,
-                                    'tool_name': 'read', 'tool_input': {'path': 'a.txt', 'offset': 1}})
-        self.assertEqual(read, {'input': {'path': str(self.linked('pi-dddd4444') / 'a.txt'), 'offset': 1}})
-        agy = self.edit('agy', 'eeee5555', PARENT)
-        self.assertEqual(agy['decision'], 'allow')
-        self.assertEqual(agy['overwrite']['TargetFile'], str(self.linked('agy-eeee5555') / 'a.txt'))
-        view = self.run_hook('agy', {'conversationId': 'eeee5555', 'workspacePaths': [str(self.repo)], 'pid': PARENT,
-                                     'toolCall': {'name': 'run_command', 'args': {'CommandLine': 'ls', 'Cwd': str(self.repo)}}})
-        self.assertEqual(view['overwrite']['Cwd'], str(self.linked('agy-eeee5555')))
-
-    def test_a_session_that_names_the_repo_through_a_symlink_is_steered_too(self):
-        alias = self.repo.parent / 'alias'
-        alias.symlink_to(self.repo)  # like /var -> /private/var on macOS, or a symlinked project folder
-        self.edit('claude', 'aaaa1111', ME)
-        reply = self.run_hook('pi', {'session_id': 'dddd4444', 'cwd': str(alias), 'pid': PARENT,
-                                     'tool_name': 'write', 'tool_input': {'path': 'a.txt', 'content': 'x'}})
-        self.assertEqual(reply['input']['path'], str(self.linked('pi-dddd4444') / 'a.txt'))
-        shell = self.run_hook('pi', {'session_id': 'dddd4444', 'cwd': str(alias), 'pid': PARENT,
-                                     'tool_name': 'bash', 'tool_input': {'command': f'cat {alias}/a.txt'}})
-        self.assertEqual(shell['input']['command'],
-                         f"cd '{self.linked('pi-dddd4444')}' && cat {self.linked('pi-dddd4444')}/a.txt")
-
-    def test_a_cd_into_another_repo_claims_that_repo_not_the_session_folder(self):
-        # A second repo beside this one; a session whose cwd is self.repo runs a tree-changing
-        # git in it through `cd <other> && git ...`. The claim must land on the other repo.
+    def test_in_a_repo_that_is_off_every_edit_passes_with_no_claim_and_no_message(self):
         other = self.repo.parent / 'other'
         other.mkdir()
         git(other, 'init', '-q', '-b', 'main')
@@ -210,29 +139,29 @@ class GuardTest(Repo):
         (other / 'f.txt').write_text('x\n')
         git(other, 'add', '.')
         git(other, 'commit', '-q', '-m', 'init')
+        for cli, session, pid in (('claude', 'aaaa1111', ME), ('codex', 'bbbb2222', PARENT), ('pi', 'dddd4444', ME),
+                                  ('agy', 'eeee5555', PARENT), ('claude', 'cccc3333', PARENT)):
+            for _ in range(2):
+                self.assertTrue(self.plain(self.edit(cli, session, pid)), (cli, session))
+            if cli != 'agy':
+                self.assertTrue(self.plain(self.shell(cli, session, pid, 'git commit -am x')), (cli, session))
         reply = self.shell('claude', 'aaaa1111', ME, f'cd {shlex.quote(str(other))} && git commit --allow-empty -m x')
-        self.assertIsNone(reply)  # the other repo is unowned: a claim, no move
-        self.assertTrue(guard.claim_file(other).exists())
-        self.assertEqual(json.loads(guard.claim_file(other).read_text())['session'], 'aaaa1111')
-        self.assertFalse(guard.claim_file(self.repo).exists())  # the session folder was never charged
-
-    def test_a_dead_owner_is_replaced_and_its_leftovers_named_once(self):
-        self.edit('claude', 'aaaa1111', dead_pid())
-        (self.repo / 'a.txt').write_text('half done\n')
-        note = self.edit('codex', 'bbbb2222', ME)['hookSpecificOutput']['additionalContext']
-        self.assertIn('already had 1 uncommitted change(s)', note)
-        self.assertIn('last owner: claude session aaaa1111, no longer running', note)
-        self.assertIsNone(self.edit('codex', 'bbbb2222', ME))
-        self.assertFalse((self.repo / '.claude').exists())  # no clash, no linked worktree
+        self.assertIsNone(reply)
+        self.assertEqual(list(guard.state_root().glob('claims/*.json')), [])  # nobody owns anything
+        self.assertFalse((self.repo / '.claude').exists())  # nothing was made
+        self.assertEqual(git(self.repo, 'branch', '--list'), '* main')
 
     def test_session_end_releases_and_a_shared_worktree_lets_anyone_edit(self):
-        self.edit('claude', 'aaaa1111', ME)
+        git(self.repo, 'config', '--local', guard.FLOW_KEY, 'true')
+        git(self.repo, 'worktree', 'add', '-q', '--detach', str(self.linked('fix-x')))
+        inside = '.claude/worktrees/fix-x/a.txt'
+        self.assertIsNone(self.edit('claude', 'aaaa1111', ME, path=inside))
+        self.assertTrue(self.edit('codex', 'bbbb2222', PARENT, path=inside))  # busy: refused
         self.assertIsNone(self.run_hook('claude', {'session_id': 'aaaa1111'}, kind='end'))
-        self.assertIsNone(self.edit('codex', 'bbbb2222', PARENT))  # free again: claimed, no move
-        path = guard.claim_file(self.repo)
+        self.assertIsNone(self.edit('codex', 'bbbb2222', PARENT, path=inside))  # free again
+        path = guard.claim_file(self.linked('fix-x'))
         path.write_text(json.dumps({**json.loads(path.read_text()), 'shared': True}))
-        self.assertIsNone(self.edit('pi', 'ffff6666', ME))
-        self.assertFalse((self.repo / '.claude').exists())
+        self.assertIsNone(self.edit('pi', 'ffff6666', ME, path=inside))
 
     def test_overrides_are_for_people_and_outside_git_nothing_happens(self):
         reply = self.shell('codex', 'bbbb2222', ME, 'ai-dotfiles worktree release')
@@ -242,24 +171,13 @@ class GuardTest(Repo):
         self.assertIsNone(self.run_hook('claude', {'session_id': 's', 'cwd': str(outside), 'pid': ME,
                                                    'tool_name': 'Write', 'tool_input': {'file_path': str(outside / 'x')}}))
 
-    def test_worktreeinclude_copies_gitignored_files_only(self):
-        (self.repo / '.worktreeinclude').write_text('.env\na.txt\n')
-        git(self.repo, 'add', '.worktreeinclude')
-        git(self.repo, 'commit', '-q', '-m', 'include')
-        (self.repo / '.env').write_text('SECRET=1\n')
-        (self.repo / 'build').mkdir()
-        (self.repo / 'build/x').write_text('x\n')
-        self.edit('claude', 'aaaa1111', ME)
-        self.edit('codex', 'bbbb2222', PARENT)
-        linked = self.linked('codex-bbbb2222')
-        self.assertEqual((linked / '.env').read_text(), 'SECRET=1\n')
-        self.assertFalse((linked / 'build').exists())
-
     def test_make_worktree_without_a_branch_detaches_and_keeps_the_rest(self):
         (self.repo / '.worktreeinclude').write_text('.env\n')
         git(self.repo, 'add', '.worktreeinclude')
         git(self.repo, 'commit', '-q', '-m', 'include')
         (self.repo / '.env').write_text('SECRET=1\n')
+        (self.repo / 'build').mkdir()
+        (self.repo / 'build/x').write_text('x\n')
         head = git(self.repo, 'rev-parse', 'HEAD')
         me = {'session': 's', 'cli': 'claude', 'pid': ME, 'started': guard.started(ME)}
         linked = guard.make_worktree(self.repo, 'fix-x', head, None, source=self.repo, owner=me,
@@ -269,15 +187,18 @@ class GuardTest(Repo):
         self.assertEqual(subprocess.run(['git', '-C', str(linked), 'symbolic-ref', '-q', 'HEAD']).returncode, 1)
         self.assertEqual(git(self.repo, 'branch', '--list'), '* main')
         self.assertEqual((linked / '.env').read_text(), 'SECRET=1\n')
+        self.assertFalse((linked / 'build').exists())  # only what .worktreeinclude lists
         self.assertEqual(git(self.repo, 'status', '--porcelain'), '')
         self.assertIsNone(guard.read_meta(self.repo, 'fix-x')['branch'])
         self.assertEqual(guard.read_claim(guard.claim_file(linked))['session'], 's')
 
     def test_a_failure_says_the_edit_was_not_protected(self):
+        git(self.repo, 'config', '--local', guard.FLOW_KEY, 'true')
+        git(self.repo, 'worktree', 'add', '-q', '--detach', str(self.linked('fix-x')))
         broken = Path(tempfile.mkstemp()[1])  # the state "folder" is a file: claims cannot be kept
         self.addCleanup(broken.unlink)
         data = {'session_id': 's', 'cwd': str(self.repo), 'tool_name': 'Edit',
-                'tool_input': {'file_path': str(self.repo / 'a.txt')}}
+                'tool_input': {'file_path': str(self.linked('fix-x') / 'a.txt')}}
         run = subprocess.run([sys.executable, str(SCRIPT), 'hook', 'pre', '--cli', 'claude'], input=json.dumps(data),
                              capture_output=True, text=True, env={**os.environ, guard.ENV: str(broken)})
         self.assertEqual((run.returncode, run.stderr), (0, ''))
@@ -293,13 +214,16 @@ class GuardTest(Repo):
 
 
 class CommandsTest(Repo):
-    """list, done, rm, prune, release and share, on a repo where codex-bbbb2222 was moved aside."""
+    """list, done, rm, prune, release and share, on a worktree of the retired agent/<cli>-<id8> kind
+    (the guard no longer makes them; ones made before still can be listed and removed)."""
 
     def setUp(self):
         super().setUp()
-        self.edit('claude', 'aaaa1111', ME)
-        self.edit('codex', 'bbbb2222', PARENT)
-        self.wt = self.linked('codex-bbbb2222')
+        owner = {'session': 'bbbb2222', 'cli': 'codex', 'pid': PARENT, 'started': guard.started(PARENT)}
+        self.wt = guard.make_worktree(self.repo, 'codex-bbbb2222', self.base, 'agent/codex-bbbb2222',
+                                      source=self.repo, owner=owner, table=guard.process_table(),
+                                      meta={'from': 'main', 'busy': str(self.repo), 'cli': 'codex',
+                                            'session': 'bbbb2222', 'model': ''})
 
     def cli(self, *args):
         out, err = io.StringIO(), io.StringIO()
@@ -403,11 +327,14 @@ class CommandsTest(Repo):
         self.assertTrue((self.repo / '.claude/worktrees/codex-bbbb2222.json').exists())
 
     def test_release_and_share(self):
-        self.assertIn('released', self.cli('release', str(self.repo))[1])
-        self.assertIn('nobody owns', self.cli('release', str(self.repo))[1])
-        self.edit('claude', 'aaaa1111', ME)
-        self.assertIn('any session may edit', self.cli('share', str(self.repo))[1])
-        self.assertIsNone(self.edit('pi', 'ffff6666', PARENT))  # shared: no move
+        git(self.repo, 'config', '--local', guard.FLOW_KEY, 'true')  # a repo that is off keeps no owners
+        inside = '.claude/worktrees/codex-bbbb2222/a.txt'
+        self.assertIn('released', self.cli('release', str(self.wt))[1])
+        self.assertIn('nobody owns', self.cli('release', str(self.wt))[1])
+        self.assertIsNone(self.edit('claude', 'aaaa1111', ME, path=inside))  # first edit: owns it again
+        self.assertTrue(self.edit('pi', 'ffff6666', PARENT, path=inside)['block'])  # another session: refused
+        self.assertIn('any session may edit', self.cli('share', str(self.wt))[1])
+        self.assertIsNone(self.edit('pi', 'ffff6666', PARENT, path=inside))
 
     def test_done_only_inside_a_linked_worktree(self):
         status, out = self.cli('done', 'x', '--path', str(self.repo))
@@ -570,13 +497,6 @@ class SweepTest(OriginRepo):
         self.sweep()
         self.assertFalse(self.linked('fix-new').exists())
 
-    def test_a_clashing_edit_sweeps_too(self):
-        wt = self.leftover()
-        self.edit('claude', 'aaaa1111', ME)
-        self.edit('codex', 'bbbb2222', PARENT)
-        self.assertFalse(wt.exists())
-        self.assertTrue(self.linked('codex-bbbb2222').is_dir())
-
     def test_a_session_ending_takes_its_own_clean_worktree_with_it(self):
         me = {'session': 's1', 'cli': 'claude', 'pid': ME, 'started': guard.started(ME)}
         table = guard.process_table()
@@ -615,6 +535,7 @@ class SweepTest(OriginRepo):
         self.assertNotIn('LEFT BEHIND', out)
 
     def test_a_new_session_takes_over_a_flagged_worktree_and_hears_what_it_holds(self):
+        self.assertEqual(self.cli('on', '--repo', str(self.repo))[0], 0)  # a repo that is off keeps no owners
         wt = self.leftover()
         self.commit(wt)
         (wt / 'new.txt').write_text('x\n')
@@ -625,6 +546,8 @@ class SweepTest(OriginRepo):
         self.assertIn('1 uncommitted change(s)', reply['additionalContext'])
         self.assertIn('1 commit(s) not pushed', reply['additionalContext'])
         self.assertEqual(guard.read_claim(guard.claim_file(wt))['session'], 'new1')
+        self.assertIn('last owner: claude session old1, no longer running', reply['additionalContext'])
+        self.assertIsNone(self.run_hook('claude', data))  # said once
         self.assertNotIn('LEFT BEHIND', self.cli('list', '--repo', str(self.repo))[1])
         self.sweep()
         self.assertTrue(wt.is_dir())  # owned again
@@ -784,6 +707,29 @@ class BoundTest(OriginRepo):
         self.new('codex', 'cdx', ME, 'fix/c')
         steered = self.shell('codex', 'cdx', ME, 'git commit -am x')['hookSpecificOutput']['updatedInput']['command']
         self.assertTrue(steered.startswith(f"cd '{self.linked('fix-c')}' && git commit"), steered)
+
+    def test_reads_follow_the_session_into_its_worktree(self):
+        self.new('pi', 'dddd4444', ME, 'fix/p')
+        read = self.run_hook('pi', {'session_id': 'dddd4444', 'cwd': str(self.repo), 'pid': ME,
+                                    'tool_name': 'read', 'tool_input': {'path': 'a.txt', 'offset': 1}})
+        self.assertEqual(read, {'input': {'path': str(self.linked('fix-p') / 'a.txt'), 'offset': 1}})
+        self.new('agy', 'eeee5555', PARENT, 'fix/a')
+        view = self.run_hook('agy', {'conversationId': 'eeee5555', 'workspacePaths': [str(self.repo)], 'pid': PARENT,
+                                     'toolCall': {'name': 'run_command',
+                                                  'args': {'CommandLine': 'ls', 'Cwd': str(self.repo)}}})
+        self.assertEqual(view['overwrite']['Cwd'], str(self.linked('fix-a')))
+
+    def test_a_session_that_names_the_repo_through_a_symlink_is_steered_too(self):
+        alias = self.repo.parent / 'alias'
+        alias.symlink_to(self.repo)  # like /var -> /private/var on macOS, or a symlinked project folder
+        self.new('pi', 'dddd4444', ME, 'fix/p')
+        linked = self.linked('fix-p')
+        reply = self.run_hook('pi', {'session_id': 'dddd4444', 'cwd': str(alias), 'pid': ME,
+                                     'tool_name': 'write', 'tool_input': {'path': 'a.txt', 'content': 'x'}})
+        self.assertEqual(reply['input']['path'], str(linked / 'a.txt'))
+        shell = self.run_hook('pi', {'session_id': 'dddd4444', 'cwd': str(alias), 'pid': ME,
+                                     'tool_name': 'bash', 'tool_input': {'command': f'cat {alias}/a.txt'}})
+        self.assertEqual(shell['input']['command'], f"cd '{linked}' && cat {linked}/a.txt")
 
     def test_two_sessions_work_side_by_side_and_cannot_touch_each_others_worktree(self):
         self.new('codex', 'aaaa1111', ME, 'fix/a')
@@ -958,11 +904,12 @@ class FlowTest(Repo):
                                                   'args': {'AbsolutePath': str(self.repo / 'a.txt')}}})
         self.assertEqual(view, {'decision': 'allow'})
 
-    def test_a_repo_that_is_off_keeps_todays_behavior(self):
+    def test_a_repo_that_is_switched_off_again_claims_and_says_nothing(self):
         self.on()
         self.cli('off', '--repo', str(self.repo))
         self.assertIsNone(self.edit('claude', 'aaaa1111', ME))
-        self.assertTrue(guard.claim_file(self.repo).exists())
+        self.assertIsNone(self.edit('codex', 'bbbb2222', PARENT))
+        self.assertFalse(guard.claim_file(self.repo).exists())
 
     def test_the_edited_files_repo_decides_wherever_the_session_started(self):
         other = self.second_repo()

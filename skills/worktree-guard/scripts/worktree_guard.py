@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""worktree-guard: keep agent sessions that share a checkout out of each other's changes.
+"""worktree-guard: a repo that is on works through worktrees, one per task, one session each.
 
   worktree-guard hook (pre|end) --cli (claude|codex|agy|pi)   JSON in; JSON or nothing out
   worktree-guard hook (create|remove) --cli claude    Claude's WorktreeCreate/Remove: path out, no JSON
@@ -13,16 +13,16 @@
   worktree-guard release [PATH]                       clear a worktree's owner (people only)
   worktree-guard share   [PATH]                       let any session edit it (people only)
 
-A session owns a worktree from its first edit until it ends or its process is gone. When a
-second live session's first edit lands in a worktree another session owns, the guard makes a
-linked worktree for it at <main worktree>/.claude/worktrees/<name>, on a new branch from the
-busy worktree's last commit, and points the session there: Claude Code is told to call
-EnterWorktree; Codex, Pi and Antigravity have their tool calls rewritten. An edit is a
-file-edit tool or a git command that changes the working tree or the index. Subagents share
-their parent's ownership. A failure never blocks an edit; it says the edit was not protected.
+A repo that is off (the default) gets nothing: every edit passes, with no owner, no move and no
+message. The guard no longer moves a clashing session into an agent/<cli>-<id8> worktree; ones
+made before can still be listed and removed. An edit is a file-edit tool or a git command that
+changes the working tree or the index. Subagents share their parent's ownership. A failure never
+blocks an edit; it says the edit was not protected.
 
-A repo whose flow is on (git config --local worktree-guard.flow true, set by `on`) is stricter:
-an edit of a file in its main checkout is stopped, and the agent is asked to name the work with
+A repo whose flow is on (git config --local worktree-guard.flow true, set by `on`): a session
+owns a worktree from its first edit there until it ends or its process is gone; an edit in a
+worktree another live session owns is refused. An edit of a file in the main checkout is
+stopped, and the agent is asked to name the work with
 `ai-dotfiles worktree new <type>/<slug>`. That fetches origin and makes .claude/worktrees/
 <type>-<slug> detached at origin's default branch, with no local branch. The hook notes which
 session is about to run it (naming/<CLI pid>.json); the command finds the note by its own pid or
@@ -79,7 +79,6 @@ DEFAULT_STATE = '~/.local/state/ai-dotfiles/worktree-guard'
 KEEP_SECONDS = 30 * 24 * 3600
 SESSIONS = agent_hooks.Store(ENV, DEFAULT_STATE, KEEP_SECONDS, 'sessions')
 LINKED = Path('.claude/worktrees')
-BRANCH_PREFIX = 'agent/'
 FLOW_KEY = 'worktree-guard.flow'  # local git config: `true` when the repo works through worktrees
 GIT_CHANGES = frozenset(
     'add am apply checkout cherry-pick clean commit merge mv pull rebase reset restore revert rm stash switch'.split())
@@ -524,34 +523,6 @@ def who(claim):
     return f"{claim.get('cli', 'an agent')} session {str(claim.get('session', '?'))[:8]}"
 
 
-def linked_name(main, event):
-    base = f"{event.cli}-{re.sub(r'[^A-Za-z0-9]', '', str(event.session))[:8] or 'session'}"
-    name, n = base, 1
-    while (main / LINKED / name).exists() or git(main, 'rev-parse', '-q', '--verify',
-                                                   f'refs/heads/{BRANCH_PREFIX}{name}', check=False):
-        n += 1
-        name = f'{base}-{n}'
-    return name
-
-
-def moved_text(event, moved, claim):
-    first = (f"worktree-guard: {moved['busy']} is busy: {who(claim)} is editing it. To keep your changes "
-             f"apart, this session works in a linked worktree: {moved['linked']} (branch {moved['branch']}, "
-             f"from {moved['from']} at {moved['base'][:7]}).")
-    how = (f" Call EnterWorktree with path \"{moved['linked']}\", then redo this change there."
-           if event.cli == 'claude' else
-           " Your tool calls are moved there automatically; name files by their paths there.")
-    fresh = (" It starts from the last commit, without the other session's uncommitted changes: re-read "
-             "files before you edit them.")
-    unrelated = (f" If your task is unrelated to {moved['from']}, start from {moved['default']} before any "
-                 f"edit: git -C {shlex.quote(moved['linked'])} reset --hard {moved['default']}."
-                 if moved.get('default') else '')
-    done = (f" When done: commit on {moved['branch']}, run ai-dotfiles worktree done \"<one-line description>\","
-            f" and report: git merge {moved['branch']} (in {moved['busy']}), then ai-dotfiles worktree rm "
-            f"{moved['name']}.")
-    return first + how + fresh + unrelated + done
-
-
 def make_worktree(main, name, base, branch, source, owner=None, table=None, meta=None, sweep_first=True):
     """The one path that makes a linked worktree: `main/.claude/worktrees/<name>` at commit `base`,
     on a new `branch` (None: detached), kept out of `git status`, with the gitignored files
@@ -569,30 +540,6 @@ def make_worktree(main, name, base, branch, source, owner=None, table=None, meta
     if owner:
         take(linked, owner, table)
     return linked
-
-
-def clash(event, state, busy, claim, me, table):
-    if state.get('moved'):
-        return Deny(f"worktree-guard: {busy} is busy: {who(claim)} is editing it. This session works in "
-                    f"{state['moved']['linked']}; make this change there.")
-    main = main_of(busy)
-    branch, base = head_of(busy)
-    if not base:
-        return Note(f'worktree-guard: {busy} is busy ({who(claim)}) but has no commit to start a linked '
-                    'worktree from; this edit was not protected.')
-    name = linked_name(main, event)
-    linked = make_worktree(main, name, base, BRANCH_PREFIX + name, source=busy, owner=me, table=table,
-                           meta={'from': branch or base[:12], 'busy': str(busy), 'cli': event.cli,
-                                 'session': str(event.session), 'model': event.model})
-    moved = {'busy': str(busy), 'linked': str(linked), 'name': name, 'branch': BRANCH_PREFIX + name,
-             'from': branch or base[:12], 'base': base, 'default': default_ref(busy),
-             'owner': {k: claim.get(k) for k in ('cli', 'session')}}
-    state['moved'] = moved
-    text = moved_text(event, moved, claim)
-    if event.cli == 'claude':
-        return Deny(text)
-    steered = steer(event, moved)
-    return Rewrite(steered, text) if steered is not None else Deny(text)
 
 
 def leftovers(worktree, previous, state):
@@ -681,21 +628,19 @@ def decide(event, state, table=None):
                 folder = str(here) if here else folder
             event = replace(event, tool_input=steered, folder=folder)
     paths = targets(event)
-    worktrees = list(dict.fromkeys(w for w in map(worktree_of, paths) if w))
+    worktrees = list(dict.fromkeys(w for w in map(worktree_of, paths) if w and flow_on(w)))  # off: nothing
     notes = []
     note_naming(event, table)
     if worktrees:
         table = table if table is not None else process_table()
         me = owner(event, table)
         for worktree in worktrees:
-            if worktree == main_of(worktree) and flow_on(worktree):
+            if worktree == main_of(worktree):
                 return Deny(stop_text(state, worktree))
             verdict, claim, previous = take(worktree, me, table)
-            if verdict == 'busy':
-                if flow_on(worktree):  # in a repo that is on, every session has a worktree of its own
-                    return Deny(f'worktree-guard: {worktree} belongs to {who(claim)}. Do not edit it; work in '
-                                'your own worktree: `ai-dotfiles worktree new <type>/<slug>`.')
-                return clash(event, state, worktree, claim, me, table)
+            if verdict == 'busy':  # in a repo that is on, every session has a worktree of its own
+                return Deny(f'worktree-guard: {worktree} belongs to {who(claim)}. Do not edit it; work in '
+                            'your own worktree: `ai-dotfiles worktree new <type>/<slug>`.')
             if verdict == 'new':
                 notes.append(leftovers(worktree, previous, state))
     text = ' '.join(n for n in notes if n)
