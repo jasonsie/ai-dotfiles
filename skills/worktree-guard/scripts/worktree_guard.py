@@ -2,12 +2,14 @@
 """worktree-guard: keep agent sessions that share a checkout out of each other's changes.
 
   worktree-guard hook (pre|end) --cli (claude|codex|agy|pi)   JSON in; JSON or nothing out
+  worktree-guard hook (create|remove) --cli claude    Claude's WorktreeCreate/Remove: path out, no JSON
   worktree-guard list   [--repo DIR]                  linked worktrees: owner, branch, merged, left behind
   worktree-guard done   DESCRIPTION [--path DIR]      a linked worktree's one-line summary
   worktree-guard rm     NAME [--force] [--repo DIR]   archive tag, then remove worktree and branch
   worktree-guard prune  [--repo DIR]                  rm every merged, clean, unowned one
   worktree-guard on|off [--repo DIR]                  switch the repo's worktree flow (people only)
   worktree-guard new    <type>/<slug> [--repo DIR]    a detached worktree from origin's default branch
+  worktree-guard shipped NAME [--repo DIR]            delete a pushed worktree whose PR is open (ship runs it)
   worktree-guard release [PATH]                       clear a worktree's owner (people only)
   worktree-guard share   [PATH]                       let any session edit it (people only)
 
@@ -34,6 +36,11 @@ whose owner is gone and that have nothing to lose: no uncommitted or untracked f
 commit on a remote-tracking ref. A worktree nobody has claimed yet is left alone for an hour. The
 rest are never removed automatically: `list` marks them LEFT BEHIND with counts, a new session that
 edits there takes them over, and `rm` archive-tags before deleting.
+
+Claude Code's own worktrees (`claude -w`, EnterWorktree with a name, subagent isolation) go through
+its WorktreeCreate and WorktreeRemove hooks. In a repo that is on they are made in the same shape
+as `new` makes them; in any other repo exactly as Claude makes them (.claude/worktrees/<name> on
+branch worktree-<name> from HEAD), so the global hook changes nothing there.
 
 State: $WORKTREE_GUARD_STATE, else ~/.local/state/ai-dotfiles/worktree-guard/ (claims/ per
 worktree, sessions/ per session). The CLIs' hook formats live in the repo's
@@ -80,6 +87,9 @@ GIT_OPTIONS_WITH_VALUE = frozenset(('-C', '-c', '--git-dir', '--work-tree', '--n
 WRAPPERS = frozenset(('sh', 'bash', 'zsh', 'dash', 'fish', 'ksh', 'env', 'timeout', 'gtimeout', 'nice', 'nohup'))
 WORK_NAME = re.compile(r'[a-z][a-z0-9]*/[a-z0-9][a-z0-9-]*')  # <type>/<slug>
 FETCH_SECONDS = 120
+HOOK_FETCH_SECONDS = 40  # Claude's create hook has 60 s in all
+CLAUDE_BRANCH = 'worktree-'  # the branch Claude's own default puts a worktree on: worktree-<name>
+FOLDER_NAME = re.compile(r'[A-Za-z0-9][A-Za-z0-9._-]*')
 NAMING_SECONDS = 600  # how long the hook's note of a `worktree new` call stays good
 UNCLAIMED_SECONDS = 3600  # a worktree nobody has claimed yet is left alone this long: its first edit is coming
 PERSON_ONLY = frozenset(('release', 'share', 'on', 'off'))  # worktree commands a person runs
@@ -703,6 +713,8 @@ def failed(error):
 
 
 def cmd_hook(args):
+    if args.kind in agent_hooks.CLAUDE_ONLY:
+        return cmd_native(args)
     return agent_hooks.serve(args.cli, args.kind, answer(args.cli, args.kind),
                              on_error=failed if args.kind == 'pre' else None)
 
@@ -910,6 +922,39 @@ def left_behind(risk):
     return ', '.join(['owner gone', *filter(None, parts)])
 
 
+def shipped(main, name):
+    """Delete a worktree whose work is shipped (ship has pushed it and opened the PR): (done, lines
+    to print). Refused while it has uncommitted changes or a commit on no remote. The owner's
+    claim goes, and the session's `moved` with it, so its next first edit starts a new task. No
+    archive tag: the branch is on origin, and approve tags it at the PR's head."""
+    meta = read_meta(main, name)
+    if meta is None:
+        return False, [f'worktree-guard: no linked worktree named {name} in {main}']
+    linked = main / LINKED / name
+    if linked.is_dir():
+        count = changes_in(linked)
+        if count:
+            return False, [f'worktree-guard: kept {name}: {count} uncommitted change(s)']
+        head = git(linked, 'rev-parse', '-q', '--verify', 'HEAD', check=False)
+        if head and not pushed(main, head, None):
+            return False, [f'worktree-guard: kept {name}: a commit of it is on no remote']
+    claim = read_claim(claim_file(linked)) or {}
+    if linked.is_dir():
+        try:
+            git(main, 'worktree', 'remove', str(linked))
+        except RuntimeError as error:
+            return False, [f'worktree-guard: kept {name}: {error}']
+    for session in {str(s) for s in (claim.get('session'), meta.get('session')) if s}:
+        state = SESSIONS.load(session)
+        if (state.get('moved') or {}).get('linked') == str(linked):
+            state.pop('moved')
+            SESSIONS.save(session, state)
+    meta_file(main, name).unlink(missing_ok=True)
+    claim_file(linked).unlink(missing_ok=True)
+    return True, [f"worktree-guard: removed {name} ({meta.get('work') or 'no work name'}); "
+                  f'its session is back in {main}']
+
+
 def cmd_list(args):
     main = repo_main(args.repo)
     found = linked_worktrees(main)
@@ -974,22 +1019,22 @@ def cmd_flow(args):
     return 0
 
 
-def fetch(main):
+def fetch(main, seconds=FETCH_SECONDS):
     """(fetched, why not): `git fetch origin`, never asking for a password."""
     try:
         run = subprocess.run(['git', '-C', str(main), 'fetch', '--prune', '--quiet', 'origin'], capture_output=True,
-                             text=True, timeout=FETCH_SECONDS, env={**os.environ, 'GIT_TERMINAL_PROMPT': '0'})
+                             text=True, timeout=seconds, env={**os.environ, 'GIT_TERMINAL_PROMPT': '0'})
     except subprocess.TimeoutExpired:
         return False, 'timed out'
     return run.returncode == 0, run.stderr.strip().splitlines()[-1] if run.stderr.strip() else 'failed'
 
 
-def start_point(main):
+def start_point(main, seconds=FETCH_SECONDS):
     """(ref, notes): where new work starts: origin's default branch after a fetch, else the last
     one known here, else the local default branch; None when the repo has no default at all."""
     notes = []
     if git(main, 'remote', 'get-url', 'origin', check=False):
-        fetched, why = fetch(main)
+        fetched, why = fetch(main, seconds)
         if not fetched:
             notes.append(f'could not fetch origin ({why}); starting from the last origin state known here')
         head = git(main, 'symbolic-ref', '-q', '--short', 'refs/remotes/origin/HEAD', check=False)
@@ -1056,6 +1101,110 @@ def cmd_new(args):
     return 0
 
 
+def cmd_shipped(args):
+    done, lines = shipped(repo_main(args.repo), args.name)
+    print('\n'.join(lines), file=sys.stdout if done else sys.stderr)
+    return 0 if done else 1
+
+
+# --- Claude's own worktrees: the WorktreeCreate and WorktreeRemove hooks ---------------------
+
+def folder_of(name):
+    """The folder Claude's worktree `name` becomes under .claude/worktrees/, or '' when it is not
+    a plain name (nothing that climbs out of the folder or reads as an option)."""
+    folder = name.replace('/', '-')
+    return folder if FOLDER_NAME.fullmatch(folder) and '..' not in folder else ''
+
+
+def registered(main, folder):
+    """Whether `folder` is a worktree of the repo."""
+    listed = git(main, 'worktree', 'list', '--porcelain', check=False) or ''
+    return any(line.startswith('worktree ') and Path(line[9:]).resolve() == folder.resolve()
+               for line in listed.splitlines())
+
+
+def native_create(event):
+    """The path of the worktree Claude asked for. In a repo whose flow is on, our shape: no branch,
+    from freshly fetched origin's default branch, claimed for the session. In any other repo,
+    Claude's own default, so the hook changes nothing there: a new branch worktree-<name> from the
+    session's HEAD. Both under .claude/worktrees/, with `.worktreeinclude` copied in."""
+    folder = folder_of(event.name)
+    if not folder:
+        raise ValueError(f'{event.name!r} is not a name to make a worktree folder from')
+    where = worktree_of(event.folder or os.getcwd())
+    if not where:
+        raise ValueError(f'{event.folder or os.getcwd()} is not in a git repository')
+    main = main_of(where)
+    linked = main / LINKED / folder
+    if linked.exists():
+        if registered(main, linked):
+            return linked  # asked for again: the same worktree, as it is
+        raise ValueError(f'{LINKED.as_posix()}/{folder} is taken')
+    if not flow_on(main):
+        base = git(where, 'rev-parse', '-q', '--verify', 'HEAD', check=False)
+        if not base:
+            raise ValueError(f'{where} has no commit to start a worktree from')
+        git(main, 'worktree', 'add', '-q', '-b', CLAUDE_BRANCH + folder, str(linked), base)
+        copy_included(main, linked)
+        return linked
+    ref, notes = start_point(main, HOOK_FETCH_SECONDS)
+    why = taken(main, folder, folder) if ref else 'the repo has no default branch to start from'
+    if why:
+        raise ValueError(f'cannot start {event.name}: {why}')
+    for line in notes:
+        print(f'worktree-guard: {line}', file=sys.stderr)
+    table = process_table() if event.session else None
+    return make_worktree(main, folder, git(main, 'rev-parse', f'{ref}^{{commit}}'), None, source=main,
+                         owner=owner(event, table) if table else None, table=table,
+                         meta={'work': event.name, 'from': ref, 'busy': str(main), 'cli': event.cli,
+                               'session': str(event.session)})
+
+
+def native_remove(event):
+    """Delete the worktree Claude is removing: ours with its record and claim (commits it made are
+    kept under an archive tag), else one of Claude's default shape with its worktree-<name> branch.
+    Claude has asked or checked already, so uncommitted changes go. Anything else is left alone."""
+    path = Path(event.path) if event.path else None
+    where = worktree_of(path) if path and path.is_dir() else None
+    if not where or where != path.resolve():
+        return  # gone already, or not a worktree's top folder
+    main = main_of(where)
+    if where == main:
+        raise ValueError(f'{where} is the main checkout, not a worktree to remove')
+    if where.parent != main / LINKED:
+        return  # some other hook made it
+    if read_meta(main, where.name) is not None:
+        done, lines = remove(main, where.name, force=True)
+        if not done:
+            raise RuntimeError('\n'.join(lines))
+        return
+    branch = head_of(where)[0]
+    git(main, 'worktree', 'remove', '--force', str(where))
+    if branch == CLAUDE_BRANCH + where.name:
+        git(main, 'branch', '-D', branch, check=False)
+
+
+def cmd_native(args):
+    """`hook create|remove --cli claude`: Claude reads the new worktree's path from our stdout, so
+    nothing else goes there; a failure says why on stderr and exits 1 (a missing path fails the
+    creation, which is right: there is no worktree to enter)."""
+    if args.cli != 'claude':
+        return 0
+    try:
+        event = agent_hooks.read(args.cli, args.kind, json.loads(sys.stdin.read() or '{}'))
+    except ValueError:
+        event = agent_hooks.read(args.cli, args.kind, {})
+    try:
+        if args.kind == 'create':
+            print(native_create(event))
+        else:
+            native_remove(event)
+    except Exception as error:  # the message is all Claude shows
+        print(f'worktree-guard: {error}', file=sys.stderr)
+        return 1
+    return 0
+
+
 def cmd_release(args):
     worktree = worktree_of(Path(args.path or os.getcwd()).resolve())
     path = claim_file(worktree) if worktree else None
@@ -1089,7 +1238,7 @@ def parser():
                                   formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = top.add_subparsers(dest='command', required=True)
     hook = sub.add_parser('hook', help='the CLI hook: JSON on stdin')
-    hook.add_argument('kind', choices=('pre', 'end'))
+    hook.add_argument('kind', choices=('pre', 'end', *agent_hooks.CLAUDE_ONLY))
     hook.add_argument('--cli', choices=agent_hooks.CLIS, required=True)
     hook.set_defaults(run=cmd_hook)
     for name, run, help_text in (('list', cmd_list, 'linked worktrees: owner, branch, merged, left behind'),
@@ -1114,6 +1263,10 @@ def parser():
     new.add_argument('name', help='<type>/<slug>, for example fix/prune-worktrees')
     new.add_argument('--repo', help='a folder in the repository (default: here)')
     new.set_defaults(run=cmd_new)
+    done_ = sub.add_parser('shipped', help='delete a worktree whose work is pushed and has its PR (what ship runs)')
+    done_.add_argument('name', help="the worktree's folder name, e.g. fix-prune-worktrees")
+    done_.add_argument('--repo', help='a folder in the repository (default: here)')
+    done_.set_defaults(run=cmd_shipped)
     for name, run, help_text in (('release', cmd_release, "clear a worktree's owner (for people)"),
                                  ('share', cmd_share, 'let any session edit a worktree until its owner ends')):
         command = sub.add_parser(name, help=help_text)

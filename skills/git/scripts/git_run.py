@@ -77,11 +77,12 @@ def github():
     return slug, author
 
 
-def preflight():
-    """The branch to land: checked out, not the base, no tracked changes."""
+def preflight(work=None):
+    """The branch to land: checked out, not the base, no tracked changes. A worktree with no
+    branch is landed under its `work` name (<type>/<slug>), the branch it will be pushed as."""
     if sh(['git', 'rev-parse', '--is-inside-work-tree'])[0] != 0:
         raise Stop('preflight: not in a git repository')
-    branch = out(['git', 'branch', '--show-current'])
+    branch = work or out(['git', 'branch', '--show-current'])
     if not branch:
         raise Stop('preflight: detached HEAD; check out the branch to land')
     code, head, _ = sh(['git', 'symbolic-ref', '--short', 'refs/remotes/origin/HEAD'])
