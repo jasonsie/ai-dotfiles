@@ -9,6 +9,7 @@ import json
 import os
 from pathlib import Path
 import shlex
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -386,6 +387,176 @@ class CommandsTest(Repo):
         status, out = self.cli('done', 'x', '--path', str(self.repo))
         self.assertEqual(status, 1)
         self.assertIn('inside a linked worktree', out)
+
+
+CLIS = ('claude', 'codex', 'pi', 'agy')
+STOP = 'ai-dotfiles worktree new <type>/<slug>'
+
+
+class FlowTest(Repo):
+    """The flow switch (`worktree on|off`) and the first-edit gate it arms, in all four CLIs."""
+
+    def cli(self, *args):
+        out, err = io.StringIO(), io.StringIO()
+        with redirect_stdout(out), redirect_stderr(err):
+            status = guard.main(list(args))
+        return status, out.getvalue() + err.getvalue()
+
+    def on(self, repo=None):
+        self.assertEqual(self.cli('on', '--repo', str(repo or self.repo))[0], 0)
+
+    def stopped(self, cli, reply):
+        """Whether `reply`, in `cli`'s own format, denies and names the way out."""
+        if cli in ('claude', 'codex'):
+            out = reply['hookSpecificOutput']
+            denied, text = out['permissionDecision'] == 'deny', out['permissionDecisionReason']
+        elif cli == 'pi':
+            denied, text = reply['block'], reply['reason']
+        else:
+            denied, text = reply['decision'] == 'deny', reply['reason']
+        return denied and STOP in text
+
+    def denied(self, cli, reply):
+        if reply is None:
+            return False
+        if cli in ('claude', 'codex'):
+            return reply['hookSpecificOutput'].get('permissionDecision') == 'deny'
+        return bool(reply.get('block')) if cli == 'pi' else reply.get('decision') == 'deny'
+
+    def shell_in(self, cli, command):
+        if cli == 'agy':
+            return self.run_hook('agy', {'conversationId': 'ee', 'workspacePaths': [str(self.repo)], 'pid': ME,
+                                         'toolCall': {'name': 'run_command',
+                                                      'args': {'CommandLine': command, 'Cwd': str(self.repo)}}})
+        return self.shell(cli, 'ee', ME, command)
+
+    def second_repo(self):
+        other = self.repo.parent / 'other'
+        other.mkdir()
+        git(other, 'init', '-q', '-b', 'main')
+        git(other, 'config', 'user.email', 't@example.com')
+        git(other, 'config', 'user.name', 'T')
+        (other / 'f.txt').write_text('x\n')
+        git(other, 'add', '.')
+        git(other, 'commit', '-q', '-m', 'init')
+        return other
+
+    def test_on_and_off_set_one_local_config_key_and_list_shows_it(self):
+        self.assertIn('flow: off', self.cli('list', '--repo', str(self.repo))[1])
+        self.assertIn('flow: on', self.cli('on', '--repo', str(self.repo))[1])
+        self.assertEqual(git(self.repo, 'config', '--local', '--get', guard.FLOW_KEY), 'true')
+        self.assertIn('flow: on', self.cli('list', '--repo', str(self.repo))[1])
+        self.assertEqual(self.cli('on', '--repo', str(self.repo))[0], 0)  # idempotent
+        self.assertIn('flow: off', self.cli('off', '--repo', str(self.repo))[1])
+        unset = subprocess.run(['git', '-C', str(self.repo), 'config', '--local', '--get', guard.FLOW_KEY],
+                               capture_output=True)
+        self.assertEqual(unset.returncode, 1)
+        self.assertEqual(self.cli('off', '--repo', str(self.repo))[0], 0)  # idempotent
+
+    def test_the_switch_is_per_repo_whichever_worktree_asks(self):
+        self.on()
+        git(self.repo, 'worktree', 'add', '-q', '-b', 'side', str(self.linked('side')))
+        self.assertIn('flow: on', self.cli('list', '--repo', str(self.linked('side')))[1])
+        self.assertIn('flow: off', self.cli('list', '--repo', str(self.second_repo()))[1])
+
+    def test_on_outside_a_repo_says_so(self):
+        outside = Path(tempfile.mkdtemp())
+        self.addCleanup(outside.rmdir)
+        with self.assertRaises(SystemExit):
+            self.cli('on', '--repo', str(outside))
+
+    def test_an_agent_cannot_flip_the_switch_in_any_cli(self):
+        for cli in CLIS:
+            for word in ('on', 'off'):
+                reply = self.shell_in(cli, f'ai-dotfiles worktree {word}')
+                self.assertTrue(self.denied(cli, reply), (cli, word, reply))
+        for allowed in ('ai-dotfiles worktree list', 'ai-dotfiles worktree new fix/x', 'echo worktree on'):
+            self.assertFalse(self.denied('claude', self.shell_in('claude', allowed)), allowed)
+
+    def test_only_a_real_invocation_is_refused_not_text_that_mentions_one(self):
+        wt = 'ai-dotfiles worktree'
+        refused = (f'{wt} release', f'{wt} share /x', f'cd /x && {wt} on', f'ls; {wt} off', f'true | {wt} on',
+                   f'cd /tmp\n{wt} on', f'FOO=1 {wt} share', f'sudo {wt} on', f'({wt} on)', f'ls || {wt} off',
+                   f'bash -c "{wt} on"', f"sh -lc '{wt} off'", 'python3 skills/worktree-guard/scripts/worktree_guard.py on',
+                   'worktree-guard release', f'cat <<EOF > f\ntext\nEOF\n{wt} on', f'echo "x" && cd y; {wt} off')
+        mentioned = (f'echo "{wt} on"', f"grep -n 'worktree release' notes.txt", f'git commit -m "docs: {wt} off"',
+                     f"cat <<'EOF'\n{wt} on\nEOF", f'cat <<EOF > f\nrun {wt} release\nEOF', f'cat docs/{wt} on',
+                     f'echo {wt}-on', f'{wt} list', f'{wt} new fix/x', f'echo hi # {wt} on', "echo 'a\nai-dotfiles worktree on'")
+        for cli in CLIS:
+            for command in refused:
+                self.assertTrue(self.denied(cli, self.shell_in(cli, command)), (cli, command))
+            for command in mentioned:
+                self.assertFalse(self.denied(cli, self.shell_in(cli, command)), (cli, command))
+
+    def test_in_a_repo_that_is_on_the_first_edit_is_stopped_in_every_cli(self):
+        self.on()
+        for cli, session, pid in (('claude', 'aaaa1111', ME), ('codex', 'bbbb2222', PARENT),
+                                  ('pi', 'dddd4444', ME), ('agy', 'eeee5555', PARENT)):
+            reply = self.edit(cli, session, pid)
+            self.assertTrue(self.stopped(cli, reply), (cli, reply))
+            self.assertTrue(self.stopped(cli, self.edit(cli, session, pid)), cli)  # until it names the work
+            self.assertFalse(guard.claim_file(self.repo).exists(), cli)  # a stopped edit claims nothing
+
+    def test_a_tree_changing_git_command_is_stopped_but_reads_pass(self):
+        self.on()
+        self.assertTrue(self.stopped('claude', self.shell('claude', 'aaaa1111', ME, 'git commit -am x')))
+        self.assertIsNone(self.shell('claude', 'aaaa1111', ME, 'git status && cat a.txt'))
+        self.assertIsNone(self.run_hook('claude', {'session_id': 'aaaa1111', 'cwd': str(self.repo), 'pid': ME,
+                                                   'tool_name': 'Read',
+                                                   'tool_input': {'file_path': str(self.repo / 'a.txt')}}))
+        self.assertIsNone(self.run_hook('pi', {'session_id': 'dddd4444', 'cwd': str(self.repo), 'pid': ME,
+                                               'tool_name': 'read', 'tool_input': {'path': 'a.txt'}}))
+        view = self.run_hook('agy', {'conversationId': 'eeee5555', 'workspacePaths': [str(self.repo)], 'pid': ME,
+                                     'toolCall': {'name': 'view_file',
+                                                  'args': {'AbsolutePath': str(self.repo / 'a.txt')}}})
+        self.assertEqual(view, {'decision': 'allow'})
+
+    def test_a_repo_that_is_off_keeps_todays_behavior(self):
+        self.on()
+        self.cli('off', '--repo', str(self.repo))
+        self.assertIsNone(self.edit('claude', 'aaaa1111', ME))
+        self.assertTrue(guard.claim_file(self.repo).exists())
+
+    def test_the_edited_files_repo_decides_wherever_the_session_started(self):
+        other = self.second_repo()
+        self.on(other)  # self.repo stays off
+        data = {'session_id': 'aaaa1111', 'cwd': str(self.repo), 'pid': ME, 'tool_name': 'Edit',
+                'tool_input': {'file_path': str(other / 'f.txt')}}
+        self.assertTrue(self.stopped('claude', self.run_hook('claude', data)))  # started in an off repo
+        self.assertIsNone(self.edit('claude', 'aaaa1111', ME))  # the off repo's own file: plain
+        self.on()
+        self.cli('off', '--repo', str(other))
+        self.assertIsNone(self.run_hook('claude', {**data, 'cwd': str(self.repo)}))  # file in a repo now off
+        self.assertTrue(self.stopped('claude', self.edit('claude', 'aaaa1111', ME)))  # cwd-independent
+
+    def test_a_file_outside_git_is_a_plain_edit(self):
+        self.on()
+        outside = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, outside)
+        data = {'session_id': 'aaaa1111', 'cwd': str(self.repo), 'pid': ME, 'tool_name': 'Write',
+                'tool_input': {'file_path': str(outside / 'x.txt')}}
+        self.assertIsNone(self.run_hook('claude', data))
+
+    def test_a_linked_worktree_of_an_on_repo_is_not_the_gate(self):
+        self.on()
+        git(self.repo, 'worktree', 'add', '-q', '--detach', str(self.linked('fix-x')))
+        data = {'session_id': 'aaaa1111', 'cwd': str(self.repo), 'pid': ME, 'tool_name': 'Edit',
+                'tool_input': {'file_path': str(self.linked('fix-x') / 'a.txt')}}
+        self.assertIsNone(self.run_hook('claude', data))
+
+    def test_a_guard_failure_never_blocks_an_edit(self):
+        self.on()
+        data = {'session_id': 's', 'cwd': str(self.repo), 'tool_name': 'Edit',
+                'tool_input': {'file_path': str(self.repo / 'a.txt')}}
+        out, err = io.StringIO(), io.StringIO()
+        with patch.object(guard, 'flow_on', side_effect=RuntimeError('boom')), redirect_stdout(out), redirect_stderr(err):
+            status = guard.agent_hooks.serve('claude', 'pre', guard.answer('claude', 'pre'),
+                                             stdin=io.StringIO(json.dumps(data)), stdout=out,
+                                             on_error=guard.failed)
+        reply = json.loads(out.getvalue())['hookSpecificOutput']
+        self.assertEqual(status, 0)
+        self.assertNotEqual(reply.get('permissionDecision'), 'deny')
+        self.assertIn('not protected', reply['additionalContext'])
 
 
 if __name__ == '__main__':
