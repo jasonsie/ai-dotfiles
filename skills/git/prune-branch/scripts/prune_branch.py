@@ -29,6 +29,67 @@ def held_elsewhere(base):
     return False
 
 
+def delete_remote(branch, dry):
+    """Delete the branch on origin; False when it is gone already."""
+    if git_run.sh(['git', 'ls-remote', '--exit-code', '--heads', 'origin', branch])[0] != 0:
+        return False
+    git_run.act(['git', 'push', '-q', 'origin', '--delete', branch], dry)
+    return True
+
+
+def main_checkout():
+    """(path, branch ref or None) of the main checkout: the first worktree git lists."""
+    path = ref = None
+    for line in git_run.out(['git', 'worktree', 'list', '--porcelain']).splitlines() + ['']:
+        if line.startswith('worktree ') and path is None:
+            path = line.split(' ', 1)[1]
+        elif line.startswith('branch ') and path:
+            ref = line.split(' ', 1)[1]
+        elif not line and path:
+            break
+    return path, ref
+
+
+def paths(args, where):
+    code, text, _ = git_run.sh(['git', '-C', where, *args])
+    return set(text.split('\0')) - {''} if code == 0 else set()
+
+
+def fast_forward(base, dry):
+    """Move the main checkout to origin/<base> when git can without touching uncommitted files.
+
+    Never a stash, reset or forced checkout: a checkout that is not on the base, is not behind it,
+    or has uncommitted work in a file the move would change is left as it is, with the reason."""
+    path, ref = main_checkout()
+    if ref != f'refs/heads/{base}':
+        on = ref.removeprefix('refs/heads/') if ref else 'a detached HEAD'
+        return f'skipped: the main checkout is on {on}, not {base}'
+    git_run.act(['git', 'fetch', '-q', 'origin', base], dry)  # a dry run compares with the last fetch
+    head = git_run.out(['git', '-C', path, 'rev-parse', 'HEAD'])
+    target = git_run.out(['git', '-C', path, 'rev-parse', f'origin/{base}'])
+    if head == target:
+        return 'up to date already'
+    if git_run.sh(['git', '-C', path, 'merge-base', '--is-ancestor', head, target])[0] != 0:
+        return f'skipped: {base} has commits origin/{base} lacks'
+    incoming = paths(['diff', '--name-only', '-z', '--no-renames', head, target], path)
+    dirty = (paths(['diff', '--name-only', '-z', '--no-renames'], path)
+             | paths(['diff', '--name-only', '-z', '--no-renames', '--cached'], path)
+             | paths(['ls-files', '-z', '--others', '--exclude-standard'], path))
+    clash = sorted(incoming & dirty)
+    if clash:
+        more = f' and {len(clash) - 3} more' if len(clash) > 3 else ''
+        return f'skipped: uncommitted changes in {", ".join(clash[:3])}{more}'
+    merge = ['git', '-C', path, 'merge', '--ff-only', f'origin/{base}']
+    if dry:
+        git_run.act(merge, dry)
+        return 'would fast-forward'
+    code, stdout, stderr = git_run.sh(merge)
+    if code != 0:
+        why = (stderr or stdout).splitlines()
+        return f'skipped: git refused: {why[0] if why else f"exit {code}"}'
+    return f'fast-forwarded to {target[:7]}'
+
+
 def prune(repo, dry):
     done = []
     if held_elsewhere(repo.base):
@@ -44,8 +105,7 @@ def prune(repo, dry):
     if git_run.sh(['git', 'rev-parse', '--verify', '-q', f'refs/heads/{repo.branch}'])[0] == 0:
         git_run.act(['git', 'branch', '-q', '-D', repo.branch], dry)
         done.append('local branch deleted')
-    if git_run.sh(['git', 'ls-remote', '--exit-code', '--heads', 'origin', repo.branch])[0] == 0:
-        git_run.act(['git', 'push', '-q', 'origin', '--delete', repo.branch], dry)
+    if delete_remote(repo.branch, dry):
         done.append('remote branch deleted')
     return ', '.join(done) or 'nothing left'
 

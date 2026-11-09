@@ -14,6 +14,8 @@ from unittest.mock import patch
 from support import ROOT, load
 
 statusline = load('statusline.py')
+sys.path.insert(0, str(ROOT / 'scripts'))
+import agent_hooks  # noqa: E402  (imported, not loaded by path: its dataclasses need sys.modules)
 
 HOME = '/Users/me'
 NOW = 1794195900  # 2026-11-09 03:45 UTC, a Monday
@@ -57,7 +59,9 @@ def plain(text):
 
 class RenderTest(unittest.TestCase):
     def setUp(self):
-        env = patch.dict(os.environ, {'HOME': HOME})
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        env = patch.dict(os.environ, {'HOME': HOME, 'WORKTREE_GUARD_STATE': temp.name})  # no guard state leaks in
         env.start()
         self.addCleanup(env.stop)
 
@@ -138,6 +142,92 @@ class RenderTest(unittest.TestCase):
         self.assertEqual(statusline.tilde('/Users/me', '/Users/me/'), '~')
         self.assertEqual(statusline.tilde('/Users/me/a', '/Users/me'), '~/a')
         self.assertEqual(statusline.tilde('/Users/meow/a', '/Users/me'), '/Users/meow/a')
+
+
+class WorkNameTest(unittest.TestCase):
+    """The work name replaces the branch while a session has a worktree; the guard's state is the fixture."""
+
+    def setUp(self):
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        self.root = Path(temp.name).resolve()
+        self.state = self.root / 'state'
+        self.main = self.root / 'repo'
+        self.linked = self.main / '.claude/worktrees/fix-x'
+        self.linked.mkdir(parents=True)
+        env = patch.dict(os.environ, {'HOME': HOME, 'WORKTREE_GUARD_STATE': str(self.state)})
+        env.start()
+        self.addCleanup(env.stop)
+
+    def keep(self, session, moved):
+        """The guard's record of a session, written by the guard's own store."""
+        store = agent_hooks.Store('WORKTREE_GUARD_STATE', '', 60, 'sessions')
+        store.save(session, {'moved': moved})
+
+    def moved(self, **fields):
+        return {'busy': str(self.main), 'linked': str(self.linked), 'name': 'fix-x', 'work': 'fix/x',
+                'branch': None, **fields}
+
+    def first(self, data, facts=('main', '')):
+        return plain(statusline.render(data, facts, NOW, UTC)[0])
+
+    def agy(self, **extra):
+        return {**ANTIGRAVITY, 'cwd': str(self.main), 'workspace': {'current_dir': str(self.main)}, **extra}
+
+    def test_antigravity_shows_the_work_the_guard_moved_its_session_to(self):
+        self.keep('x', self.moved())
+        self.assertEqual(self.first(self.agy()),
+                         f'📁 {self.main}  🌿 fix/x  🤖 Gemini 4 Argon · medium  📟 v1.4.5')
+
+    def test_the_conversation_id_finds_the_session_too(self):
+        self.keep('conv-1', self.moved())
+        data = self.agy(session_id=None, conversation_id='conv-1')
+        self.assertIn('🌿 fix/x', self.first(data))
+
+    def test_the_session_file_is_the_one_the_guard_writes(self):
+        store = agent_hooks.Store('WORKTREE_GUARD_STATE', '', 60, 'sessions')
+        self.assertEqual(statusline.session_file('we/ird id'), store.file('we/ird id'))
+        self.assertEqual(statusline.session_file('a' * 200), store.file('a' * 200))
+
+    def test_claude_shows_the_work_from_its_worktree_folder(self):
+        (self.main / '.claude/worktrees/fix-x.json').write_text(json.dumps({'work': 'fix/x', 'branch': None}))
+        data = {**CLAUDE, 'cwd': str(self.linked / 'src'), 'workspace': {'current_dir': str(self.linked / 'src')}}
+        (self.linked / 'src').mkdir()
+        self.assertIn('🌿 fix/x  🤖', self.first(data, ('abc1234', 'fix-x')))
+
+    def test_a_worktree_without_a_work_name_keeps_the_branch_and_folder(self):
+        (self.main / '.claude/worktrees/fix-x.json').write_text(json.dumps({'branch': 'agent/fix-x'}))
+        data = {**CLAUDE, 'cwd': str(self.linked), 'workspace': {'current_dir': str(self.linked)}}
+        self.assertIn('🌿 agent/fix-x ⎇ fix-x', self.first(data, ('agent/fix-x', 'fix-x')))
+
+    def test_the_branch_shows_when_the_session_has_no_worktree(self):
+        self.assertIn('🌿 main  🤖', self.first(self.agy()))
+        self.keep('x', {})
+        self.assertIn('🌿 main  🤖', self.first(self.agy()))
+        self.keep('other', self.moved())
+        self.assertIn('🌿 main  🤖', self.first(self.agy()))
+
+    def test_a_worktree_that_is_gone_shows_the_branch(self):
+        self.keep('x', self.moved(linked=str(self.main / '.claude/worktrees/deleted')))
+        self.assertIn('🌿 main  🤖', self.first(self.agy()))
+
+    def test_state_that_cannot_be_read_shows_the_branch(self):
+        path = statusline.session_file('x')
+        path.parent.mkdir(parents=True)
+        for text in ('not json', '[1]', '{"moved": 3}', '{"moved": {"linked": 4}}', '{"moved": {"linked": "' + str(self.linked) + '", "work": 5}}'):
+            path.write_text(text)
+            self.assertIn('🌿 main  🤖', self.first(self.agy()), text)
+        self.assertIn('🌿 main  🤖', self.first(self.agy(session_id=['x'], conversation_id=None)))
+
+    def test_a_work_less_move_shows_its_branch(self):  # a record an older guard wrote (move on clash)
+        self.keep('x', self.moved(work=None, branch='agent/codex-bbbb2222'))
+        self.assertIn('🌿 agent/codex-bbbb2222  🤖', self.first(self.agy()))
+
+    def test_runs_as_a_script_with_the_state_in_place(self):
+        self.keep('x', self.moved())
+        result = subprocess.run([sys.executable, str(ROOT / 'scripts/statusline.py')], input=json.dumps(self.agy()),
+                                capture_output=True, text=True, env=os.environ.copy())
+        self.assertIn('🌿 fix/x', plain(result.stdout))
 
 
 class GitFactsTest(unittest.TestCase):

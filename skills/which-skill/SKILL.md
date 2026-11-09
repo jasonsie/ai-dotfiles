@@ -105,14 +105,18 @@ has the reasoning and each CLI's commands.
 - **`daily-log`**: record finished work in the daily logger through the `daily-log`
   command; its grammar is what the learning-tutor and every `<subject>-tutor-daily`
   task write; its hook nudges a session that changed files but logged nothing.
-- **`worktree-guard`**: sessions sharing one checkout stay apart: a second session's first
-  edit moves it into a linked worktree; the skill is what a moved session does, and
-  `ai-dotfiles worktree` lists, archives and removes those worktrees.
+- **`worktree-guard`**: in a repo switched on, each task works in its own worktree and
+  an edit in the main checkout or another session's worktree is refused; the skill is how
+  a session names its work, and `ai-dotfiles worktree` lists, archives and removes
+  those worktrees.
 - **`small-commits`**: commit the way the hook accepts: under 300 changed lines, one
   concern, `type(scope): outcome` and the Why:, Scope:, Verified: trailers; the plan to
   show first, how to split, and what a block means.
 - **`approve`**: once the user has reviewed a branch and said "approve": commit, PR body,
-  then `ai-dotfiles approve` runs the git steps below in order, resumable.
+  then `ai-dotfiles approve` runs the git steps below in order, resumable. "approve <n>":
+  `ai-dotfiles approve <n>` lands PR n from any session, nothing local.
+- **`ship`**: the agent's finish in a worktree `worktree new` made: `ai-dotfiles ship` runs the
+  repo's checks, pushes the work as `<type>/<slug>`, opens the PR, deletes the worktree.
 - The git steps, each alone as `ai-dotfiles git <step>`: **`push-branch`** (to origin),
   **`open-pr`** (open or reuse), **`approve-pr`** (approve as the repo's cached reviewer
   account), **`archive-tag`** (`archive/<name>` at the tip before a branch goes; also

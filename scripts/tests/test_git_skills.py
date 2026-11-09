@@ -7,7 +7,11 @@ from contextlib import redirect_stderr, redirect_stdout
 import importlib
 import io
 import json
+import os
+from pathlib import Path
+import subprocess
 import sys
+import tempfile
 import time
 import unittest
 from unittest.mock import patch
@@ -31,10 +35,12 @@ class Fake:
     def __init__(self, **answers):
         self.answers = dict(DEFAULTS, **answers)
         self.calls = []
+        self.dirs = []   # (command, cwd) of every call
 
     def __call__(self, args, env=None, cwd=None):
         key = ' '.join(args)
         self.calls.append((key, (env or {}).get('GH_TOKEN')))
+        self.dirs.append((key, cwd))
         for prefix in sorted(self.answers, key=len, reverse=True):
             if key.startswith(prefix):
                 answer = self.answers[prefix]
@@ -79,6 +85,10 @@ DEFAULTS = {
     'git rev-parse --verify -q refs/heads/feat/x': TIP,
     'git branch -q -D': OK,
     'git ls-remote --exit-code --heads origin feat/x': OK,
+    'gh pr view 7 --json number': json.dumps(dict(PR, headRefName='feat/x', baseRefName='main', headRefOid=TIP,
+                                                  author={'login': 'owner'})),
+    'git rev-parse --verify -q ' + TIP + '^{commit}': TIP,
+    'git log --format=%ad --date=format:%Y-%m-%d origin/main..' + TIP: '2026-11-03\n2026-11-02',
     'git rev-parse --show-toplevel': '/repo',
     'git worktree list --porcelain': 'worktree /repo\nHEAD ' + TIP + '\nbranch refs/heads/feat/x',
 }
@@ -95,7 +105,7 @@ def as_reviewer(fake):
         if args[:3] == ['gh', 'api', 'repos/o/r'] and (env or {}).get('GH_TOKEN') == 'tok-second':
             fake.calls.append((' '.join(args), 'tok-second'))
             return fake.answers.get('gh api repos/o/r', (0, '1', ''))
-        return original(args, env)
+        return original(args, env, cwd)
     return call
 
 
@@ -234,6 +244,54 @@ class ApprovePrTest(unittest.TestCase):
         code, _, _, fake = land(['--unset'], reviewer)
         self.assertEqual(code, 0)
         self.assertTrue(fake.ran('git config --local --unset approve.reviewer'))
+
+
+class FastForwardRealGitTest(unittest.TestCase):
+    """prune_branch.fast_forward against real repositories (a local bare origin): uncommitted files survive."""
+
+    def git(self, where, *args):
+        done = subprocess.run(['git', '-C', str(where), *args], capture_output=True, text=True, check=True)
+        return done.stdout.strip()
+
+    def setUp(self):
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        root = Path(temp.name).resolve()
+        env = patch.dict(os.environ, {'GIT_CONFIG_GLOBAL': '/dev/null'})
+        env.start()
+        self.addCleanup(env.stop)
+        self.main, other = root / 'main co', root / 'other'
+        subprocess.run(['git', 'init', '-q', '--bare', '-b', 'main', str(root / 'origin.git')], check=True)
+        for folder in (self.main, other):
+            subprocess.run(['git', 'clone', '-q', str(root / 'origin.git'), str(folder)], check=True, capture_output=True)
+            self.git(folder, 'config', 'user.email', 't@example.com')
+            self.git(folder, 'config', 'user.name', 'T')
+        for name in ('a.txt', 'b.txt'):
+            (other / name).write_text('one\n')
+        self.git(other, 'add', '.')
+        self.git(other, 'commit', '-q', '-m', 'init')
+        self.git(other, 'push', '-q', 'origin', 'HEAD:main')
+        self.git(self.main, 'pull', '-q', 'origin', 'main')
+        (other / 'b.txt').write_text('two\n')
+        self.git(other, 'commit', '-q', '-am', 'change b')
+        self.git(other, 'push', '-q', 'origin', 'HEAD:main')
+        self.addCleanup(os.chdir, os.getcwd())
+        os.chdir(self.main)
+
+    def test_unrelated_uncommitted_work_stays_and_main_moves(self):
+        (self.main / 'a.txt').write_text('mine\n')
+        (self.main / 'notes.md').write_text('new\n')
+        self.assertTrue(prune_branch.fast_forward('main', False).startswith('fast-forwarded'))
+        self.assertEqual((self.main / 'b.txt').read_text(), 'two\n')
+        self.assertEqual((self.main / 'a.txt').read_text(), 'mine\n')
+        self.assertTrue((self.main / 'notes.md').exists())
+
+    def test_a_file_the_move_would_change_is_left_as_it_is(self):
+        (self.main / 'b.txt').write_text('mine\n')
+        self.assertEqual(prune_branch.fast_forward('main', False), 'skipped: uncommitted changes in b.txt')
+        self.assertEqual((self.main / 'b.txt').read_text(), 'mine\n')
+        self.assertEqual(self.git(self.main, 'rev-list', '--count', 'HEAD'), '1')
+        self.assertEqual(self.git(self.main, 'stash', 'list'), '')
 
 
 if __name__ == '__main__':

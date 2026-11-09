@@ -45,8 +45,10 @@ MATCHERS = {
     'agy': {'edit': 'write_to_file|replace_file_content|multi_replace_file_content', 'shell': 'run_command',
             'read': 'view_file|list_dir|find_by_name|grep_search'},
 }
-NATIVE = {'pre': 'PreToolUse', 'tool': 'PostToolUse', 'stop': 'Stop', 'end': 'SessionEnd'}
+NATIVE = {'pre': 'PreToolUse', 'tool': 'PostToolUse', 'stop': 'Stop', 'end': 'SessionEnd',
+          'create': 'WorktreeCreate', 'remove': 'WorktreeRemove'}
 NO_SESSION_END = ('agy',)  # Antigravity's hooks have no end-of-session event
+CLAUDE_ONLY = ('create', 'remove')  # worktree events: only Claude Code lets a hook make and remove worktrees
 # CLIs that do not flag the turn a hook's own Continue started; the store remembers it for them.
 UNFLAGGED_CONTINUATION = ('agy', 'pi')
 CONTINUED = 'pending'
@@ -66,6 +68,8 @@ class Event:
     tool_input: dict = field(default_factory=dict)  # the tool's arguments, in the CLI's own names
     pid: int | None = None       # the CLI's process, when its extension says (Pi)
     model: str = ''              # the model, when the CLI says
+    name: str = ''               # the new worktree's name (Claude's 'create' event)
+    path: str = ''               # the worktree being removed (Claude's 'remove' event)
 
 
 @dataclass(frozen=True)
@@ -93,11 +97,25 @@ class Rewrite:
     note: str = ''
 
 
+@dataclass(frozen=True)
+class Shown:
+    """A 'pre' reply that also tells the person something: `reply` (None for nothing else) is rendered
+    as usual. Claude Code and Codex show `text` as a warning; Pi's extension sets its footer status to
+    `status` (None clears it); Antigravity has no such channel and gets `reply` only."""
+    reply: object
+    text: str
+    status: str | None = None
+
+
 def action_of(cli, tool):
     for action, names in TOOLS.get(cli, {}).items():
         if tool in names:
             return action
     return 'other'
+
+
+def text(value):
+    return value if isinstance(value, str) else ''
 
 
 def read(cli, kind, data):
@@ -118,12 +136,17 @@ def read(cli, kind, data):
     return Event(cli, kind, session, folder, tool, action == 'edit', bool(data.get('stop_hook_active')),
                  model_stopped, action, tool_input if isinstance(tool_input, dict) else {},
                  pid if isinstance(pid, int) and not isinstance(pid, bool) else None,
-                 model if isinstance(model, str) else '')
+                 model if isinstance(model, str) else '', text(data.get('name')), text(data.get('worktree_path')))
 
 
 def render_pre(cli, reply):
     """A 'pre' reply: Claude Code and Codex share hookSpecificOutput; Antigravity always wants
-    a decision; Pi's extension applies block, input and note itself."""
+    a decision; Pi's extension applies block, input, note and status itself."""
+    if isinstance(reply, Shown):
+        out = render_pre(cli, reply.reply)
+        if cli in ('claude', 'codex'):  # only systemMessage: PreToolUse rejects continue, stopReason, suppressOutput
+            return {**(out or {}), 'systemMessage': reply.text}
+        return {**(out or {}), 'status': reply.status} if cli == 'pi' else out
     if cli in ('claude', 'codex'):
         if reply is None:
             return None
@@ -251,7 +274,7 @@ def native_events(cli, wants):
         return ()
     found = []
     for kind, actions in wants:
-        if kind == 'end' and cli in NO_SESSION_END:
+        if (kind == 'end' and cli in NO_SESSION_END) or (kind in CLAUDE_ONLY and cli != 'claude'):
             continue
         actions = (actions,) if isinstance(actions, str) else actions or ()
         matcher = '|'.join(MATCHERS[cli][a] for a in actions if a in MATCHERS[cli]) or None

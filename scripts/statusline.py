@@ -27,6 +27,7 @@ from datetime import datetime
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 import time
@@ -37,6 +38,8 @@ COLORS = {
 }
 RESET = '\033[0m'
 WINDOWS = (('five_hour', '5h'), ('seven_day', '7d'), ('spend_limit', 'spend'))  # Claude's rate_limits
+GUARD_STATE = 'WORKTREE_GUARD_STATE'  # the worktree guard's state folder: this variable, else the default
+GUARD_DEFAULT = '~/.local/state/ai-dotfiles/worktree-guard'
 GIT_FACTS = ['rev-parse', '--abbrev-ref', 'HEAD', '--git-dir', '--git-common-dir', '--show-toplevel']
 
 
@@ -83,6 +86,60 @@ def git_facts(folder, run=subprocess.run):
     base = Path(folder)
     linked = (base / git_dir).resolve() != (base / common_dir).resolve()
     return branch, Path(top).name if linked else ''
+
+
+def read_object(path):
+    """The JSON object in a file, or {} when it is missing, unreadable or not an object."""
+    try:
+        found = json.loads(Path(path).read_text())
+    except (OSError, ValueError):
+        return {}
+    return found if isinstance(found, dict) else {}
+
+
+def session_file(session):
+    """The guard's record of a session. The same name agent_hooks.Store.file gives it (a test holds
+    the two together); this script runs on any python3, so it cannot import that module."""
+    root = Path(os.environ.get(GUARD_STATE) or GUARD_DEFAULT).expanduser()
+    return root / 'sessions' / (re.sub(r'[^A-Za-z0-9_.-]', '_', str(session))[:128] + '.json')
+
+
+def text_of(value):
+    return value if isinstance(value, str) and value else ''
+
+
+def session_work(data):
+    """The work name of the worktree the guard moved this session to (its branch when it has no work
+    name), '' when none or when the worktree is gone. Claude Code names its session `session_id`,
+    Antigravity `session_id` and `conversation_id`."""
+    for key in ('session_id', 'conversation_id'):
+        session = get(data, key)
+        if not isinstance(session, (str, int)) or session == '':
+            continue
+        moved = read_object(session_file(session)).get('moved')
+        linked = text_of(moved.get('linked')) if isinstance(moved, dict) else ''
+        if linked and os.path.isdir(linked):
+            return text_of(moved.get('work')) or text_of(moved.get('branch'))
+    return ''
+
+
+def folder_work(folder):
+    """The work name in the record next to a worktree under <repo>/.claude/worktrees/<folder>, for a
+    folder inside one; '' for any other folder or a worktree with no work name."""
+    parts = Path(folder).parts
+    for i in range(len(parts) - 2):
+        if parts[i:i + 2] == ('.claude', 'worktrees'):
+            record = Path(*parts[:i + 2]) / (parts[i + 2] + '.json')
+            return text_of(read_object(record).get('work'))
+    return ''
+
+
+def work_name(data, folder):
+    """The work name to show instead of the branch, or '' (never raises)."""
+    try:
+        return folder_work(folder) or session_work(data)
+    except Exception:
+        return ''
 
 
 def model_segment(data):
@@ -189,9 +246,11 @@ def folder_of(data):
 
 def render(data, facts=None, now=None, tz=None):
     """The lines for one payload; `facts` is (branch, worktree), looked up in git when not given;
-    `now` and `tz` fix the clock and zone the reset times are shown in (the system's when not given)."""
+    a session's worktree shows by its work name instead (the guard's record of it); `now` and `tz` fix the clock and zone the reset times are shown in (the system's when not given)."""
     folder = folder_of(data)
-    lines = [first_line(data, folder, git_facts(folder) if facts is None else facts), context_line(data)]
+    facts = git_facts(folder) if facts is None else facts
+    work = work_name(data, folder)
+    lines = [first_line(data, folder, (work, '') if work else facts), context_line(data)]
     usage = usage_line(data, now, tz)
     return lines + [usage] if usage else lines
 
