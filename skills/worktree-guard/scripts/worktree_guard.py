@@ -569,6 +569,10 @@ def branch_of(main, name, meta):
     return current or meta.get('branch')
 
 
+def branch_exists(main, branch):
+    return bool(branch) and git(main, 'rev-parse', '-q', '--verify', f'refs/heads/{branch}', check=False) is not None
+
+
 def target_of(main, meta):
     source = meta.get('from')
     if source and git(main, 'rev-parse', '-q', '--verify', f'refs/heads/{source}', check=False):
@@ -598,6 +602,8 @@ def span(main, base, branch):
 
 def archive(main, name, meta, branch, was_merged):
     """Tag the branch tip with archive-tag; None when it has no commits of its own."""
+    if not branch_exists(main, branch):
+        return None
     description = meta.get('description') or git(main, 'log', '-1', '--format=%s', branch)
     agent = ' '.join(x for x in (meta.get('cli', 'agent'), meta.get('model', '')) if x)
     extra = (f"Agent: {agent}, session {meta.get('session', '?')}; redirected from branch {meta.get('from', '?')}.",)
@@ -611,6 +617,12 @@ def remove(main, name, force=False, quiet_refusal=False):
         return False, [f'worktree-guard: no linked worktree named {name} in {main}']
     linked = main / LINKED / name
     branch = branch_of(main, name, meta)
+    if not linked.is_dir() and not branch_exists(main, branch):
+        # A stale record: both the worktree and its branch are already gone. Nothing to archive
+        # or refuse; just drop the leftover files. --force is not needed.
+        meta_file(main, name).unlink(missing_ok=True)
+        claim_file(linked).unlink(missing_ok=True)
+        return True, [f'worktree-guard: removed {name}: worktree and branch {branch} already gone (stale record)']
     was_merged = merged(main, branch, meta)
     problems = []
     claim = owner_of(linked) if linked.is_dir() else None

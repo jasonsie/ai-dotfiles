@@ -298,6 +298,41 @@ class CommandsTest(Repo):
         self.assertIn('removed codex-bbbb2222', out)
         self.assertFalse(self.wt.exists())
 
+    def make_stale(self):
+        """Remove the linked worktree and its branch by hand, leaving only the .json record."""
+        git(self.repo, 'worktree', 'remove', '--force', str(self.wt))
+        git(self.repo, 'branch', '-D', 'agent/codex-bbbb2222')
+        self.end()
+        self.assertTrue((self.repo / '.claude/worktrees/codex-bbbb2222.json').exists())
+
+    def test_prune_drops_a_sidecar_whose_worktree_and_branch_are_gone(self):
+        self.make_stale()
+        status, out = self.cli('prune', '--repo', str(self.repo))
+        self.assertEqual(status, 0, out)
+        self.assertIn('removed codex-bbbb2222', out)
+        self.assertIn('stale record', out)
+        self.assertFalse((self.repo / '.claude/worktrees/codex-bbbb2222.json').exists())
+        self.assertIn('no linked worktrees', self.cli('list', '--repo', str(self.repo))[1])
+
+    def test_rm_on_a_stale_sidecar_does_not_raise(self):
+        self.make_stale()
+        status, out = self.cli('rm', 'codex-bbbb2222', '--repo', str(self.repo))  # no --force needed
+        self.assertEqual(status, 0, out)
+        self.assertIn('already gone', out)
+        self.assertFalse((self.repo / '.claude/worktrees/codex-bbbb2222.json').exists())
+        # list over a stale sidecar must not crash either
+        status, out = self.cli('list', '--repo', str(self.repo))
+        self.assertEqual(status, 0, out)
+
+    def test_a_missing_folder_with_a_live_branch_is_still_kept(self):
+        self.work()  # a commit of its own, so the branch is unmerged
+        git(self.repo, 'worktree', 'remove', '--force', str(self.wt))  # folder gone, branch agent/codex-bbbb2222 stays
+        self.end()
+        status, out = self.cli('rm', 'codex-bbbb2222', '--repo', str(self.repo))
+        self.assertEqual(status, 1, out)  # unmerged branch: kept, not treated as stale
+        self.assertIn('neither merged into main nor pushed', out)
+        self.assertTrue((self.repo / '.claude/worktrees/codex-bbbb2222.json').exists())
+
     def test_release_and_share(self):
         self.assertIn('released', self.cli('release', str(self.repo))[1])
         self.assertIn('nobody owns', self.cli('release', str(self.repo))[1])
