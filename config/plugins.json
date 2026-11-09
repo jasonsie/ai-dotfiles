@@ -8,7 +8,7 @@
     },
     "zkfy": {
       "source": "jasonsie/zkfy",
-      "version": "1.7.0",
+      "version": "1.8.0",
       "targets": ["claude", "codex", "pi", "agy"]
     }
   }
