@@ -200,6 +200,14 @@ def main_of(worktree):
     return common.parent if common.name == '.git' else worktree
 
 
+def ours(worktree):
+    """Whether the guard gates and claims `worktree`: the main checkout, or a linked worktree under
+    `.claude/worktrees/`. A linked worktree elsewhere (Codex's or Antigravity's app makes them) is
+    left to the app."""
+    main = main_of(worktree)
+    return worktree == main or worktree.parent == main / LINKED
+
+
 def flow_on(worktree):
     """Whether the repo of `worktree` works through worktrees (`worktree on`)."""
     return git(worktree, 'config', '--local', '--bool', '--get', FLOW_KEY, check=False) == 'true'
@@ -667,7 +675,7 @@ def route(event, state, table=None):
                 folder = str(here) if here else folder
             event = replace(event, tool_input=steered, folder=folder)
     paths = targets(event)
-    worktrees = list(dict.fromkeys(w for w in map(worktree_of, paths) if w and flow_on(w)))  # off: nothing
+    worktrees = list(dict.fromkeys(w for w in map(worktree_of, paths) if w and ours(w) and flow_on(w)))  # off: nothing
     notes = []
     note_naming(event, table)
     if worktrees:

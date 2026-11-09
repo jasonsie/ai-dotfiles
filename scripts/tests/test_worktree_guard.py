@@ -944,6 +944,21 @@ class FlowTest(Repo):
                 'tool_input': {'file_path': str(self.linked('fix-x') / 'a.txt')}}
         self.assertIsNone(self.run_hook('claude', data))
 
+    def test_a_linked_worktree_outside_the_guards_folder_is_left_alone(self):
+        """Codex's and Antigravity's app worktrees: not gated, not claimed, whoever edits them."""
+        self.on()
+        elsewhere = self.repo.parent / 'app worktree'
+        git(self.repo, 'worktree', 'add', '-q', '--detach', str(elsewhere))
+        for cli, session, pid in (('claude', 'aaaa1111', ME), ('codex', 'bbbb2222', PARENT)):
+            data = {'session_id': session, 'cwd': str(elsewhere), 'pid': pid, 'tool_name': 'Edit',
+                    'tool_input': {'file_path': str(elsewhere / 'a.txt')}}
+            if cli == 'codex':
+                data = {**data, 'tool_name': 'apply_patch', 'tool_input': {
+                    'command': '*** Begin Patch\n*** Update File: a.txt\n@@\n-one\n+two\n*** End Patch\n'}}
+            self.assertTrue(self.plain(self.run_hook(cli, data)), cli)
+        self.assertEqual(list(guard.state_root().glob('claims/*.json')), [])
+        self.assertTrue(self.plain(self.shell('claude', 'aaaa1111', ME, f'git -C {shlex.quote(str(elsewhere))} commit -am x')))
+
     def test_a_guard_failure_never_blocks_an_edit(self):
         self.on()
         data = {'session_id': 's', 'cwd': str(self.repo), 'tool_name': 'Edit',

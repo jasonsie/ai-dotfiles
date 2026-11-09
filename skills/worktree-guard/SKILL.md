@@ -45,6 +45,8 @@ deleted the guard tells Codex in one line. Not an error: the notice is how Codex
 main checkout (or a git command that changes it) is stopped with "name this work". Reads pass.
 The edited file's repo decides, wherever the session started; a file outside git is never
 gated. A repo that is off gets nothing: no owner, no move, no message.
+In a repo that is on, only the main checkout and the worktrees under `.claude/worktrees/` are gated
+or claimed; a linked worktree elsewhere (Codex's or Antigravity's app makes them) is left alone.
 
 ## Name the work (first edit, repo on)
 
