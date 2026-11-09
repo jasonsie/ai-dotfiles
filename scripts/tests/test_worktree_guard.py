@@ -572,6 +572,122 @@ class NewTest(OriginRepo):
 
 
 CLIS = ('claude', 'codex', 'pi', 'agy')
+
+
+class BoundTest(OriginRepo):
+    """The session that ran `worktree new` owns the worktree, and its later calls land there."""
+
+    def setUp(self):
+        super().setUp()
+        self.assertEqual(self.cli('on', '--repo', str(self.repo))[0], 0)
+
+    def say(self, cli, session, pid, command):
+        """The pre-hook call for a shell command the agent is about to run."""
+        if cli == 'agy':
+            return self.run_hook('agy', {'conversationId': session, 'workspacePaths': [str(self.repo)], 'pid': pid,
+                                         'toolCall': {'name': 'run_command',
+                                                      'args': {'CommandLine': command, 'Cwd': str(self.repo)}}})
+        return self.shell(cli, session, pid, command)
+
+    def new(self, cli, session, pid, name):
+        """What an agent does: the hook sees `worktree new`, then the command runs."""
+        reply = self.say(cli, session, pid, f'ai-dotfiles worktree new {name}')
+        status, out = self.cli('new', name, '--repo', str(self.repo))
+        self.assertEqual(status, 0, out)
+        return reply, out
+
+    def plain(self, cli, reply):
+        return reply is None or reply == {'decision': 'allow'}
+
+    def test_every_cli_is_told_or_steered_and_its_edits_never_land_in_the_main_checkout(self):
+        for cli in CLIS:
+            session, name = f'{cli}-sess', f'fix/{cli}'
+            linked = self.linked(f'fix-{cli}')
+            reply, out = self.new(cli, session, ME, name)
+            self.assertTrue(self.plain(cli, reply), (cli, reply))  # the command keeps its own permissions
+            claim = guard.read_claim(guard.claim_file(linked))
+            self.assertEqual((claim['session'], claim['cli'], claim['pid']), (session, cli, ME), cli)
+            self.assertEqual(guard.SESSIONS.load(session)['moved']['linked'], str(linked), cli)
+            self.assertEqual('EnterWorktree' in out, cli == 'claude', (cli, out))
+            if cli == 'claude':
+                self.assertIn(f'Call EnterWorktree with path "{linked}"', out)
+            else:
+                self.assertIn('moved there automatically', out)
+            aimed = self.edit(cli, session, ME)  # at the main checkout's a.txt
+            if cli == 'claude':
+                reason = aimed['hookSpecificOutput']['permissionDecisionReason']
+                self.assertEqual(aimed['hookSpecificOutput']['permissionDecision'], 'deny')
+                self.assertIn(str(linked), reason)
+                self.assertNotIn('worktree new', reason)
+            elif cli == 'codex':
+                self.assertIn(f'*** Update File: .claude/worktrees/fix-{cli}/a.txt',
+                              aimed['hookSpecificOutput']['updatedInput']['command'])
+            elif cli == 'pi':
+                self.assertEqual(aimed['input']['path'], str(linked / 'a.txt'))
+            else:
+                self.assertEqual(aimed['overwrite']['TargetFile'], str(linked / 'a.txt'))
+            inside = self.edit(cli, session, ME, path=f'.claude/worktrees/fix-{cli}/a.txt')
+            self.assertTrue(self.plain(cli, inside), (cli, inside))
+        self.assertEqual(git(self.repo, 'status', '--porcelain'), '')
+        self.assertEqual(git(self.repo, 'branch', '--list'), '* main')
+
+    def test_a_tree_changing_git_command_follows_the_session_into_its_worktree(self):
+        self.new('codex', 'cdx', ME, 'fix/c')
+        steered = self.shell('codex', 'cdx', ME, 'git commit -am x')['hookSpecificOutput']['updatedInput']['command']
+        self.assertTrue(steered.startswith(f"cd '{self.linked('fix-c')}' && git commit"), steered)
+
+    def test_two_sessions_work_side_by_side_and_cannot_touch_each_others_worktree(self):
+        self.new('codex', 'aaaa1111', ME, 'fix/a')
+        self.new('pi', 'bbbb2222', PARENT, 'fix/b')
+        mine = self.edit('pi', 'bbbb2222', PARENT)
+        self.assertEqual(mine['input']['path'], str(self.linked('fix-b') / 'a.txt'))
+        theirs = self.edit('pi', 'bbbb2222', PARENT, path='.claude/worktrees/fix-a/a.txt')
+        self.assertTrue(theirs['block'], theirs)
+        self.assertIn('codex session aaaa1111', theirs['reason'])
+        self.assertEqual(sorted(p.name for p in (self.repo / '.claude/worktrees').iterdir()),
+                         ['fix-a', 'fix-a.json', 'fix-b', 'fix-b.json'])  # no agent/ worktree was made
+        self.assertEqual(git(self.repo, 'branch', '--list'), '* main')
+
+    def test_a_session_that_has_not_named_its_work_cannot_edit_anothers_worktree(self):
+        self.new('codex', 'aaaa1111', ME, 'fix/a')
+        reply = self.edit('claude', 'cccc3333', PARENT, path='.claude/worktrees/fix-a/a.txt')
+        out = reply['hookSpecificOutput']
+        self.assertEqual(out['permissionDecision'], 'deny')
+        self.assertIn('codex session aaaa1111', out['permissionDecisionReason'])
+        self.assertEqual(git(self.repo, 'branch', '--list'), '* main')
+
+    def test_a_command_run_by_nobody_the_hook_saw_is_unbound(self):
+        self.say('claude', 'sess', dead_pid(), 'ai-dotfiles worktree new fix/x')  # not this process's CLI
+        self.assertEqual(self.cli('new', 'fix/x', '--repo', str(self.repo))[0], 0)
+        self.assertFalse(guard.claim_file(self.linked('fix-x')).exists())
+        self.assertNotIn('moved', guard.SESSIONS.load('sess'))
+        self.say('claude', 'sess', ME, 'ai-dotfiles worktree new fix/other')  # another name
+        self.assertEqual(self.cli('new', 'fix/y', '--repo', str(self.repo))[0], 0)
+        self.assertFalse(guard.claim_file(self.linked('fix-y')).exists())
+
+    def test_text_that_only_mentions_the_command_records_nothing(self):
+        self.say('claude', 'sess', ME, 'echo "ai-dotfiles worktree new fix/x"')
+        self.say('claude', 'sess', ME, 'ai-dotfiles worktree list')
+        self.assertEqual(self.cli('new', 'fix/x', '--repo', str(self.repo))[0], 0)
+        self.assertFalse(guard.claim_file(self.linked('fix-x')).exists())
+
+    def test_a_record_goes_stale_and_is_used_once(self):
+        self.say('claude', 'sess', ME, 'ai-dotfiles worktree new fix/x')
+        with patch.object(guard.time, 'time', return_value=time.time() + 3600):
+            self.assertEqual(self.cli('new', 'fix/x', '--repo', str(self.repo))[0], 0)
+        self.assertFalse(guard.claim_file(self.linked('fix-x')).exists())
+        self.say('claude', 'sess', ME, 'ai-dotfiles worktree new fix/y')
+        self.assertEqual(self.cli('new', 'fix/y', '--repo', str(self.repo))[0], 0)
+        self.assertTrue(guard.claim_file(self.linked('fix-y')).exists())
+        self.assertEqual(self.cli('new', 'fix/y', '--repo', str(self.repo))[0], 1)  # taken; the record is gone
+        self.assertEqual(list((guard.state_root() / 'naming').glob('*.json')), [])
+
+    def test_the_session_in_the_cli_process_above_the_command_is_the_one_bound(self):
+        self.say('claude', 'sess', PARENT, 'ai-dotfiles worktree new fix/x')  # the CLI is this process's parent
+        self.assertEqual(self.cli('new', 'fix/x', '--repo', str(self.repo))[0], 0)
+        self.assertEqual(guard.read_claim(guard.claim_file(self.linked('fix-x')))['pid'], PARENT)
+
+
 STOP = 'ai-dotfiles worktree new <type>/<slug>'
 
 

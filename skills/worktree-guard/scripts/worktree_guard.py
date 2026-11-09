@@ -68,6 +68,7 @@ GIT_OPTIONS_WITH_VALUE = frozenset(('-C', '-c', '--git-dir', '--work-tree', '--n
 WRAPPERS = frozenset(('sh', 'bash', 'zsh', 'dash', 'fish', 'ksh', 'env', 'timeout', 'gtimeout', 'nice', 'nohup'))
 WORK_NAME = re.compile(r'[a-z][a-z0-9]*/[a-z0-9][a-z0-9-]*')  # <type>/<slug>
 FETCH_SECONDS = 120
+NAMING_SECONDS = 600  # how long the hook's note of a `worktree new` call stays good
 PERSON_ONLY = frozenset(('release', 'share', 'on', 'off'))  # worktree commands a person runs
 HEREDOC = re.compile(r'<<-?\s*([\'"]?)(\w+)\1[^\n]*\n.*?^[ \t]*\2[ \t]*$', re.M | re.S)
 SEPARATORS = frozenset(';&|()\n')
@@ -576,6 +577,49 @@ def leftovers(worktree, previous, state):
             'is to finish them.')
 
 
+def naming_dir():
+    return state_root() / 'naming'
+
+
+def note_naming(event, table):
+    """The hook saw a shell command that runs `worktree new <name>`. The command has no hook input
+    of its own, so keep who is running it, by the CLI process, for the command to find. A note
+    changes nothing for the call: it keeps its own permissions."""
+    names = new_names(command_of(event)) if event.action == 'shell' else []
+    if not names:
+        return
+    me = owner(event, table if table is not None else process_table())
+    folder = naming_dir()
+    folder.mkdir(parents=True, exist_ok=True, mode=0o700)
+    for old in folder.glob('*.json'):
+        if time.time() - old.stat().st_mtime > 3600:
+            old.unlink(missing_ok=True)
+    write_claim(folder / f"{me['pid']}.json", {'owner': me, 'names': names, 'at': int(time.time())})
+
+
+def naming_for(name):
+    """(file, owner) of the session whose hook just saw `worktree new <name>` in the CLI process
+    this command runs under, else (None, None)."""
+    table = process_table()
+    for pid in (os.getpid(), *lineage(table, os.getpid())):
+        path = naming_dir() / f'{pid}.json'
+        note = read_claim(path)
+        if (note and name in note.get('names', ()) and time.time() - note.get('at', 0) <= NAMING_SECONDS
+                and isinstance(note.get('owner'), dict) and alive(note['owner'])):
+            return path, note['owner']
+    return None, None
+
+
+def stop_text(state, worktree):
+    """The refusal for an edit in a main checkout of a repo that is on: name the work, or, for a
+    session that already did, go where its work is."""
+    moved = state.get('moved') or {}
+    if moved.get('busy') == str(worktree) and Path(moved.get('linked', '')).is_dir():
+        return (f"worktree-guard: {worktree} is not edited by agents; this session works in {moved['linked']}. "
+                f"Make this change there (Claude Code: call EnterWorktree with path \"{moved['linked']}\" first).")
+    return STOP
+
+
 STOP = ('worktree-guard: this repo works through worktrees, and its main checkout is not edited by '
         'agents. Name this work: run `ai-dotfiles worktree new <type>/<slug>` (for example '
         'fix/prune-worktrees), then make this change there.')
@@ -603,14 +647,18 @@ def decide(event, state, table=None):
     paths = targets(event)
     worktrees = list(dict.fromkeys(w for w in map(worktree_of, paths) if w))
     notes = []
+    note_naming(event, table)
     if worktrees:
         table = table if table is not None else process_table()
         me = owner(event, table)
         for worktree in worktrees:
             if worktree == main_of(worktree) and flow_on(worktree):
-                return Deny(STOP)
+                return Deny(stop_text(state, worktree))
             verdict, claim, previous = take(worktree, me, table)
             if verdict == 'busy':
+                if flow_on(worktree):  # in a repo that is on, every session has a worktree of its own
+                    return Deny(f'worktree-guard: {worktree} belongs to {who(claim)}. Do not edit it; work in '
+                                'your own worktree: `ai-dotfiles worktree new <type>/<slug>`.')
                 return clash(event, state, worktree, claim, me, table)
             if verdict == 'new':
                 notes.append(leftovers(worktree, previous, state))
@@ -896,17 +944,30 @@ def cmd_new(args):
               file=sys.stderr)
         return 1
     base = git(main, 'rev-parse', f'{ref}^{{commit}}')
+    note, me = naming_for(name)
     try:
-        linked = make_worktree(main, folder, base, None, source=main,
-                               meta={'work': name, 'from': ref, 'busy': str(main)})
+        linked = make_worktree(main, folder, base, None, source=main, owner=me, table=process_table() if me else None,
+                               meta={'work': name, 'from': ref, 'busy': str(main),
+                                     **({'cli': me['cli'], 'session': me['session']} if me else {})})
     except RuntimeError as error:
         print(f'worktree-guard: cannot start {name}: {error}', file=sys.stderr)
         return 1
-    for note in notes:
-        print(f'worktree-guard: {note}')
-    print(f'worktree-guard: {name} starts in {linked} (from {ref} at {base[:7]}, no branch). Make every change '
-          f'there. Claude Code: call EnterWorktree with path "{linked}". Commit on the detached HEAD; other CLIs: '
-          f'name files by their paths under {linked}.')
+    for line in notes:
+        print(f'worktree-guard: {line}')
+    head = f'worktree-guard: {name} starts in {linked} (from {ref} at {base[:7]}, no branch).'
+    if not me:
+        print(f'{head} Make every change there. Claude Code: call EnterWorktree with path "{linked}"; other CLIs: '
+              f'name files by their paths under {linked}.')
+        return 0
+    moved = {'busy': str(main), 'linked': str(linked), 'name': folder, 'work': name, 'branch': None,
+             'from': ref, 'base': base, 'default': ref, 'owner': None}
+    state = SESSIONS.load(me['session'])
+    SESSIONS.save(me['session'], {**state, 'moved': moved})
+    note.unlink(missing_ok=True)
+    how = (f'Call EnterWorktree with path "{linked}", then make every change there.' if me['cli'] == 'claude' else
+           f'Your tool calls that name files in {main} are moved there automatically; name files by their paths '
+           'there.')
+    print(f'{head} This session owns it. {how}')
     return 0
 
 
