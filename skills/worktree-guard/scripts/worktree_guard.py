@@ -211,16 +211,28 @@ def copy_included(source, target):
 
 def git_changes(command):
     """The folders ('' for the current one) of the git commands in a shell command line that
-    change a working tree or the index."""
+    change a working tree or the index. A leading `cd <dir>` joined by && or ; moves the base
+    for the commands after it, so `cd repo && git commit` names repo, not the current folder; a
+    pipe or subshell boundary forgets it. `-C` and an absolute `cd` resolve on top of that base."""
     try:
         lexer = shlex.shlex(command, posix=True, punctuation_chars=True)
         lexer.whitespace_split = True
         tokens = list(lexer)
     except ValueError:
         tokens = command.split()
-    found, i = [], 0
+    found, i, cwd = [], 0, ''
     while i < len(tokens):
-        if Path(tokens[i]).name != 'git':
+        token = tokens[i]
+        if token in ('|', '|&', '(', ')'):  # a pipe or subshell runs elsewhere: forget the cd
+            cwd, i = '', i + 1
+            continue
+        name = Path(token).name
+        if name == 'cd' and i + 1 < len(tokens) and not tokens[i + 1].startswith('-'):
+            arg = tokens[i + 1]
+            cwd = arg if os.path.isabs(arg) else os.path.join(cwd, arg)
+            i += 2
+            continue
+        if name != 'git':
             i += 1
             continue
         j, where = i + 1, ''
@@ -234,7 +246,8 @@ def git_changes(command):
         sub = tokens[j] if j < len(tokens) else ''
         reading = sub == 'stash' and j + 1 < len(tokens) and tokens[j + 1] in ('list', 'show')
         if sub in GIT_CHANGES and not reading:
-            found.append(where)
+            base = where if os.path.isabs(where) else os.path.join(cwd, where)
+            found.append(os.path.normpath(base) if base else '')
         i = j + 1
     return found
 

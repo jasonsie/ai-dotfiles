@@ -8,6 +8,7 @@ import io
 import json
 import os
 from pathlib import Path
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -39,9 +40,15 @@ def git(cwd, *args):
 class GitChangesTest(unittest.TestCase):
     def test_git_commands_that_change_a_tree_or_the_index(self):
         self.assertEqual(guard.git_changes('git commit -m "a b"'), [''])
-        self.assertEqual(guard.git_changes('cd x && git -C sub stash'), ['sub'])
+        self.assertEqual(guard.git_changes('cd x && git -C sub stash'), ['x/sub'])
         self.assertEqual(guard.git_changes('git -c core.x=1 checkout -b y && git add .'), ['', ''])
         self.assertEqual(guard.git_changes('git status; git log | head; git stash list; git worktree add z'), [])
+
+    def test_a_leading_cd_moves_the_base_for_the_commands_after_it(self):
+        self.assertEqual(guard.git_changes('cd repo && git commit -am x'), ['repo'])
+        self.assertEqual(guard.git_changes('cd /abs/web && git status --short && git checkout -b y main'), ['/abs/web'])
+        self.assertEqual(guard.git_changes('cd a; cd b && git add .'), ['a/b'])
+        self.assertEqual(guard.git_changes('cd a | git commit'), [''])  # a pipe forgets the cd
 
 
 class Repo(unittest.TestCase):
@@ -164,6 +171,23 @@ class GuardTest(Repo):
                                      'tool_name': 'bash', 'tool_input': {'command': f'cat {alias}/a.txt'}})
         self.assertEqual(shell['input']['command'],
                          f"cd '{self.linked('pi-dddd4444')}' && cat {self.linked('pi-dddd4444')}/a.txt")
+
+    def test_a_cd_into_another_repo_claims_that_repo_not_the_session_folder(self):
+        # A second repo beside this one; a session whose cwd is self.repo runs a tree-changing
+        # git in it through `cd <other> && git ...`. The claim must land on the other repo.
+        other = self.repo.parent / 'other'
+        other.mkdir()
+        git(other, 'init', '-q', '-b', 'main')
+        git(other, 'config', 'user.email', 't@example.com')
+        git(other, 'config', 'user.name', 'T')
+        (other / 'f.txt').write_text('x\n')
+        git(other, 'add', '.')
+        git(other, 'commit', '-q', '-m', 'init')
+        reply = self.shell('claude', 'aaaa1111', ME, f'cd {shlex.quote(str(other))} && git commit --allow-empty -m x')
+        self.assertIsNone(reply)  # the other repo is unowned: a claim, no move
+        self.assertTrue(guard.claim_file(other).exists())
+        self.assertEqual(json.loads(guard.claim_file(other).read_text())['session'], 'aaaa1111')
+        self.assertFalse(guard.claim_file(self.repo).exists())  # the session folder was never charged
 
     def test_a_dead_owner_is_replaced_and_its_leftovers_named_once(self):
         self.edit('claude', 'aaaa1111', dead_pid())
