@@ -7,7 +7,7 @@ its `tui.status_line` list, and Pi's own footer already shows them. Up to three 
 
   📁 ~/repo  🌿 main ⎇ agent-2  🤖 Fable 5.1 · max · ⚡fast  📟 v2.1.318
   🧠 Context: 93% [=========-]
-  ⏳ 5h 23% → 14:00  7d 41% → Thu 08:00  💰 $0.12
+  ⏳ 23% → 14:00  41% → Thu 08:00  💰 $0.12
 
 Line 1: the folder; the git branch (the short commit when detached) and, inside a linked
 worktree, its name; the model with its effort when the CLI sends one, "thinking off" and
@@ -15,13 +15,14 @@ worktree, its name; the model with its effort when the CLI sends one, "thinking 
 percentage, "?" before the first reply. Line 3: the rate-limit windows and the cost, each when
 the CLI sends it; no line when it sends neither. A window shows how much of it is used and the
 local time it resets (with the weekday when that is not today); a window whose reset has passed
-is left out, since its figure is stale. The figures are those of the session's last API
-response: the CLI re-runs the script on every change in the session and at each reset time, not
-on a clock, so a figure can lag what another session has spent since. The two CLIs name fields
-differently (Claude: effort.level, cost.total_cost_usd, rate_limits with resets_at; Antigravity:
-model.effort, cost.total_usd, quota with reset_time); each lookup tries both. The script never
-fails: on bad input it prints what it can and exits 0, so a broken payload cannot blank the line.
-Runs on any python3 (3.9+).
+is left out, since its figure is stale. Claude's 5-hour and 7-day windows show no label, the
+5-hour one first; the spend limit and Antigravity's quota buckets keep their names. The figures
+are those of the session's last API response: the CLI re-runs the script on every change in the
+session and at each reset time, not on a clock, so a figure can lag what another session has
+spent since. The two CLIs name fields differently (Claude: effort.level, cost.total_cost_usd,
+rate_limits with resets_at; Antigravity: model.effort, cost.total_usd, quota with reset_time);
+each lookup tries both. The script never fails: on bad input it prints what it can and exits 0,
+so a broken payload cannot blank the line. Runs on any python3 (3.9+).
 """
 from datetime import datetime
 import json
@@ -37,7 +38,7 @@ COLORS = {
     'ctx': 158, 'ctx_warn': 215, 'ctx_crit': 203, 'limits': 222, 'cost': 220,
 }
 RESET = '\033[0m'
-WINDOWS = (('five_hour', '5h'), ('seven_day', '7d'), ('spend_limit', 'spend'))  # Claude's rate_limits
+WINDOWS = (('five_hour', ''), ('seven_day', ''), ('spend_limit', 'spend'))  # Claude's rate_limits; '' shows no label
 GUARD_STATE = 'WORKTREE_GUARD_STATE'  # the worktree guard's state folder: this variable, else the default
 GUARD_DEFAULT = '~/.local/state/ai-dotfiles/worktree-guard'
 GIT_FACTS = ['rev-parse', '--abbrev-ref', 'HEAD', '--git-dir', '--git-common-dir', '--show-toplevel']
@@ -217,7 +218,7 @@ def limits(data, now=None):
 def usage_line(data, now=None, tz=None):
     now = time.time() if now is None else now
     parts = []
-    windows = [paint('limits', f'{label} {round(used)}%') + (paint('detail', f' → {clock(reset, now, tz)}') if reset else '')
+    windows = [paint('limits', f'{label} {round(used)}%'.lstrip()) + (paint('detail', f' → {clock(reset, now, tz)}') if reset else '')
                for label, used, reset in limits(data, now)]
     if windows:
         parts.append('⏳ ' + '  '.join(windows))

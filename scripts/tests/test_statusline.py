@@ -72,7 +72,7 @@ class RenderTest(unittest.TestCase):
         self.assertEqual(self.lines(CLAUDE), [
             '📁 ~/Developer/repo  🌿 main  🤖 Fable 5.1 · max  📟 v2.1.318',
             '🧠 Context: 93% [=========-]',
-            '⏳ 5h 23% → 06:00  7d 41% → Thu 00:00  💰 $0.12',
+            '⏳ 23% → 06:00  41% → Thu 00:00  💰 $0.12',
         ])
 
     def test_antigravity_payload(self):
@@ -110,10 +110,14 @@ class RenderTest(unittest.TestCase):
         self.assertEqual(self.lines({'cost': {'total_usd': 1.5}})[-1], '💰 $1.50')
         self.assertEqual(self.lines({'rate_limits': {'spend_limit': {'used_percentage': 62.8}}})[-1], '⏳ spend 63%')
 
+    def test_the_5h_and_7d_windows_show_no_label_the_spend_limit_keeps_its_name(self):
+        data = {'rate_limits': {**CLAUDE['rate_limits'], 'spend_limit': {'used_percentage': 62.8, 'resets_at': 1794441600}}}
+        self.assertEqual(self.lines(data)[-1], '⏳ 23% → 06:00  41% → Thu 00:00  spend 63% → Thu 00:00')
+
     def test_a_window_whose_reset_has_passed_is_left_out(self):
         data = {'rate_limits': {'five_hour': {'used_percentage': 90, 'resets_at': NOW - 1},
                                 'seven_day': {'used_percentage': 41.2, 'resets_at': 1794441600}}}
-        self.assertEqual(self.lines(data)[-1], '⏳ 7d 41% → Thu 00:00')
+        self.assertEqual(self.lines(data)[-1], '⏳ 41% → Thu 00:00')
         stale = {'quota': {'gemini-weekly': {'remaining_fraction': 0.5, 'reset_time': '2026-11-01T00:00:00Z'}}}
         self.assertEqual(len(self.lines(stale)), 2)
         self.assertEqual(len(self.lines({'rate_limits': {'five_hour': {'used_percentage': 90, 'resets_at': NOW}}})), 2)
@@ -135,7 +139,7 @@ class RenderTest(unittest.TestCase):
         with patch.dict(os.environ, {'TZ': 'Asia/Taipei'}):
             time.tzset()
             line = plain(statusline.usage_line(CLAUDE, NOW))
-        self.assertEqual(line, '⏳ 5h 23% → 14:00  7d 41% → Thu 08:00  💰 $0.12')
+        self.assertEqual(line, '⏳ 23% → 14:00  41% → Thu 08:00  💰 $0.12')
         self.assertIn(str(statusline.COLORS['detail']), statusline.usage_line(CLAUDE, NOW, UTC))
 
     def test_tilde(self):
