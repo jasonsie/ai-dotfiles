@@ -150,8 +150,7 @@ Rules the step follows:
   CLI cannot load as shipped is filled with that CLI's own feature where one exists (commands
   as skills, Antigravity's own `hooks.json` and `mcp_config.json`, a Pi extension for hooks
   and MCP), else documented. The rules, with the facts behind them and the trial-install
-  commands, are the `portable-plugin` skill. Today web-clipper goes to all four CLIs; zkfy
-  goes to Claude only until its portable release.
+  commands, are the `portable-plugin` skill. web-clipper 2.2.1 and zkfy 1.7.0 go to all four CLIs.
 
 Adding, bumping or removing a plugin is a hand edit of `config/plugins.json`, applied by
 `ai-dotfiles install`; a release in a plugin repo ends by bumping its pin here. `ai-dotfiles
