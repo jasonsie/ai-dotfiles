@@ -87,6 +87,8 @@ bound), it still makes the worktree and prints its path; the first edit there cl
 When a worktree is made, and when a session ends, the guard deletes the linked worktrees whose
 owner is gone and that have nothing to lose: no uncommitted or untracked files, and every
 commit on a remote-tracking ref (pushed). One nobody has claimed yet is spared for an hour.
+A session's end sweeps every repo that is on where it edited, claimed a worktree or ran `worktree
+new` or `pr`.
 Anything else stays, and `list` marks it `LEFT BEHIND: owner gone, 2 commits not pushed, 1 file
 uncommitted`.
 

@@ -573,6 +573,21 @@ def leftovers(worktree, previous, state):
             'your task is to finish them.')
 
 
+def remember(state, main):
+    """Note in the session that it worked in the repo at `main`, for the sweep when it ends."""
+    repos = state.setdefault('repos', [])
+    if str(main) not in repos:
+        repos.append(str(main))
+
+
+def ran_in(event):
+    """{main checkout} of the repo that is on, when a shell command runs `worktree new` or `worktree pr`."""
+    if event.action != 'shell' or not new_names(command_of(event)):
+        return set()
+    where = worktree_of(shell_folder(event))
+    return {main_of(where)} if where and flow_on(where) else set()
+
+
 def naming_dir():
     return state_root() / 'naming'
 
@@ -657,7 +672,9 @@ def decide(event, state, table=None):
 def route(event, state, table=None):
     """What the guard does with one hook call, before telling the person anything."""
     if event.kind == 'end':
-        for main in {main_of(w) for w in release(event.session) if w.is_dir()}:
+        mains = {main_of(w) for w in release(event.session) if w.is_dir()}
+        mains |= {Path(r) for r in state.pop('repos', ()) if flow_on(Path(r))}  # every repo it worked in that is on
+        for main in mains:
             sweep(main, gone=True)
         return None
     if event.kind != 'pre':
@@ -678,6 +695,8 @@ def route(event, state, table=None):
     worktrees = list(dict.fromkeys(w for w in map(worktree_of, paths) if w and ours(w) and flow_on(w)))  # off: nothing
     notes = []
     note_naming(event, table)
+    for main in {main_of(w) for w in worktrees} | ran_in(event):
+        remember(state, main)
     if worktrees:
         table = table if table is not None else process_table()
         me = owner(event, table)

@@ -515,6 +515,27 @@ class SweepTest(OriginRepo):
         self.assertTrue(busy.is_dir())
         self.assertFalse(guard.claim_file(busy).exists())  # released: the owner is gone
 
+    def test_a_session_ending_sweeps_the_repos_it_worked_in_not_only_ones_it_released(self):
+        """It ran `worktree new` (its worktree shipped and went, so no claim is left to release), or
+        was stopped at the main checkout: either way the repo it touched is swept at its end."""
+        git(self.repo, 'config', '--local', guard.FLOW_KEY, 'true')
+        for session, command in (('s1', 'ai-dotfiles worktree new fix/z'), ('s2', 'ai-dotfiles worktree pr 7')):
+            wt = self.leftover()
+            self.shell('claude', session, ME, command)
+            self.assertTrue(wt.is_dir())  # a hook call does not sweep
+            self.run_hook('claude', {'session_id': session}, kind='end')
+            self.assertFalse(wt.exists(), command)
+        wt = self.leftover()
+        self.assertTrue(self.edit('claude', 's3', ME))  # stopped at the main checkout: claims nothing
+        self.run_hook('claude', {'session_id': 's3'}, kind='end')
+        self.assertFalse(wt.exists())
+
+    def test_a_repo_that_is_off_is_not_swept_for_a_session_that_only_ran_a_command_there(self):
+        wt = self.leftover()
+        self.shell('claude', 's1', ME, 'ai-dotfiles worktree new fix/z')
+        self.run_hook('claude', {'session_id': 's1'}, kind='end')
+        self.assertTrue(wt.is_dir())
+
     def test_list_flags_what_was_left_with_counts(self):
         wt = self.leftover()
         (wt / 'a.txt').write_text('edited\n')
@@ -1289,7 +1310,10 @@ class ShippedTest(OriginRepo):
         guard.SESSIONS.save('sess-ship', {**state, 'warned': ['x']})
         self.commit_and_push()
         self.assertEqual(self.shipped()[0], 0)
-        self.assertEqual(guard.SESSIONS.load('sess-ship'), {'warned': ['x']})
+        state = guard.SESSIONS.load('sess-ship')
+        self.assertEqual(state['warned'], ['x'])
+        self.assertEqual(state['repos'], [str(self.repo)], 'the repo stays noted for the sweep at its end')
+        self.assertNotIn('moved', state)
 
     def test_work_not_on_a_remote_is_kept(self):
         (self.wt / 'a.txt').write_text('two\n')
