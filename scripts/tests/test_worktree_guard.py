@@ -77,6 +77,11 @@ class GuardCallsTest(unittest.TestCase):
         self.assertEqual(guard.new_names('ai-dotfiles worktree list; ai-dotfiles worktree new a/b'), ['a/b'])
         self.assertEqual(guard.new_names('ai-dotfiles worktree new'), [])
 
+    def test_a_pr_fix_is_named_by_its_number_apart_from_any_work_name(self):
+        self.assertEqual(guard.new_names('ai-dotfiles worktree pr 7'), ['#7'])
+        self.assertEqual(guard.new_names('cd x && ai-dotfiles worktree pr --repo . 12 && ls'), ['#12'])
+        self.assertEqual(guard.new_names('ai-dotfiles worktree pr'), [])
+
 
 class Repo(unittest.TestCase):
     """A temp repo with one commit, guard state of its own, and each CLI's hook input."""
@@ -1009,6 +1014,130 @@ class NativeTest(OriginRepo):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class PrTest(OriginRepo):
+    """`worktree pr <n>`: a detached worktree on an open PR's remote branch, named after it (D4)."""
+
+    def setUp(self):
+        super().setUp()
+        self.assertEqual(self.cli('on', '--repo', str(self.repo))[0], 0)
+        bin = self.repo.parent / 'bin'
+        bin.mkdir()
+        (bin / 'gh').write_text('#!/bin/sh\necho "$@" >> "$GH_LOG"\n'
+                                '[ -n "$GH_ERR" ] && { echo "$GH_ERR" >&2; exit 1; }\nprintf "%s" "$GH_OUT"\n')
+        (bin / 'gh').chmod(0o755)
+        self.log = self.repo.parent / 'gh.log'
+        patcher = patch.dict(os.environ, {'PATH': f"{bin}{os.pathsep}{os.environ['PATH']}", 'GH_LOG': str(self.log),
+                                          'GH_ERR': '', 'GH_OUT': ''})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        self.tip = self.push_branch('feat/thing')
+        self.say_pr()
+
+    def push_branch(self, branch, name='p.txt'):
+        """Another clone pushes a commit to `branch` (the PR's branch); the repo has not fetched it."""
+        clone = self.repo.parent / 'author'
+        if not clone.exists():
+            git(self.repo.parent, 'clone', '-q', str(self.origin), str(clone))
+            git(clone, 'config', 'user.email', 't@example.com')
+            git(clone, 'config', 'user.name', 'T')
+        (clone / name).write_text(f'{time.time()}\n')
+        git(clone, 'add', '.')
+        git(clone, 'commit', '-q', '-m', 'the pr work')
+        git(clone, 'push', '-q', 'origin', f'HEAD:refs/heads/{branch}')
+        return git(clone, 'rev-parse', 'HEAD')
+
+    def say_pr(self, **fields):
+        info = {'number': 7, 'state': 'OPEN', 'headRefName': 'feat/thing', 'baseRefName': 'main',
+                'isCrossRepository': False, **fields}
+        os.environ['GH_OUT'] = json.dumps(info)
+
+    def pr(self, number=7):
+        return self.cli('pr', str(number), '--repo', str(self.repo))
+
+    def announce(self, cli, session):
+        """The pre-hook call for the shell command `worktree pr 7`, which notes who runs it."""
+        command = 'ai-dotfiles worktree pr 7'
+        if cli == 'agy':
+            return self.run_hook('agy', {'conversationId': session, 'workspacePaths': [str(self.repo)], 'pid': ME,
+                                         'toolCall': {'name': 'run_command',
+                                                      'args': {'CommandLine': command, 'Cwd': str(self.repo)}}})
+        return self.shell(cli, session, ME, command)
+
+    def test_it_fetches_and_makes_a_worktree_on_the_branch_tip_named_after_it(self):
+        self.assertFalse(git(self.repo, 'branch', '-r', '--list', 'origin/feat/thing'))  # not fetched yet
+        status, out = self.pr()
+        linked = self.linked('feat-thing')
+        self.assertEqual(status, 0, out)
+        self.assertIn(str(linked), out)
+        self.assertEqual(git(linked, 'rev-parse', 'HEAD'), self.tip)
+        self.assertEqual(subprocess.run(['git', '-C', str(linked), 'symbolic-ref', '-q', 'HEAD']).returncode, 1)
+        self.assertEqual(git(self.repo, 'branch', '--list'), '* main')  # no local branch
+        meta = guard.read_meta(self.repo, 'feat-thing')
+        self.assertEqual((meta['work'], meta['pr'], meta['branch'], meta['base']), ('feat/thing', 7, None, self.tip))
+        self.assertIn('pr view 7 --json', self.log.read_text())
+
+    def test_the_fix_starts_from_the_branch_as_it_is_now_on_origin(self):
+        self.assertEqual(self.pr()[0], 0)
+        self.assertEqual(self.cli('rm', 'feat-thing', '--repo', str(self.repo), '--force')[0], 0)
+        newer = self.push_branch('feat/thing', 'q.txt')
+        self.assertEqual(self.pr()[0], 0)
+        self.assertEqual(git(self.linked('feat-thing'), 'rev-parse', 'HEAD'), newer)
+
+    def test_the_session_that_ran_it_owns_the_worktree_and_is_pointed_there(self):
+        for cli in CLIS:
+            self.assertTrue(self.announce(cli, f'{cli}-s') in (None, {'decision': 'allow'}), cli)  # keeps its permissions
+            status, out = self.pr()
+            linked = self.linked('feat-thing')
+            self.assertEqual(status, 0, out)
+            claim = guard.read_claim(guard.claim_file(linked))
+            self.assertEqual((claim['session'], claim['cli'], claim['pid']), (f'{cli}-s', cli, ME), cli)
+            moved = guard.SESSIONS.load(f'{cli}-s')['moved']
+            self.assertEqual((moved['linked'], moved['work'], moved['branch']), (str(linked), 'feat/thing', None), cli)
+            self.assertEqual('EnterWorktree' in out, cli == 'claude', (cli, out))
+            self.assertEqual(self.cli('rm', 'feat-thing', '--repo', str(self.repo), '--force')[0], 0)
+
+    def test_the_main_checkout_stays_closed_to_the_bound_session(self):
+        self.announce('claude', 'sess')
+        self.assertEqual(self.pr()[0], 0)
+        reason = self.edit('claude', 'sess', ME)['hookSpecificOutput']['permissionDecisionReason']
+        self.assertIn(str(self.linked('feat-thing')), reason)
+
+    def test_without_it_a_first_edit_is_still_a_new_task_from_main(self):
+        denied = self.edit('claude', 'sess', ME)
+        self.assertIn(STOP, denied['hookSpecificOutput']['permissionDecisionReason'])
+        self.assertFalse(self.linked('feat-thing').exists())
+
+    def test_a_pr_that_is_not_open_or_not_in_this_repo_is_refused_and_nothing_is_made(self):
+        for fields, why in (({'state': 'MERGED'}, 'is merged'), ({'state': 'CLOSED'}, 'is closed'),
+                            ({'isCrossRepository': True}, 'fork')):
+            self.say_pr(**fields)
+            status, out = self.pr()
+            self.assertEqual(status, 1, fields)
+            self.assertIn(why, out)
+            self.assertFalse(self.linked('feat-thing').exists())
+            self.assertFalse(guard.meta_file(self.repo, 'feat-thing').exists())
+
+    def test_gh_failing_or_a_branch_origin_lacks_is_refused(self):
+        os.environ['GH_ERR'] = 'no pull request found'
+        status, out = self.pr(9)
+        self.assertEqual(status, 1)
+        self.assertIn('no pull request found', out)
+        os.environ['GH_ERR'] = ''
+        self.say_pr(headRefName='feat/gone')
+        status, out = self.pr()
+        self.assertEqual(status, 1)
+        self.assertIn('feat/gone', out)
+        self.assertFalse(self.linked('feat-gone').exists())
+
+    def test_a_folder_already_taken_is_refused_and_a_pr_number_must_be_one(self):
+        self.assertEqual(self.pr()[0], 0)
+        status, out = self.pr()
+        self.assertEqual(status, 1)
+        self.assertIn('feat-thing is taken', out)
+        with redirect_stderr(io.StringIO()):
+            self.assertEqual(guard.main(['pr', 'seven']), 2)
 
 
 class ShippedTest(OriginRepo):

@@ -31,7 +31,7 @@ Merging and removing belong to the person: `rm` archives the branch as `archive/
 
 ## Commands
 
-`ai-dotfiles worktree on | off | new | shipped | list | done | rm | prune | release | share`; `--help`
+`ai-dotfiles worktree on | off | new | pr | shipped | list | done | rm | prune | release | share`; `--help`
 describes each. `shipped` is what `ship` runs. `on`/`off`, `release` (clear a stale owner) and `share` (let every session
 edit a worktree) are the person's, run in a terminal; the guard refuses them from an agent,
 so ask the user.
@@ -64,7 +64,17 @@ gated. A repo that is off behaves as before.
    `rm` tags its tip `archive/<slug>`, and refuses unpushed or uncommitted work without
    `--force`.
 
-Run `new` as its own command in the shell, not inside a script or a quoted string: the hook
+## Fix an open PR
+
+A first edit with no PR named is a new task. To change a PR that is open, run `ai-dotfiles
+worktree pr <n>` instead of `new`: it fetches origin and makes `.claude/worktrees/<branch>`
+(slashes become hyphens) detached at the PR's remote branch, with no local branch, bound to your
+session as `new` does (enter it the same way). A PR that is not open or comes from a fork is
+refused. Commit there, then run the `ship` skill: it pushes to the PR's branch, so the PR
+updates, and deletes the worktree. A push that origin refuses, or a branch that moved on, stops
+the run and deletes nothing.
+
+Run `new` and `pr` as their own commands in the shell, not inside a script or a quoted string: the hook
 that binds the worktree to your session reads the command line. Run by hand (no session
 bound), it still makes the worktree and prints its path; the first edit there claims it.
 
