@@ -499,6 +499,78 @@ class DetachedTest(OriginRepo):
         self.assertTrue(self.wt.exists())  # still owned
 
 
+class NewTest(OriginRepo):
+    """`worktree new <type>/<slug>`: a detached worktree from a freshly fetched origin default."""
+
+    def new(self, name='fix/x'):
+        return self.cli('new', name, '--repo', str(self.repo))
+
+    def test_it_starts_from_the_fetched_origin_default_with_no_branch(self):
+        (self.repo / '.worktreeinclude').write_text('.env\n')
+        (self.repo / '.env').write_text('SECRET=1\n')
+        ahead = self.advance_origin()
+        self.assertNotEqual(git(self.repo, 'rev-parse', 'HEAD'), ahead)  # the main checkout lags
+        status, out = self.new()
+        linked = self.linked('fix-x')
+        self.assertEqual(status, 0, out)
+        self.assertIn(str(linked), out)
+        self.assertEqual(git(linked, 'rev-parse', 'HEAD'), ahead)
+        self.assertEqual(subprocess.run(['git', '-C', str(linked), 'symbolic-ref', '-q', 'HEAD']).returncode, 1)
+        self.assertEqual(git(self.repo, 'branch', '--list'), '* main')
+        self.assertEqual((linked / '.env').read_text(), 'SECRET=1\n')  # an included ignored file
+        meta = guard.read_meta(self.repo, 'fix-x')
+        self.assertEqual((meta['work'], meta['branch'], meta['base'], meta['from']), ('fix/x', None, ahead, 'origin/main'))
+
+    def test_the_default_comes_from_origin_even_when_its_head_was_never_set(self):
+        git(self.repo, 'remote', 'set-head', 'origin', '-d')
+        ahead = self.advance_origin()
+        self.assertEqual(self.new()[0], 0)
+        self.assertEqual(git(self.linked('fix-x'), 'rev-parse', 'HEAD'), ahead)
+
+    def test_a_taken_name_is_refused_and_nothing_is_made(self):
+        self.assertEqual(self.new()[0], 0)
+        status, out = self.new()
+        self.assertEqual(status, 1)
+        self.assertIn('fix/x: .claude/worktrees/fix-x is taken', out)
+        git(self.repo, 'push', '-q', 'origin', 'HEAD:refs/heads/fix/y')
+        status, out = self.new('fix/y')
+        self.assertEqual(status, 1)
+        self.assertIn('fix/y: origin already has a branch of that name', out)
+        git(self.repo, 'branch', 'fix/z')
+        status, out = self.new('fix/z')
+        self.assertEqual(status, 1)
+        self.assertIn('fix/z: a local branch of that name exists', out)
+        self.assertEqual(sorted(p.name for p in (self.repo / '.claude/worktrees').iterdir()), ['fix-x', 'fix-x.json'])
+
+    def test_a_name_must_be_type_slash_slug(self):
+        for name in ('fix', 'Fix/x', 'fix/', '/x', 'fix/x/y', 'fix/x y', '../x', 'fix/-x'):
+            status, out = self.new(name)
+            self.assertEqual(status, 1, name)
+            self.assertIn('<type>/<slug>', out)
+        self.assertFalse((self.repo / '.claude').exists())
+
+    def test_offline_it_starts_from_the_last_origin_state_and_says_so(self):
+        git(self.repo, 'remote', 'set-url', 'origin', str(self.repo.parent / 'gone.git'))
+        status, out = self.new()
+        self.assertEqual(status, 0, out)
+        self.assertIn('could not fetch origin', out)
+        self.assertEqual(git(self.linked('fix-x'), 'rev-parse', 'HEAD'), self.base)
+
+    def test_without_an_origin_it_starts_from_the_local_default(self):
+        git(self.repo, 'remote', 'remove', 'origin')
+        status, out = self.new()
+        self.assertEqual(status, 0, out)
+        self.assertIn('no origin', out)
+        self.assertEqual(git(self.linked('fix-x'), 'rev-parse', 'HEAD'), self.base)
+
+    def test_a_worktree_nobody_bound_is_unowned_and_the_message_covers_every_cli(self):
+        status, out = self.new()
+        self.assertEqual(status, 0, out)
+        self.assertFalse(guard.claim_file(self.linked('fix-x')).exists())
+        self.assertIn(f'Claude Code: call EnterWorktree with path "{self.linked("fix-x")}"', out)
+        self.assertIn('other CLIs', out)
+
+
 CLIS = ('claude', 'codex', 'pi', 'agy')
 STOP = 'ai-dotfiles worktree new <type>/<slug>'
 

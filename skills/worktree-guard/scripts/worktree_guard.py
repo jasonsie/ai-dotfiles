@@ -66,6 +66,8 @@ GIT_CHANGES = frozenset(
     'add am apply checkout cherry-pick clean commit merge mv pull rebase reset restore revert rm stash switch'.split())
 GIT_OPTIONS_WITH_VALUE = frozenset(('-C', '-c', '--git-dir', '--work-tree', '--namespace', '--config-env'))
 WRAPPERS = frozenset(('sh', 'bash', 'zsh', 'dash', 'fish', 'ksh', 'env', 'timeout', 'gtimeout', 'nice', 'nohup'))
+WORK_NAME = re.compile(r'[a-z][a-z0-9]*/[a-z0-9][a-z0-9-]*')  # <type>/<slug>
+FETCH_SECONDS = 120
 PERSON_ONLY = frozenset(('release', 'share', 'on', 'off'))  # worktree commands a person runs
 HEREDOC = re.compile(r'<<-?\s*([\'"]?)(\w+)\1[^\n]*\n.*?^[ \t]*\2[ \t]*$', re.M | re.S)
 SEPARATORS = frozenset(';&|()\n')
@@ -841,6 +843,73 @@ def cmd_flow(args):
     return 0
 
 
+def fetch(main):
+    """(fetched, why not): `git fetch origin`, never asking for a password."""
+    try:
+        run = subprocess.run(['git', '-C', str(main), 'fetch', '--prune', '--quiet', 'origin'], capture_output=True,
+                             text=True, timeout=FETCH_SECONDS, env={**os.environ, 'GIT_TERMINAL_PROMPT': '0'})
+    except subprocess.TimeoutExpired:
+        return False, 'timed out'
+    return run.returncode == 0, run.stderr.strip().splitlines()[-1] if run.stderr.strip() else 'failed'
+
+
+def start_point(main):
+    """(ref, notes): where new work starts: origin's default branch after a fetch, else the last
+    one known here, else the local default branch; None when the repo has no default at all."""
+    notes = []
+    if git(main, 'remote', 'get-url', 'origin', check=False):
+        fetched, why = fetch(main)
+        if not fetched:
+            notes.append(f'could not fetch origin ({why}); starting from the last origin state known here')
+        head = git(main, 'symbolic-ref', '-q', '--short', 'refs/remotes/origin/HEAD', check=False)
+        for ref in (head, 'origin/main', 'origin/master'):
+            if ref and git(main, 'rev-parse', '-q', '--verify', f'refs/remotes/{ref}', check=False):
+                return ref, notes
+    ref = default_ref(main)
+    if ref:
+        notes.append(f'no origin default branch here; starting from the local {ref}')
+    return ref, notes
+
+
+def taken(main, name, folder):
+    """Why `name` cannot be used, or ''. Run after the fetch: origin's branches are then current."""
+    if (main / LINKED / folder).exists() or meta_file(main, folder).exists():
+        return f'{LINKED.as_posix()}/{folder} is taken'
+    if git(main, 'rev-parse', '-q', '--verify', f'refs/heads/{name}', check=False):
+        return 'a local branch of that name exists'
+    if git(main, 'rev-parse', '-q', '--verify', f'refs/remotes/origin/{name}', check=False):
+        return 'origin already has a branch of that name'
+    return ''
+
+
+def cmd_new(args):
+    name = args.name
+    if not WORK_NAME.fullmatch(name):
+        print(f'worktree-guard: a work name looks like <type>/<slug> (lowercase letters, digits and hyphens), '
+              f'for example fix/prune-worktrees; got {name!r}', file=sys.stderr)
+        return 1
+    main, folder = repo_main(args.repo), name.replace('/', '-')
+    ref, notes = start_point(main)
+    why = taken(main, name, folder) if ref else 'the repo has no default branch to start from'
+    if why:
+        print(f'worktree-guard: cannot start {name}: {why}.' + ('' if not ref else ' Pick another name.'),
+              file=sys.stderr)
+        return 1
+    base = git(main, 'rev-parse', f'{ref}^{{commit}}')
+    try:
+        linked = make_worktree(main, folder, base, None, source=main,
+                               meta={'work': name, 'from': ref, 'busy': str(main)})
+    except RuntimeError as error:
+        print(f'worktree-guard: cannot start {name}: {error}', file=sys.stderr)
+        return 1
+    for note in notes:
+        print(f'worktree-guard: {note}')
+    print(f'worktree-guard: {name} starts in {linked} (from {ref} at {base[:7]}, no branch). Make every change '
+          f'there. Claude Code: call EnterWorktree with path "{linked}". Commit on the detached HEAD; other CLIs: '
+          f'name files by their paths under {linked}.')
+    return 0
+
+
 def cmd_release(args):
     worktree = worktree_of(Path(args.path or os.getcwd()).resolve())
     path = claim_file(worktree) if worktree else None
@@ -895,6 +964,10 @@ def parser():
         command = sub.add_parser(name, help=f'switch the worktree flow {name} for the repo (for people)')
         command.add_argument('--repo', help='a folder in the repository (default: here)')
         command.set_defaults(run=cmd_flow)
+    new = sub.add_parser('new', help='start work in its own worktree, from origin\'s default branch, with no branch')
+    new.add_argument('name', help='<type>/<slug>, for example fix/prune-worktrees')
+    new.add_argument('--repo', help='a folder in the repository (default: here)')
+    new.set_defaults(run=cmd_new)
     for name, run, help_text in (('release', cmd_release, "clear a worktree's owner (for people)"),
                                  ('share', cmd_share, 'let any session edit a worktree until its owner ends')):
         command = sub.add_parser(name, help=help_text)
