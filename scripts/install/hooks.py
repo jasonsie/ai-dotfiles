@@ -2,11 +2,12 @@
 """Install the skills' hooks into each CLI: worktree-guard, small-commits; writes unless --dry-run.
 
 worktree-guard (skills/worktree-guard/scripts/worktree_guard.py) runs before edits and shell
-commands (PreToolUse; Antigravity also before reads) and when a session ends (SessionEnd).
+commands (PreToolUse; Antigravity also before reads) and when a session ends (SessionEnd); for
+Claude Code it also makes and removes the worktrees Claude asks for (WorktreeCreate, WorktreeRemove).
 small-commits (skills/small-commits/scripts/small_commits.py) runs before shell commands, for
 `git commit`. Each feature's hooks are merged into the CLI's own hook file as one entry per
 event; every other hook stays as it is:
-  Claude Code   ~/.claude/settings.json      "hooks": PreToolUse, SessionEnd
+  Claude Code   ~/.claude/settings.json      "hooks": PreToolUse, SessionEnd, WorktreeCreate, WorktreeRemove
   Codex         ~/.codex/hooks.json          the same (approve once in /hooks)
   Antigravity   ~/.gemini/config/hooks.json  a named entry per feature and event (no SessionEnd)
 Pi has no hooks: skills.py links scripts/agent_hooks.ts as its extension. The native events
@@ -35,8 +36,9 @@ import agent_hooks  # noqa: E402  (the CLIs' hook formats)
 TOOL_EVENTS = ('PreToolUse', 'PostToolUse')  # Antigravity: these take matcher groups, the rest bare handlers
 GUARD_MARK = 'skills/worktree-guard/scripts/worktree_guard.py'
 GUARD_WANTS = {  # before edits and shell commands, and at session end; Claude Code moves itself, so
-    # its reads are left alone; Antigravity has no SessionEnd but has read tools to steer
-    'claude': (('pre', ('edit', 'shell')), ('end', None)),
+    # its reads are left alone; Antigravity has no SessionEnd but has read tools to steer; only
+    # Claude Code has hooks that make and remove its worktrees
+    'claude': (('pre', ('edit', 'shell')), ('end', None), ('create', None), ('remove', None)),
     'codex': (('pre', ('edit', 'shell')), ('end', None)),
     'agy': (('pre', ('edit', 'shell', 'read')),),
 }
