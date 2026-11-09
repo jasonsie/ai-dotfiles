@@ -859,3 +859,72 @@ class FlowTest(Repo):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class ShippedTest(OriginRepo):
+    """`worktree shipped <folder>`: ship's cleanup, once the PR exists."""
+
+    def setUp(self):
+        super().setUp()
+        self.assertEqual(self.cli('on', '--repo', str(self.repo))[0], 0)
+        self.shell('claude', 'sess-ship', ME, 'ai-dotfiles worktree new fix/x')  # the hook notes who runs it
+        self.assertEqual(self.cli('new', 'fix/x', '--repo', str(self.repo))[0], 0)
+        self.wt = self.linked('fix-x')
+
+    def commit_and_push(self):
+        (self.wt / 'a.txt').write_text('two\n')
+        git(self.wt, 'commit', '-q', '-am', 'change a')
+        git(self.wt, 'push', '-q', 'origin', 'HEAD:refs/heads/fix/x')
+
+    def shipped(self):
+        return self.cli('shipped', 'fix-x', '--repo', str(self.repo))
+
+    def test_it_deletes_the_worktree_and_frees_the_session_for_a_new_task(self):
+        self.commit_and_push()
+        status, out = self.shipped()
+        self.assertEqual(status, 0, out)
+        self.assertIn('removed fix-x', out)
+        self.assertFalse(self.wt.exists())
+        self.assertFalse(guard.meta_file(self.repo, 'fix-x').exists())
+        self.assertFalse(guard.claim_file(self.wt).exists())
+        self.assertNotIn('moved', guard.SESSIONS.load('sess-ship'))
+        self.assertEqual(git(self.repo, 'branch', '--list'), '* main')
+        self.assertEqual(git(self.repo, 'tag', '--list'), '', 'ship leaves the archive tag to approve')
+        stopped = self.edit('claude', 'sess-ship', ME)  # the next first edit starts a new task
+        self.assertIn('worktree new', stopped['hookSpecificOutput']['permissionDecisionReason'])
+
+    def test_other_state_of_the_session_is_kept(self):
+        state = guard.SESSIONS.load('sess-ship')
+        guard.SESSIONS.save('sess-ship', {**state, 'warned': ['x']})
+        self.commit_and_push()
+        self.assertEqual(self.shipped()[0], 0)
+        self.assertEqual(guard.SESSIONS.load('sess-ship'), {'warned': ['x']})
+
+    def test_work_not_on_a_remote_is_kept(self):
+        (self.wt / 'a.txt').write_text('two\n')
+        git(self.wt, 'commit', '-q', '-am', 'change a')
+        status, out = self.shipped()
+        self.assertEqual(status, 1)
+        self.assertIn('a commit of it is on no remote', out)
+        self.assertTrue(self.wt.exists())
+        self.assertEqual(guard.SESSIONS.load('sess-ship')['moved']['linked'], str(self.wt))
+
+    def test_uncommitted_changes_are_kept(self):
+        self.commit_and_push()
+        (self.wt / 'new.txt').write_text('x\n')
+        status, out = self.shipped()
+        self.assertEqual(status, 1)
+        self.assertIn('1 uncommitted change', out)
+        self.assertTrue(self.wt.exists())
+
+    def test_a_folder_that_is_not_a_guard_worktree_is_refused(self):
+        status, out = self.cli('shipped', 'nope', '--repo', str(self.repo))
+        self.assertEqual(status, 1)
+        self.assertIn('no linked worktree named nope', out)
+
+    def test_a_worktree_nobody_bound_goes_the_same_way(self):
+        guard.make_worktree(self.repo, 'fix-y', self.base, None, source=self.repo, meta={'work': 'fix/y'})
+        git(self.linked('fix-y'), 'push', '-q', 'origin', 'HEAD:refs/heads/fix/y')
+        status, out = self.cli('shipped', 'fix-y', '--repo', str(self.repo))
+        self.assertEqual(status, 0, out)
+        self.assertFalse(self.linked('fix-y').exists())

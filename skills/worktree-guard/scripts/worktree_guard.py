@@ -8,6 +8,7 @@
   worktree-guard prune  [--repo DIR]                  rm every merged, clean, unowned one
   worktree-guard on|off [--repo DIR]                  switch the repo's worktree flow (people only)
   worktree-guard new    <type>/<slug> [--repo DIR]    a detached worktree from origin's default branch
+  worktree-guard shipped NAME [--repo DIR]            delete a pushed worktree whose PR is open (ship runs it)
   worktree-guard release [PATH]                       clear a worktree's owner (people only)
   worktree-guard share   [PATH]                       let any session edit it (people only)
 
@@ -835,6 +836,39 @@ def remove(main, name, force=False, quiet_refusal=False):
     return True, lines
 
 
+def shipped(main, name):
+    """Delete a worktree whose work is shipped (ship has pushed it and opened the PR): (done, lines
+    to print). Refused while it has uncommitted changes or a commit on no remote. The owner's
+    claim goes, and the session's `moved` with it, so its next first edit starts a new task. No
+    archive tag: the branch is on origin, and approve tags it at the PR's head."""
+    meta = read_meta(main, name)
+    if meta is None:
+        return False, [f'worktree-guard: no linked worktree named {name} in {main}']
+    linked = main / LINKED / name
+    if linked.is_dir():
+        count = changes_in(linked)
+        if count:
+            return False, [f'worktree-guard: kept {name}: {count} uncommitted change(s)']
+        head = git(linked, 'rev-parse', '-q', '--verify', 'HEAD', check=False)
+        if head and not pushed(main, head, None):
+            return False, [f'worktree-guard: kept {name}: a commit of it is on no remote']
+    claim = read_claim(claim_file(linked)) or {}
+    if linked.is_dir():
+        try:
+            git(main, 'worktree', 'remove', str(linked))
+        except RuntimeError as error:
+            return False, [f'worktree-guard: kept {name}: {error}']
+    for session in {str(s) for s in (claim.get('session'), meta.get('session')) if s}:
+        state = SESSIONS.load(session)
+        if (state.get('moved') or {}).get('linked') == str(linked):
+            state.pop('moved')
+            SESSIONS.save(session, state)
+    meta_file(main, name).unlink(missing_ok=True)
+    claim_file(linked).unlink(missing_ok=True)
+    return True, [f"worktree-guard: removed {name} ({meta.get('work') or 'no work name'}); "
+                  f'its session is back in {main}']
+
+
 def cmd_list(args):
     main = repo_main(args.repo)
     found = linked_worktrees(main)
@@ -977,6 +1011,12 @@ def cmd_new(args):
     return 0
 
 
+def cmd_shipped(args):
+    done, lines = shipped(repo_main(args.repo), args.name)
+    print('\n'.join(lines), file=sys.stdout if done else sys.stderr)
+    return 0 if done else 1
+
+
 def cmd_release(args):
     worktree = worktree_of(Path(args.path or os.getcwd()).resolve())
     path = claim_file(worktree) if worktree else None
@@ -1035,6 +1075,10 @@ def parser():
     new.add_argument('name', help='<type>/<slug>, for example fix/prune-worktrees')
     new.add_argument('--repo', help='a folder in the repository (default: here)')
     new.set_defaults(run=cmd_new)
+    done_ = sub.add_parser('shipped', help='delete a worktree whose work is pushed and has its PR (what ship runs)')
+    done_.add_argument('name', help="the worktree's folder name, e.g. fix-prune-worktrees")
+    done_.add_argument('--repo', help='a folder in the repository (default: here)')
+    done_.set_defaults(run=cmd_shipped)
     for name, run, help_text in (('release', cmd_release, "clear a worktree's owner (for people)"),
                                  ('share', cmd_share, 'let any session edit a worktree until its owner ends')):
         command = sub.add_parser(name, help=help_text)
