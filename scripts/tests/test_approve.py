@@ -249,7 +249,8 @@ class FastForwardTest(unittest.TestCase):
 
 
 WT = f'{MAIN}/.claude/worktrees/feat-x'
-IN_WT = {**BEHIND, 'git rev-parse --show-toplevel': WT,   # the run is in WT, on feat/x; main lags
+LANDED = {f'git merge-base --is-ancestor HEAD {TIP}': OK}  # the worktree holds nothing the PR's head lacks
+IN_WT = {**BEHIND, **LANDED, 'git rev-parse --show-toplevel': WT,   # the run is in WT, on feat/x; main lags
          'git worktree list --porcelain': f'worktree {MAIN}\nHEAD {OLD}\nbranch refs/heads/main\n\n'
                                           f'worktree {WT}\nHEAD {TIP}\nbranch refs/heads/feat/x'}
 
@@ -272,6 +273,58 @@ class InWorktreeTest(unittest.TestCase):
         self.assertEqual(deletions, [(Path(WT), False, len(fake.calls))])
         self.assertEqual(output.splitlines()[-1], prune_branch.BACK.format(MAIN))
 
+    def test_by_number_in_the_worktree_its_branch_is_checked_out_in(self):
+        code, output, err, fake, deletions = finishing(['7'], ap.main, **IN_WT)
+        self.assertEqual(code, 0, output + err)
+        self.assertEqual(steps_of(output), ['pr', 'reviewer', 'review', 'tag', 'merge', 'branch', 'prune', 'main', 'worktree',
+                                            'landed', 'Back'])
+        self.assertTrue(fake.ran('git checkout -q --detach origin/main'))
+        self.assertTrue(fake.ran('git branch -q -D feat/x'), 'its local branch goes too')
+        self.assertEqual(deletions, [(Path(WT), False, len(fake.calls))])
+
+    def test_by_number_a_worktree_holding_work_the_pr_lacks_keeps_its_branch_and_folder(self):
+        for held, answer in (('commits', {f'git merge-base --is-ancestor HEAD {TIP}': FAIL}),
+                             ('uncommitted files', {'git status --porcelain': ' M a.txt'})):
+            code, output, err, fake, deletions = finishing(['7'], ap.main, **{**IN_WT, **answer})
+            self.assertEqual(code, 0, output + err)
+            self.assertEqual(steps_of(output), ['pr', 'reviewer', 'review', 'tag', 'merge', 'branch', 'main', 'worktree',
+                                                'landed'], held)
+            self.assertIn(f'worktree   skipped: feat-x holds {held} that PR #7 does not have; its branch and folder stay',
+                          output)
+            self.assertEqual(fake.ran('git checkout') + fake.ran('git branch -q -D') + deletions, [], held)
+
+    def by_number(self, folder, state, record=None):
+        """`approve 7` run in .claude/worktrees/<folder> (git's `state` line for it: its branch, or
+        detached), with worktree-guard's `record` of it; the main checkout is on another branch."""
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        main = Path(temp.name).resolve()
+        wt = main / '.claude/worktrees' / folder
+        if record is not None:
+            wt.parent.mkdir(parents=True)
+            (wt.parent / f'{folder}.json').write_text(json.dumps(record))
+        listing = f'worktree {main}\nHEAD {OLD}\nbranch refs/heads/other\n\nworktree {wt}\nHEAD {TIP}\n{state}'
+        return wt, finishing(['7'], ap.main, **{'git rev-parse --show-toplevel': str(wt), 'git worktree list --porcelain': listing,
+                                                'git branch --show-current': '', 'git rev-parse --verify -q refs/heads/feat/x': FAIL,
+                                                **LANDED})
+
+    def test_by_number_a_detached_worktree_the_guard_recorded_for_the_pr(self):
+        for folder, record in (('feat-x', {'work': 'feat/x'}), ('review-fix', {'work': 'review/fix', 'pr': 7})):
+            wt, (code, output, err, fake, deletions) = self.by_number(folder, 'detached', record)
+            self.assertEqual(code, 0, output + err)
+            self.assertEqual(steps_of(output)[-5:], ['prune', 'main', 'worktree', 'landed', 'Back'], folder)
+            self.assertIn('main       skipped: the main checkout is on other, not main', output)
+            self.assertEqual(deletions, [(wt, False, len(fake.calls))], folder)
+
+    def test_by_number_a_worktree_holding_other_work_is_left_alone(self):
+        for folder, state, record in (('feat-y', 'detached', {'work': 'feat/y', 'pr': 8}), ('feat-y', 'branch refs/heads/feat/y', None),
+                                      ('scratch', 'detached', None)):
+            _, (code, output, err, fake, deletions) = self.by_number(folder, state, record)
+            self.assertEqual(code, 0, output + err)
+            self.assertEqual(steps_of(output), ['pr', 'reviewer', 'review', 'tag', 'merge', 'branch', 'main', 'landed'], folder)
+            self.assertEqual(deletions, [], folder)
+            for prefix in NOT_LOCAL:
+                self.assertEqual(fake.ran(prefix), [], prefix)
 
 
 if __name__ == '__main__':

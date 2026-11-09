@@ -345,6 +345,19 @@ class FinishRealGitTest(unittest.TestCase):
         self.assertEqual(self.git(self.main, 'ls-remote', '--heads', 'origin'), f'{self.tip}\trefs/heads/main')
         self.assertEqual(self.git(self.main, 'rev-parse', 'HEAD'), self.tip, 'the main checkout has the merge')
 
+    def test_by_number_a_commit_the_pr_lacks_keeps_the_branch_and_the_folder(self):
+        (self.wt / 'b.txt').write_text('later\n')
+        self.git(self.wt, 'add', 'b.txt')
+        self.git(self.wt, 'commit', '-q', '-m', 'after the PR')
+        out = io.StringIO()
+        with redirect_stdout(out):
+            back = prune_branch.finish(git_run.Repo('main', 'feat/x', self.tip, 'o/r', 'me'), False, number=7)
+        self.assertIsNone(back)
+        self.assertIn('worktree   skipped: feat-x holds commits that PR #7 does not have', out.getvalue())
+        self.assertTrue(self.wt.exists())
+        self.assertEqual(self.git(self.wt, 'branch', '--show-current'), 'feat/x')
+
+
 class FastForwardRealGitTest(unittest.TestCase):
     """prune_branch.fast_forward against real repositories (a local bare origin): uncommitted files survive."""
 

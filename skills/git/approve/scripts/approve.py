@@ -32,6 +32,11 @@ GitHub, then, each step skipped when done:
   main        the main checkout fast-forwarded to origin/<base>, only when git can without
               touching uncommitted files (never a stash or reset); otherwise skipped, with why
 
+Run in the linked worktree that holds PR <n>'s work (its branch checked out there, or the guard's
+record naming the branch or the PR), that worktree ends as in the one-run form: prune before main,
+worktree after it. Any other worktree is left alone, and so is that one while it holds uncommitted
+files or commits the PR's head lacks: then its branch and folder stay (a skipped: worktree line).
+
 With --dry-run nothing is fetched (a fetch writes refs): the plan reads what the last fetch left.
 When the run's worktree is deleted, the last line says where the session is: the main checkout.
 
@@ -96,8 +101,10 @@ def run_number(args):
     step('tag', tag(repo, pr, dry, ref=repo.tip))
     step('merge', merge_pr.merge(pr, dry))
     step('branch', 'deleted on origin' if prune_branch.delete_remote(repo.branch, dry) else 'gone already')
-    step('main', prune_branch.fast_forward(repo.base, dry))
+    back = prune_branch.finish(repo, dry, number=pr['number'])
     print(('would land ' if dry else 'landed ') + pr['url'])
+    if back:
+        print(back)
 
 
 def run(args):

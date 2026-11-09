@@ -135,6 +135,27 @@ def here():
     return top, trees[0][0], next((branch for path, branch in trees if path == top), None)
 
 
+def holds(top, main, checked_out, branch, number):
+    """Whether the linked worktree `top` holds PR `number`'s work: its `branch` is checked out
+    there, or worktree-guard's record of it names that branch (the work shipped as it) or that PR
+    (a fix `worktree pr <n>` made)."""
+    if checked_out == branch:
+        return True
+    meta = guard.read_meta(main, top.name) if top.parent == main / guard.LINKED else None
+    return bool(meta) and (meta.get('work') == branch or meta.get('pr') == number)
+
+
+def unlanded(tip, dry):
+    """What this worktree holds that the landed commit `tip` lacks: 'uncommitted files', 'commits',
+    or '' for nothing. A dry run that has not fetched `tip` cannot tell, and says nothing."""
+    if git_run.out(['git', 'status', '--porcelain']):
+        return 'uncommitted files'
+    known = git_run.sh(['git', 'rev-parse', '--verify', '-q', f'{tip}^{{commit}}'])[0] == 0
+    if (known or not dry) and git_run.sh(['git', 'merge-base', '--is-ancestor', 'HEAD', tip])[0] != 0:
+        return 'commits'
+    return ''
+
+
 def leave(top, base, dry):
     """(step line, deleted): the linked worktree this run is in, deleted now that its work is merged
     and tagged; worktree-guard keeps it, with why, when it is not safe to. Origin's base is fetched
@@ -145,16 +166,29 @@ def leave(top, base, dry):
     return (said, not dry) if done else (f'skipped: {said}', False)
 
 
-def finish(repo, dry):
+def finish(repo, dry, number=None):
     """The local end of a landing, after the merge, one step line each; returns where the session is
-    when its worktree was deleted (BACK), else None: prune; run in a linked worktree, then the
-    main checkout fast-forwarded and the worktree deleted. The deletion is last: nothing can run
-    in its folder after it."""
-    top, main, _ = here()
-    git_run.step('prune', prune(repo, dry))
-    if top == main:
+    when its worktree was deleted (BACK), else None.
+
+    Plain (`approve`, `git prune`): prune; run in a linked worktree, then the main checkout
+    fast-forwarded and the worktree deleted. By number (`approve <n>`): the main checkout
+    fast-forwarded, and, run in the linked worktree holding PR <n>'s work, that worktree pruned
+    before it and deleted after, unless it holds work the PR lacks: then its branch and folder
+    stay. (The plain form needs no such check: its push made the branch's tip the PR's head.)
+    The deletion is last: nothing can run in its folder after it."""
+    top, main, checked_out = here()
+    linked = top != main
+    own = linked and (number is None or holds(top, main, checked_out, repo.branch, number))
+    held = unlanded(repo.tip, dry) if own and number is not None else ''
+    if number is None or (own and not held):
+        git_run.step('prune', prune(repo, dry))
+    if number is not None or linked:
+        git_run.step('main', fast_forward(repo.base, dry))
+    if held:
+        git_run.step('worktree', f'skipped: {top.name} holds {held} that PR #{number} does not have; its '
+                                 'branch and folder stay')
+    if not own or held:
         return None
-    git_run.step('main', fast_forward(repo.base, dry))
     said, gone = leave(top, repo.base, dry)
     git_run.step('worktree', said)
     return BACK.format(main) if gone else None
