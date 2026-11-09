@@ -1,6 +1,6 @@
 ---
 name: worktree-guard
-description: Finish work in a linked worktree that worktree-guard moved this session into. Use when a worktree-guard message says a worktree is busy or this session was moved, when work in a .claude/worktrees/ folder is done, or when the user asks about agents' linked worktrees (list, merge, rm, release, share).
+description: Name work and edit in its own worktree, or finish work in a linked worktree that worktree-guard moved this session into. Use when a worktree-guard message says to name this work, or that a worktree is busy or this session was moved, when work in a .claude/worktrees/ folder is done, or when the user asks about agents' linked worktrees (new, list, merge, rm, release, share).
 ---
 
 # Worktree guard
@@ -31,7 +31,7 @@ Merging and removing belong to the person: `rm` archives the branch as `archive/
 
 ## Commands
 
-`ai-dotfiles worktree on | off | list | done | rm | prune | release | share`; `--help`
+`ai-dotfiles worktree on | off | new | list | done | rm | prune | release | share`; `--help`
 describes each. `on`/`off`, `release` (clear a stale owner) and `share` (let every session
 edit a worktree) are the person's, run in a terminal; the guard refuses them from an agent,
 so ask the user.
@@ -40,10 +40,29 @@ so ask the user.
 
 `ai-dotfiles worktree on` sets the local git config `worktree-guard.flow true` in a repo;
 `off` removes it; `list` shows `flow: on|off`. In a repo that is on, an edit of a file in the
-main checkout (or a git command that changes it) is stopped with "name this work": run
-`ai-dotfiles worktree new <type>/<slug>` and redo the change there. Reads pass. The edited
-file's repo decides, wherever the session started; a file outside git is never gated. A repo
-that is off behaves as before.
+main checkout (or a git command that changes it) is stopped with "name this work". Reads pass.
+The edited file's repo decides, wherever the session started; a file outside git is never
+gated. A repo that is off behaves as before.
+
+## Name the work (first edit, repo on)
+
+1. **Name it.** Run `ai-dotfiles worktree new <type>/<slug>` (for example
+   `fix/prune-worktrees`; lowercase letters, digits, hyphens). It fetches origin and makes
+   `.claude/worktrees/<type>-<slug>` detached at origin's default branch, with no local
+   branch, and copies the files `.worktreeinclude` lists. A name taken by that folder, a
+   local branch or an origin branch is refused: pick another.
+2. **Enter.** The session owns the worktree. Claude Code: call `EnterWorktree` with the path
+   the command prints. Codex, Pi and Antigravity: calls that name files in the main checkout
+   are moved into the worktree for you; name files by their paths there.
+3. **Work there only.** Edit, test and commit in the worktree, on its detached HEAD. The
+   main checkout is never edited by an agent, and another session's worktree is refused.
+4. **Gone for good.** `list` shows a worktree with no branch as `<type>/<slug> (no branch)`;
+   `rm` tags its tip `archive/<slug>`, and refuses unpushed or uncommitted work without
+   `--force`.
+
+Run `new` as its own command in the shell, not inside a script or a quoted string: the hook
+that binds the worktree to your session reads the command line. Run by hand (no session
+bound), it still makes the worktree and prints its path; the first edit there claims it.
 
 ## Messages
 

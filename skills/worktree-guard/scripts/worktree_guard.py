@@ -7,6 +7,7 @@
   worktree-guard rm     NAME [--force] [--repo DIR]   archive tag, then remove worktree and branch
   worktree-guard prune  [--repo DIR]                  rm every merged, clean, unowned one
   worktree-guard on|off [--repo DIR]                  switch the repo's worktree flow (people only)
+  worktree-guard new    <type>/<slug> [--repo DIR]    a detached worktree from origin's default branch
   worktree-guard release [PATH]                       clear a worktree's owner (people only)
   worktree-guard share   [PATH]                       let any session edit it (people only)
 
@@ -20,8 +21,13 @@ their parent's ownership. A failure never blocks an edit; it says the edit was n
 
 A repo whose flow is on (git config --local worktree-guard.flow true, set by `on`) is stricter:
 an edit of a file in its main checkout is stopped, and the agent is asked to name the work with
-`ai-dotfiles worktree new <type>/<slug>`. The edited file's repo decides, wherever the session
-started; a file outside git is never gated.
+`ai-dotfiles worktree new <type>/<slug>`. That fetches origin and makes .claude/worktrees/
+<type>-<slug> detached at origin's default branch, with no local branch. The hook notes which
+session is about to run it (naming/<CLI pid>.json); the command finds the note by its own pid or
+an ancestor's, claims the worktree for that CLI process and records it in the session's state,
+so Claude is told to call EnterWorktree and Codex, Pi and Antigravity are steered. Another
+session's worktree is refused. The edited file's repo decides, wherever the session started; a
+file outside git is never gated.
 
 State: $WORKTREE_GUARD_STATE, else ~/.local/state/ai-dotfiles/worktree-guard/ (claims/ per
 worktree, sessions/ per session). The CLIs' hook formats live in the repo's
@@ -66,6 +72,9 @@ GIT_CHANGES = frozenset(
     'add am apply checkout cherry-pick clean commit merge mv pull rebase reset restore revert rm stash switch'.split())
 GIT_OPTIONS_WITH_VALUE = frozenset(('-C', '-c', '--git-dir', '--work-tree', '--namespace', '--config-env'))
 WRAPPERS = frozenset(('sh', 'bash', 'zsh', 'dash', 'fish', 'ksh', 'env', 'timeout', 'gtimeout', 'nice', 'nohup'))
+WORK_NAME = re.compile(r'[a-z][a-z0-9]*/[a-z0-9][a-z0-9-]*')  # <type>/<slug>
+FETCH_SECONDS = 120
+NAMING_SECONDS = 600  # how long the hook's note of a `worktree new` call stays good
 PERSON_ONLY = frozenset(('release', 'share', 'on', 'off'))  # worktree commands a person runs
 HEREDOC = re.compile(r'<<-?\s*([\'"]?)(\w+)\1[^\n]*\n.*?^[ \t]*\2[ \t]*$', re.M | re.S)
 SEPARATORS = frozenset(';&|()\n')
@@ -269,19 +278,19 @@ def git_changes(command):
     return found
 
 
-def person_only(command):
-    """Whether a shell command line runs a person-only worktree command (`ai-dotfiles worktree
-    on|off|release|share`, or the guard script with that verb) as a command: first on the line
-    or after `&&`, `;`, `|`, a newline or a parenthesis, behind `VAR=x`, `sudo`, `env`..., or
-    inside `sh -c '...'`. The same words in a quote, a heredoc, a comment or an argument do not
-    count."""
+def guard_calls(command):
+    """[(verb, arguments)] for each worktree command (`ai-dotfiles worktree <verb> ...`, or the
+    guard script with a verb) a shell command line runs as a command: first on the line or after
+    `&&`, `;`, `|`, a newline or a parenthesis, behind `VAR=x`, `sudo`, `env`..., or inside
+    `sh -c '...'`. The same words in a quote, a heredoc, a comment or an argument do not count.
+    The arguments run to the end of the line, separators included."""
     try:
         lexer = shlex.shlex(HEREDOC.sub('', command), posix=True, punctuation_chars=';()<>|&\n')
         lexer.whitespace_split, lexer.whitespace = True, ' \t\r'
         tokens = list(lexer)
     except ValueError:
-        return False
-    start = True
+        return []
+    found, start = [], True
     for i, token in enumerate(tokens):
         if set(token) <= SEPARATORS:
             start = True
@@ -293,16 +302,38 @@ def person_only(command):
             continue  # VAR=x, sudo, env ...: the command is the next word
         start = False
         if name == 'ai-dotfiles':
-            if rest[:1] == ['worktree'] and rest[1:2] and rest[1] in PERSON_ONLY:
-                return True
+            if rest[:1] == ['worktree'] and rest[1:2]:
+                found.append((rest[1], rest[2:]))
         elif name in GUARD_NAMES:
-            if rest[:1] and rest[0] in PERSON_ONLY:
-                return True
+            if rest[:1]:
+                found.append((rest[0], rest[1:]))
         elif name in SHELLS:
             flag = next((n for n, t in enumerate(rest) if re.fullmatch(r'-\w*c', t)), None)
-            if flag is not None and flag + 1 < len(rest) and person_only(rest[flag + 1]):
-                return True
-    return False
+            if flag is not None and flag + 1 < len(rest):
+                found += guard_calls(rest[flag + 1])
+    return found
+
+
+def person_only(command):
+    """Whether a shell command line runs a person-only worktree command (`on`, `off`, `release`,
+    `share`)."""
+    return any(verb in PERSON_ONLY for verb, _ in guard_calls(command))
+
+
+def new_names(command):
+    """The work names a shell command line passes to `worktree new`."""
+    names = []
+    for verb, args in guard_calls(command):
+        skip = False
+        for arg in args if verb == 'new' else ():
+            if set(arg) <= SEPARATORS:
+                break
+            if skip or arg.startswith('-'):
+                skip = arg == '--repo'
+                continue
+            names.append(arg)
+            break
+    return names
 
 
 def command_of(event):
@@ -552,6 +583,49 @@ def leftovers(worktree, previous, state):
             'is to finish them.')
 
 
+def naming_dir():
+    return state_root() / 'naming'
+
+
+def note_naming(event, table):
+    """The hook saw a shell command that runs `worktree new <name>`. The command has no hook input
+    of its own, so keep who is running it, by the CLI process, for the command to find. A note
+    changes nothing for the call: it keeps its own permissions."""
+    names = new_names(command_of(event)) if event.action == 'shell' else []
+    if not names:
+        return
+    me = owner(event, table if table is not None else process_table())
+    folder = naming_dir()
+    folder.mkdir(parents=True, exist_ok=True, mode=0o700)
+    for old in folder.glob('*.json'):
+        if time.time() - old.stat().st_mtime > 3600:
+            old.unlink(missing_ok=True)
+    write_claim(folder / f"{me['pid']}.json", {'owner': me, 'names': names, 'at': int(time.time())})
+
+
+def naming_for(name):
+    """(file, owner) of the session whose hook just saw `worktree new <name>` in the CLI process
+    this command runs under, else (None, None)."""
+    table = process_table()
+    for pid in (os.getpid(), *lineage(table, os.getpid())):
+        path = naming_dir() / f'{pid}.json'
+        note = read_claim(path)
+        if (note and name in note.get('names', ()) and time.time() - note.get('at', 0) <= NAMING_SECONDS
+                and isinstance(note.get('owner'), dict) and alive(note['owner'])):
+            return path, note['owner']
+    return None, None
+
+
+def stop_text(state, worktree):
+    """The refusal for an edit in a main checkout of a repo that is on: name the work, or, for a
+    session that already did, go where its work is."""
+    moved = state.get('moved') or {}
+    if moved.get('busy') == str(worktree) and Path(moved.get('linked', '')).is_dir():
+        return (f"worktree-guard: {worktree} is not edited by agents; this session works in {moved['linked']}. "
+                f"Make this change there (Claude Code: call EnterWorktree with path \"{moved['linked']}\" first).")
+    return STOP
+
+
 STOP = ('worktree-guard: this repo works through worktrees, and its main checkout is not edited by '
         'agents. Name this work: run `ai-dotfiles worktree new <type>/<slug>` (for example '
         'fix/prune-worktrees), then make this change there.')
@@ -579,14 +653,18 @@ def decide(event, state, table=None):
     paths = targets(event)
     worktrees = list(dict.fromkeys(w for w in map(worktree_of, paths) if w))
     notes = []
+    note_naming(event, table)
     if worktrees:
         table = table if table is not None else process_table()
         me = owner(event, table)
         for worktree in worktrees:
             if worktree == main_of(worktree) and flow_on(worktree):
-                return Deny(STOP)
+                return Deny(stop_text(state, worktree))
             verdict, claim, previous = take(worktree, me, table)
             if verdict == 'busy':
+                if flow_on(worktree):  # in a repo that is on, every session has a worktree of its own
+                    return Deny(f'worktree-guard: {worktree} belongs to {who(claim)}. Do not edit it; work in '
+                                'your own worktree: `ai-dotfiles worktree new <type>/<slug>`.')
                 return clash(event, state, worktree, claim, me, table)
             if verdict == 'new':
                 notes.append(leftovers(worktree, previous, state))
@@ -653,6 +731,19 @@ def branch_of(main, name, meta):
     return current or meta.get('branch')
 
 
+def ref_of(main, name, branch):
+    """What to read the work's commits from: its branch, else (no branch) the worktree's HEAD
+    commit; None when neither is there."""
+    if branch:
+        return branch
+    linked = main / LINKED / name
+    return git(linked, 'rev-parse', '-q', '--verify', 'HEAD', check=False) if linked.is_dir() else None
+
+
+def label_of(meta, branch):
+    return branch or f"{meta.get('work') or '?'} (no branch)"
+
+
 def branch_exists(main, branch):
     return bool(branch) and git(main, 'rev-parse', '-q', '--verify', f'refs/heads/{branch}', check=False) is not None
 
@@ -664,12 +755,16 @@ def target_of(main, meta):
     return default_ref(main)
 
 
-def merged(main, branch, meta):
+def merged(main, ref, meta):
     target = target_of(main, meta)
-    return bool(target) and git(main, 'merge-base', '--is-ancestor', branch, target, check=False) is not None
+    return bool(target) and bool(ref) and git(main, 'merge-base', '--is-ancestor', ref, target, check=False) is not None
 
 
-def pushed(main, branch):
+def pushed(main, ref, branch):
+    """Whether every commit of the work is on a remote: the branch's upstream has them, or (no
+    branch) some remote-tracking ref does."""
+    if not branch:
+        return git(main, 'rev-list', '--count', ref, '--not', '--remotes', check=False) == '0'
     ahead = git(main, 'rev-list', '--count', f'{branch}@{{upstream}}..{branch}', check=False)
     return ahead == '0'
 
@@ -679,19 +774,21 @@ def owner_of(worktree):
     return claim if claim and alive(claim) else None
 
 
-def span(main, base, branch):
-    """The branch's commit dates, in archive-tag's words; '' for no commits of its own."""
-    return archive_tag.span(base, branch, cwd=main)
+def span(main, base, ref):
+    """The work's commit dates, in archive-tag's words; '' for no commits of its own."""
+    return archive_tag.span(base, ref, cwd=main) if ref else ''
 
 
-def archive(main, name, meta, branch, was_merged):
-    """Tag the branch tip with archive-tag; None when it has no commits of its own."""
-    if not branch_exists(main, branch):
+def archive(main, name, meta, branch, ref, was_merged):
+    """Tag the work's tip with archive-tag; None when it has no commits of its own. A worktree
+    with no branch is tagged by its work name (`fix/x` -> `archive/x`)."""
+    if not ref or (branch and not branch_exists(main, branch)):
         return None
-    description = meta.get('description') or git(main, 'log', '-1', '--format=%s', branch)
+    description = meta.get('description') or git(main, 'log', '-1', '--format=%s', ref)
     agent = ' '.join(x for x in (meta.get('cli', 'agent'), meta.get('model', '')) if x)
     extra = (f"Agent: {agent}, session {meta.get('session', '?')}; redirected from branch {meta.get('from', '?')}.",)
-    return archive_tag.archive(branch, description, was_merged, meta.get('base', ''), cwd=main, extra=extra)
+    return archive_tag.archive(branch or meta.get('work') or name, description, was_merged, meta.get('base', ''),
+                               cwd=main, extra=extra, ref=ref)
 
 
 def remove(main, name, force=False, quiet_refusal=False):
@@ -707,7 +804,8 @@ def remove(main, name, force=False, quiet_refusal=False):
         meta_file(main, name).unlink(missing_ok=True)
         claim_file(linked).unlink(missing_ok=True)
         return True, [f'worktree-guard: removed {name}: worktree and branch {branch} already gone (stale record)']
-    was_merged = merged(main, branch, meta)
+    ref = ref_of(main, name, branch)
+    was_merged = merged(main, ref, meta)
     problems = []
     claim = owner_of(linked) if linked.is_dir() else None
     if claim:
@@ -715,19 +813,20 @@ def remove(main, name, force=False, quiet_refusal=False):
     count = changes_in(linked) if linked.is_dir() else 0
     if count:
         problems.append(f'{count} uncommitted change(s)')
-    if not was_merged and not pushed(main, branch):
-        problems.append(f'{branch} is neither merged into {target_of(main, meta)} nor pushed')
+    if not was_merged and not pushed(main, ref, branch):
+        problems.append(f"{branch or meta.get('work')} is neither merged into {target_of(main, meta)} nor pushed")
     if problems and not force:
         return False, [] if quiet_refusal else [f"worktree-guard: kept {name}: {'; '.join(problems)}. "
                                                f"--force removes it anyway."]
-    tag = archive(main, name, meta, branch, was_merged)
+    tag = archive(main, name, meta, branch, ref, was_merged)
     if linked.is_dir():
         git(main, 'worktree', 'remove', *(['--force'] if force else []), str(linked))
-    git(main, 'branch', '-D', branch, check=False)
+    if branch:
+        git(main, 'branch', '-D', branch, check=False)
     meta_file(main, name).unlink(missing_ok=True)
     claim_file(linked).unlink(missing_ok=True)
-    lines = [f'worktree-guard: removed {name} and branch {branch}' + (f'; archived as {tag}' if tag else
-                                                                       '; no commits of its own, no tag')]
+    lines = [f"worktree-guard: removed {name}{f' and branch {branch}' if branch else ''}"
+             + (f'; archived as {tag}' if tag else '; no commits of its own, no tag')]
     if tag and git(main, 'remote', 'get-url', 'origin', check=False):
         try:
             lines.append(archive_tag.push_tag(tag, cwd=main).replace(' pushed', ' pushed to origin', 1))
@@ -745,11 +844,12 @@ def cmd_list(args):
     for name, meta in found.items():
         linked = main / LINKED / name
         branch = branch_of(main, name, meta)
+        ref = ref_of(main, name, branch)
         claim = owner_of(linked) if linked.is_dir() else None
-        state = ('no commits yet' if not span(main, meta.get('base', ''), branch) else
-                 'merged' if merged(main, branch, meta) else 'not merged')
+        state = ('no commits yet' if not span(main, meta.get('base', ''), ref) else
+                 'merged' if merged(main, ref, meta) else 'not merged')
         count = changes_in(linked) if linked.is_dir() else 0
-        print(f"{name}  {branch}  from {meta.get('from')}  {state}"
+        print(f"{name}  {label_of(meta, branch)}  from {meta.get('from')}  {state}"
               f"{f', {count} uncommitted' if count else ''}  owner: {who(claim) if claim else 'none'}"
               f"{'  - ' + meta['description'] if meta.get('description') else ''}")
     return 0
@@ -794,6 +894,86 @@ def cmd_flow(args):
     else:
         git(main, 'config', '--local', '--unset', FLOW_KEY, check=False)  # exit 5 when it was never set
     print(f"worktree-guard: flow: {args.command} in {main}")
+    return 0
+
+
+def fetch(main):
+    """(fetched, why not): `git fetch origin`, never asking for a password."""
+    try:
+        run = subprocess.run(['git', '-C', str(main), 'fetch', '--prune', '--quiet', 'origin'], capture_output=True,
+                             text=True, timeout=FETCH_SECONDS, env={**os.environ, 'GIT_TERMINAL_PROMPT': '0'})
+    except subprocess.TimeoutExpired:
+        return False, 'timed out'
+    return run.returncode == 0, run.stderr.strip().splitlines()[-1] if run.stderr.strip() else 'failed'
+
+
+def start_point(main):
+    """(ref, notes): where new work starts: origin's default branch after a fetch, else the last
+    one known here, else the local default branch; None when the repo has no default at all."""
+    notes = []
+    if git(main, 'remote', 'get-url', 'origin', check=False):
+        fetched, why = fetch(main)
+        if not fetched:
+            notes.append(f'could not fetch origin ({why}); starting from the last origin state known here')
+        head = git(main, 'symbolic-ref', '-q', '--short', 'refs/remotes/origin/HEAD', check=False)
+        for ref in (head, 'origin/main', 'origin/master'):
+            if ref and git(main, 'rev-parse', '-q', '--verify', f'refs/remotes/{ref}', check=False):
+                return ref, notes
+    ref = default_ref(main)
+    if ref:
+        notes.append(f'no origin default branch here; starting from the local {ref}')
+    return ref, notes
+
+
+def taken(main, name, folder):
+    """Why `name` cannot be used, or ''. Run after the fetch: origin's branches are then current."""
+    if (main / LINKED / folder).exists() or meta_file(main, folder).exists():
+        return f'{LINKED.as_posix()}/{folder} is taken'
+    if git(main, 'rev-parse', '-q', '--verify', f'refs/heads/{name}', check=False):
+        return 'a local branch of that name exists'
+    if git(main, 'rev-parse', '-q', '--verify', f'refs/remotes/origin/{name}', check=False):
+        return 'origin already has a branch of that name'
+    return ''
+
+
+def cmd_new(args):
+    name = args.name
+    if not WORK_NAME.fullmatch(name):
+        print(f'worktree-guard: a work name looks like <type>/<slug> (lowercase letters, digits and hyphens), '
+              f'for example fix/prune-worktrees; got {name!r}', file=sys.stderr)
+        return 1
+    main, folder = repo_main(args.repo), name.replace('/', '-')
+    ref, notes = start_point(main)
+    why = taken(main, name, folder) if ref else 'the repo has no default branch to start from'
+    if why:
+        print(f'worktree-guard: cannot start {name}: {why}.' + ('' if not ref else ' Pick another name.'),
+              file=sys.stderr)
+        return 1
+    base = git(main, 'rev-parse', f'{ref}^{{commit}}')
+    note, me = naming_for(name)
+    try:
+        linked = make_worktree(main, folder, base, None, source=main, owner=me, table=process_table() if me else None,
+                               meta={'work': name, 'from': ref, 'busy': str(main),
+                                     **({'cli': me['cli'], 'session': me['session']} if me else {})})
+    except RuntimeError as error:
+        print(f'worktree-guard: cannot start {name}: {error}', file=sys.stderr)
+        return 1
+    for line in notes:
+        print(f'worktree-guard: {line}')
+    head = f'worktree-guard: {name} starts in {linked} (from {ref} at {base[:7]}, no branch).'
+    if not me:
+        print(f'{head} Make every change there. Claude Code: call EnterWorktree with path "{linked}"; other CLIs: '
+              f'name files by their paths under {linked}.')
+        return 0
+    moved = {'busy': str(main), 'linked': str(linked), 'name': folder, 'work': name, 'branch': None,
+             'from': ref, 'base': base, 'default': ref, 'owner': None}
+    state = SESSIONS.load(me['session'])
+    SESSIONS.save(me['session'], {**state, 'moved': moved})
+    note.unlink(missing_ok=True)
+    how = (f'Call EnterWorktree with path "{linked}", then make every change there.' if me['cli'] == 'claude' else
+           f'Your tool calls that name files in {main} are moved there automatically; name files by their paths '
+           'there.')
+    print(f'{head} This session owns it. {how}')
     return 0
 
 
@@ -851,6 +1031,10 @@ def parser():
         command = sub.add_parser(name, help=f'switch the worktree flow {name} for the repo (for people)')
         command.add_argument('--repo', help='a folder in the repository (default: here)')
         command.set_defaults(run=cmd_flow)
+    new = sub.add_parser('new', help='start work in its own worktree, from origin\'s default branch, with no branch')
+    new.add_argument('name', help='<type>/<slug>, for example fix/prune-worktrees')
+    new.add_argument('--repo', help='a folder in the repository (default: here)')
+    new.set_defaults(run=cmd_new)
     for name, run, help_text in (('release', cmd_release, "clear a worktree's owner (for people)"),
                                  ('share', cmd_share, 'let any session edit a worktree until its owner ends')):
         command = sub.add_parser(name, help=help_text)

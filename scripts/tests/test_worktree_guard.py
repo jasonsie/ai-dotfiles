@@ -52,6 +52,32 @@ class GitChangesTest(unittest.TestCase):
         self.assertEqual(guard.git_changes('cd a | git commit'), [''])  # a pipe forgets the cd
 
 
+class GuardCallsTest(unittest.TestCase):
+    """The worktree commands a shell line runs, as (verb, arguments): the one reading that
+    person_only and the first-edit naming share."""
+
+    def verbs(self, command):
+        return [verb for verb, _ in guard.guard_calls(command)]
+
+    def test_a_command_in_command_position_is_found_with_its_arguments(self):
+        self.assertEqual(guard.guard_calls('ai-dotfiles worktree new fix/x'), [('new', ['fix/x'])])
+        self.assertEqual(guard.guard_calls('cd /x && FOO=1 ai-dotfiles worktree new --repo . fix/x; ls'),
+                         [('new', ['--repo', '.', 'fix/x', ';', 'ls'])])
+        self.assertEqual(self.verbs('sh -c "ai-dotfiles worktree list"'), ['list'])
+        self.assertEqual(self.verbs('python3 skills/worktree-guard/scripts/worktree_guard.py rm a'), ['rm'])
+
+    def test_text_that_only_mentions_a_command_is_not_one(self):
+        for command in ('echo "ai-dotfiles worktree new fix/x"', 'cat <<EOF\nai-dotfiles worktree new x\nEOF',
+                        'echo ai-dotfiles worktree new x # ai-dotfiles worktree new y', 'ai-dotfiles worktree'):
+            self.assertEqual(guard.guard_calls(command), [], command)
+
+    def test_the_name_is_the_first_argument_that_is_not_an_option(self):
+        self.assertEqual(guard.new_names('ai-dotfiles worktree new fix/x'), ['fix/x'])
+        self.assertEqual(guard.new_names('ai-dotfiles worktree new --repo /a b/c && ls x/y'), ['b/c'])
+        self.assertEqual(guard.new_names('ai-dotfiles worktree list; ai-dotfiles worktree new a/b'), ['a/b'])
+        self.assertEqual(guard.new_names('ai-dotfiles worktree new'), [])
+
+
 class Repo(unittest.TestCase):
     """A temp repo with one commit, guard state of its own, and each CLI's hook input."""
 
@@ -389,7 +415,279 @@ class CommandsTest(Repo):
         self.assertIn('inside a linked worktree', out)
 
 
+class OriginRepo(Repo):
+    """A repo whose origin is a local bare repo, so fetch, push and ls-remote work offline."""
+
+    def setUp(self):
+        super().setUp()
+        base = self.repo.parent
+        self.origin = base / 'origin.git'
+        git(base, 'init', '-q', '--bare', '-b', 'main', str(self.origin))
+        git(self.repo, 'remote', 'add', 'origin', str(self.origin))
+        git(self.repo, 'push', '-q', '-u', 'origin', 'main')
+        git(self.repo, 'remote', 'set-head', 'origin', 'main')
+
+    def advance_origin(self, name='b.txt'):
+        """Another clone pushes a commit, so the main checkout lags (spec D2); returns its sha."""
+        clone = self.repo.parent / 'other'
+        git(self.repo.parent, 'clone', '-q', str(self.origin), str(clone))
+        git(clone, 'config', 'user.email', 't@example.com')
+        git(clone, 'config', 'user.name', 'T')
+        (clone / name).write_text('x\n')
+        git(clone, 'add', '.')
+        git(clone, 'commit', '-q', '-m', 'ahead')
+        git(clone, 'push', '-q', 'origin', 'main')
+        return git(clone, 'rev-parse', 'HEAD')
+
+    def cli(self, *args):
+        out, err = io.StringIO(), io.StringIO()
+        with redirect_stdout(out), redirect_stderr(err):
+            status = guard.main(list(args))
+        return status, out.getvalue() + err.getvalue()
+
+
+class DetachedTest(OriginRepo):
+    """list, rm and prune on a worktree with no branch: where the work name stands in for one."""
+
+    def setUp(self):
+        super().setUp()
+        me = {'session': 's1', 'cli': 'claude', 'pid': ME, 'started': guard.started(ME)}
+        self.wt = guard.make_worktree(self.repo, 'fix-x', self.base, None, source=self.repo, owner=me,
+                                      table=guard.process_table(), meta={'work': 'fix/x', 'from': 'origin/main'})
+
+    def work(self):
+        (self.wt / 'a.txt').write_text('two\n')
+        git(self.wt, 'commit', '-q', '-am', 'change a')
+        return git(self.wt, 'rev-parse', 'HEAD')
+
+    def test_list_names_the_work_where_a_branch_would_be(self):
+        status, out = self.cli('list', '--repo', str(self.repo))
+        self.assertEqual(status, 0, out)
+        self.assertIn('fix-x  fix/x (no branch)  from origin/main  no commits yet  owner: claude session s1', out)
+        self.work()
+        self.assertIn('from origin/main  not merged  owner:', self.cli('list', '--repo', str(self.repo))[1])
+
+    def test_rm_keeps_unpushed_commits_unless_forced_then_tags_the_tip(self):
+        tip = self.work()
+        guard.release('s1')
+        status, out = self.cli('rm', 'fix-x', '--repo', str(self.repo))
+        self.assertEqual(status, 1)
+        self.assertIn('fix/x is neither merged into origin/main nor pushed', out)
+        status, out = self.cli('rm', 'fix-x', '--force', '--repo', str(self.repo))
+        self.assertEqual(status, 0, out)
+        self.assertIn('removed fix-x; archived as archive/x', out)
+        self.assertEqual(git(self.repo, 'rev-list', '-n', '1', 'archive/x'), tip)
+        self.assertFalse(self.wt.exists())
+        self.assertEqual(git(self.repo, 'branch', '--list'), '* main')
+
+    def test_rm_lets_go_of_pushed_work_and_of_work_with_no_commits(self):
+        tip = self.work()
+        guard.release('s1')
+        git(self.wt, 'push', '-q', 'origin', 'HEAD:refs/heads/fix/x')
+        status, out = self.cli('rm', 'fix-x', '--repo', str(self.repo))
+        self.assertEqual(status, 0, out)
+        self.assertEqual(git(self.repo, 'rev-list', '-n', '1', 'archive/x'), tip)
+        self.assertIn('archive/x pushed to origin', out)
+        guard.make_worktree(self.repo, 'fix-y', self.base, None, source=self.repo, meta={'work': 'fix/y'})
+        status, out = self.cli('rm', 'fix-y', '--repo', str(self.repo))
+        self.assertEqual(status, 0, out)
+        self.assertIn('no commits of its own, no tag', out)
+
+    def test_prune_removes_a_clean_unowned_one_and_keeps_the_rest(self):
+        guard.make_worktree(self.repo, 'fix-y', self.base, None, source=self.repo, meta={'work': 'fix/y'})
+        self.assertIn('removed fix-y', self.cli('prune', '--repo', str(self.repo))[1])
+        self.assertTrue(self.wt.exists())  # still owned
+
+
+class NewTest(OriginRepo):
+    """`worktree new <type>/<slug>`: a detached worktree from a freshly fetched origin default."""
+
+    def new(self, name='fix/x'):
+        return self.cli('new', name, '--repo', str(self.repo))
+
+    def test_it_starts_from_the_fetched_origin_default_with_no_branch(self):
+        (self.repo / '.worktreeinclude').write_text('.env\n')
+        (self.repo / '.env').write_text('SECRET=1\n')
+        ahead = self.advance_origin()
+        self.assertNotEqual(git(self.repo, 'rev-parse', 'HEAD'), ahead)  # the main checkout lags
+        status, out = self.new()
+        linked = self.linked('fix-x')
+        self.assertEqual(status, 0, out)
+        self.assertIn(str(linked), out)
+        self.assertEqual(git(linked, 'rev-parse', 'HEAD'), ahead)
+        self.assertEqual(subprocess.run(['git', '-C', str(linked), 'symbolic-ref', '-q', 'HEAD']).returncode, 1)
+        self.assertEqual(git(self.repo, 'branch', '--list'), '* main')
+        self.assertEqual((linked / '.env').read_text(), 'SECRET=1\n')  # an included ignored file
+        meta = guard.read_meta(self.repo, 'fix-x')
+        self.assertEqual((meta['work'], meta['branch'], meta['base'], meta['from']), ('fix/x', None, ahead, 'origin/main'))
+
+    def test_the_default_comes_from_origin_even_when_its_head_was_never_set(self):
+        git(self.repo, 'remote', 'set-head', 'origin', '-d')
+        ahead = self.advance_origin()
+        self.assertEqual(self.new()[0], 0)
+        self.assertEqual(git(self.linked('fix-x'), 'rev-parse', 'HEAD'), ahead)
+
+    def test_a_taken_name_is_refused_and_nothing_is_made(self):
+        self.assertEqual(self.new()[0], 0)
+        status, out = self.new()
+        self.assertEqual(status, 1)
+        self.assertIn('fix/x: .claude/worktrees/fix-x is taken', out)
+        git(self.repo, 'push', '-q', 'origin', 'HEAD:refs/heads/fix/y')
+        status, out = self.new('fix/y')
+        self.assertEqual(status, 1)
+        self.assertIn('fix/y: origin already has a branch of that name', out)
+        git(self.repo, 'branch', 'fix/z')
+        status, out = self.new('fix/z')
+        self.assertEqual(status, 1)
+        self.assertIn('fix/z: a local branch of that name exists', out)
+        self.assertEqual(sorted(p.name for p in (self.repo / '.claude/worktrees').iterdir()), ['fix-x', 'fix-x.json'])
+
+    def test_a_name_must_be_type_slash_slug(self):
+        for name in ('fix', 'Fix/x', 'fix/', '/x', 'fix/x/y', 'fix/x y', '../x', 'fix/-x'):
+            status, out = self.new(name)
+            self.assertEqual(status, 1, name)
+            self.assertIn('<type>/<slug>', out)
+        self.assertFalse((self.repo / '.claude').exists())
+
+    def test_offline_it_starts_from_the_last_origin_state_and_says_so(self):
+        git(self.repo, 'remote', 'set-url', 'origin', str(self.repo.parent / 'gone.git'))
+        status, out = self.new()
+        self.assertEqual(status, 0, out)
+        self.assertIn('could not fetch origin', out)
+        self.assertEqual(git(self.linked('fix-x'), 'rev-parse', 'HEAD'), self.base)
+
+    def test_without_an_origin_it_starts_from_the_local_default(self):
+        git(self.repo, 'remote', 'remove', 'origin')
+        status, out = self.new()
+        self.assertEqual(status, 0, out)
+        self.assertIn('no origin', out)
+        self.assertEqual(git(self.linked('fix-x'), 'rev-parse', 'HEAD'), self.base)
+
+    def test_a_worktree_nobody_bound_is_unowned_and_the_message_covers_every_cli(self):
+        status, out = self.new()
+        self.assertEqual(status, 0, out)
+        self.assertFalse(guard.claim_file(self.linked('fix-x')).exists())
+        self.assertIn(f'Claude Code: call EnterWorktree with path "{self.linked("fix-x")}"', out)
+        self.assertIn('other CLIs', out)
+
+
 CLIS = ('claude', 'codex', 'pi', 'agy')
+
+
+class BoundTest(OriginRepo):
+    """The session that ran `worktree new` owns the worktree, and its later calls land there."""
+
+    def setUp(self):
+        super().setUp()
+        self.assertEqual(self.cli('on', '--repo', str(self.repo))[0], 0)
+
+    def say(self, cli, session, pid, command):
+        """The pre-hook call for a shell command the agent is about to run."""
+        if cli == 'agy':
+            return self.run_hook('agy', {'conversationId': session, 'workspacePaths': [str(self.repo)], 'pid': pid,
+                                         'toolCall': {'name': 'run_command',
+                                                      'args': {'CommandLine': command, 'Cwd': str(self.repo)}}})
+        return self.shell(cli, session, pid, command)
+
+    def new(self, cli, session, pid, name):
+        """What an agent does: the hook sees `worktree new`, then the command runs."""
+        reply = self.say(cli, session, pid, f'ai-dotfiles worktree new {name}')
+        status, out = self.cli('new', name, '--repo', str(self.repo))
+        self.assertEqual(status, 0, out)
+        return reply, out
+
+    def plain(self, cli, reply):
+        return reply is None or reply == {'decision': 'allow'}
+
+    def test_every_cli_is_told_or_steered_and_its_edits_never_land_in_the_main_checkout(self):
+        for cli in CLIS:
+            session, name = f'{cli}-sess', f'fix/{cli}'
+            linked = self.linked(f'fix-{cli}')
+            reply, out = self.new(cli, session, ME, name)
+            self.assertTrue(self.plain(cli, reply), (cli, reply))  # the command keeps its own permissions
+            claim = guard.read_claim(guard.claim_file(linked))
+            self.assertEqual((claim['session'], claim['cli'], claim['pid']), (session, cli, ME), cli)
+            self.assertEqual(guard.SESSIONS.load(session)['moved']['linked'], str(linked), cli)
+            self.assertEqual('EnterWorktree' in out, cli == 'claude', (cli, out))
+            if cli == 'claude':
+                self.assertIn(f'Call EnterWorktree with path "{linked}"', out)
+            else:
+                self.assertIn('moved there automatically', out)
+            aimed = self.edit(cli, session, ME)  # at the main checkout's a.txt
+            if cli == 'claude':
+                reason = aimed['hookSpecificOutput']['permissionDecisionReason']
+                self.assertEqual(aimed['hookSpecificOutput']['permissionDecision'], 'deny')
+                self.assertIn(str(linked), reason)
+                self.assertNotIn('worktree new', reason)
+            elif cli == 'codex':
+                self.assertIn(f'*** Update File: .claude/worktrees/fix-{cli}/a.txt',
+                              aimed['hookSpecificOutput']['updatedInput']['command'])
+            elif cli == 'pi':
+                self.assertEqual(aimed['input']['path'], str(linked / 'a.txt'))
+            else:
+                self.assertEqual(aimed['overwrite']['TargetFile'], str(linked / 'a.txt'))
+            inside = self.edit(cli, session, ME, path=f'.claude/worktrees/fix-{cli}/a.txt')
+            self.assertTrue(self.plain(cli, inside), (cli, inside))
+        self.assertEqual(git(self.repo, 'status', '--porcelain'), '')
+        self.assertEqual(git(self.repo, 'branch', '--list'), '* main')
+
+    def test_a_tree_changing_git_command_follows_the_session_into_its_worktree(self):
+        self.new('codex', 'cdx', ME, 'fix/c')
+        steered = self.shell('codex', 'cdx', ME, 'git commit -am x')['hookSpecificOutput']['updatedInput']['command']
+        self.assertTrue(steered.startswith(f"cd '{self.linked('fix-c')}' && git commit"), steered)
+
+    def test_two_sessions_work_side_by_side_and_cannot_touch_each_others_worktree(self):
+        self.new('codex', 'aaaa1111', ME, 'fix/a')
+        self.new('pi', 'bbbb2222', PARENT, 'fix/b')
+        mine = self.edit('pi', 'bbbb2222', PARENT)
+        self.assertEqual(mine['input']['path'], str(self.linked('fix-b') / 'a.txt'))
+        theirs = self.edit('pi', 'bbbb2222', PARENT, path='.claude/worktrees/fix-a/a.txt')
+        self.assertTrue(theirs['block'], theirs)
+        self.assertIn('codex session aaaa1111', theirs['reason'])
+        self.assertEqual(sorted(p.name for p in (self.repo / '.claude/worktrees').iterdir()),
+                         ['fix-a', 'fix-a.json', 'fix-b', 'fix-b.json'])  # no agent/ worktree was made
+        self.assertEqual(git(self.repo, 'branch', '--list'), '* main')
+
+    def test_a_session_that_has_not_named_its_work_cannot_edit_anothers_worktree(self):
+        self.new('codex', 'aaaa1111', ME, 'fix/a')
+        reply = self.edit('claude', 'cccc3333', PARENT, path='.claude/worktrees/fix-a/a.txt')
+        out = reply['hookSpecificOutput']
+        self.assertEqual(out['permissionDecision'], 'deny')
+        self.assertIn('codex session aaaa1111', out['permissionDecisionReason'])
+        self.assertEqual(git(self.repo, 'branch', '--list'), '* main')
+
+    def test_a_command_run_by_nobody_the_hook_saw_is_unbound(self):
+        self.say('claude', 'sess', dead_pid(), 'ai-dotfiles worktree new fix/x')  # not this process's CLI
+        self.assertEqual(self.cli('new', 'fix/x', '--repo', str(self.repo))[0], 0)
+        self.assertFalse(guard.claim_file(self.linked('fix-x')).exists())
+        self.assertNotIn('moved', guard.SESSIONS.load('sess'))
+        self.say('claude', 'sess', ME, 'ai-dotfiles worktree new fix/other')  # another name
+        self.assertEqual(self.cli('new', 'fix/y', '--repo', str(self.repo))[0], 0)
+        self.assertFalse(guard.claim_file(self.linked('fix-y')).exists())
+
+    def test_text_that_only_mentions_the_command_records_nothing(self):
+        self.say('claude', 'sess', ME, 'echo "ai-dotfiles worktree new fix/x"')
+        self.say('claude', 'sess', ME, 'ai-dotfiles worktree list')
+        self.assertEqual(self.cli('new', 'fix/x', '--repo', str(self.repo))[0], 0)
+        self.assertFalse(guard.claim_file(self.linked('fix-x')).exists())
+
+    def test_a_record_goes_stale_and_is_used_once(self):
+        self.say('claude', 'sess', ME, 'ai-dotfiles worktree new fix/x')
+        with patch.object(guard.time, 'time', return_value=time.time() + 3600):
+            self.assertEqual(self.cli('new', 'fix/x', '--repo', str(self.repo))[0], 0)
+        self.assertFalse(guard.claim_file(self.linked('fix-x')).exists())
+        self.say('claude', 'sess', ME, 'ai-dotfiles worktree new fix/y')
+        self.assertEqual(self.cli('new', 'fix/y', '--repo', str(self.repo))[0], 0)
+        self.assertTrue(guard.claim_file(self.linked('fix-y')).exists())
+        self.assertEqual(self.cli('new', 'fix/y', '--repo', str(self.repo))[0], 1)  # taken; the record is gone
+        self.assertEqual(list((guard.state_root() / 'naming').glob('*.json')), [])
+
+    def test_the_session_in_the_cli_process_above_the_command_is_the_one_bound(self):
+        self.say('claude', 'sess', PARENT, 'ai-dotfiles worktree new fix/x')  # the CLI is this process's parent
+        self.assertEqual(self.cli('new', 'fix/x', '--repo', str(self.repo))[0], 0)
+        self.assertEqual(guard.read_claim(guard.claim_file(self.linked('fix-x')))['pid'], PARENT)
+
+
 STOP = 'ai-dotfiles worktree new <type>/<slug>'
 
 
