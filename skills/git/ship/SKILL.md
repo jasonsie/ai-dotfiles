@@ -22,7 +22,7 @@ For the agent, once its task is done and committed in the worktree `ai-dotfiles 
 | Step | What |
 |---|---|
 | preflight | no tracked changes; commits ahead of the default branch |
-| checks | the commands of the repo's `AGENTS.md` "Verify" block, run in the worktree; a repo with none has no checks |
+| checks | the commands of the repo's `AGENTS.md` "Verify" block, run in the worktree; a repo with no Verify block stops here unless `--no-checks` |
 | push | HEAD as the new branch `<type>/<slug>` (the work name); a branch of that name already on origin at another commit is refused |
 | pr | the PR against the default branch (`open-pr`); one already open is reused |
 | worktree | deleted once the PR exists, by `worktree shipped`; your session's record of it is cleared |
@@ -42,7 +42,8 @@ The message names the step, e.g. `ship stopped at checks: ...`; nothing is undon
 - **preflight, the work name is not `<type>/<slug>`**: the worktree was made by `claude -w foo` or
   by a subagent, so its name is Claude's, never a branch. Rerun with `--work <type>/<slug>`.
 - **checks**: the message names the failing command. Fix it in the worktree, commit, rerun.
-  Nothing was pushed.
+  Nothing was pushed. "No Verify block": the repo has no checks to run; ask the user whether to
+  add one or ship with `--no-checks`.
 - **push, origin has the branch** (PR fix): it moved on, or origin refused the push (a protected
   branch). Nothing is deleted; fix the cause and rerun.
 - **push, origin already has the branch**: the name is taken. Start the work under another name

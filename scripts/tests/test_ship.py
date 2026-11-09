@@ -215,11 +215,24 @@ class ShipTest(unittest.TestCase):
             self.assertIn(line, output)
         self.assertIn('would ship', output)
 
-    def test_a_repo_without_a_verify_block_has_no_checks(self):
+    def test_a_repo_without_a_verify_block_stops_before_the_push_unless_no_checks_is_passed(self):
         (self.linked / 'AGENTS.md').write_text('# Repo\n')
-        code, output, err, fake = self.ship()
+        code, _, err, fake = self.ship()
+        self.assertEqual(code, 1)
+        self.assertIn('checks: AGENTS.md has no Verify block; add one, or pass --no-checks to ship without checks', err)
+        self.assertEqual(fake.ran('bash -c') + fake.ran('git push') + fake.ran('gh pr create'), [])
+        self.shipped.assert_not_called()
+        (self.linked / 'AGENTS.md').unlink()  # no AGENTS.md at all is the same
+        self.assertEqual(self.ship()[0], 1)
+        code, output, err, fake = self.ship(['--no-checks', '--title', 't', '--body-file', str(self.body)])
         self.assertEqual(code, 0, err)
-        self.assertIn('checks     none: AGENTS.md has no Verify block', output)
+        self.assertIn('checks     skipped (--no-checks)', output)
+        self.assertEqual(fake.ran('bash -c'), [])
+        self.assertTrue(fake.ran('git push'))
+
+    def test_no_checks_skips_a_verify_block_that_is_there(self):
+        code, output, err, fake = self.ship(['--no-checks', '--title', 't', '--body-file', str(self.body)])
+        self.assertEqual(code, 0, err)
         self.assertEqual(fake.ran('bash -c'), [])
 
 

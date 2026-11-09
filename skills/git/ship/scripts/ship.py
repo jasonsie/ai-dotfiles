@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """ship: finish the work of a worktree: checks, push as <type>/<slug>, PR, worktree deleted.
 
-  ai-dotfiles ship --title T --body-file F [--work <type>/<slug>] [--dry-run]     run from inside the worktree
+  ai-dotfiles ship --title T --body-file F [--work <type>/<slug>] [--no-checks] [--dry-run]     run from inside the worktree
 
 For an agent that worked in a worktree made by `ai-dotfiles worktree new <type>/<slug>` (no
 branch) and has committed. In order, each skipped when already done, so a stopped run can be
@@ -9,7 +9,8 @@ rerun from the same worktree:
 
   preflight   committed (no tracked changes), commits ahead of the base           (git_run)
   checks      the commands of the repo's AGENTS.md "Verify" block, in the worktree; the first
-              failure stops the run before anything is pushed
+              failure stops the run before anything is pushed, and so does a repo with no
+              Verify block, unless --no-checks is passed
   push        HEAD as the new branch <type>/<slug>; a branch of that name already on origin at
               another commit is refused                                           (git push)
   pr          the PR against the base from --title and --body-file, or the one already open
@@ -68,12 +69,15 @@ def checks_of(text):
     return commands
 
 
-def checks(top, dry):
-    """Run the repo's checks in the worktree; the first failure stops the run."""
+def checks(top, dry, skip=False):
+    """Run the repo's checks in the worktree; the first failure stops the run. A repo with no
+    Verify block stops it too, unless `skip` (--no-checks): shipping unchecked is a choice."""
+    if skip:
+        return 'skipped (--no-checks)'
     agents = Path(top) / 'AGENTS.md'
     commands = checks_of(agents.read_text()) if agents.is_file() else []
     if not commands:
-        return 'none: AGENTS.md has no Verify block'
+        raise Stop('checks: AGENTS.md has no Verify block; add one, or pass --no-checks to ship without checks')
     for command in commands:
         if dry:
             git_run.act(['bash', '-c', command], dry)
@@ -164,7 +168,7 @@ def run(args):
             raise Stop(f'ship: no PR for {work} yet; pass --title and --body-file (pr skill)')
         if not os.path.isfile(args.body_file):
             raise Stop(f'ship: body file not found: {args.body_file}')
-    step('checks', checks(top, dry))
+    step('checks', checks(top, dry, args.no_checks))
     step('push', (update if number else push)(repo, dry))
     if number:
         step('pr', f'#{number} updated')
@@ -188,6 +192,8 @@ def run(args):
 
 def configure(parser):
     parser.prog = 'ai-dotfiles ship'
+    parser.add_argument('--no-checks', action='store_true',
+                        help="ship without running checks; needed when the repo's AGENTS.md has no Verify block")
     parser.add_argument('--work', metavar='<type>/<slug>',
                         help='the branch to ship as, when the worktree is named something else (made by claude -w or a subagent)')
     parser.add_argument('--title', help='the PR title, when no PR is open for the work (not for a PR fix)')
