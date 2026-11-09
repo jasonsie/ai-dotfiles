@@ -11,19 +11,6 @@ one session: the first session to edit a worktree owns it until it ends, and ano
 session's edit there is refused. The hook in [scripts/worktree_guard.py](scripts/worktree_guard.py)
 does the gating; this skill is what a session does.
 
-## Older agent worktrees
-
-The guard used to move a second session's first edit into `.claude/worktrees/<cli>-<session>`
-on branch `agent/<cli>-<session>`. It no longer makes them; ones already there stay and are
-the person's to clear:
-
-- `ai-dotfiles worktree list` shows them; from inside one, `ai-dotfiles worktree done
-  "<one-line description>"` records its summary.
-- `ai-dotfiles worktree rm <name>` archives the branch as `archive/<name>` (the description
-  becomes the tag's), then deletes worktree and branch; merge the branch first
-  (`git merge <branch>` in the main checkout), or it refuses an unmerged one without `--force`.
-  `prune` removes every merged, clean, unowned one.
-
 ## Commands
 
 `ai-dotfiles worktree on | off | new | pr | shipped | list | done | rm | prune | release | share`; `--help`
@@ -129,3 +116,16 @@ Desktop app), so use `worktree new` from a session started in the repo instead.
 - **"worktree-guard failed ... not protected"**: that edit ran unguarded; say so in your reply.
 - The guard sees file-edit tools and git; in a repo that is on, change files through those
   rather than `sed -i`, redirects or generators.
+
+## Older agent worktrees
+
+The guard used to move a second session's first edit into `.claude/worktrees/<cli>-<session>`
+on branch `agent/<cli>-<session>`. It no longer makes them; ones already there stay and are
+the person's to clear:
+
+- `ai-dotfiles worktree list` shows them; from inside one, `ai-dotfiles worktree done
+  "<one-line description>"` records its summary.
+- `ai-dotfiles worktree rm <name>` archives the branch as `archive/<name>` (the description
+  becomes the tag's), then deletes worktree and branch; merge the branch first
+  (`git merge <branch>` in the main checkout), or it refuses an unmerged one without `--force`.
+  `prune` removes every merged, clean, unowned one.

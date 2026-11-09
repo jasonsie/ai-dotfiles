@@ -271,7 +271,8 @@ session as JSON on stdin and shows what it prints.
   `model-with-reasoning`, `codex-version`, `context-remaining`) and cannot follow a steered
   session, so its footer keeps showing the main checkout: **a gap, not emulated**. Instead
   worktree-guard answers the session's next tool call after a worktree is made or deleted with
-  a one-line notice (a `systemMessage`): `fix/x works in <path>`, then `fix/x is deleted; the
+  a one-line notice (a `systemMessage`, Codex's own channel for a line to the person: native, not a
+  shim): `fix/x works in <path>`, then `fix/x is deleted; the
   session is back in <repo>`. The notice comes with the next call, not the moment the worktree
   changes, so a deletion by `ship` is told only if the session makes another call.
   **Pi**'s built-in footer already shows the folder, branch, model, thinking level, context and
@@ -326,6 +327,7 @@ skills/git/                          a bundle; the installer links each skill by
   merge-pr/      ai-dotfiles git merge     a merge commit
   prune-branch/  ai-dotfiles git prune     base pulled; branch deleted locally and on origin
   approve/       ai-dotfiles approve       preflight, then the six above, in that order
+  ship/          ai-dotfiles ship          an agent's finish: checks, push as <type>/<slug>, PR, worktree deleted
 ```
 
 - **Steps:** preflight (a branch other than the base, no tracked changes), then the six.
@@ -335,6 +337,13 @@ skills/git/                          a bundle; the installer links each skill by
   worktree: reviewer approval, archive tag at the PR head, merge commit, remote branch deleted,
   then the main checkout fast-forwarded only when git can without touching uncommitted files
   (never a stash or reset; otherwise skipped, with the reason). Each step is skipped when done.
+- **Ship:** `ai-dotfiles ship` is the agent's own finish, before the person reviews: in the worktree
+  `worktree new` made (no branch) it runs the checks (the commands of the repo's `AGENTS.md`
+  Verify block), pushes HEAD as `<type>/<slug>`, opens the PR and deletes the worktree. It stops
+  with no Verify block unless `--no-checks`, and, for a worktree whose name is not
+  `<type>/<slug>` (made by `claude -w` or a subagent), unless `--work <type>/<slug>` names the
+  branch. In a worktree `worktree pr <n>` made it pushes to that PR's own branch, fast-forward
+  only, and opens no PR. It makes no archive tag: `approve <n>` tags the PR's head.
 - **The reviewer:** GitHub refuses self-approval, so each repo names its own reviewer login,
   cached in `git config --local approve.reviewer`. None cached: exit 3, and the agent asks
   the user and reruns with `--reviewer LOGIN`. A login is cached only once it has a `gh auth`
@@ -344,7 +353,8 @@ skills/git/                          a bundle; the installer links each skill by
   tip, pushed before the merge commit, in the one format `archive-tag` owns: the commits' date
   span, the PR title, "merged and deleted", and a `PR:` line. A name taken by another commit
   gets the date; a tag already at the tip is reused.
-- **`--dry-run`** prints each change it would make; read-only commands still run.
+- **`--dry-run`** prints each change it would make; read-only commands still run. A dry run of
+  `approve <n>` fetches nothing, since a fetch writes refs.
 
 ## Upstream updates
 
@@ -407,3 +417,17 @@ skills/git/                          a bundle; the installer links each skill by
   where one exists, else documented; the plugin's job, not this repo's.
 - **Emitted vs verified:** writing a config is not proof that it works. Verified means the
   CLI itself reports it (`mcp list`, a session listing the skill, `codex debug prompt-input`).
+- **Flow switch:** the repo-local git config `worktree-guard.flow`, set by `ai-dotfiles worktree on`
+  and cleared by `off`; both are the person's, and the guard refuses them from an agent. A repo
+  that is off gets nothing from the guard. Claude's `WorktreeCreate` hook still runs there, only to
+  reproduce Claude's own default (a branch `worktree-<name>` from the session's HEAD).
+- **Work name:** `<type>/<slug>` (for example `fix/prune-worktrees`), what a task is called. It
+  names the worktree folder (`fix-prune-worktrees`) and, when shipped, the branch and the PR.
+- **First-edit gate:** in a repo that is on, a session's first edit in the main checkout is
+  stopped with "name this work"; `ai-dotfiles worktree new <type>/<slug>` makes the worktree, and
+  the edits go there. Only the main checkout and `.claude/worktrees/` are gated or claimed.
+- **Ship:** an agent's finish in its worktree (`ai-dotfiles ship`): checks, push, PR, worktree
+  deleted. The person's `approve <n>` follows.
+- **Leftover:** a linked worktree whose owner is gone. One with nothing to lose is deleted when a
+  worktree is made or a session ends; one holding uncommitted files or unpushed commits stays,
+  listed as LEFT BEHIND, until a session takes it over or `worktree rm` drops it.
