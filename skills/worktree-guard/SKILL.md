@@ -68,6 +68,20 @@ Run `new` as its own command in the shell, not inside a script or a quoted strin
 that binds the worktree to your session reads the command line. Run by hand (no session
 bound), it still makes the worktree and prints its path; the first edit there claims it.
 
+## Leftovers
+
+When a worktree is made, and when a session ends, the guard deletes the linked worktrees whose
+owner is gone and that have nothing to lose: no uncommitted or untracked files, and every
+commit on a remote-tracking ref (pushed). One nobody has claimed yet is spared for an hour.
+Anything else stays, and `list` marks it `LEFT BEHIND: owner gone, 2 commits not pushed, 1 file
+uncommitted`.
+
+- **Take it over.** Enter it (Claude Code: `EnterWorktree` with its path) and make your first
+  edit there: you own it, and the guard names the uncommitted files and unpushed commits you
+  now hold. Finish or discard them, then push.
+- **Or drop it.** `ai-dotfiles worktree rm <name>` archive-tags its tip as `archive/<name>`,
+  then deletes it; it refuses unpushed or uncommitted work without `--force`.
+
 ## Claude's own worktrees
 
 The installer adds Claude Code `WorktreeCreate` and `WorktreeRemove` hooks (Claude Code only;
