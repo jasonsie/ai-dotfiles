@@ -7,6 +7,7 @@
   worktree-guard rm     NAME [--force] [--repo DIR]   archive tag, then remove worktree and branch
   worktree-guard prune  [--repo DIR]                  rm every merged, clean, unowned one
   worktree-guard on|off [--repo DIR]                  switch the repo's worktree flow (people only)
+  worktree-guard new    <type>/<slug> [--repo DIR]    a detached worktree from origin's default branch
   worktree-guard release [PATH]                       clear a worktree's owner (people only)
   worktree-guard share   [PATH]                       let any session edit it (people only)
 
@@ -20,8 +21,13 @@ their parent's ownership. A failure never blocks an edit; it says the edit was n
 
 A repo whose flow is on (git config --local worktree-guard.flow true, set by `on`) is stricter:
 an edit of a file in its main checkout is stopped, and the agent is asked to name the work with
-`ai-dotfiles worktree new <type>/<slug>`. The edited file's repo decides, wherever the session
-started; a file outside git is never gated.
+`ai-dotfiles worktree new <type>/<slug>`. That fetches origin and makes .claude/worktrees/
+<type>-<slug> detached at origin's default branch, with no local branch. The hook notes which
+session is about to run it (naming/<CLI pid>.json); the command finds the note by its own pid or
+an ancestor's, claims the worktree for that CLI process and records it in the session's state,
+so Claude is told to call EnterWorktree and Codex, Pi and Antigravity are steered. Another
+session's worktree is refused. The edited file's repo decides, wherever the session started; a
+file outside git is never gated.
 
 State: $WORKTREE_GUARD_STATE, else ~/.local/state/ai-dotfiles/worktree-guard/ (claims/ per
 worktree, sessions/ per session). The CLIs' hook formats live in the repo's
