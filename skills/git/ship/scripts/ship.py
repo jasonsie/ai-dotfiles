@@ -43,7 +43,6 @@ import open_pr  # noqa: E402
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / 'worktree-guard' / 'scripts'))
 import worktree_guard as guard  # noqa: E402  (the sidecar of a worktree, and its removal)
 
-GUARD = Path(guard.__file__).resolve()
 HEADING = re.compile(r'^#{1,6}\s+(.*?)\s*$')
 FENCE = re.compile(r'^\s*```\s*(bash|sh|shell|zsh)?\s*$')
 COMMENT = re.compile(r'\s+#.*$')
@@ -83,11 +82,16 @@ def checks(top, dry):
     return f'{len(commands)} passed' if not dry else f'{len(commands)} to run'
 
 
+def on_origin(branch):
+    """The commit origin has for `branch`, or '' when it has none."""
+    listing = git_run.out(['git', 'ls-remote', '--heads', 'origin', f'refs/heads/{branch}'], what='git ls-remote')
+    found = [line.split() for line in listing.splitlines()]
+    return next((sha for sha, ref in found if ref == f'refs/heads/{branch}'), '')
+
+
 def push(repo, dry):
     """HEAD as the new branch; a rerun after a stop finds it at the same commit and moves on."""
-    listing = git_run.out(['git', 'ls-remote', '--heads', 'origin', f'refs/heads/{repo.branch}'], what='git ls-remote')
-    found = [line.split() for line in listing.splitlines()]
-    remote = next((sha for sha, ref in found if ref == f'refs/heads/{repo.branch}'), '')
+    remote = on_origin(repo.branch)
     if remote == repo.tip:
         return 'already pushed'
     if remote:
@@ -100,9 +104,7 @@ def push(repo, dry):
 def update(repo, dry):
     """HEAD onto the PR's own branch (a worktree `worktree pr` made): the one case a branch already
     on origin may be pushed to, and only fast-forward: a branch that moved on stops the run."""
-    listing = git_run.out(['git', 'ls-remote', '--heads', 'origin', f'refs/heads/{repo.branch}'], what='git ls-remote')
-    found = [line.split() for line in listing.splitlines()]
-    remote = next((sha for sha, ref in found if ref == f'refs/heads/{repo.branch}'), '')
+    remote = on_origin(repo.branch)
     if remote == repo.tip:
         return 'already pushed'
     if not remote:
@@ -152,17 +154,17 @@ def run(args):
     else:
         pr, said = open_pr.pull_request(repo, args.title, args.body_file, dry)
         step('pr', said)
-    command = ['python3', str(GUARD), 'shipped', top.name, '--repo', str(main)]
     if dry:
-        git_run.act(command, dry)
+        print(f'   would  delete the worktree {top.name} (worktree shipped)')
         print(f'would ship {pr["url"]}')
         return
-    code, stdout, stderr = git_run.sh(command, cwd=str(main))
+    done, lines = guard.shipped(main, top.name)
+    said = ' '.join(lines).replace('worktree-guard: ', '')
     print(f'shipped {pr["url"]}')
-    if code != 0:
-        raise Stop(f'worktree: {(stderr or stdout or f"exit {code}").replace("worktree-guard: ", "")}; '
-                   f'the PR is open; remove it with ai-dotfiles worktree rm {top.name} once it is clean')
-    step('worktree', stdout.replace('worktree-guard: ', '') or f'{top.name} deleted')
+    if not done:
+        raise Stop(f'worktree: {said}; the PR is open; remove it with ai-dotfiles worktree rm {top.name} once '
+                   f'it is clean')
+    step('worktree', said or f'{top.name} deleted')
     print(f'Back in {main}. Claude Code: call ExitWorktree (action keep) or cd there; the next first '
           f'edit starts a new task.')
 
