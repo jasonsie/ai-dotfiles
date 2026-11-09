@@ -31,6 +31,13 @@ describes each. `shipped` is what `ship` runs. `on`/`off`, `release` (clear a st
 edit a worktree) are the person's, run in a terminal; the guard refuses them from an agent,
 so ask the user.
 
+## Where the work shows
+
+Claude Code's and Antigravity's status lines show the work name while the session has a worktree.
+Pi's footer shows it as the `worktree` status. Codex's footer cannot follow a steered session (it
+keeps showing the main checkout), so on the session's next tool call after a worktree is made or
+deleted the guard tells Codex in one line. Not an error: the notice is how Codex shows it.
+
 ## Flow switch
 
 `ai-dotfiles worktree on` sets the local git config `worktree-guard.flow true` in a repo;

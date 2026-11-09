@@ -38,6 +38,10 @@ commit on a remote-tracking ref. A worktree nobody has claimed yet is left alone
 rest are never removed automatically: `list` marks them LEFT BEHIND with counts, a new session that
 edits there takes them over, and `rm` archive-tags before deleting.
 
+Codex and Pi, which have no status line that follows a steered session, hear it on their next tool
+call when the session's worktree was made or deleted: Codex as a line of its own (systemMessage), Pi
+as the work name for its footer status (or none).
+
 Claude Code's own worktrees (`claude -w`, EnterWorktree with a name, subagent isolation) go through
 its WorktreeCreate and WorktreeRemove hooks. In a repo that is on they are made in the same shape
 as `new` makes them; in any other repo exactly as Claude makes them (.claude/worktrees/<name> on
@@ -69,7 +73,7 @@ import time
 SKILL = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(SKILL.parents[1] / 'scripts'))
 import agent_hooks  # noqa: E402  (the CLIs' hook formats, in the repo's scripts folder)
-from agent_hooks import Deny, Note, Rewrite  # noqa: E402
+from agent_hooks import Deny, Note, Rewrite, Shown  # noqa: E402
 sys.path.insert(0, str(SKILL.parent / 'git' / 'scripts'))
 import git_run  # noqa: E402  (the git bundle's runner)
 git_run.use('archive-tag')
@@ -608,8 +612,41 @@ STOP = ('worktree-guard: this repo works through worktrees, and its main checkou
         'fix/prune-worktrees), then make this change there.')
 
 
+def seen_work(state):
+    """(work name, main checkout) of the worktree `worktree new` bound the session to, while it is
+    there; None otherwise, and for a record with no work name (one an older guard wrote)."""
+    moved = state.get('moved')
+    if isinstance(moved, dict) and moved.get('work') and Path(str(moved.get('linked'))).is_dir():
+        return moved['work'], moved.get('busy', '')
+    return None
+
+
+def tell(event, state, reply):
+    """`reply` with a line for the person when the session's worktree was made or deleted since it
+    was last told. Codex has no status line that follows a steered session and Pi's footer is set by
+    its extension, so both hear it on their next tool call; the others show it themselves."""
+    if event.kind != 'pre' or event.cli not in ('codex', 'pi'):
+        return reply
+    now, before = seen_work(state), state.get('shown')
+    if now == (tuple(before) if before else None):
+        return reply
+    if now is None:
+        state.pop('shown')
+        text = f'worktree-guard: {before[0]} is deleted; the session is back in {before[1]}'
+    else:
+        state['shown'] = list(now)
+        text = (f"worktree-guard: {now[0]} works in {state['moved']['linked']}; "
+                'the footer may still show the main checkout')
+    return Shown(reply, text, now[0] if now else None)
+
+
 def decide(event, state, table=None):
     """The reply to one hook call; `state` is the session's, saved by agent_hooks.call."""
+    return tell(event, state, route(event, state, table))
+
+
+def route(event, state, table=None):
+    """What the guard does with one hook call, before telling the person anything."""
     if event.kind == 'end':
         for main in {main_of(w) for w in release(event.session) if w.is_dir()}:
             sweep(main, gone=True)

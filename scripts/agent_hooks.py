@@ -97,6 +97,16 @@ class Rewrite:
     note: str = ''
 
 
+@dataclass(frozen=True)
+class Shown:
+    """A 'pre' reply that also tells the person something: `reply` (None for nothing else) is rendered
+    as usual. Claude Code and Codex show `text` as a warning; Pi's extension sets its footer status to
+    `status` (None clears it); Antigravity has no such channel and gets `reply` only."""
+    reply: object
+    text: str
+    status: str | None = None
+
+
 def action_of(cli, tool):
     for action, names in TOOLS.get(cli, {}).items():
         if tool in names:
@@ -131,7 +141,12 @@ def read(cli, kind, data):
 
 def render_pre(cli, reply):
     """A 'pre' reply: Claude Code and Codex share hookSpecificOutput; Antigravity always wants
-    a decision; Pi's extension applies block, input and note itself."""
+    a decision; Pi's extension applies block, input, note and status itself."""
+    if isinstance(reply, Shown):
+        out = render_pre(cli, reply.reply)
+        if cli in ('claude', 'codex'):  # only systemMessage: PreToolUse rejects continue, stopReason, suppressOutput
+            return {**(out or {}), 'systemMessage': reply.text}
+        return {**(out or {}), 'status': reply.status} if cli == 'pi' else out
     if cli in ('claude', 'codex'):
         if reply is None:
             return None

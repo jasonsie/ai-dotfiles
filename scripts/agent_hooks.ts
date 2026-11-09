@@ -3,6 +3,8 @@
 // worktree-guard and small-commits before each tool call, worktree-guard when the session shuts
 // down. Linked into ~/.pi/agent/extensions/ by scripts/install/skills.py; the link resolves back
 // to scripts/, so the repo is one folder up.
+// The footer shows the work name while the session has a worktree: the guard's reply carries `status`
+// (a name, or null to clear it), on the session's next tool call after the worktree is made or deleted.
 // A failed call is ignored: the extension never blocks a session on its own.
 import { spawnSync } from "node:child_process";
 import { realpathSync } from "node:fs";
@@ -42,6 +44,7 @@ export default function (pi: any) {
       // Each feature sees the input as the one before it left it (worktree-guard may steer it).
       const reply = ask(feature.script, "pre", { ...session(ctx), tool_name: event.toolName ?? "", tool_input: event.input ?? {} }, feature.timeout);
       if (!reply) continue;
+      if ("status" in reply) ctx.ui?.setStatus?.("worktree", reply.status ?? undefined);
       if (reply.block) return { block: true, reason: reply.reason };
       if (reply.input && event.input) Object.assign(event.input, reply.input); // Pi: mutate the input in place
       if (reply.note) said.push(reply.note);

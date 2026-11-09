@@ -254,8 +254,12 @@ session as JSON on stdin and shows what it prints.
 ```
 
 - **Line 1:** the folder; the branch, with the worktree's name when the session works in a
-  linked one; the model with its effort, `thinking off` and `⚡fast` only when
-  so; the CLI's version.
+  linked one; the model with its effort, `thinking off` and `⚡fast` only when so; the CLI's
+  version. While a session has a worktree of worktree-guard's the work name
+  (`🌿 fix/prune-worktrees`) replaces the branch: Claude Code reads it from the record beside
+  the worktree its folder is in, Antigravity (its folder stays the main checkout) from the
+  guard's record of the session, found by the payload's `session_id`. Once the worktree is
+  gone the branch shows again.
 - **Line 2:** the context left, from the CLI's own percentage, `?` before the first reply.
   **Line 3:** the rate-limit windows (Claude: 5h, 7d, spend; Antigravity: its quota buckets) and
   the cost, each when the CLI sends it; no line when it sends neither. A window shows the share
@@ -264,9 +268,16 @@ session as JSON on stdin and shows what it prints.
   CLI re-runs the script on changes in the session and at each reset time, not on a clock, so
   they can lag what other sessions have spent since.
 - **Codex** runs no script: `tui.status_line` lists its own items (`current-dir`, `git-branch`,
-  `model-with-reasoning`, `codex-version`, `context-remaining`). **Pi**'s built-in footer already
-  shows the folder, branch, model, thinking level, context and cost; only an extension could
-  restyle it, so nothing is installed.
+  `model-with-reasoning`, `codex-version`, `context-remaining`) and cannot follow a steered
+  session, so its footer keeps showing the main checkout: **a gap, not emulated**. Instead
+  worktree-guard answers the session's next tool call after a worktree is made or deleted with
+  a one-line notice (a `systemMessage`): `fix/x works in <path>`, then `fix/x is deleted; the
+  session is back in <repo>`. The notice comes with the next call, not the moment the worktree
+  changes, so a deletion by `ship` is told only if the session makes another call.
+  **Pi**'s built-in footer already shows the folder, branch, model, thinking level, context and
+  cost; the Pi extension (`scripts/agent_hooks.ts`) adds a footer status, `worktree`, with the
+  work name, set and cleared by the same next-call answer. A resumed Pi session shows it after its
+  worktree next changes.
 - The script never fails: bad input prints what it can and exits 0. `ai-dotfiles check` runs
   it once. An uninstall removes the two `statusLine` keys, which would otherwise run a command
   that is gone.

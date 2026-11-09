@@ -717,7 +717,8 @@ class BoundTest(OriginRepo):
         self.new('pi', 'dddd4444', ME, 'fix/p')
         read = self.run_hook('pi', {'session_id': 'dddd4444', 'cwd': str(self.repo), 'pid': ME,
                                     'tool_name': 'read', 'tool_input': {'path': 'a.txt', 'offset': 1}})
-        self.assertEqual(read, {'input': {'path': str(self.linked('fix-p') / 'a.txt'), 'offset': 1}})
+        self.assertEqual(read, {'input': {'path': str(self.linked('fix-p') / 'a.txt'), 'offset': 1},
+                                'status': 'fix/p'})  # the first call after the worktree is made also sets Pi's footer
         self.new('agy', 'eeee5555', PARENT, 'fix/a')
         view = self.run_hook('agy', {'conversationId': 'eeee5555', 'workspacePaths': [str(self.repo)], 'pid': PARENT,
                                      'toolCall': {'name': 'run_command',
@@ -1303,3 +1304,84 @@ class ShippedTest(OriginRepo):
         status, out = self.cli('shipped', 'fix-y', '--repo', str(self.repo))
         self.assertEqual(status, 0, out)
         self.assertFalse(self.linked('fix-y').exists())
+
+
+class SeenTest(OriginRepo):
+    """Codex has no status line to follow a steered session and Pi's footer is the extension's to set, so
+    the guard tells them, on the session's next tool call, that a worktree was made or deleted."""
+
+    def setUp(self):
+        super().setUp()
+        self.assertEqual(self.cli('on', '--repo', str(self.repo))[0], 0)
+
+    def start(self, cli, session='sess-seen'):
+        self.shell(cli, session, ME, 'ai-dotfiles worktree new fix/x')  # the hook notes who runs it
+        self.assertEqual(self.cli('new', 'fix/x', '--repo', str(self.repo))[0], 0)
+        return self.linked('fix-x')
+
+    def look(self, cli, session='sess-seen'):
+        """A harmless tool call: what the CLI shows the person for it."""
+        return self.shell(cli, session, ME, 'ls')
+
+    def ship(self, wt):
+        (wt / 'a.txt').write_text('two\n')
+        git(wt, 'commit', '-q', '-am', 'change a')
+        git(wt, 'push', '-q', 'origin', 'HEAD:refs/heads/fix/x')
+        self.assertEqual(self.cli('shipped', 'fix-x', '--repo', str(self.repo))[0], 0)
+
+    def test_codex_is_told_once_when_its_worktree_is_made_and_once_when_it_is_deleted(self):
+        self.assertIsNone(self.look('codex'))
+        wt = self.start('codex')
+        made = self.look('codex')  # steered into the worktree as well
+        self.assertIn('updatedInput', made['hookSpecificOutput'])
+        self.assertIn(f'fix/x works in {wt}', made['systemMessage'])
+        self.assertNotIn('\n', made['systemMessage'])
+        self.assertNotIn('systemMessage', self.look('codex'))
+        self.ship(wt)
+        gone = self.look('codex')
+        self.assertEqual(list(gone), ['systemMessage'])
+        self.assertIn(f'fix/x is deleted; the session is back in {self.repo}', gone['systemMessage'])
+        self.assertIsNone(self.look('codex'))
+
+    def test_the_notice_comes_with_the_first_edit_of_a_steered_session(self):
+        self.start('codex')
+        reply = self.edit('codex', 'sess-seen', ME)
+        self.assertIn('fix-x/a.txt', reply['hookSpecificOutput']['updatedInput']['command'])
+        self.assertIn('fix/x works in', reply['systemMessage'])
+        self.assertNotIn('systemMessage', self.edit('codex', 'sess-seen', ME))
+
+    def test_a_worktree_removed_some_other_way_is_told_as_deleted(self):
+        wt = self.start('codex')
+        self.look('codex')
+        git(self.repo, 'worktree', 'remove', '--force', str(wt))
+        self.assertIn('is deleted', self.look('codex')['systemMessage'])
+        self.assertNotIn('systemMessage', self.look('codex') or {})
+
+    def test_pi_gets_the_work_name_for_its_footer_and_then_none(self):
+        self.assertIsNone(self.look('pi'))
+        wt = self.start('pi')
+        self.assertEqual(self.look('pi')['status'], 'fix/x')
+        self.assertNotIn('status', self.look('pi'))
+        self.ship(wt)
+        self.assertEqual(self.look('pi'), {'status': None})
+        self.assertIsNone(self.look('pi'))
+
+    def test_pi_keeps_the_guards_own_answer_beside_the_status(self):
+        self.start('pi')
+        reply = self.edit('pi', 'sess-seen', ME)
+        self.assertEqual(reply['status'], 'fix/x')
+        self.assertIn('fix-x/a.txt', reply['input']['path'])
+
+    def test_claude_and_antigravity_are_not_told(self):
+        for cli in ('claude', 'agy'):
+            session = f'sess-{cli}'
+            self.start(cli, session)
+            reply = self.look(cli, session)
+            self.assertNotIn('systemMessage', reply or {})
+            self.assertNotIn('shown', guard.SESSIONS.load(session))
+            self.cli('shipped', 'fix-x', '--repo', str(self.repo))
+
+    def test_a_move_with_no_work_name_is_not_told(self):
+        guard.SESSIONS.save('sess-old', {'moved': {'busy': str(self.repo), 'linked': str(self.repo),
+                                                  'name': 'codex-x', 'branch': 'agent/codex-x'}})
+        self.assertNotIn('systemMessage', self.look('codex', 'sess-old') or {})
