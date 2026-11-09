@@ -95,6 +95,7 @@ HOOK_FETCH_SECONDS = 40  # Claude's create hook has 60 s in all
 CLAUDE_BRANCH = 'worktree-'  # the branch Claude's own default puts a worktree on: worktree-<name>
 FOLDER_NAME = re.compile(r'[A-Za-z0-9][A-Za-z0-9._-]*')
 NAMING_SECONDS = 600  # how long the hook's note of a `worktree new` call stays good
+NAMING_KEEP_SECONDS = 3600  # after this a note is deleted, used or not
 UNCLAIMED_SECONDS = 3600  # a worktree nobody has claimed yet is left alone this long: its first edit is coming
 PERSON_ONLY = frozenset(('release', 'share', 'on', 'off'))  # worktree commands a person runs
 HEREDOC = re.compile(r'<<-?\s*([\'"]?)(\w+)\1[^\n]*\n.*?^[ \t]*\2[ \t]*$', re.M | re.S)
@@ -579,7 +580,7 @@ def note_naming(event, table):
     folder = naming_dir()
     folder.mkdir(parents=True, exist_ok=True, mode=0o700)
     for old in folder.glob('*.json'):
-        if time.time() - old.stat().st_mtime > 3600:
+        if time.time() - old.stat().st_mtime > NAMING_KEEP_SECONDS:
             old.unlink(missing_ok=True)
     write_claim(folder / f"{me['pid']}.json", {'owner': me, 'names': names, 'at': int(time.time())})
 
