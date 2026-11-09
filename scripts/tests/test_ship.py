@@ -9,6 +9,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from support import ROOT
 from test_git_skills import FAIL, OK, OLD, PR, TIP, land  # also loads the step skills
@@ -64,7 +65,6 @@ class ShipTest(unittest.TestCase):
         self.body.write_text('## Summary\n')
         self.answers = {
             'git rev-parse --show-toplevel': str(self.linked),
-            'git rev-parse --path-format=absolute --git-common-dir': str(self.main / '.git'),
             'git branch --show-current': '',   # detached
             'git ls-remote --heads origin refs/heads/fix/x': '',
             'gh pr list': '[]',
@@ -75,7 +75,8 @@ class ShipTest(unittest.TestCase):
 
     def ship(self, argv=None, **answers):
         argv = ['--title', 'fix(x): the thing', '--body-file', str(self.body)] if argv is None else argv
-        return land(argv, ship.main, **{**self.answers, **answers})
+        with patch.object(ship.guard, 'main_of', return_value=self.main):  # the folders are not a real repo
+            return land(argv, ship.main, **{**self.answers, **answers})
 
     def test_runs_the_checks_pushes_opens_the_pr_then_deletes_the_worktree(self):
         code, output, err, fake = self.ship()
@@ -203,7 +204,6 @@ class FixShipTest(unittest.TestCase):
         self.remote = 'git ls-remote --heads origin refs/heads/feat/thing'
         self.answers = {
             'git rev-parse --show-toplevel': str(self.linked),
-            'git rev-parse --path-format=absolute --git-common-dir': str(self.main / '.git'),
             'git branch --show-current': '',
             self.remote: f'{OLD}\trefs/heads/feat/thing',
             'git merge-base --is-ancestor': OK,
@@ -216,7 +216,8 @@ class FixShipTest(unittest.TestCase):
         self.meta.write_text(json.dumps({'name': 'feat-thing', 'work': 'feat/thing', **fields}))
 
     def ship(self, argv=(), **answers):
-        return land(list(argv), ship.main, **{**self.answers, **answers})
+        with patch.object(ship.guard, 'main_of', return_value=self.main):  # the folders are not a real repo
+            return land(list(argv), ship.main, **{**self.answers, **answers})
 
     def test_it_pushes_to_the_prs_branch_updates_the_pr_and_deletes_the_worktree(self):
         self.set_meta(pr=7, base=OLD)

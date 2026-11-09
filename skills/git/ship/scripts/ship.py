@@ -118,9 +118,7 @@ def update(repo, dry):
 def where():
     """(worktree folder, main checkout, its record): this run's worktree and what made it."""
     top = Path(git_run.out(['git', 'rev-parse', '--show-toplevel'], what='git rev-parse')).resolve()
-    common = Path(git_run.out(['git', 'rev-parse', '--path-format=absolute', '--git-common-dir'],
-                              what='git rev-parse')).resolve()
-    main = common.parent if common.name == '.git' else top
+    main = guard.main_of(top)
     meta = guard.read_meta(main, top.name) if top != main else None
     if not meta or not meta.get('work'):
         raise Stop(f'ship: {top.name} was not made by `ai-dotfiles worktree new`; run ship from the worktree it made')
