@@ -250,7 +250,7 @@ session as JSON on stdin and shows what it prints.
 ```text
 📁 ~/repo  🌿 main ⎇ agent-2  🤖 Fable 5.1 · max · ⚡fast  📟 v2.1.318
 🧠 Context: 93% [=========-]
-⏳ 5h 23% → 14:00  7d 41% → Thu 08:00  💰 $0.12
+⏳ 23% → 14:00  41% → Thu 08:00  💰 $0.12
 ```
 
 - **Line 1:** the folder; the branch, with the worktree's name when the session works in a
@@ -261,8 +261,9 @@ session as JSON on stdin and shows what it prints.
   guard's record of the session, found by the payload's `session_id`. Once the worktree is
   gone the branch shows again.
 - **Line 2:** the context left, from the CLI's own percentage, `?` before the first reply.
-  **Line 3:** the rate-limit windows (Claude: 5h, 7d, spend; Antigravity: its quota buckets) and
-  the cost, each when the CLI sends it; no line when it sends neither. A window shows the share
+  **Line 3:** the rate-limit windows (Claude: the 5-hour then the 7-day window, with no label, and
+  the spend limit as `spend`; Antigravity: its quota buckets by name) and the cost, each when the
+  CLI sends it; no line when it sends neither. A window shows the share
   used and the local time it resets, with the weekday when that is not today; a window whose
   reset has passed is left out. The figures are those of the session's last API response: the
   CLI re-runs the script on changes in the session and at each reset time, not on a clock, so
