@@ -9,6 +9,7 @@
   worktree-guard prune  [--repo DIR]                  rm every merged, clean, unowned one
   worktree-guard on|off [--repo DIR]                  switch the repo's worktree flow (people only)
   worktree-guard new    <type>/<slug> [--repo DIR]    a detached worktree from origin's default branch
+  worktree-guard pr     <n> [--repo DIR]              a detached worktree on open PR <n>'s branch, to fix it
   worktree-guard shipped NAME [--repo DIR]            delete a pushed worktree whose PR is open (ship runs it)
   worktree-guard release [PATH]                       clear a worktree's owner (people only)
   worktree-guard share   [PATH]                       let any session edit it (people only)
@@ -338,17 +339,17 @@ def person_only(command):
 
 
 def new_names(command):
-    """The work names a shell command line passes to `worktree new`."""
+    """The work a shell command line names to `worktree new` (<type>/<slug>) or `worktree pr` (#<n>)."""
     names = []
     for verb, args in guard_calls(command):
         skip = False
-        for arg in args if verb == 'new' else ():
+        for arg in args if verb in ('new', 'pr') else ():
             if set(arg) <= SEPARATORS:
                 break
             if skip or arg.startswith('-'):
                 skip = arg == '--repo'
                 continue
-            names.append(arg)
+            names.append(f'#{arg}' if verb == 'pr' else arg)
             break
     return names
 
@@ -1084,20 +1085,78 @@ def cmd_new(args):
         return 1
     for line in notes:
         print(f'worktree-guard: {line}')
-    head = f'worktree-guard: {name} starts in {linked} (from {ref} at {base[:7]}, no branch).'
+    print(bind(main, linked, folder, name, ref, base, ref, me, note,
+               f'{name} starts in {linked} (from {ref} at {base[:7]}, no branch).'))
+    return 0
+
+
+def bind(main, linked, folder, work, ref, base, default, me, note, head):
+    """The session that ran the command (`me`, from the hook's `note`) is recorded as moved into
+    the new worktree `linked`; the text to print: `head`, then what the session does next."""
+    head = f'worktree-guard: {head}'
     if not me:
-        print(f'{head} Make every change there. Claude Code: call EnterWorktree with path "{linked}"; other CLIs: '
-              f'name files by their paths under {linked}.')
-        return 0
-    moved = {'busy': str(main), 'linked': str(linked), 'name': folder, 'work': name, 'branch': None,
-             'from': ref, 'base': base, 'default': ref, 'owner': None}
+        return (f'{head} Make every change there. Claude Code: call EnterWorktree with path "{linked}"; other '
+                f'CLIs: name files by their paths under {linked}.')
+    moved = {'busy': str(main), 'linked': str(linked), 'name': folder, 'work': work, 'branch': None,
+             'from': ref, 'base': base, 'default': default, 'owner': None}
     state = SESSIONS.load(me['session'])
     SESSIONS.save(me['session'], {**state, 'moved': moved})
     note.unlink(missing_ok=True)
     how = (f'Call EnterWorktree with path "{linked}", then make every change there.' if me['cli'] == 'claude' else
            f'Your tool calls that name files in {main} are moved there automatically; name files by their paths '
            'there.')
-    print(f'{head} This session owns it. {how}')
+    return f'{head} This session owns it. {how}'
+
+
+def pr_info(main, number):
+    """gh's view of PR `number`: {state, headRefName, isCrossRepository, ...}; RuntimeError when gh cannot say."""
+    try:
+        run = subprocess.run(['gh', 'pr', 'view', str(number), '--json', 'number,state,headRefName,isCrossRepository'],
+                             cwd=main, capture_output=True, text=True, timeout=FETCH_SECONDS)
+        info = json.loads(run.stdout) if run.returncode == 0 else None
+    except (OSError, subprocess.TimeoutExpired, ValueError) as error:
+        raise RuntimeError(f'gh pr view {number}: {error}') from error
+    if not isinstance(info, dict):
+        raise RuntimeError(f'gh pr view {number}: ' + (run.stderr.strip().splitlines() or ['no answer'])[-1])
+    return info
+
+
+def cmd_pr(args):
+    """A detached worktree on the remote branch of open PR <n>, named after the branch, for the
+    session that ran this to fix it. Ship pushes it back to that branch (D4)."""
+    main, number = repo_main(args.repo), args.number
+
+    def refuse(why):
+        print(f'worktree-guard: cannot fix PR #{number}: {why}.', file=sys.stderr)
+        return 1
+    try:
+        info = pr_info(main, number)
+    except RuntimeError as error:
+        return refuse(error)
+    branch, state = str(info.get('headRefName') or ''), str(info.get('state') or '').lower()
+    folder = branch.replace('/', '-')
+    if state != 'open':
+        return refuse(f'it is {state}')
+    if info.get('isCrossRepository'):
+        return refuse('its branch is in a fork, which this repo cannot push to')
+    if not FOLDER_NAME.fullmatch(folder):
+        return refuse(f'its branch {branch!r} does not make a folder name')
+    if (main / LINKED / folder).exists() or meta_file(main, folder).exists():
+        return refuse(f'{LINKED.as_posix()}/{folder} is taken; see ai-dotfiles worktree list')
+    fetched, why = fetch(main)
+    base = git(main, 'rev-parse', '-q', '--verify', f'refs/remotes/origin/{branch}^{{commit}}', check=False)
+    if not fetched or not base:
+        return refuse(f'origin has no current {branch}' + (f' ({why})' if not fetched else ''))
+    note, me = naming_for(f'#{number}')
+    try:
+        linked = make_worktree(main, folder, base, None, source=main, owner=me, table=process_table() if me else None,
+                               meta={'work': branch, 'pr': number, 'from': f'origin/{branch}', 'busy': str(main),
+                                     **({'cli': me['cli'], 'session': me['session']} if me else {})})
+    except RuntimeError as error:
+        return refuse(error)
+    print(bind(main, linked, folder, branch, f'origin/{branch}', base, default_ref(main) or base, me, note,
+               f'PR #{number} is fixed in {linked} (origin/{branch} at {base[:7]}, no branch); ship pushes it back '
+               'to the PR.'))
     return 0
 
 
@@ -1263,6 +1322,10 @@ def parser():
     new.add_argument('name', help='<type>/<slug>, for example fix/prune-worktrees')
     new.add_argument('--repo', help='a folder in the repository (default: here)')
     new.set_defaults(run=cmd_new)
+    fix = sub.add_parser('pr', help="fix an open PR: a worktree on its remote branch, named after it (ship updates the PR)")
+    fix.add_argument('number', type=int, help='the PR number')
+    fix.add_argument('--repo', help='a folder in the repository (default: here)')
+    fix.set_defaults(run=cmd_pr)
     done_ = sub.add_parser('shipped', help='delete a worktree whose work is pushed and has its PR (what ship runs)')
     done_.add_argument('name', help="the worktree's folder name, e.g. fix-prune-worktrees")
     done_.add_argument('--repo', help='a folder in the repository (default: here)')
