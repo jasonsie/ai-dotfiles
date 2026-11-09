@@ -47,7 +47,7 @@ class ApplySettingsTest(unittest.TestCase):
         self.assertLessEqual(set(managed) - {'version'}, set(CLIS))
         for group in managed['codex'].values():
             for key in group:
-                self.assertNotIn('.', key)
+                self.assertLessEqual(key.count('.'), 1)  # top-level, or one table deep
 
     def test_old_or_ambiguous_managed_files_are_refused(self):
         path = self.home / 'cli-settings.json'
@@ -127,9 +127,60 @@ command = "x"
         self.assertTrue(result.startswith('# comment kept\n'))
         self.assertEqual(settings.merge_toml(result, keys('codex')), result)
 
-    def test_toml_rejects_nested_keys(self):
-        with self.assertRaisesRegex(ValueError, 'top-level'):
-            settings.merge_toml('', {'tui.x': True})
+    def test_toml_upserts_inside_a_table_and_rejects_deeper_keys(self):
+        before = '''model = "m"
+
+[tui]
+pet = "disabled"
+
+[tui.nux]
+x = 1
+
+[mcp_servers.mine]
+command = "x"
+'''
+        items = ['current-dir', 'git-branch']
+        result = settings.merge_toml(before, {'tui.status_line': items})
+        parsed = tomllib.loads(result)
+        self.assertEqual(parsed['tui'], {'pet': 'disabled', 'status_line': items, 'nux': {'x': 1}})
+        self.assertEqual(parsed['mcp_servers']['mine']['command'], 'x')
+        self.assertIn('\n[tui]\npet = "disabled"\nstatus_line = ["current-dir", "git-branch"]\n\n[tui.nux]\n', result)
+        self.assertEqual(settings.merge_toml(result, {'tui.status_line': items}), result)
+        changed = settings.merge_toml(result, {'tui.status_line': ['model']})
+        self.assertEqual(tomllib.loads(changed)['tui']['status_line'], ['model'])
+        added = settings.merge_toml('model = "m"\n', {'tui.status_line': items})
+        self.assertEqual(tomllib.loads(added)['tui']['status_line'], items)
+        self.assertTrue(added.endswith('\n[tui]\nstatus_line = ["current-dir", "git-branch"]\n'))
+        with self.assertRaisesRegex(ValueError, 'one table deep'):
+            settings.merge_toml('', {'a.b.c': True})
+
+    def test_uninstall_removes_only_the_keys_that_run_this_repo(self):
+        command = {'type': 'command', 'command': '~/.local/bin/ai-dotfiles statusline'}
+        managed = {'version': 2,
+                   'claude': {'enforce': {'statusLine': command}, 'default': {'model': 'opus'}},
+                   'codex': {'enforce': {'tui.status_line': ['model']}, 'default': {'model': 'm'}},
+                   'agy': {'enforce': {'statusLine': command}}}
+        claude = self.seed('claude', json.dumps({'model': 'opus', 'statusLine': command, 'theme': 'dark'}))
+        codex = self.seed('codex', 'model = "m"\n\n[tui]\npet = "disabled"\nstatus_line = ["model"]\n\n[mcp_servers.x]\ncommand = "y"\n')
+        mine = {'type': 'command', 'command': '~/mine.sh'}  # the user's own status line stays
+        agy = self.seed('agy', json.dumps({'statusLine': mine}))
+        path = self.home / 'cli-settings.json'
+        path.write_text(json.dumps(managed))
+        out = io.StringIO()
+        with redirect_stdout(out):
+            self.assertEqual(settings.run(self.home, 'all', path, False, True), 1)  # a preview writes nothing
+        self.assertIn('statusLine', json.loads(claude.read_text()))
+        with redirect_stdout(out):
+            self.assertEqual(settings.run(self.home, 'all', path, True, True), 1)
+        self.assertEqual(json.loads(claude.read_text()), {'model': 'opus', 'theme': 'dark'})
+        self.assertEqual(tomllib.loads(codex.read_text())['tui'], {'pet': 'disabled', 'status_line': ['model']})  # names no command
+        self.assertEqual(json.loads(agy.read_text()), {'statusLine': mine})
+        self.assertIn(f'Left in place: {claude}: model', out.getvalue())
+        self.assertIn(f'Left in place: {codex}: tui.status_line, model', out.getvalue())
+        self.assertIn(f'Left in place: {agy}: statusLine', out.getvalue())
+        codex.write_text('[tui]\nstatus_line = ["model"]\n')
+        self.assertEqual(settings.drop('codex', codex.read_text(), ['tui.status_line']), '[tui]\n')
+        self.assertTrue(list((self.home / '.local/state/ai-dotfiles/settings').iterdir()))  # backed up first
 
     def test_plan_skips_uninstalled_cli_and_is_idempotent(self):
         path = self.seed('agy', '{}')

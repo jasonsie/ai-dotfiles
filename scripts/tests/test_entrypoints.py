@@ -88,6 +88,10 @@ class EntrypointsTest(unittest.TestCase):
         self.assertIn('ai-dotfiles update', run('--help').stdout)
         self.assertIn('Preview only', run('--dry-run').stdout)  # flags alone mean install
         self.assertIn('Preview only', run('uninstall', '--dry-run').stdout)
+        shown = subprocess.run([str(command), 'statusline'], env=self.env, capture_output=True, text=True,
+                               input='{"model": {"display_name": "Opus"}, "version": "1", "cwd": "/"}')
+        self.assertEqual(shown.returncode, 0, shown.stderr)
+        self.assertIn('Opus', shown.stdout)
         bad = run('bogus')
         self.assertEqual(bad.returncode, 1)
         self.assertIn('Unknown command', bad.stderr)
