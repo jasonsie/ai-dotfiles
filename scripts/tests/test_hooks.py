@@ -94,12 +94,15 @@ class InstallHooksTest(unittest.TestCase):
                 {'matcher': 'Bash', 'hooks': [
                     {'type': 'command', 'command': self.command('claude', 'pre', self.commits), 'timeout': 30}]}],
             'SessionEnd': [{'hooks': [{'type': 'command', 'command': self.command('claude', 'end'), 'timeout': 60}]}],
+            'WorktreeCreate': [{'hooks': [{'type': 'command', 'command': self.command('claude', 'create'), 'timeout': 60}]}],
+            'WorktreeRemove': [{'hooks': [{'type': 'command', 'command': self.command('claude', 'remove'), 'timeout': 60}]}],
         })
         self.assertIn(str(self.guard), claude['SessionEnd'][0]['hooks'][0]['command'].replace("'", ''))
         codex = self.read('codex')['hooks']
         self.assertEqual([g['matcher'] for g in codex['PreToolUse']], ['Edit|Write|Bash', 'Bash'])
         self.assertIn('hook pre --cli codex', codex['PreToolUse'][0]['hooks'][0]['command'])
         self.assertIn(str(self.commits), codex['PreToolUse'][1]['hooks'][0]['command'].replace("'", ''))
+        self.assertEqual(sorted(codex), ['PreToolUse', 'SessionEnd'])  # worktree events are Claude's alone
         self.assertNotIn('matcher', codex['SessionEnd'][0])
         self.assertIn('hook end --cli codex', codex['SessionEnd'][0]['hooks'][0]['command'])
 
@@ -312,6 +315,18 @@ class InstallHooksTest(unittest.TestCase):
         self.assertEqual(self.read('claude'), {'hooks': {
             'PreToolUse': [{'matcher': 'Edit|Write|NotebookEdit|Bash', 'hooks': [OTHERS]}], 'SessionEnd': [THEIRS]}})
 
+    def test_the_worktree_entries_are_claudes_alone_and_uninstall_takes_back_only_ours(self):
+        self.write('claude', {'hooks': {'WorktreeCreate': [THEIRS]}})
+        self.install(apply=True)
+        data = self.read('claude')['hooks']
+        self.assertEqual(data['WorktreeCreate'][0], THEIRS)  # theirs first, ours appended
+        self.assertEqual([g['hooks'][0]['command'] for g in data['WorktreeCreate'][1:]], [self.command('claude', 'create')])
+        self.assertEqual(self.install(), 0)
+        for cli in ('codex', 'agy'):
+            self.assertNotIn('Worktree', json.dumps(self.read(cli)), cli)
+        self.install(apply=True, uninstall=True)
+        self.assertEqual(self.read('claude'), {'hooks': {'WorktreeCreate': [THEIRS]}})
+
     def test_uninstall_is_idempotent(self):
         self.seed()
         self.install(apply=True)
@@ -347,7 +362,7 @@ class InstallHooksTest(unittest.TestCase):
             self.assertEqual(hooks.run(self.home, 'all', True, False, self.repo), 1)  # agy out
             self.assertEqual(hooks.run(self.home, 'all', False, False, self.repo), 0)
         self.assertEqual(self.read('agy'), seeds['agy'])
-        self.assertEqual(sorted(self.read('claude')['hooks']), ['PreToolUse', 'SessionEnd', 'Stop'])
+        self.assertEqual(sorted(self.read('claude')['hooks']), ['PreToolUse', 'SessionEnd', 'Stop', 'WorktreeCreate', 'WorktreeRemove'])
 
     def test_run_follows_the_target_and_uninstall_ignores_the_switches(self):
         with patch.object(installer, 'REGISTRY', registry(self.home, agy=False)), redirect_stdout(io.StringIO()):
@@ -388,7 +403,7 @@ class InstallHooksTest(unittest.TestCase):
         self.assertFalse(state.exists())
         claude = self.read('claude')
         self.assertEqual(claude['model'], 'opus')
-        self.assertEqual(sorted(claude['hooks']), ['PreToolUse', 'SessionEnd', 'Stop'])
+        self.assertEqual(sorted(claude['hooks']), ['PreToolUse', 'SessionEnd', 'Stop', 'WorktreeCreate', 'WorktreeRemove'])
         self.assertEqual(claude['hooks']['Stop'], [THEIRS])  # the foreign group stays, ours is gone
         codex = self.read('codex')['hooks']
         self.assertEqual(codex['PostToolUse'], [{'matcher': 'Edit|Write', 'hooks': [OTHERS]}])  # theirs kept
