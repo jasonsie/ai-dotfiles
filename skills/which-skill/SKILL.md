@@ -105,9 +105,10 @@ has the reasoning and each CLI's commands.
 - **`daily-log`**: record finished work in the daily logger through the `daily-log`
   command; its grammar is what the learning-tutor and every `<subject>-tutor-daily`
   task write; its hook nudges a session that changed files but logged nothing.
-- **`worktree-guard`**: sessions sharing one checkout stay apart: a second session's first
-  edit moves it into a linked worktree; the skill is what a moved session does, and
-  `ai-dotfiles worktree` lists, archives and removes those worktrees.
+- **`worktree-guard`**: in a repo switched on, each task works in its own worktree and
+  an edit in the main checkout or another session's worktree is refused; the skill is how
+  a session names its work, and `ai-dotfiles worktree` lists, archives and removes
+  those worktrees.
 - **`small-commits`**: commit the way the hook accepts: under 300 changed lines, one
   concern, `type(scope): outcome` and the Why:, Scope:, Verified: trailers; the plan to
   show first, how to split, and what a block means.
