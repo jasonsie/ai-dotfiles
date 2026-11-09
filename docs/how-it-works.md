@@ -20,7 +20,8 @@ skills/              shared skills; skills.lock pins adapted ones; daily-log/ ho
                      their hooks; git/ a bundle: the git step skills and approve
 scripts/             ai-dotfiles, install.sh, uninstall.sh, healthcheck.sh (entry points);
                      agent_hooks.py and agent_sessions.py (the CLIs' hook formats and
-                     session stores behind one interface); agent_hooks.ts (Pi's extension)
+                     session stores behind one interface); agent_hooks.ts (Pi's extension);
+                     statusline.py (the status line Claude Code and Antigravity run)
   install/             installer.py (shared by every step) and one file per step
   upstream/            the weekly docs sync and its pull request report
   tests/               unit tests for all of the above
@@ -38,6 +39,7 @@ YOU EDIT                          APPLIED BY scripts/install/ (ai-dotfiles = ins
 config/ai-clis.json           ─►  every step: which CLIs, and their paths  ─►  (the CLIs switched on)
 config/global-agents.md       ─►  instructions.py (symlinks)               ─►  each CLI's global instruction file
 config/cli-settings.json      ─►  settings.py (merges listed keys)         ─►  settings.json / config.toml
+scripts/statusline.py         ─►  settings.py (the statusLine keys run it) ─►  Claude Code's and Antigravity's status line
 config/mcp-servers.json       ─►  mcp.py (native `mcp add`, or a merge)    ─►  Claude Code, Codex, Pi, Antigravity
 config/plugins.json           ─►  plugins.py (each CLI's plugin manager)   ─►  each CLI's plugin store; ~/.local/bin/<command>
 skills/<name>/                ─►  skills.py (links)                        ─►  every CLI's skill folder
@@ -80,9 +82,10 @@ code for stops the run.
 
 `uninstall.sh` runs each step's `--uninstall` in reverse order and removes whatever points
 into this repo: instruction links (restoring the file from before the first install),
-skill links, hook entries, Pi's extension and the command links. Settings keys and MCP
-servers stay and are listed, because they hold no repo paths and could be the user's own.
-After it, deleting the repo breaks nothing.
+skill links, hook entries, Pi's extension, the command links, and a settings key whose value
+runs this repo's command (the status line). The other settings keys and the MCP servers stay
+and are listed, because they hold no repo paths and could be the user's own. After it,
+deleting the repo breaks nothing.
 
 ## Where each CLI reads things
 
@@ -94,6 +97,7 @@ After it, deleting the repo breaks nothing.
 | Settings file | `~/.claude/settings.json` | `~/.codex/config.toml` | `~/.pi/agent/settings.json` | `~/.gemini/antigravity-cli/settings.json` |
 | MCP servers | `~/.claude.json` via `claude mcp add` | `config.toml` via `codex mcp add` | `~/.pi/agent/mcp.json` via `pi mcp add` | `~/.gemini/config/mcp_config.json`, merged (no `mcp add`) |
 | Hooks | `~/.claude/settings.json` (`hooks`) | `~/.codex/hooks.json`, run after approval in `/hooks` | none; `~/.pi/agent/extensions/*.ts` | `~/.gemini/config/hooks.json` |
+| Status line | `statusLine` in `settings.json` runs `ai-dotfiles statusline` | `tui.status_line` in `config.toml`: Codex's own items | built-in footer; only an extension could replace it | `statusLine` in `settings.json` runs the same script |
 | MCP server guidance | server instructions | server instructions | only the `description` in `mcp-servers.json` | not documented |
 | Explicit-only skill | `disable-model-invocation: true` | `agents/openai.yaml`: `policy.allow_implicit_invocation: false` | `disable-model-invocation: true` | none documented; may load implicitly |
 
@@ -183,10 +187,11 @@ version or a plugin to remove shows up as a pending change.
 ## Settings: enforce and default
 
 `config/cli-settings.json` (version 2) lists, per CLI, an `enforce` group and a `default`
-group. `enforce` holds safety settings (approval policy, sandbox, permission prompts) and
-is put back on every install. `default` holds model choices and is written only while a
-CLI has no value; a model you pick in a CLI's own menu stays, and the preview and
-healthcheck report it as a "local choice kept".
+group. `enforce` holds the settings this repo owns (approval policy, sandbox, permission
+prompts, the status line) and is put back on every install. `default` holds model choices
+and is written only while a CLI has no value; a model you pick in a CLI's own menu stays,
+and the preview and healthcheck report it as a "local choice kept". A key is a dotted path;
+for Codex's TOML, a top-level key or `table.key`.
 
 ## Memory
 
@@ -235,6 +240,36 @@ refreshed by `scripts/vendor_daily_log.py` and checked by a test), and every
   `~/Library/Logs/ai-dotfiles/`. The healthcheck checks the job is loaded. Before November
   2026 a Stop hook nudged every session that edited files; `hooks.py` takes its entries and
   state folder out when it finds them.
+
+## Status line
+
+One script, `scripts/statusline.py`, draws the status line in Claude Code and Antigravity: each
+runs `ai-dotfiles statusline` (the `statusLine` key `cli-settings.json` enforces) with the
+session as JSON on stdin and shows what it prints.
+
+```text
+📁 ~/repo  🌿 main ⎇ agent-2  🤖 Fable 5.1 · max · ⚡fast  📟 v2.1.318
+🧠 Context: 93% [=========-]
+⏳ 5h 23% → 14:00  7d 41% → Thu 08:00  💰 $0.12
+```
+
+- **Line 1:** the folder; the branch, with the worktree's name when worktree-guard moved the
+  session into a linked one; the model with its effort, `thinking off` and `⚡fast` only when
+  so; the CLI's version.
+- **Line 2:** the context left, from the CLI's own percentage, `?` before the first reply.
+  **Line 3:** the rate-limit windows (Claude: 5h, 7d, spend; Antigravity: its quota buckets) and
+  the cost, each when the CLI sends it; no line when it sends neither. A window shows the share
+  used and the local time it resets, with the weekday when that is not today; a window whose
+  reset has passed is left out. The figures are those of the session's last API response: the
+  CLI re-runs the script on changes in the session and at each reset time, not on a clock, so
+  they can lag what other sessions have spent since.
+- **Codex** runs no script: `tui.status_line` lists its own items (`current-dir`, `git-branch`,
+  `model-with-reasoning`, `codex-version`, `context-remaining`). **Pi**'s built-in footer already
+  shows the folder, branch, model, thinking level, context and cost; only an extension could
+  restyle it, so nothing is installed.
+- The script never fails: bad input prints what it can and exits 0. `ai-dotfiles check` runs
+  it once. An uninstall removes the two `statusLine` keys, which would otherwise run a command
+  that is gone.
 
 ## Small commits
 

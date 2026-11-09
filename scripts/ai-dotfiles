@@ -10,6 +10,7 @@
 #   ai-dotfiles commit check [args]  the size and message `git commit [args]` would get past the hook
 #   ai-dotfiles approve [n] [flags] land PR n from any session, or the branch checked out here
 #   ai-dotfiles git <step> [flags]  one step: push, pr, review, reviewer, tag, merge, prune
+#   ai-dotfiles statusline          the status line Claude Code and Antigravity run: session JSON in, lines out
 #   Flags pass through, e.g. --dry-run, --target=claude; see each script's --help.
 
 set -euo pipefail
@@ -23,7 +24,7 @@ while [ -L "$SELF" ]; do
 done
 SCRIPTS="$(cd "$(dirname "$SELF")" && pwd)"
 
-usage() { sed -n '2,13p' "$SELF" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,14p' "$SELF" | sed 's/^# \{0,1\}//'; }
 
 COMMAND="${1:-install}"
 case "$COMMAND" in
@@ -40,6 +41,7 @@ case "$COMMAND" in
   worktree) exec python3 "$SCRIPTS/../skills/worktree-guard/scripts/worktree_guard.py" "$@" ;;
   commit) exec python3 "$SCRIPTS/../skills/small-commits/scripts/small_commits.py" "$@" ;;
   approve) exec python3 "$SCRIPTS/../skills/git/approve/scripts/approve.py" "$@" ;;
+  statusline) exec "${PYTHON:-python3}" "$SCRIPTS/statusline.py" "$@" ;;
   git)
     GIT="$SCRIPTS/../skills/git"
     STEP="${1:-}"
