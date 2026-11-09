@@ -1,6 +1,6 @@
 ---
 name: ship
-description: "Finish your own work in a worktree made by `worktree new`: run the repo's checks, push it as a new branch <type>/<slug>, open the PR, delete the worktree. Use when your task in such a worktree is done and committed, or when an `ai-dotfiles ship` run stopped. Not for the user's 'approve' (that is the approve skill)."
+description: "Finish your own work in a worktree made by `worktree new` or `worktree pr`: run the repo's checks, push it as a new branch <type>/<slug> (or onto the open PR's branch), open the PR (or update it), delete the worktree. Use when your task in such a worktree is done and committed, or when an `ai-dotfiles ship` run stopped. Not for the user's 'approve' (that is the approve skill)."
 ---
 
 # Ship
@@ -27,12 +27,22 @@ For the agent, once its task is done and committed in the worktree `ai-dotfiles 
 | pr | the PR against the default branch (`open-pr`); one already open is reused |
 | worktree | deleted once the PR exists, by `worktree shipped`; your session's record of it is cleared |
 
+## Fixing an open PR
+
+In a worktree `ai-dotfiles worktree pr <n>` made, the same command, with no `--title` or
+`--body-file`: `ship` pushes to the PR's own branch, so the PR updates and no new PR opens, then
+deletes the worktree. Only this worktree may push to a branch already on origin, and only as a
+fast-forward of it: if the branch moved on, fetch it, merge or rebase it in, commit and rerun. A
+PR no longer open, or no commit on top of the branch, stops the run.
+
 ## When it stops
 
 The message names the step, e.g. `ship stopped at checks: ...`; nothing is undone.
 
 - **checks**: the message names the failing command. Fix it in the worktree, commit, rerun.
   Nothing was pushed.
+- **push, origin has the branch** (PR fix): it moved on, or origin refused the push (a protected
+  branch). Nothing is deleted; fix the cause and rerun.
 - **push, origin already has the branch**: the name is taken. Start the work under another name
   (`worktree new`), moving the commits there.
 - **pr**: see `open-pr`; the branch is pushed, rerun once fixed.
