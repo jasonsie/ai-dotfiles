@@ -28,6 +28,8 @@ GitHub, then, each step skipped when done:
   main        the main checkout fast-forwarded to origin/<base>, only when git can without
               touching uncommitted files (never a stash or reset); otherwise skipped, with why
 
+With --dry-run nothing is fetched (a fetch writes refs): the plan reads what the last fetch left.
+
 Nothing is undone on failure: the run stops, names the step, and exits 1. Exit 3 means no
 reviewer is known for this repo: ask the user which login reviews here and rerun with
 --reviewer. Python 3.11+, stdlib only; needs git and an authenticated gh.
@@ -54,6 +56,8 @@ NO_REVIEWER = approve_pr.NO_REVIEWER
 
 
 def tag(repo, pr, dry, ref=None):
+    if dry and ref and git_run.sh(['git', 'rev-parse', '--verify', '-q', f'{ref}^{{commit}}'])[0] != 0:
+        return f'would tag {archive_tag.stem(repo.branch)} at {ref[:7]} and push it (the head is not fetched in a dry run)'
     name = archive_tag.archive(repo.branch, pr.get('title') or repo.branch, True, f'origin/{repo.base}',
                                extra=(f'PR: {pr["url"]}',), dry=dry, ref=ref)
     if not name:
@@ -61,14 +65,15 @@ def tag(repo, pr, dry, ref=None):
     return archive_tag.push_tag(name, dry=dry)
 
 
-def pull_request(number):
-    """(Repo, pr) from GitHub's view of PR #number; the PR's head is fetched so it can be tagged."""
+def pull_request(number, dry=False):
+    """(Repo, pr) from GitHub's view of PR #number; the PR's head is fetched so it can be tagged
+    (a dry run fetches nothing: a fetch writes refs)."""
     fields = 'number,url,state,title,headRefName,baseRefName,headRefOid,author'
     pr = json.loads(git_run.out(['gh', 'pr', 'view', str(number), '--json', fields], what='gh pr view'))
     if pr['state'] == 'CLOSED':
         raise Stop(f'pr: PR #{number} is closed, not merged; reopen it or open another')
     base = pr['baseRefName']
-    git_run.out(['git', 'fetch', '-q', 'origin', base, f'refs/pull/{number}/head'], what='git fetch')
+    git_run.act(['git', 'fetch', '-q', 'origin', base, f'refs/pull/{number}/head'], dry)
     slug, _ = git_run.github()
     return git_run.Repo(base, pr['headRefName'], pr['headRefOid'], slug, pr['author']['login']), pr
 
@@ -78,7 +83,7 @@ def run_number(args):
         raise Stop('approve: --title and --body-file belong to the one-run form (no PR number)')
     dry = args.dry_run
     step = git_run.step
-    repo, pr = pull_request(args.pr)
+    repo, pr = pull_request(args.pr, dry)
     step('pr', f'#{pr["number"]} {pr["state"].lower()}: {repo.branch} -> {repo.base} in {repo.slug}, by {repo.author}')
     login, token = approve_pr.reviewer(repo, args.reviewer, dry)
     step('reviewer', login)
