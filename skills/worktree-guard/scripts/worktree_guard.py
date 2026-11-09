@@ -6,6 +6,7 @@
   worktree-guard done   DESCRIPTION [--path DIR]      a linked worktree's one-line summary
   worktree-guard rm     NAME [--force] [--repo DIR]   archive tag, then remove worktree and branch
   worktree-guard prune  [--repo DIR]                  rm every merged, clean, unowned one
+  worktree-guard on|off [--repo DIR]                  switch the repo's worktree flow (people only)
   worktree-guard release [PATH]                       clear a worktree's owner (people only)
   worktree-guard share   [PATH]                       let any session edit it (people only)
 
@@ -16,6 +17,11 @@ busy worktree's last commit, and points the session there: Claude Code is told t
 EnterWorktree; Codex, Pi and Antigravity have their tool calls rewritten. An edit is a
 file-edit tool or a git command that changes the working tree or the index. Subagents share
 their parent's ownership. A failure never blocks an edit; it says the edit was not protected.
+
+A repo whose flow is on (git config --local worktree-guard.flow true, set by `on`) is stricter:
+an edit of a file in its main checkout is stopped, and the agent is asked to name the work with
+`ai-dotfiles worktree new <type>/<slug>`. The edited file's repo decides, wherever the session
+started; a file outside git is never gated.
 
 State: $WORKTREE_GUARD_STATE, else ~/.local/state/ai-dotfiles/worktree-guard/ (claims/ per
 worktree, sessions/ per session). The CLIs' hook formats live in the repo's
@@ -55,11 +61,17 @@ KEEP_SECONDS = 30 * 24 * 3600
 SESSIONS = agent_hooks.Store(ENV, DEFAULT_STATE, KEEP_SECONDS, 'sessions')
 LINKED = Path('.claude/worktrees')
 BRANCH_PREFIX = 'agent/'
+FLOW_KEY = 'worktree-guard.flow'  # local git config: `true` when the repo works through worktrees
 GIT_CHANGES = frozenset(
     'add am apply checkout cherry-pick clean commit merge mv pull rebase reset restore revert rm stash switch'.split())
 GIT_OPTIONS_WITH_VALUE = frozenset(('-C', '-c', '--git-dir', '--work-tree', '--namespace', '--config-env'))
 WRAPPERS = frozenset(('sh', 'bash', 'zsh', 'dash', 'fish', 'ksh', 'env', 'timeout', 'gtimeout', 'nice', 'nohup'))
-OVERRIDE = re.compile(r'(ai-dotfiles\s+worktree|worktree[-_]guard(\.py)?)\s+(release|share)\b')
+PERSON_ONLY = frozenset(('release', 'share', 'on', 'off'))  # worktree commands a person runs
+HEREDOC = re.compile(r'<<-?\s*([\'"]?)(\w+)\1[^\n]*\n.*?^[ \t]*\2[ \t]*$', re.M | re.S)
+SEPARATORS = frozenset(';&|()\n')
+COMMAND_PREFIXES = frozenset(('sudo', 'env', 'command', 'exec', 'time', 'nohup', 'nice', 'timeout', 'gtimeout'))
+SHELLS = frozenset(('sh', 'bash', 'zsh', 'dash', 'ksh'))
+GUARD_NAMES = frozenset(('worktree-guard', 'worktree_guard', 'worktree-guard.py', 'worktree_guard.py'))
 PATH_KEYS = {  # tool-input fields that name a file or folder
     'claude': ('file_path', 'notebook_path'),
     'pi': ('path',),
@@ -157,6 +169,11 @@ def main_of(worktree):
     return common.parent if common.name == '.git' else worktree
 
 
+def flow_on(worktree):
+    """Whether the repo of `worktree` works through worktrees (`worktree on`)."""
+    return git(worktree, 'config', '--local', '--bool', '--get', FLOW_KEY, check=False) == 'true'
+
+
 def head_of(worktree):
     """(branch or None when detached, commit or None before the first commit)."""
     return git(worktree, 'symbolic-ref', '-q', '--short', 'HEAD', check=False) or None, \
@@ -250,6 +267,42 @@ def git_changes(command):
             found.append(os.path.normpath(base) if base else '')
         i = j + 1
     return found
+
+
+def person_only(command):
+    """Whether a shell command line runs a person-only worktree command (`ai-dotfiles worktree
+    on|off|release|share`, or the guard script with that verb) as a command: first on the line
+    or after `&&`, `;`, `|`, a newline or a parenthesis, behind `VAR=x`, `sudo`, `env`..., or
+    inside `sh -c '...'`. The same words in a quote, a heredoc, a comment or an argument do not
+    count."""
+    try:
+        lexer = shlex.shlex(HEREDOC.sub('', command), posix=True, punctuation_chars=';()<>|&\n')
+        lexer.whitespace_split, lexer.whitespace = True, ' \t\r'
+        tokens = list(lexer)
+    except ValueError:
+        return False
+    start = True
+    for i, token in enumerate(tokens):
+        if set(token) <= SEPARATORS:
+            start = True
+            continue
+        if not start:
+            continue
+        name, rest = Path(token).name, tokens[i + 1:]
+        if '=' in token.split('/')[0] or name in COMMAND_PREFIXES or name.startswith('python'):
+            continue  # VAR=x, sudo, env ...: the command is the next word
+        start = False
+        if name == 'ai-dotfiles':
+            if rest[:1] == ['worktree'] and rest[1:2] and rest[1] in PERSON_ONLY:
+                return True
+        elif name in GUARD_NAMES:
+            if rest[:1] and rest[0] in PERSON_ONLY:
+                return True
+        elif name in SHELLS:
+            flag = next((n for n, t in enumerate(rest) if re.fullmatch(r'-\w*c', t)), None)
+            if flag is not None and flag + 1 < len(rest) and person_only(rest[flag + 1]):
+                return True
+    return False
 
 
 def command_of(event):
@@ -488,6 +541,11 @@ def leftovers(worktree, previous, state):
             'is to finish them.')
 
 
+STOP = ('worktree-guard: this repo works through worktrees, and its main checkout is not edited by '
+        'agents. Name this work: run `ai-dotfiles worktree new <type>/<slug>` (for example '
+        'fix/prune-worktrees), then make this change there.')
+
+
 def decide(event, state, table=None):
     """The reply to one hook call; `state` is the session's, saved by agent_hooks.call."""
     if event.kind == 'end':
@@ -495,8 +553,8 @@ def decide(event, state, table=None):
         return None
     if event.kind != 'pre':
         return None
-    if event.action == 'shell' and OVERRIDE.search(command_of(event)):
-        return Deny('worktree-guard: release and share are for a person, run from a terminal; '
+    if event.action == 'shell' and person_only(command_of(event)):
+        return Deny('worktree-guard: release, share, on and off are for a person, run from a terminal; '
                     'ask the user to run it.')
     moved, steered = state.get('moved'), None
     if moved and event.cli != 'claude':
@@ -514,6 +572,8 @@ def decide(event, state, table=None):
         table = table if table is not None else process_table()
         me = owner(event, table)
         for worktree in worktrees:
+            if worktree == main_of(worktree) and flow_on(worktree):
+                return Deny(STOP)
             verdict, claim, previous = take(worktree, me, table)
             if verdict == 'busy':
                 return clash(event, state, worktree, claim, me, table)
@@ -668,6 +728,7 @@ def remove(main, name, force=False, quiet_refusal=False):
 def cmd_list(args):
     main = repo_main(args.repo)
     found = linked_worktrees(main)
+    print(f"worktree-guard: flow: {'on' if flow_on(main) else 'off'} in {main}")
     if not found:
         print(f'worktree-guard: no linked worktrees in {main}')
     for name, meta in found.items():
@@ -712,6 +773,16 @@ def cmd_prune(args):
             print('\n'.join(lines))
     if not removed:
         print('worktree-guard: nothing to prune (every linked worktree is owned, changed or unmerged)')
+    return 0
+
+
+def cmd_flow(args):
+    main = repo_main(args.repo)
+    if args.command == 'on':
+        git(main, 'config', '--local', FLOW_KEY, 'true')
+    else:
+        git(main, 'config', '--local', '--unset', FLOW_KEY, check=False)  # exit 5 when it was never set
+    print(f"worktree-guard: flow: {args.command} in {main}")
     return 0
 
 
@@ -765,6 +836,10 @@ def parser():
     rm.add_argument('--force', action='store_true', help='also when owned, changed or unmerged')
     rm.add_argument('--repo', help='a folder in the repository (default: here)')
     rm.set_defaults(run=cmd_rm)
+    for name in ('on', 'off'):
+        command = sub.add_parser(name, help=f'switch the worktree flow {name} for the repo (for people)')
+        command.add_argument('--repo', help='a folder in the repository (default: here)')
+        command.set_defaults(run=cmd_flow)
     for name, run, help_text in (('release', cmd_release, "clear a worktree's owner (for people)"),
                                  ('share', cmd_share, 'let any session edit a worktree until its owner ends')):
         command = sub.add_parser(name, help=help_text)

@@ -6,7 +6,7 @@
 #   ai-dotfiles update [flags]      pull this repo, then install (install.sh --update)
 #   ai-dotfiles uninstall [flags]   remove what points into this repo (scripts/uninstall.sh)
 #   ai-dotfiles check               verify live state (scripts/healthcheck.sh)
-#   ai-dotfiles worktree <command>  agents' linked worktrees: list, done, rm, prune, release, share
+#   ai-dotfiles worktree <command>  agents' linked worktrees: on, off, list, done, rm, prune, release, share
 #   ai-dotfiles commit check [args]  the size and message `git commit [args]` would get past the hook
 #   ai-dotfiles approve [flags]     land the reviewed branch: every git step below, in order
 #   ai-dotfiles git <step> [flags]  one step: push, pr, review, reviewer, tag, merge, prune
