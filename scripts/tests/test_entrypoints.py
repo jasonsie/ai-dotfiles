@@ -24,10 +24,18 @@ class EntrypointsTest(unittest.TestCase):
         # No CLI on PATH, so the MCP step adds nothing.
         self.env = {**os.environ, 'HOME': str(self.home), 'PATH': '/usr/bin:/bin', 'PYTHON': sys.executable}
 
-    def run_script(self, *args, script='scripts/install.sh'):
-        result = subprocess.run(['bash', str(ROOT / script), *args], env=self.env, capture_output=True, text=True)
+    def run_script(self, *args, script='scripts/install.sh', root=ROOT):
+        result = subprocess.run(['bash', str(root / script), *args], env=self.env, capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         return result.stdout
+
+    def working_copy(self):
+        """scripts/, config/ and skills/ copied outside git, so an install there links the copy itself
+        (in a worktree, an install from ROOT links the main checkout, which runs other code)."""
+        checkout = Path(self.temp.name).resolve() / 'checkout'
+        for folder in ('scripts', 'config', 'skills'):
+            shutil.copytree(ROOT / folder, checkout / folder, ignore=shutil.ignore_patterns('__pycache__'))
+        return checkout
 
     def into_repo(self):
         """Links into the repo and files naming it, outside the installers' own state."""
@@ -60,9 +68,7 @@ class EntrypointsTest(unittest.TestCase):
         self.assertFalse(command.exists() or command.is_symlink())
 
     def test_switches_in_ai_clis_decide_what_is_installed(self):
-        checkout = Path(self.temp.name).resolve() / 'checkout'
-        for folder in ('scripts', 'config', 'skills'):
-            shutil.copytree(ROOT / folder, checkout / folder, ignore=shutil.ignore_patterns('__pycache__'))
+        checkout = self.working_copy()
         registry = checkout / 'config/ai-clis.json'
 
         def install(agy_on):
@@ -85,8 +91,10 @@ class EntrypointsTest(unittest.TestCase):
         self.assertTrue((self.home / '.claude/CLAUDE.md').is_symlink())
 
     def test_wrapper_dispatches_through_its_link(self):
-        self.run_script()
+        checkout = self.working_copy()
+        self.run_script(root=checkout)
         command = self.home / '.local/bin/ai-dotfiles'
+        self.assertEqual(Path(os.readlink(command)), checkout / 'scripts/ai-dotfiles')  # this code, not main's
         run = lambda *a: subprocess.run([str(command), *a], env=self.env, capture_output=True, text=True)  # noqa: E731
         self.assertIn('ai-dotfiles update', run('--help').stdout)
         self.assertIn('Preview only', run('--dry-run').stdout)  # flags alone mean install
