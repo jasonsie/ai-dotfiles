@@ -326,7 +326,7 @@ skills/git/                          a bundle; the installer links each skill by
   approve-pr/    ai-dotfiles git review    approval as the repo's reviewer (git reviewer: the cache)
   archive-tag/   ai-dotfiles git tag       archive/<name> at the tip; worktree-guard imports it too
   merge-pr/      ai-dotfiles git merge     a merge commit
-  prune-branch/  ai-dotfiles git prune     base pulled; branch deleted locally and on origin
+  prune-branch/  ai-dotfiles git prune     base pulled; branch deleted here and on origin; then its worktree
   approve/       ai-dotfiles approve       preflight, then the six above, in that order
   ship/          ai-dotfiles ship          an agent's finish: checks, push as <type>/<slug>, PR, worktree deleted
 ```
@@ -338,6 +338,14 @@ skills/git/                          a bundle; the installer links each skill by
   worktree: reviewer approval, archive tag at the PR head, merge commit, remote branch deleted,
   then the main checkout fast-forwarded only when git can without touching uncommitted files
   (never a stash or reset; otherwise skipped, with the reason). Each step is skipped when done.
+  Run in PR n's own linked worktree, it ends that worktree too, as below.
+- **The end:** run in the linked worktree that holds the work, either form leaves only the
+  archive tag: the branch deleted, the main checkout fast-forwarded, then the worktree deleted,
+  last (nothing can run in its folder after it), through worktree-guard, so its record, its
+  owner and the session's binding go too. It is kept, as a `skipped:` line, in a repo whose
+  flow is off, when the guard did not make it, while another live session owns it, or while it
+  holds uncommitted files or a commit on no remote. A worktree holding other work is untouched;
+  by number, so is the PR's own while it holds uncommitted files or commits the PR lacks.
 - **Ship:** `ai-dotfiles ship` is the agent's own finish, before the person reviews: in the worktree
   `worktree new` made (no branch) it runs the checks (the commands of the repo's `AGENTS.md`
   Verify block), pushes HEAD as `<type>/<slug>`, opens the PR and deletes the worktree. It stops

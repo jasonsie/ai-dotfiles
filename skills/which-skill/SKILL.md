@@ -114,14 +114,15 @@ has the reasoning and each CLI's commands.
   show first, how to split, and what a block means.
 - **`approve`**: once the user has reviewed a branch and said "approve": commit, PR body,
   then `ai-dotfiles approve` runs the git steps below in order, resumable. "approve <n>":
-  `ai-dotfiles approve <n>` lands PR n from any session, nothing local.
+  `ai-dotfiles approve <n>` lands PR n from any session, nothing local. Either form, run in
+  the work's own worktree, deletes that worktree last: only the archive tag is left.
 - **`ship`**: the agent's finish in a worktree `worktree new` made: `ai-dotfiles ship` runs the
   repo's checks, pushes the work as `<type>/<slug>`, opens the PR, deletes the worktree.
 - The git steps, each alone as `ai-dotfiles git <step>`: **`push-branch`** (to origin),
   **`open-pr`** (open or reuse), **`approve-pr`** (approve as the repo's cached reviewer
   account), **`archive-tag`** (`archive/<name>` at the tip before a branch goes; also
   worktree-guard's), **`merge-pr`** (merge commit), **`prune-branch`** (branch deleted
-  locally and on origin).
+  locally and on origin; run in a linked worktree, the worktree too).
 
 ## Repository setup
 

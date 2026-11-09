@@ -14,7 +14,8 @@ does the gating; this skill is what a session does.
 ## Commands
 
 `ai-dotfiles worktree on | off | new | pr | shipped | list | done | rm | prune | release | share`; `--help`
-describes each. `shipped` is what `ship` runs. `on`/`off`, `release` (clear a stale owner) and `share` (let every session
+describes each. `shipped` is what `ship` runs; `approve`, run inside a worktree, deletes it the
+same way once its PR is merged. `on`/`off`, `release` (clear a stale owner) and `share` (let every session
 edit a worktree) are the person's, run in a terminal; the guard refuses them from an agent,
 so ask the user.
 
