@@ -17,6 +17,11 @@ rerun from the same worktree:
   worktree    deleted once the PR exists (`worktree shipped`): the session's record of it is
               cleared, so its next first edit starts a new task                  (worktree-guard)
 
+A worktree made by `ai-dotfiles worktree pr <n>` fixes that open PR: its push goes to the PR's own
+branch, only as a fast-forward of origin's (a branch that moved on, or a push origin refuses, stops
+the run), no PR is opened, and the worktree is deleted the same way. Another worktree can never
+push to a branch already on origin.
+
 Prints the PR's URL, then where the session is: the main checkout. The archive tag is not made
 here: approve makes it at the PR's head. Nothing is undone on failure. Python 3.11+, stdlib
 only; needs git and an authenticated gh.
@@ -92,8 +97,26 @@ def push(repo, dry):
     return f'would push {repo.branch}' if dry else f'{repo.branch} pushed'
 
 
+def update(repo, dry):
+    """HEAD onto the PR's own branch (a worktree `worktree pr` made): the one case a branch already
+    on origin may be pushed to, and only fast-forward: a branch that moved on stops the run."""
+    listing = git_run.out(['git', 'ls-remote', '--heads', 'origin', f'refs/heads/{repo.branch}'], what='git ls-remote')
+    found = [line.split() for line in listing.splitlines()]
+    remote = next((sha for sha, ref in found if ref == f'refs/heads/{repo.branch}'), '')
+    if remote == repo.tip:
+        return 'already pushed'
+    if not remote:
+        raise Stop(f'push: origin no longer has {repo.branch}; the PR is gone or its branch was deleted')
+    git_run.act(['git', 'fetch', '-q', 'origin', repo.branch], dry)
+    if git_run.sh(['git', 'merge-base', '--is-ancestor', remote, repo.tip])[0] != 0:
+        raise Stop(f'push: origin has {repo.branch} at {remote[:7]}, which this worktree does not contain; '
+                   f'merge or rebase it in, commit, and rerun')
+    git_run.act(['git', 'push', '-q', 'origin', f'HEAD:refs/heads/{repo.branch}'], dry)
+    return f'would update {repo.branch}' if dry else f'{repo.branch} updated'
+
+
 def where():
-    """(worktree folder, main checkout, work name): this run's worktree and what made it."""
+    """(worktree folder, main checkout, its record): this run's worktree and what made it."""
     top = Path(git_run.out(['git', 'rev-parse', '--show-toplevel'], what='git rev-parse')).resolve()
     common = Path(git_run.out(['git', 'rev-parse', '--path-format=absolute', '--git-common-dir'],
                               what='git rev-parse')).resolve()
@@ -101,15 +124,23 @@ def where():
     meta = guard.read_meta(main, top.name) if top != main else None
     if not meta or not meta.get('work'):
         raise Stop(f'ship: {top.name} was not made by `ai-dotfiles worktree new`; run ship from the worktree it made')
-    return top, main, meta['work']
+    return top, main, meta
 
 
 def run(args):
     dry, step = args.dry_run, git_run.step
-    top, main, work = where()
+    top, main, meta = where()
+    work, number = meta['work'], meta.get('pr')
     repo = git_run.preflight(work)
     step('preflight', f'{repo.branch} -> {repo.base} in {repo.slug}, as {repo.author}')
-    if not open_pr.find_pr(repo):
+    if number:
+        pr = open_pr.find_pr(repo)
+        if not pr or pr['state'] != 'OPEN' or pr['number'] != number:
+            raise Stop(f'ship: PR #{number} is not open any more; nothing to update (remove the worktree, or '
+                       f'start again with worktree new)')
+        if repo.tip == meta.get('base'):
+            raise Stop(f'ship: nothing to ship: no commit on top of origin/{work}')
+    elif not open_pr.find_pr(repo):
         if not repo.ahead:
             raise Stop(f'ship: nothing to ship: no commits ahead of origin/{repo.base} and no PR for {work}')
         if not (args.title and args.body_file):
@@ -117,9 +148,12 @@ def run(args):
         if not os.path.isfile(args.body_file):
             raise Stop(f'ship: body file not found: {args.body_file}')
     step('checks', checks(top, dry))
-    step('push', push(repo, dry))
-    pr, said = open_pr.pull_request(repo, args.title, args.body_file, dry)
-    step('pr', said)
+    step('push', (update if number else push)(repo, dry))
+    if number:
+        step('pr', f'#{number} updated')
+    else:
+        pr, said = open_pr.pull_request(repo, args.title, args.body_file, dry)
+        step('pr', said)
     command = ['python3', str(GUARD), 'shipped', top.name, '--repo', str(main)]
     if dry:
         git_run.act(command, dry)
@@ -137,7 +171,7 @@ def run(args):
 
 def configure(parser):
     parser.prog = 'ai-dotfiles ship'
-    parser.add_argument('--title', help='the PR title, when no PR is open for the work')
+    parser.add_argument('--title', help='the PR title, when no PR is open for the work (not for a PR fix)')
     parser.add_argument('--body-file', help='the PR body (pr skill), when no PR is open for the work')
 
 

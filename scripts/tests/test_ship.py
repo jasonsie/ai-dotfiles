@@ -186,3 +186,114 @@ class ShipTest(unittest.TestCase):
         self.assertEqual(code, 0, err)
         self.assertIn('checks     none: AGENTS.md has no Verify block', output)
         self.assertEqual(fake.ran('bash -c'), [])
+
+
+class FixShipTest(unittest.TestCase):
+    """A worktree `worktree pr 7` made: detached on origin/feat/thing, which was at OLD when it was made."""
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix='ship 空間 ')
+        self.addCleanup(self.temp.cleanup)
+        self.main = Path(self.temp.name).resolve() / 'repo'
+        self.linked = self.main / '.claude/worktrees/feat-thing'
+        self.linked.mkdir(parents=True)
+        (self.linked / 'AGENTS.md').write_text(VERIFY)
+        self.meta = self.main / '.claude/worktrees/feat-thing.json'
+        self.set_meta(base=OLD)
+        self.remote = 'git ls-remote --heads origin refs/heads/feat/thing'
+        self.answers = {
+            'git rev-parse --show-toplevel': str(self.linked),
+            'git rev-parse --path-format=absolute --git-common-dir': str(self.main / '.git'),
+            'git branch --show-current': '',
+            self.remote: f'{OLD}\trefs/heads/feat/thing',
+            'git merge-base --is-ancestor': OK,
+            'gh pr list': json.dumps([PR]),
+            'bash -c': OK,
+            'python3': 'worktree-guard: removed feat-thing (feat/thing); its session is back in ' + str(self.main),
+        }
+
+    def set_meta(self, **fields):
+        self.meta.write_text(json.dumps({'name': 'feat-thing', 'work': 'feat/thing', **fields}))
+
+    def ship(self, argv=(), **answers):
+        return land(list(argv), ship.main, **{**self.answers, **answers})
+
+    def test_it_pushes_to_the_prs_branch_updates_the_pr_and_deletes_the_worktree(self):
+        self.set_meta(pr=7, base=OLD)
+        code, output, err, fake = self.ship()
+        self.assertEqual(code, 0, output + err)
+        self.assertIn('push       feat/thing updated', output)
+        self.assertIn('pr         #7 updated', output)
+        self.assertEqual(fake.ran('git push'), ['git push -q origin HEAD:refs/heads/feat/thing'])
+        self.assertEqual(fake.ran('gh pr create'), [], 'no new PR')
+        self.assertTrue(fake.ran('git fetch -q origin feat/thing'), 'the branch is fetched to compare')
+        self.assertIn('shipped https://github.com/o/r/pull/7', output)
+        self.assertIn(f'shipped feat-thing --repo {self.main}', fake.ran('python3')[0])
+        calls = [c for c, _ in fake.calls]
+        order = [next(i for i, c in enumerate(calls) if c.startswith(p)) for p in ('bash -c', 'git push', 'python3')]
+        self.assertEqual(order, sorted(order), 'checks, push, then the worktree goes')
+
+    def test_a_branch_that_moved_on_origin_stops_before_the_push_and_deletes_nothing(self):
+        self.set_meta(pr=7, base=OLD)
+        code, _, err, fake = self.ship(**{self.remote: f'{"c" * 40}\trefs/heads/feat/thing',
+                                          'git merge-base --is-ancestor': FAIL})
+        self.assertEqual(code, 1)
+        self.assertIn('push: origin has feat/thing at ccccccc, which this worktree does not contain', err)
+        self.assertEqual(fake.ran('git push') + fake.ran('python3'), [])
+
+    def test_a_push_origin_refuses_stops_with_its_message_and_deletes_nothing(self):
+        self.set_meta(pr=7, base=OLD)
+        code, output, err, fake = self.ship(**{'git push': (1, '', 'remote: protected branch')})
+        self.assertEqual(code, 1)
+        self.assertIn('git push: remote: protected branch', err)
+        self.assertNotIn('shipped', output)
+        self.assertEqual(fake.ran('python3'), [])
+
+    def test_a_pr_that_is_no_longer_open_stops_before_the_checks(self):
+        self.set_meta(pr=7, base=OLD)
+        for listing in ('[]', json.dumps([dict(PR, state='MERGED')]), json.dumps([dict(PR, number=9)])):
+            code, _, err, fake = self.ship(**{'gh pr list': listing})
+            self.assertEqual(code, 1, listing)
+            self.assertIn('ship: PR #7 is not open', err)
+            self.assertEqual(fake.ran('bash -c') + fake.ran('git push'), [])
+
+    def test_nothing_on_top_of_the_branch_has_nothing_to_ship(self):
+        self.set_meta(pr=7, base=TIP)
+        code, _, err, fake = self.ship()
+        self.assertEqual(code, 1)
+        self.assertIn('nothing to ship: no commit on top of origin/feat/thing', err)
+        self.assertEqual(fake.ran('bash -c') + fake.ran('git push'), [])
+
+    def test_a_rerun_after_the_push_skips_it_and_still_deletes_the_worktree(self):
+        self.set_meta(pr=7, base=OLD)
+        code, output, err, fake = self.ship(**{self.remote: f'{TIP}\trefs/heads/feat/thing'})
+        self.assertEqual(code, 0, err)
+        self.assertIn('push       already pushed', output)
+        self.assertEqual(fake.ran('git push'), [])
+        self.assertTrue(fake.ran('python3'))
+
+    def test_a_failing_check_stops_before_the_push(self):
+        self.set_meta(pr=7, base=OLD)
+        code, _, err, fake = self.ship(**{'bash -c shellcheck': (2, '', 'bad')})
+        self.assertEqual(code, 1)
+        self.assertEqual(fake.ran('git push') + fake.ran('python3'), [])
+
+    def test_a_branch_gone_from_origin_is_not_recreated(self):
+        self.set_meta(pr=7, base=OLD)
+        code, _, err, fake = self.ship(**{self.remote: ''})
+        self.assertEqual(code, 1)
+        self.assertIn('push: origin no longer has feat/thing', err)
+        self.assertEqual(fake.ran('git push'), [])
+
+    def test_dry_run_changes_nothing(self):
+        self.set_meta(pr=7, base=OLD)
+        code, output, err, fake = self.ship(['--dry-run'])
+        self.assertEqual(code, 0, err)
+        self.assertEqual(fake.ran('git push') + fake.ran('python3') + fake.ran('gh pr create'), [])
+        self.assertIn('would  git push -q origin HEAD:refs/heads/feat/thing', output)
+
+    def test_work_that_is_not_a_pr_fix_still_cannot_take_an_existing_branch(self):
+        code, _, err, fake = self.ship(['--title', 't', '--body-file', __file__], **{'gh pr list': '[]'})
+        self.assertEqual(code, 1)
+        self.assertIn('push: origin already has feat/thing at bbbbbbb', err)
+        self.assertEqual(fake.ran('git push'), [])

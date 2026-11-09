@@ -253,9 +253,9 @@ session as JSON on stdin and shows what it prints.
 ⏳ 5h 23% → 14:00  7d 41% → Thu 08:00  💰 $0.12
 ```
 
-- **Line 1:** the folder; the branch, with the worktree's name when worktree-guard moved the
-  session into a linked one; the model with its effort, `thinking off` and `⚡fast` only when
-  so; the CLI's version. While a session has a worktree of worktree-guard's the work name
+- **Line 1:** the folder; the branch, with the worktree's name when the session works in a
+  linked one; the model with its effort, `thinking off` and `⚡fast` only when so; the CLI's
+  version. While a session has a worktree of worktree-guard's the work name
   (`🌿 fix/prune-worktrees`) replaces the branch: Claude Code reads it from the record beside
   the worktree its folder is in, Antigravity (its folder stays the main checkout) from the
   guard's record of the session, found by the payload's `session_id`. Once the worktree is

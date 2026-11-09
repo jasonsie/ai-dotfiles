@@ -1,37 +1,32 @@
 ---
 name: worktree-guard
-description: Name work and edit in its own worktree, or finish work in a linked worktree that worktree-guard moved this session into. Use when a worktree-guard message says to name this work, or that a worktree is busy or this session was moved, when work in a .claude/worktrees/ folder is done, or when the user asks about agents' linked worktrees (new, list, merge, rm, release, share).
+description: Name work and edit in its own worktree, and clear linked worktrees. Use when a worktree-guard message says to name this work or that a worktree belongs to another session, when work in a .claude/worktrees/ folder is done, or when the user asks about agents' linked worktrees (new, list, rm, release, share).
 ---
 
 # Worktree guard
 
-Sessions sharing a checkout stay apart. The first session to edit a worktree owns it until it
-ends; a second session's first edit there moves that session into a linked worktree,
-`.claude/worktrees/<cli>-<session>` on branch `agent/<cli>-<session>`, started from the busy
-worktree's last commit. The hook in [scripts/worktree_guard.py](scripts/worktree_guard.py)
-does the moving; this skill is what the moved session does.
+A repo that is off gets nothing from the guard: every edit passes, with no owner and no
+message. In a repo that is on (see Flow switch), each task has a worktree and each worktree
+one session: the first session to edit a worktree owns it until it ends, and another
+session's edit there is refused. The hook in [scripts/worktree_guard.py](scripts/worktree_guard.py)
+does the gating; this skill is what a session does.
 
-## Moved
+## Older agent worktrees
 
-1. **Enter.** Claude Code: call `EnterWorktree` with the path the message gives, then redo the
-   change. Codex, Pi and Antigravity: your calls are steered there already; name files by
-   their paths there.
-2. **Re-read** every file before editing it: the linked worktree holds the last commit, not
-   the other session's uncommitted changes.
-3. **Base.** Unrelated to the busy branch? Before any edit, restart from the default branch
-   with the `reset --hard` command the message gives. Once the task is clear, give the branch
-   the repo's name for it: `git -C <linked worktree> branch -m <type>/<slug>`.
-4. **Finish.** Done when the work is committed on the branch, `ai-dotfiles worktree done
-   "<one-line description>"` has run from the linked worktree, and your final reply names the
-   branch, its base, and the person's two commands: `git merge <branch>` in the busy
-   worktree, then `ai-dotfiles worktree rm <name>`.
+The guard used to move a second session's first edit into `.claude/worktrees/<cli>-<session>`
+on branch `agent/<cli>-<session>`. It no longer makes them; ones already there stay and are
+the person's to clear:
 
-Merging and removing belong to the person: `rm` archives the branch as `archive/<name>`
-(the description becomes the tag's) before deleting worktree and branch.
+- `ai-dotfiles worktree list` shows them; from inside one, `ai-dotfiles worktree done
+  "<one-line description>"` records its summary.
+- `ai-dotfiles worktree rm <name>` archives the branch as `archive/<name>` (the description
+  becomes the tag's), then deletes worktree and branch; merge the branch first
+  (`git merge <branch>` in the main checkout), or it refuses an unmerged one without `--force`.
+  `prune` removes every merged, clean, unowned one.
 
 ## Commands
 
-`ai-dotfiles worktree on | off | new | shipped | list | done | rm | prune | release | share`; `--help`
+`ai-dotfiles worktree on | off | new | pr | shipped | list | done | rm | prune | release | share`; `--help`
 describes each. `shipped` is what `ship` runs. `on`/`off`, `release` (clear a stale owner) and `share` (let every session
 edit a worktree) are the person's, run in a terminal; the guard refuses them from an agent,
 so ask the user.
@@ -49,7 +44,7 @@ deleted the guard tells Codex in one line. Not an error: the notice is how Codex
 `off` removes it; `list` shows `flow: on|off`. In a repo that is on, an edit of a file in the
 main checkout (or a git command that changes it) is stopped with "name this work". Reads pass.
 The edited file's repo decides, wherever the session started; a file outside git is never
-gated. A repo that is off behaves as before.
+gated. A repo that is off gets nothing: no owner, no move, no message.
 
 ## Name the work (first edit, repo on)
 
@@ -71,9 +66,33 @@ gated. A repo that is off behaves as before.
    `rm` tags its tip `archive/<slug>`, and refuses unpushed or uncommitted work without
    `--force`.
 
-Run `new` as its own command in the shell, not inside a script or a quoted string: the hook
+## Fix an open PR
+
+A first edit with no PR named is a new task. To change a PR that is open, run `ai-dotfiles
+worktree pr <n>` instead of `new`: it fetches origin and makes `.claude/worktrees/<branch>`
+(slashes become hyphens) detached at the PR's remote branch, with no local branch, bound to your
+session as `new` does (enter it the same way). A PR that is not open or comes from a fork is
+refused. Commit there, then run the `ship` skill: it pushes to the PR's branch, so the PR
+updates, and deletes the worktree. A push that origin refuses, or a branch that moved on, stops
+the run and deletes nothing.
+
+Run `new` and `pr` as their own commands in the shell, not inside a script or a quoted string: the hook
 that binds the worktree to your session reads the command line. Run by hand (no session
 bound), it still makes the worktree and prints its path; the first edit there claims it.
+
+## Leftovers
+
+When a worktree is made, and when a session ends, the guard deletes the linked worktrees whose
+owner is gone and that have nothing to lose: no uncommitted or untracked files, and every
+commit on a remote-tracking ref (pushed). One nobody has claimed yet is spared for an hour.
+Anything else stays, and `list` marks it `LEFT BEHIND: owner gone, 2 commits not pushed, 1 file
+uncommitted`.
+
+- **Take it over.** Enter it (Claude Code: `EnterWorktree` with its path) and make your first
+  edit there: you own it, and the guard names the uncommitted files and unpushed commits you
+  now hold. Finish or discard them, then push.
+- **Or drop it.** `ai-dotfiles worktree rm <name>` archive-tags its tip as `archive/<name>`,
+  then deletes it; it refuses unpushed or uncommitted work without `--force`.
 
 ## Claude's own worktrees
 
@@ -101,6 +120,8 @@ Desktop app), so use `worktree new` from a session started in the repo instead.
 
 - **Uncommitted changes already there** when you first edit an unowned worktree: leave them
   out of your commits unless your task is to finish them.
+- **"belongs to ... session"**: another live session owns that worktree; do not edit it, work in
+  your own (`worktree new`).
 - **"worktree-guard failed ... not protected"**: that edit ran unguarded; say so in your reply.
-- The guard sees file-edit tools and git; in a busy worktree, change files through those
+- The guard sees file-edit tools and git; in a repo that is on, change files through those
   rather than `sed -i`, redirects or generators.

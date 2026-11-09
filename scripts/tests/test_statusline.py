@@ -219,7 +219,7 @@ class WorkNameTest(unittest.TestCase):
             self.assertIn('🌿 main  🤖', self.first(self.agy()), text)
         self.assertIn('🌿 main  🤖', self.first(self.agy(session_id=['x'], conversation_id=None)))
 
-    def test_a_work_less_move_shows_its_branch(self):  # a session moved aside by a clash, not by `worktree new`
+    def test_a_work_less_move_shows_its_branch(self):  # a record an older guard wrote (move on clash)
         self.keep('x', self.moved(work=None, branch='agent/codex-bbbb2222'))
         self.assertIn('🌿 agent/codex-bbbb2222  🤖', self.first(self.agy()))
 
