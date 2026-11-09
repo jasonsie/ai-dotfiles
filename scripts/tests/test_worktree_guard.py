@@ -415,6 +415,90 @@ class CommandsTest(Repo):
         self.assertIn('inside a linked worktree', out)
 
 
+class OriginRepo(Repo):
+    """A repo whose origin is a local bare repo, so fetch, push and ls-remote work offline."""
+
+    def setUp(self):
+        super().setUp()
+        base = self.repo.parent
+        self.origin = base / 'origin.git'
+        git(base, 'init', '-q', '--bare', '-b', 'main', str(self.origin))
+        git(self.repo, 'remote', 'add', 'origin', str(self.origin))
+        git(self.repo, 'push', '-q', '-u', 'origin', 'main')
+        git(self.repo, 'remote', 'set-head', 'origin', 'main')
+
+    def advance_origin(self, name='b.txt'):
+        """Another clone pushes a commit, so the main checkout lags (spec D2); returns its sha."""
+        clone = self.repo.parent / 'other'
+        git(self.repo.parent, 'clone', '-q', str(self.origin), str(clone))
+        git(clone, 'config', 'user.email', 't@example.com')
+        git(clone, 'config', 'user.name', 'T')
+        (clone / name).write_text('x\n')
+        git(clone, 'add', '.')
+        git(clone, 'commit', '-q', '-m', 'ahead')
+        git(clone, 'push', '-q', 'origin', 'main')
+        return git(clone, 'rev-parse', 'HEAD')
+
+    def cli(self, *args):
+        out, err = io.StringIO(), io.StringIO()
+        with redirect_stdout(out), redirect_stderr(err):
+            status = guard.main(list(args))
+        return status, out.getvalue() + err.getvalue()
+
+
+class DetachedTest(OriginRepo):
+    """list, rm and prune on a worktree with no branch: where the work name stands in for one."""
+
+    def setUp(self):
+        super().setUp()
+        me = {'session': 's1', 'cli': 'claude', 'pid': ME, 'started': guard.started(ME)}
+        self.wt = guard.make_worktree(self.repo, 'fix-x', self.base, None, source=self.repo, owner=me,
+                                      table=guard.process_table(), meta={'work': 'fix/x', 'from': 'origin/main'})
+
+    def work(self):
+        (self.wt / 'a.txt').write_text('two\n')
+        git(self.wt, 'commit', '-q', '-am', 'change a')
+        return git(self.wt, 'rev-parse', 'HEAD')
+
+    def test_list_names_the_work_where_a_branch_would_be(self):
+        status, out = self.cli('list', '--repo', str(self.repo))
+        self.assertEqual(status, 0, out)
+        self.assertIn('fix-x  fix/x (no branch)  from origin/main  no commits yet  owner: claude session s1', out)
+        self.work()
+        self.assertIn('from origin/main  not merged  owner:', self.cli('list', '--repo', str(self.repo))[1])
+
+    def test_rm_keeps_unpushed_commits_unless_forced_then_tags_the_tip(self):
+        tip = self.work()
+        guard.release('s1')
+        status, out = self.cli('rm', 'fix-x', '--repo', str(self.repo))
+        self.assertEqual(status, 1)
+        self.assertIn('fix/x is neither merged into origin/main nor pushed', out)
+        status, out = self.cli('rm', 'fix-x', '--force', '--repo', str(self.repo))
+        self.assertEqual(status, 0, out)
+        self.assertIn('removed fix-x; archived as archive/x', out)
+        self.assertEqual(git(self.repo, 'rev-list', '-n', '1', 'archive/x'), tip)
+        self.assertFalse(self.wt.exists())
+        self.assertEqual(git(self.repo, 'branch', '--list'), '* main')
+
+    def test_rm_lets_go_of_pushed_work_and_of_work_with_no_commits(self):
+        tip = self.work()
+        guard.release('s1')
+        git(self.wt, 'push', '-q', 'origin', 'HEAD:refs/heads/fix/x')
+        status, out = self.cli('rm', 'fix-x', '--repo', str(self.repo))
+        self.assertEqual(status, 0, out)
+        self.assertEqual(git(self.repo, 'rev-list', '-n', '1', 'archive/x'), tip)
+        self.assertIn('archive/x pushed to origin', out)
+        guard.make_worktree(self.repo, 'fix-y', self.base, None, source=self.repo, meta={'work': 'fix/y'})
+        status, out = self.cli('rm', 'fix-y', '--repo', str(self.repo))
+        self.assertEqual(status, 0, out)
+        self.assertIn('no commits of its own, no tag', out)
+
+    def test_prune_removes_a_clean_unowned_one_and_keeps_the_rest(self):
+        guard.make_worktree(self.repo, 'fix-y', self.base, None, source=self.repo, meta={'work': 'fix/y'})
+        self.assertIn('removed fix-y', self.cli('prune', '--repo', str(self.repo))[1])
+        self.assertTrue(self.wt.exists())  # still owned
+
+
 CLIS = ('claude', 'codex', 'pi', 'agy')
 STOP = 'ai-dotfiles worktree new <type>/<slug>'
 

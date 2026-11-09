@@ -675,6 +675,19 @@ def branch_of(main, name, meta):
     return current or meta.get('branch')
 
 
+def ref_of(main, name, branch):
+    """What to read the work's commits from: its branch, else (no branch) the worktree's HEAD
+    commit; None when neither is there."""
+    if branch:
+        return branch
+    linked = main / LINKED / name
+    return git(linked, 'rev-parse', '-q', '--verify', 'HEAD', check=False) if linked.is_dir() else None
+
+
+def label_of(meta, branch):
+    return branch or f"{meta.get('work') or '?'} (no branch)"
+
+
 def branch_exists(main, branch):
     return bool(branch) and git(main, 'rev-parse', '-q', '--verify', f'refs/heads/{branch}', check=False) is not None
 
@@ -686,12 +699,16 @@ def target_of(main, meta):
     return default_ref(main)
 
 
-def merged(main, branch, meta):
+def merged(main, ref, meta):
     target = target_of(main, meta)
-    return bool(target) and git(main, 'merge-base', '--is-ancestor', branch, target, check=False) is not None
+    return bool(target) and bool(ref) and git(main, 'merge-base', '--is-ancestor', ref, target, check=False) is not None
 
 
-def pushed(main, branch):
+def pushed(main, ref, branch):
+    """Whether every commit of the work is on a remote: the branch's upstream has them, or (no
+    branch) some remote-tracking ref does."""
+    if not branch:
+        return git(main, 'rev-list', '--count', ref, '--not', '--remotes', check=False) == '0'
     ahead = git(main, 'rev-list', '--count', f'{branch}@{{upstream}}..{branch}', check=False)
     return ahead == '0'
 
@@ -701,19 +718,21 @@ def owner_of(worktree):
     return claim if claim and alive(claim) else None
 
 
-def span(main, base, branch):
-    """The branch's commit dates, in archive-tag's words; '' for no commits of its own."""
-    return archive_tag.span(base, branch, cwd=main)
+def span(main, base, ref):
+    """The work's commit dates, in archive-tag's words; '' for no commits of its own."""
+    return archive_tag.span(base, ref, cwd=main) if ref else ''
 
 
-def archive(main, name, meta, branch, was_merged):
-    """Tag the branch tip with archive-tag; None when it has no commits of its own."""
-    if not branch_exists(main, branch):
+def archive(main, name, meta, branch, ref, was_merged):
+    """Tag the work's tip with archive-tag; None when it has no commits of its own. A worktree
+    with no branch is tagged by its work name (`fix/x` -> `archive/x`)."""
+    if not ref or (branch and not branch_exists(main, branch)):
         return None
-    description = meta.get('description') or git(main, 'log', '-1', '--format=%s', branch)
+    description = meta.get('description') or git(main, 'log', '-1', '--format=%s', ref)
     agent = ' '.join(x for x in (meta.get('cli', 'agent'), meta.get('model', '')) if x)
     extra = (f"Agent: {agent}, session {meta.get('session', '?')}; redirected from branch {meta.get('from', '?')}.",)
-    return archive_tag.archive(branch, description, was_merged, meta.get('base', ''), cwd=main, extra=extra)
+    return archive_tag.archive(branch or meta.get('work') or name, description, was_merged, meta.get('base', ''),
+                               cwd=main, extra=extra, ref=ref)
 
 
 def remove(main, name, force=False, quiet_refusal=False):
@@ -729,7 +748,8 @@ def remove(main, name, force=False, quiet_refusal=False):
         meta_file(main, name).unlink(missing_ok=True)
         claim_file(linked).unlink(missing_ok=True)
         return True, [f'worktree-guard: removed {name}: worktree and branch {branch} already gone (stale record)']
-    was_merged = merged(main, branch, meta)
+    ref = ref_of(main, name, branch)
+    was_merged = merged(main, ref, meta)
     problems = []
     claim = owner_of(linked) if linked.is_dir() else None
     if claim:
@@ -737,19 +757,20 @@ def remove(main, name, force=False, quiet_refusal=False):
     count = changes_in(linked) if linked.is_dir() else 0
     if count:
         problems.append(f'{count} uncommitted change(s)')
-    if not was_merged and not pushed(main, branch):
-        problems.append(f'{branch} is neither merged into {target_of(main, meta)} nor pushed')
+    if not was_merged and not pushed(main, ref, branch):
+        problems.append(f"{branch or meta.get('work')} is neither merged into {target_of(main, meta)} nor pushed")
     if problems and not force:
         return False, [] if quiet_refusal else [f"worktree-guard: kept {name}: {'; '.join(problems)}. "
                                                f"--force removes it anyway."]
-    tag = archive(main, name, meta, branch, was_merged)
+    tag = archive(main, name, meta, branch, ref, was_merged)
     if linked.is_dir():
         git(main, 'worktree', 'remove', *(['--force'] if force else []), str(linked))
-    git(main, 'branch', '-D', branch, check=False)
+    if branch:
+        git(main, 'branch', '-D', branch, check=False)
     meta_file(main, name).unlink(missing_ok=True)
     claim_file(linked).unlink(missing_ok=True)
-    lines = [f'worktree-guard: removed {name} and branch {branch}' + (f'; archived as {tag}' if tag else
-                                                                       '; no commits of its own, no tag')]
+    lines = [f"worktree-guard: removed {name}{f' and branch {branch}' if branch else ''}"
+             + (f'; archived as {tag}' if tag else '; no commits of its own, no tag')]
     if tag and git(main, 'remote', 'get-url', 'origin', check=False):
         try:
             lines.append(archive_tag.push_tag(tag, cwd=main).replace(' pushed', ' pushed to origin', 1))
@@ -767,11 +788,12 @@ def cmd_list(args):
     for name, meta in found.items():
         linked = main / LINKED / name
         branch = branch_of(main, name, meta)
+        ref = ref_of(main, name, branch)
         claim = owner_of(linked) if linked.is_dir() else None
-        state = ('no commits yet' if not span(main, meta.get('base', ''), branch) else
-                 'merged' if merged(main, branch, meta) else 'not merged')
+        state = ('no commits yet' if not span(main, meta.get('base', ''), ref) else
+                 'merged' if merged(main, ref, meta) else 'not merged')
         count = changes_in(linked) if linked.is_dir() else 0
-        print(f"{name}  {branch}  from {meta.get('from')}  {state}"
+        print(f"{name}  {label_of(meta, branch)}  from {meta.get('from')}  {state}"
               f"{f', {count} uncommitted' if count else ''}  owner: {who(claim) if claim else 'none'}"
               f"{'  - ' + meta['description'] if meta.get('description') else ''}")
     return 0
