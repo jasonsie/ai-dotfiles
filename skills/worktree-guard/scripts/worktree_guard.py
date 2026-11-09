@@ -2,7 +2,7 @@
 """worktree-guard: keep agent sessions that share a checkout out of each other's changes.
 
   worktree-guard hook (pre|end) --cli (claude|codex|agy|pi)   JSON in; JSON or nothing out
-  worktree-guard list   [--repo DIR]                  linked worktrees: owner, branch, merged
+  worktree-guard list   [--repo DIR]                  linked worktrees: owner, branch, merged, left behind
   worktree-guard done   DESCRIPTION [--path DIR]      a linked worktree's one-line summary
   worktree-guard rm     NAME [--force] [--repo DIR]   archive tag, then remove worktree and branch
   worktree-guard prune  [--repo DIR]                  rm every merged, clean, unowned one
@@ -28,6 +28,12 @@ an ancestor's, claims the worktree for that CLI process and records it in the se
 so Claude is told to call EnterWorktree and Codex, Pi and Antigravity are steered. Another
 session's worktree is refused. The edited file's repo decides, wherever the session started; a
 file outside git is never gated.
+
+Leftovers: when the guard makes a worktree, and when a session ends, it removes the linked worktrees
+whose owner is gone and that have nothing to lose: no uncommitted or untracked files, and every
+commit on a remote-tracking ref. A worktree nobody has claimed yet is left alone for an hour. The
+rest are never removed automatically: `list` marks them LEFT BEHIND with counts, a new session that
+edits there takes them over, and `rm` archive-tags before deleting.
 
 State: $WORKTREE_GUARD_STATE, else ~/.local/state/ai-dotfiles/worktree-guard/ (claims/ per
 worktree, sessions/ per session). The CLIs' hook formats live in the repo's
@@ -1086,7 +1092,7 @@ def parser():
     hook.add_argument('kind', choices=('pre', 'end'))
     hook.add_argument('--cli', choices=agent_hooks.CLIS, required=True)
     hook.set_defaults(run=cmd_hook)
-    for name, run, help_text in (('list', cmd_list, 'linked worktrees: owner, branch, merged'),
+    for name, run, help_text in (('list', cmd_list, 'linked worktrees: owner, branch, merged, left behind'),
                                  ('prune', cmd_prune, 'rm every merged, clean, unowned linked worktree')):
         command = sub.add_parser(name, help=help_text)
         command.add_argument('--repo', help='a folder in the repository (default: here)')
