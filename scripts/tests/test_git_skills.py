@@ -35,10 +35,12 @@ class Fake:
     def __init__(self, **answers):
         self.answers = dict(DEFAULTS, **answers)
         self.calls = []
+        self.dirs = []   # (command, cwd) of every call
 
     def __call__(self, args, env=None, cwd=None):
         key = ' '.join(args)
         self.calls.append((key, (env or {}).get('GH_TOKEN')))
+        self.dirs.append((key, cwd))
         for prefix in sorted(self.answers, key=len, reverse=True):
             if key.startswith(prefix):
                 answer = self.answers[prefix]
@@ -103,7 +105,7 @@ def as_reviewer(fake):
         if args[:3] == ['gh', 'api', 'repos/o/r'] and (env or {}).get('GH_TOKEN') == 'tok-second':
             fake.calls.append((' '.join(args), 'tok-second'))
             return fake.answers.get('gh api repos/o/r', (0, '1', ''))
-        return original(args, env)
+        return original(args, env, cwd)
     return call
 
 
