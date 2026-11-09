@@ -9,11 +9,17 @@
 #   - `ai-dotfiles statusline`, the status line Claude Code and Antigravity run, renders a line
 #   - the daily-log pass's LaunchAgent is loaded (when claude is installed)
 #   - repo sources contain no machine-specific paths; unit tests pass
+#
+# Run in a linked worktree, the live state is measured against the main checkout, which the
+# live setup runs from (installer.live_root); the sources and tests checked stay this checkout's.
 
 set -uo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PYTHON="${PYTHON:-python3}"
+LIVE="$("$PYTHON" -c 'import sys; sys.path.insert(0, sys.argv[1]); import installer; print(installer.live_root(sys.argv[2]))' \
+  "$ROOT/scripts/install" "$ROOT" 2>/dev/null)"
+[ -f "$LIVE/scripts/install.sh" ] || LIVE="$ROOT"
 FAILS=0
 pass() { printf '  ok    %s\n' "$1"; }
 fail() { printf '  FAIL  %s\n' "$1"; FAILS=$((FAILS + 1)); }
@@ -21,7 +27,8 @@ skip() { printf '  skip  %s\n' "$1"; }
 detail() { sed 's/^/          /'; }
 
 echo "-- pending changes (install.sh --dry-run)"
-if DRY="$(bash "$ROOT/scripts/install.sh" --dry-run 2>&1)"; then
+[ "$LIVE" = "$ROOT" ] || printf '  info  a linked worktree: measured against the main checkout, %s\n' "$LIVE"
+if DRY="$(bash "$LIVE/scripts/install.sh" --dry-run 2>&1)"; then
   if printf '%s\n' "$DRY" | grep -qE '(^|: )[1-9][0-9]* changes'; then
     fail "pending changes (apply them: ai-dotfiles):"
     printf '%s\n' "$DRY" | grep -E '^Would ' | detail
@@ -37,8 +44,8 @@ printf '%s\n' "$DRY" | sed -n 's/^Local choice kept: /  info  local choice kept:
 printf '%s\n' "$DRY" | sed -n 's/^Warning: /  info  /p'
 
 echo "-- mcp (each CLI switched on in config/ai-clis.json; Antigravity has no list, so its file is read)"
-SERVERS="$("$PYTHON" -c 'import json,sys; print(" ".join(s["name"] for s in json.load(open(sys.argv[1]))["servers"]))' "$ROOT/config/mcp-servers.json")"
-for entry in $("$PYTHON" -c 'import json,sys; c=json.load(open(sys.argv[1]))["clis"]; print(" ".join(k + "=" + v["mcp"] for k, v in c.items() if v["on"]))' "$ROOT/config/ai-clis.json"); do
+SERVERS="$("$PYTHON" -c 'import json,sys; print(" ".join(s["name"] for s in json.load(open(sys.argv[1]))["servers"]))' "$LIVE/config/mcp-servers.json")"
+for entry in $("$PYTHON" -c 'import json,sys; c=json.load(open(sys.argv[1]))["clis"]; print(" ".join(k + "=" + v["mcp"] for k, v in c.items() if v["on"]))' "$LIVE/config/ai-clis.json"); do
   cli="${entry%%=*}"; file="$HOME/${entry#*=\~/}"
   for name in $SERVERS; do
     if [ "$cli" = agy ]; then
