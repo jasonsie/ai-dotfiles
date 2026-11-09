@@ -118,6 +118,31 @@ def land(argv, main, **answers):
     return code, stdout.getvalue(), stderr.getvalue(), fake
 
 
+REMOVED = (True, ['worktree-guard: removed feat-x (feat/x); its session is back in /main'])
+
+
+def finishing(argv, main, landed=REMOVED, **answers):
+    """land(), with worktree-guard's deletion faked: (code, stdout, stderr, fake, deletions), each
+    deletion (worktree, dry, how many git and gh calls had run by then)."""
+    fake, deletions = Fake(**answers), []
+
+    def deleted(worktree, dry=False):
+        deletions.append((worktree, dry, len(fake.calls)))
+        return landed
+    stdout, stderr = io.StringIO(), io.StringIO()
+    with patch.object(git_run, 'sh', as_reviewer(fake)), patch.object(prune_branch.guard, 'landed', deleted), \
+            redirect_stdout(stdout), redirect_stderr(stderr):
+        code = main(list(argv))
+    return code, stdout.getvalue(), stderr.getvalue(), fake, deletions
+
+
+LINKED = '/main/.claude/worktrees/feat-x'
+IN_WORKTREE = {'git rev-parse --show-toplevel': LINKED,   # the run is in a linked worktree, on feat/x
+               'git worktree list --porcelain': f'worktree /main\nHEAD {OLD}\nbranch refs/heads/main\n\n'
+                                                f'worktree {LINKED}\nHEAD {TIP}\nbranch refs/heads/feat/x',
+               'git -C /main rev-parse HEAD': TIP, 'git -C /main rev-parse origin/main': TIP}
+
+
 class ArchiveTagTest(unittest.TestCase):
     def test_tag_name_drops_the_first_segment(self):
         for branch, name in (('feat/small-commits', 'archive/small-commits'), ('fix/a/b', 'archive/a-b'),
@@ -185,14 +210,39 @@ class StepTest(unittest.TestCase):
         self.assertIn('would  git push -q origin --delete feat/x', output)
         self.assertEqual(fake.ran('git push'), [])
 
-    def test_prune_in_a_linked_worktree_detaches_at_the_base(self):
-        worktrees = 'worktree /main\nHEAD 1\nbranch refs/heads/main\n\nworktree /repo\nHEAD 2\nbranch refs/heads/feat/x'
-        code, output, err, fake = land([], prune_branch.main, **{'git worktree list --porcelain': worktrees})
+    def test_prune_in_a_linked_worktree_detaches_there_then_deletes_it_last(self):
+        code, output, err, fake, deletions = finishing([], prune_branch.main, **IN_WORKTREE)
         self.assertEqual(code, 0, err)
         self.assertTrue(fake.ran('git checkout -q --detach origin/main'))
         self.assertEqual(fake.ran('git checkout -q main') + fake.ran('git pull'), [])
         self.assertIn('detached at origin/main', output)
         self.assertTrue(fake.ran('git branch -q -D feat/x'))
+        self.assertEqual([line.split()[0] for line in output.splitlines()], ['prune', 'main', 'worktree', 'Back'])
+        self.assertIn('main       up to date already', output)
+        self.assertEqual(deletions, [(Path(LINKED), False, len(fake.calls))], 'through worktree-guard, after every git call')
+        self.assertEqual(fake.calls[-1][0], 'git fetch -q origin main', "origin's base, with the merge, fetched just before")
+        self.assertEqual(output.splitlines()[-1], prune_branch.BACK.format('/main'))
+
+    def test_a_worktree_the_guard_keeps_is_a_skipped_line_not_a_stop(self):
+        code, output, err, _, _ = finishing([], prune_branch.main, landed=(False, ['worktree-guard: kept feat-x: '
+                                                                                   '1 uncommitted change(s)']), **IN_WORKTREE)
+        self.assertEqual(code, 0, err)
+        self.assertEqual(output.splitlines()[-1], 'worktree   skipped: kept feat-x: 1 uncommitted change(s)')
+
+    def test_a_dry_run_asks_the_guard_and_changes_nothing(self):
+        code, output, err, fake, deletions = finishing(['--dry-run'], prune_branch.main, **IN_WORKTREE,
+                                                       landed=(True, ['worktree-guard: would remove feat-x']))
+        self.assertEqual(code, 0, err)
+        self.assertEqual([dry for _, dry, _ in deletions], [True])
+        self.assertEqual(fake.ran('git checkout') + fake.ran('git branch -q -D') + fake.ran('git push')
+                         + fake.ran('git -C /main merge'), [])
+        self.assertEqual(output.splitlines()[-1], 'worktree   would remove feat-x')
+
+    def test_prune_in_the_main_checkout_leaves_every_worktree_alone(self):
+        code, output, err, _, deletions = finishing([], prune_branch.main)
+        self.assertEqual(code, 0, err)
+        self.assertEqual([line.split()[0] for line in output.splitlines()], ['prune'])
+        self.assertEqual(deletions, [])
 
     def test_a_diverged_remote_branch_stops_before_push(self):
         code, _, err, _ = land([], push_branch.main, **{'git rev-parse --verify -q refs/remotes/origin/feat/x': OLD,
@@ -245,6 +295,55 @@ class ApprovePrTest(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertTrue(fake.ran('git config --local --unset approve.reviewer'))
 
+
+class FinishRealGitTest(unittest.TestCase):
+    """prune_branch.finish run inside a worktree worktree-guard made, against real repositories (a local
+    bare origin): the landing's local end, the folder deleted last, from under the process running it."""
+
+    def git(self, where, *args):
+        return subprocess.run(['git', '-C', str(where), *args], capture_output=True, text=True, check=True).stdout.strip()
+
+    def setUp(self):
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        root = Path(temp.name).resolve()
+        env = patch.dict(os.environ, {'GIT_CONFIG_GLOBAL': '/dev/null', prune_branch.guard.ENV: str(root / 'state')})
+        env.start()
+        self.addCleanup(env.stop)
+        self.main = root / 'main co'
+        self.git(root, 'init', '-q', '--bare', '-b', 'main', 'origin.git')
+        self.git(root, 'init', '-q', '-b', 'main', str(self.main))
+        for key, value in (('user.email', 't@example.com'), ('user.name', 'T'), ('worktree-guard.flow', 'true')):
+            self.git(self.main, 'config', key, value)
+        (self.main / 'a.txt').write_text('one\n')
+        self.git(self.main, 'add', '.')
+        self.git(self.main, 'commit', '-q', '-m', 'init')
+        self.git(self.main, 'remote', 'add', 'origin', str(root / 'origin.git'))
+        self.git(self.main, 'push', '-q', '-u', 'origin', 'main')
+        self.git(self.main, 'remote', 'set-head', 'origin', 'main')
+        base = self.git(self.main, 'rev-parse', 'HEAD')
+        self.wt = prune_branch.guard.make_worktree(self.main, 'feat-x', base, 'feat/x', source=self.main,
+                                                   meta={'work': 'feat/x'})
+        (self.wt / 'a.txt').write_text('two\n')
+        self.git(self.wt, 'commit', '-q', '-am', 'change a')
+        self.git(self.wt, 'push', '-q', 'origin', 'feat/x', 'feat/x:main')  # pushed, then merged (a fast-forward)
+        self.tip = self.git(self.wt, 'rev-parse', 'HEAD')
+        self.addCleanup(os.chdir, os.getcwd())
+        os.chdir(self.wt)
+
+    def test_the_branch_goes_the_main_checkout_moves_then_the_worktree_goes_last(self):
+        out = io.StringIO()
+        with redirect_stdout(out):
+            back = prune_branch.finish(git_run.Repo('main', 'feat/x', self.tip, 'o/r', 'me'), False)
+        os.chdir(self.main)
+        self.assertEqual(back, prune_branch.BACK.format(self.main), out.getvalue())
+        self.assertEqual([line.split()[0] for line in out.getvalue().splitlines()], ['prune', 'main', 'worktree'])
+        self.assertFalse(self.wt.exists())
+        self.assertFalse(prune_branch.guard.meta_file(self.main, 'feat-x').exists())
+        self.assertEqual(self.git(self.main, 'worktree', 'list', '--porcelain').count('worktree '), 1)
+        self.assertEqual(self.git(self.main, 'branch', '--list'), '* main')
+        self.assertEqual(self.git(self.main, 'ls-remote', '--heads', 'origin'), f'{self.tip}\trefs/heads/main')
+        self.assertEqual(self.git(self.main, 'rev-parse', 'HEAD'), self.tip, 'the main checkout has the merge')
 
 class FastForwardRealGitTest(unittest.TestCase):
     """prune_branch.fast_forward against real repositories (a local bare origin): uncommitted files survive."""

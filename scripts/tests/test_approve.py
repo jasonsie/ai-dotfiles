@@ -4,12 +4,13 @@ Run: python3 -m unittest discover -s scripts/tests -p 'test_approve.py' -v
 """
 import importlib.util
 import json
+from pathlib import Path
 import sys
 import tempfile
 import unittest
 
 from support import ROOT
-from test_git_skills import FAIL, OK, OLD, PR, TIP, land  # also loads the step skills
+from test_git_skills import FAIL, OK, OLD, PR, TIP, finishing, land, prune_branch  # also loads the step skills
 
 SCRIPT = ROOT / 'skills/git/approve/scripts/approve.py'
 SPEC = importlib.util.spec_from_file_location('approve', SCRIPT)
@@ -245,6 +246,32 @@ class FastForwardTest(unittest.TestCase):
     def test_when_git_itself_refuses_the_move_is_skipped_with_its_reason(self):
         output, fake = self.land(**{f'git -C {MAIN} merge --ff-only origin/main': (1, '', 'error: Your local changes would be overwritten')})
         self.assertIn('main       skipped: git refused: error: Your local changes would be overwritten', output)
+
+
+WT = f'{MAIN}/.claude/worktrees/feat-x'
+IN_WT = {**BEHIND, 'git rev-parse --show-toplevel': WT,   # the run is in WT, on feat/x; main lags
+         'git worktree list --porcelain': f'worktree {MAIN}\nHEAD {OLD}\nbranch refs/heads/main\n\n'
+                                          f'worktree {WT}\nHEAD {TIP}\nbranch refs/heads/feat/x'}
+
+
+def steps_of(output):
+    return [line.split()[0] for line in output.splitlines()]
+
+
+class InWorktreeTest(unittest.TestCase):
+    """Run in the linked worktree holding the work, the landing ends with it deleted, last: only the
+    archive tag is left. worktree-guard's side is tested for real in test_worktree_guard.py."""
+
+    def test_the_one_run_form_deletes_it_after_everything_else(self):
+        code, output, err, fake, deletions = finishing([], ap.main, **IN_WT)
+        self.assertEqual(code, 0, output + err)
+        self.assertEqual(steps_of(output), ['preflight', 'reviewer', 'push', 'pr', 'review', 'tag', 'merge', 'prune', 'main',
+                                            'worktree', 'landed', 'Back'])
+        self.assertEqual(len(fake.ran('git tag -a')), 1, "approve's archive tag is the only one")
+        self.assertTrue(fake.ran(f'git -C {MAIN} merge --ff-only origin/main'), 'the main checkout gets the merge')
+        self.assertEqual(deletions, [(Path(WT), False, len(fake.calls))])
+        self.assertEqual(output.splitlines()[-1], prune_branch.BACK.format(MAIN))
+
 
 
 if __name__ == '__main__':
