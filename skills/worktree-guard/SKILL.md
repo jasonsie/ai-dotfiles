@@ -64,6 +64,28 @@ Run `new` as its own command in the shell, not inside a script or a quoted strin
 that binds the worktree to your session reads the command line. Run by hand (no session
 bound), it still makes the worktree and prints its path; the first edit there claims it.
 
+## Claude's own worktrees
+
+The installer adds Claude Code `WorktreeCreate` and `WorktreeRemove` hooks (Claude Code only;
+no other CLI has them). `claude -w <name>`, `EnterWorktree` with a name and a subagent's
+`isolation: worktree` then ask the guard for the worktree:
+
+- **Repo on:** our shape, as `new` makes it: `.claude/worktrees/<name>` detached at freshly
+  fetched origin's default branch, no local branch, `.worktreeinclude` copied, owned by the
+  session. Remove deletes the folder and its record; commits it made stay under an
+  `archive/<name>` tag.
+- **Repo off, or any other repo:** what Claude does itself, so nothing changes there:
+  `.claude/worktrees/<name>` on a new branch `worktree-<name>` from the session's HEAD.
+  Remove deletes the folder and that branch.
+- The hook is global, so it runs in every repo. Outside git, or with a name that is not a
+  plain folder name, it fails with the reason on stderr and no path; Claude reports the failed
+  creation. Asking again for a name that exists returns that worktree untouched.
+- Claude does not call remove for a subagent's or a workflow's worktree; they stay until
+  someone removes them (`prune`, `rm`).
+
+Desktop's Worktree toggle stays off: whether it fires the hook is untested here (it needs the
+Desktop app), so use `worktree new` from a session started in the repo instead.
+
 ## Messages
 
 - **Uncommitted changes already there** when you first edit an unowned worktree: leave them

@@ -38,6 +38,13 @@ class ReadTest(unittest.TestCase):
         self.assertFalse(agent_hooks.read('agy', 'stop', raw('agy', terminationReason='error')).model_stopped)
         self.assertTrue(agent_hooks.read('agy', 'stop', raw('agy')).model_stopped)
 
+    def test_claudes_worktree_inputs_carry_the_name_and_the_path(self):
+        made = agent_hooks.read('claude', 'create', {'session_id': 's1', 'cwd': '/w', 'name': 'bold-oak'})
+        self.assertEqual((made.kind, made.session, made.folder, made.name, made.path), ('create', 's1', '/w', 'bold-oak', ''))
+        gone = agent_hooks.read('claude', 'remove', {'session_id': 's1', 'cwd': '/w', 'worktree_path': '/w/x'})
+        self.assertEqual((gone.name, gone.path), ('', '/w/x'))
+        self.assertEqual(agent_hooks.read('claude', 'create', {'name': 7}).name, '')
+
     def test_input_that_is_not_an_object_has_no_session(self):
         for data in ([], None, 'x', {'toolCall': []}):
             self.assertIsNone(agent_hooks.read('agy', 'tool', data).session)
@@ -195,6 +202,13 @@ class InstallTableTest(unittest.TestCase):
         self.assertEqual(agent_hooks.native_events('codex', wants),
                          (('PreToolUse', 'pre', 'Edit|Write|Bash'), ('SessionEnd', 'end', None)))
         self.assertEqual([e for e, _, _ in agent_hooks.native_events('agy', wants)], ['PreToolUse'])
+
+    def test_worktree_events_exist_for_claude_only_and_take_no_matcher(self):
+        wants = (('create', None), ('remove', None))
+        self.assertEqual(agent_hooks.native_events('claude', wants),
+                         (('WorktreeCreate', 'create', None), ('WorktreeRemove', 'remove', None)))
+        for cli in ('codex', 'agy', 'pi'):
+            self.assertEqual(agent_hooks.native_events(cli, wants), (), cli)
 
 
 if __name__ == '__main__':
