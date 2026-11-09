@@ -499,6 +499,104 @@ class DetachedTest(OriginRepo):
         self.assertTrue(self.wt.exists())  # still owned
 
 
+class SweepTest(OriginRepo):
+    """Leftovers: worktrees whose owner is gone. Those with nothing to lose go when a worktree is
+    made and when a session ends; the rest stay."""
+
+    def setUp(self):
+        super().setUp()
+        self.n = 0
+
+    def leftover(self, **meta):
+        """A detached worktree at origin/main whose owner died."""
+        self.n += 1
+        dead = {'session': f'old{self.n}', 'cli': 'claude', 'pid': dead_pid(), 'started': ''}
+        return guard.make_worktree(self.repo, f'fix-l{self.n}', self.base, None, source=self.repo, owner=dead,
+                                   table=guard.process_table(), meta={'work': f'fix/l{self.n}', 'from': 'origin/main', **meta})
+
+    def commit(self, wt):
+        (wt / 'a.txt').write_text('two\n')
+        git(wt, 'commit', '-q', '-am', 'change a')
+
+    def sweep(self):
+        """Make a worktree, which sweeps first."""
+        return self.cli('new', 'fix/fresh', '--repo', str(self.repo))
+
+    def test_a_leftover_with_nothing_to_lose_goes_when_a_worktree_is_made(self):
+        wt = self.leftover()
+        status, out = self.sweep()
+        self.assertEqual(status, 0, out)
+        self.assertIn(f'removed {wt.name}', out)
+        self.assertFalse(wt.exists())
+        self.assertIsNone(guard.read_meta(self.repo, wt.name))
+        self.assertFalse(guard.claim_file(wt).exists())
+        self.assertTrue(self.linked('fix-fresh').is_dir())
+
+    def test_a_leftover_with_work_at_risk_is_never_deleted(self):
+        dirty = self.leftover()  # each is made, and so sweeps, before the next
+        (dirty / 'a.txt').write_text('edited\n')
+        untracked = self.leftover()
+        (untracked / 'new.txt').write_text('x\n')
+        ahead = self.leftover()
+        self.commit(ahead)
+        self.assertEqual(self.sweep()[0], 0)
+        for wt in (dirty, untracked, ahead):
+            self.assertTrue(wt.is_dir(), wt.name)
+        self.run_hook('claude', {'session_id': 'x'}, kind='end')
+        for wt in (dirty, untracked, ahead):
+            self.assertTrue(wt.is_dir(), wt.name)
+
+    def test_commits_pushed_to_any_remote_ref_are_nothing_to_lose(self):
+        wt = self.leftover()
+        self.commit(wt)
+        git(wt, 'push', '-q', 'origin', 'HEAD:refs/heads/fix/l1')
+        self.sweep()
+        self.assertFalse(wt.exists())
+
+    def test_a_worktree_with_a_live_owner_stays(self):
+        me = {'session': 's1', 'cli': 'claude', 'pid': ME, 'started': guard.started(ME)}
+        wt = guard.make_worktree(self.repo, 'fix-live', self.base, None, source=self.repo, owner=me,
+                                 table=guard.process_table(), meta={'work': 'fix/live'})
+        self.sweep()
+        self.assertTrue(wt.is_dir())
+
+    def test_a_fresh_worktree_nobody_claimed_yet_stays_until_it_is_old(self):
+        git(self.repo, 'worktree', 'add', '-q', '--detach', str(self.linked('fix-new')))
+        meta = {'name': 'fix-new', 'work': 'fix/new', 'branch': None, 'base': self.base}
+        guard.write_meta(self.repo, 'fix-new', {**meta, 'created': int(time.time())})
+        self.sweep()
+        self.assertTrue(self.linked('fix-new').is_dir())
+        guard.write_meta(self.repo, 'fix-new', {**meta, 'created': int(time.time()) - 7200})
+        self.sweep()
+        self.assertFalse(self.linked('fix-new').exists())
+
+    def test_a_clashing_edit_sweeps_too(self):
+        wt = self.leftover()
+        self.edit('claude', 'aaaa1111', ME)
+        self.edit('codex', 'bbbb2222', PARENT)
+        self.assertFalse(wt.exists())
+        self.assertTrue(self.linked('codex-bbbb2222').is_dir())
+
+    def test_a_session_ending_takes_its_own_clean_worktree_with_it(self):
+        me = {'session': 's1', 'cli': 'claude', 'pid': ME, 'started': guard.started(ME)}
+        table = guard.process_table()
+        clean = guard.make_worktree(self.repo, 'fix-a', self.base, None, source=self.repo, owner=me, table=table,
+                                    meta={'work': 'fix/a'})
+        busy = guard.make_worktree(self.repo, 'fix-b', self.base, None, source=self.repo, owner=me, table=table,
+                                   meta={'work': 'fix/b'})
+        (busy / 'a.txt').write_text('edited\n')
+        self.run_hook('claude', {'session_id': 's1'}, kind='end')
+        self.assertFalse(clean.exists())
+        self.assertTrue(busy.is_dir())
+        self.assertFalse(guard.claim_file(busy).exists())  # released: the owner is gone
+
+    def test_a_sweep_that_fails_does_not_stop_the_work(self):
+        self.leftover()
+        with patch.object(guard, 'remove', side_effect=RuntimeError('boom')):
+            self.assertEqual(self.sweep()[0], 0)
+        self.assertTrue(self.linked('fix-fresh').is_dir())
+
+
 class NewTest(OriginRepo):
     """`worktree new <type>/<slug>`: a detached worktree from a freshly fetched origin default."""
 

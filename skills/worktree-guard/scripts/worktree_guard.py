@@ -75,6 +75,7 @@ WRAPPERS = frozenset(('sh', 'bash', 'zsh', 'dash', 'fish', 'ksh', 'env', 'timeou
 WORK_NAME = re.compile(r'[a-z][a-z0-9]*/[a-z0-9][a-z0-9-]*')  # <type>/<slug>
 FETCH_SECONDS = 120
 NAMING_SECONDS = 600  # how long the hook's note of a `worktree new` call stays good
+UNCLAIMED_SECONDS = 3600  # a worktree nobody has claimed yet is left alone this long: its first edit is coming
 PERSON_ONLY = frozenset(('release', 'share', 'on', 'off'))  # worktree commands a person runs
 HEREDOC = re.compile(r'<<-?\s*([\'"]?)(\w+)\1[^\n]*\n.*?^[ \t]*\2[ \t]*$', re.M | re.S)
 SEPARATORS = frozenset(';&|()\n')
@@ -483,12 +484,16 @@ def take(worktree, me, table):
 
 
 def release(session):
+    """Drop every claim of `session`; the worktrees it owned."""
     folder = state_root() / 'claims'
+    freed = []
     for path in folder.glob('*.json') if folder.is_dir() else ():
         with locked(path):
             claim = read_claim(path)
             if claim and claim.get('session') == str(session):
                 path.unlink(missing_ok=True)
+                freed.append(claim.get('worktree'))
+    return [Path(w) for w in freed if w]
 
 
 # --- the hook ----------------------------------------------------------------------------
@@ -531,11 +536,14 @@ def moved_text(event, moved, claim):
     return first + how + fresh + unrelated + done
 
 
-def make_worktree(main, name, base, branch, source, owner=None, table=None, meta=None):
+def make_worktree(main, name, base, branch, source, owner=None, table=None, meta=None, sweep_first=True):
     """The one path that makes a linked worktree: `main/.claude/worktrees/<name>` at commit `base`,
     on a new `branch` (None: detached), kept out of `git status`, with the gitignored files
     `.worktreeinclude` lists copied from `source`, its sidecar written and, given an `owner`
-    (claim dict) and process `table`, claimed for that owner. Returns the worktree's path."""
+    (claim dict) and process `table`, claimed for that owner. Safe leftovers are swept first
+    (`sweep`). Returns the worktree's path."""
+    if sweep_first:
+        sweep(main)
     linked = main / LINKED / name
     git(main, 'worktree', 'add', '-q', *(('-b', branch) if branch else ('--detach',)), str(linked), base)
     exclude(main)
@@ -634,7 +642,8 @@ STOP = ('worktree-guard: this repo works through worktrees, and its main checkou
 def decide(event, state, table=None):
     """The reply to one hook call; `state` is the session's, saved by agent_hooks.call."""
     if event.kind == 'end':
-        release(event.session)
+        for main in {main_of(w) for w in release(event.session) if w.is_dir()}:
+            sweep(main, gone=True)
         return None
     if event.kind != 'pre':
         return None
@@ -835,6 +844,51 @@ def remove(main, name, force=False, quiet_refusal=False):
     return True, lines
 
 
+def unpushed(main, ref):
+    """How many of the work's commits no remote-tracking ref has; one when git cannot tell."""
+    if not ref:
+        return 0
+    count = git(main, 'rev-list', '--count', ref, '--not', '--remotes', check=False)
+    return int(count) if count and count.isdigit() else 1
+
+
+def at_risk(main, name, meta):
+    """What a linked worktree's removal would lose: {'uncommitted': files, 'unpushed': commits},
+    the non-zero ones only."""
+    branch = branch_of(main, name, meta)
+    found = {'uncommitted': changes_in(main / LINKED / name), 'unpushed': unpushed(main, ref_of(main, name, branch))}
+    return {key: count for key, count in found.items() if count}
+
+
+def sweep(main, gone=False):
+    """Remove the linked worktrees whose owner is gone and that have nothing to lose: no
+    uncommitted or untracked files, every commit on a remote-tracking ref. A worktree nobody has
+    claimed is left alone while it is young, unless `gone` (a session just ended and released
+    its own). Returns what was removed, as lines; never raises."""
+    os.environ.setdefault('GIT_TERMINAL_PROMPT', '0')  # a hook must not wait for a password
+    lines = []
+    try:
+        found = linked_worktrees(main)
+    except OSError:
+        return lines
+    for name, meta in found.items():
+        linked = main / LINKED / name
+        try:
+            if not linked.is_dir() or owner_of(linked):
+                continue
+            young = time.time() - meta.get('created', 0) < UNCLAIMED_SECONDS
+            if not gone and young and not claim_file(linked).exists():
+                continue
+            if at_risk(main, name, meta):
+                continue
+            done, out = remove(main, name, quiet_refusal=True)
+        except (OSError, RuntimeError, git_run.Stop):
+            continue
+        if done:
+            lines += out
+    return lines
+
+
 def cmd_list(args):
     main = repo_main(args.repo)
     found = linked_worktrees(main)
@@ -943,6 +997,8 @@ def cmd_new(args):
               f'for example fix/prune-worktrees; got {name!r}', file=sys.stderr)
         return 1
     main, folder = repo_main(args.repo), name.replace('/', '-')
+    for line in sweep(main):
+        print(line)
     ref, notes = start_point(main)
     why = taken(main, name, folder) if ref else 'the repo has no default branch to start from'
     if why:
@@ -953,7 +1009,7 @@ def cmd_new(args):
     note, me = naming_for(name)
     try:
         linked = make_worktree(main, folder, base, None, source=main, owner=me, table=process_table() if me else None,
-                               meta={'work': name, 'from': ref, 'busy': str(main),
+                               sweep_first=False, meta={'work': name, 'from': ref, 'busy': str(main),
                                      **({'cli': me['cli'], 'session': me['session']} if me else {})})
     except RuntimeError as error:
         print(f'worktree-guard: cannot start {name}: {error}', file=sys.stderr)
