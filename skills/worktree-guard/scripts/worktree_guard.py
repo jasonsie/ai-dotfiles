@@ -269,19 +269,19 @@ def git_changes(command):
     return found
 
 
-def person_only(command):
-    """Whether a shell command line runs a person-only worktree command (`ai-dotfiles worktree
-    on|off|release|share`, or the guard script with that verb) as a command: first on the line
-    or after `&&`, `;`, `|`, a newline or a parenthesis, behind `VAR=x`, `sudo`, `env`..., or
-    inside `sh -c '...'`. The same words in a quote, a heredoc, a comment or an argument do not
-    count."""
+def guard_calls(command):
+    """[(verb, arguments)] for each worktree command (`ai-dotfiles worktree <verb> ...`, or the
+    guard script with a verb) a shell command line runs as a command: first on the line or after
+    `&&`, `;`, `|`, a newline or a parenthesis, behind `VAR=x`, `sudo`, `env`..., or inside
+    `sh -c '...'`. The same words in a quote, a heredoc, a comment or an argument do not count.
+    The arguments run to the end of the line, separators included."""
     try:
         lexer = shlex.shlex(HEREDOC.sub('', command), posix=True, punctuation_chars=';()<>|&\n')
         lexer.whitespace_split, lexer.whitespace = True, ' \t\r'
         tokens = list(lexer)
     except ValueError:
-        return False
-    start = True
+        return []
+    found, start = [], True
     for i, token in enumerate(tokens):
         if set(token) <= SEPARATORS:
             start = True
@@ -293,16 +293,38 @@ def person_only(command):
             continue  # VAR=x, sudo, env ...: the command is the next word
         start = False
         if name == 'ai-dotfiles':
-            if rest[:1] == ['worktree'] and rest[1:2] and rest[1] in PERSON_ONLY:
-                return True
+            if rest[:1] == ['worktree'] and rest[1:2]:
+                found.append((rest[1], rest[2:]))
         elif name in GUARD_NAMES:
-            if rest[:1] and rest[0] in PERSON_ONLY:
-                return True
+            if rest[:1]:
+                found.append((rest[0], rest[1:]))
         elif name in SHELLS:
             flag = next((n for n, t in enumerate(rest) if re.fullmatch(r'-\w*c', t)), None)
-            if flag is not None and flag + 1 < len(rest) and person_only(rest[flag + 1]):
-                return True
-    return False
+            if flag is not None and flag + 1 < len(rest):
+                found += guard_calls(rest[flag + 1])
+    return found
+
+
+def person_only(command):
+    """Whether a shell command line runs a person-only worktree command (`on`, `off`, `release`,
+    `share`)."""
+    return any(verb in PERSON_ONLY for verb, _ in guard_calls(command))
+
+
+def new_names(command):
+    """The work names a shell command line passes to `worktree new`."""
+    names = []
+    for verb, args in guard_calls(command):
+        skip = False
+        for arg in args if verb == 'new' else ():
+            if set(arg) <= SEPARATORS:
+                break
+            if skip or arg.startswith('-'):
+                skip = arg == '--repo'
+                continue
+            names.append(arg)
+            break
+    return names
 
 
 def command_of(event):

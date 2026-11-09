@@ -52,6 +52,32 @@ class GitChangesTest(unittest.TestCase):
         self.assertEqual(guard.git_changes('cd a | git commit'), [''])  # a pipe forgets the cd
 
 
+class GuardCallsTest(unittest.TestCase):
+    """The worktree commands a shell line runs, as (verb, arguments): the one reading that
+    person_only and the first-edit naming share."""
+
+    def verbs(self, command):
+        return [verb for verb, _ in guard.guard_calls(command)]
+
+    def test_a_command_in_command_position_is_found_with_its_arguments(self):
+        self.assertEqual(guard.guard_calls('ai-dotfiles worktree new fix/x'), [('new', ['fix/x'])])
+        self.assertEqual(guard.guard_calls('cd /x && FOO=1 ai-dotfiles worktree new --repo . fix/x; ls'),
+                         [('new', ['--repo', '.', 'fix/x', ';', 'ls'])])
+        self.assertEqual(self.verbs('sh -c "ai-dotfiles worktree list"'), ['list'])
+        self.assertEqual(self.verbs('python3 skills/worktree-guard/scripts/worktree_guard.py rm a'), ['rm'])
+
+    def test_text_that_only_mentions_a_command_is_not_one(self):
+        for command in ('echo "ai-dotfiles worktree new fix/x"', 'cat <<EOF\nai-dotfiles worktree new x\nEOF',
+                        'echo ai-dotfiles worktree new x # ai-dotfiles worktree new y', 'ai-dotfiles worktree'):
+            self.assertEqual(guard.guard_calls(command), [], command)
+
+    def test_the_name_is_the_first_argument_that_is_not_an_option(self):
+        self.assertEqual(guard.new_names('ai-dotfiles worktree new fix/x'), ['fix/x'])
+        self.assertEqual(guard.new_names('ai-dotfiles worktree new --repo /a b/c && ls x/y'), ['b/c'])
+        self.assertEqual(guard.new_names('ai-dotfiles worktree list; ai-dotfiles worktree new a/b'), ['a/b'])
+        self.assertEqual(guard.new_names('ai-dotfiles worktree new'), [])
+
+
 class Repo(unittest.TestCase):
     """A temp repo with one commit, guard state of its own, and each CLI's hook input."""
 
