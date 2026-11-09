@@ -173,6 +173,38 @@ class ShipTest(unittest.TestCase):
         self.assertIn('ship: fix-x was not made by `ai-dotfiles worktree new`', err)
         self.assertEqual(fake.ran('bash -c') + fake.ran('git push'), [])
 
+    def name_it(self, work):
+        """The record a worktree made by `claude -w foo` or a subagent has: Claude's own name as the work."""
+        (self.main / '.claude/worktrees/fix-x.json').write_text(json.dumps({'name': 'fix-x', 'work': work}))
+
+    def test_a_work_name_that_is_not_type_slash_slug_needs_work_and_never_becomes_a_branch(self):
+        self.name_it('foo')
+        code, _, err, fake = self.ship()
+        self.assertEqual(code, 1)
+        self.assertIn("ship: the work name 'foo' is not <type>/<slug>; pass --work <type>/<slug>", err)
+        self.assertEqual(fake.ran('bash -c') + fake.ran('git push') + fake.ran('gh pr create'), [])
+        self.shipped.assert_not_called()
+
+    def test_work_names_the_branch_when_the_recorded_name_is_not_one(self):
+        self.name_it('foo')
+        code, output, err, fake = self.ship(['--work', 'fix/y', '--title', 't', '--body-file', str(self.body)],
+                                            **{'git ls-remote --heads origin refs/heads/fix/y': ''})
+        self.assertEqual(code, 0, output + err)
+        self.assertEqual(fake.ran('git push'), ['git push -q origin HEAD:refs/heads/fix/y'])
+        self.assertTrue(fake.ran('gh pr create --base main --head fix/y'))
+
+    def test_work_must_be_type_slash_slug_and_cannot_rename_a_good_name(self):
+        self.name_it('foo')
+        code, _, err, fake = self.ship(['--work', 'Bar', '--title', 't', '--body-file', str(self.body)])
+        self.assertEqual(code, 1)
+        self.assertIn("ship: --work 'Bar' is not <type>/<slug>", err)
+        self.assertEqual(fake.ran('git push'), [])
+        self.name_it('fix/x')
+        code, _, err, fake = self.ship(['--work', 'fix/y', '--title', 't', '--body-file', str(self.body)])
+        self.assertEqual(code, 1)
+        self.assertIn("ship: this worktree's work is already fix/x; --work is only for a name that is not <type>/<slug>", err)
+        self.assertEqual(fake.ran('git push'), [])
+
     def test_dry_run_changes_nothing(self):
         code, output, err, fake = self.ship(['--dry-run', '--title', 't', '--body-file', str(self.body)])
         self.assertEqual(code, 0, err)

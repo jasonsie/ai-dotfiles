@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """ship: finish the work of a worktree: checks, push as <type>/<slug>, PR, worktree deleted.
 
-  ai-dotfiles ship --title T --body-file F [--dry-run]     run from inside the worktree
+  ai-dotfiles ship --title T --body-file F [--work <type>/<slug>] [--dry-run]     run from inside the worktree
 
 For an agent that worked in a worktree made by `ai-dotfiles worktree new <type>/<slug>` (no
 branch) and has committed. In order, each skipped when already done, so a stopped run can be
@@ -21,6 +21,9 @@ A worktree made by `ai-dotfiles worktree pr <n>` fixes that open PR: its push go
 branch, only as a fast-forward of origin's (a branch that moved on, or a push origin refuses, stops
 the run), no PR is opened, and the worktree is deleted the same way. Another worktree can never
 push to a branch already on origin.
+
+A worktree whose name is not <type>/<slug> (made by `claude -w foo` or a subagent) is never pushed
+as that name: --work <type>/<slug> says what to ship it as, and ship stops without it.
 
 Prints the PR's URL, then where the session is: the main checkout. The archive tag is not made
 here: approve makes it at the PR's head. Nothing is undone on failure. Python 3.11+, stdlib
@@ -117,20 +120,34 @@ def update(repo, dry):
     return f'would update {repo.branch}' if dry else f'{repo.branch} updated'
 
 
-def where():
-    """(worktree folder, main checkout, its record): this run's worktree and what made it."""
+def where(chosen=None):
+    """(worktree folder, main checkout, its record, work name): this run's worktree, what made it
+    and the branch name it ships under. A work name that is not <type>/<slug> (a worktree Claude's
+    `-w` or a subagent made through its create hook is named `foo`) is never a branch name: `chosen`
+    (--work) names it. A PR fix keeps the PR's own branch."""
     top = Path(git_run.out(['git', 'rev-parse', '--show-toplevel'], what='git rev-parse')).resolve()
     main = guard.main_of(top)
     meta = guard.read_meta(main, top.name) if top != main else None
     if not meta or not meta.get('work'):
         raise Stop(f'ship: {top.name} was not made by `ai-dotfiles worktree new`; run ship from the worktree it made')
-    return top, main, meta
+    work = meta['work']
+    if meta.get('pr') or guard.WORK_NAME.fullmatch(work):
+        if chosen and chosen != work:
+            raise Stop(f"ship: this worktree's work is already {work}; --work is only for a name that is not "
+                       f"<type>/<slug>")
+        return top, main, meta, work
+    if not chosen:
+        raise Stop(f'ship: the work name {work!r} is not <type>/<slug>; pass --work <type>/<slug> '
+                   f'(for example fix/prune-worktrees) to name the branch')
+    if not guard.WORK_NAME.fullmatch(chosen):
+        raise Stop(f'ship: --work {chosen!r} is not <type>/<slug> (lowercase letters, digits and hyphens)')
+    return top, main, meta, chosen
 
 
 def run(args):
     dry, step = args.dry_run, git_run.step
-    top, main, meta = where()
-    work, number = meta['work'], meta.get('pr')
+    top, main, meta, work = where(args.work)
+    number = meta.get('pr')
     repo = git_run.preflight(work)
     step('preflight', f'{repo.branch} -> {repo.base} in {repo.slug}, as {repo.author}')
     if number:
@@ -171,6 +188,8 @@ def run(args):
 
 def configure(parser):
     parser.prog = 'ai-dotfiles ship'
+    parser.add_argument('--work', metavar='<type>/<slug>',
+                        help='the branch to ship as, when the worktree is named something else (made by claude -w or a subagent)')
     parser.add_argument('--title', help='the PR title, when no PR is open for the work (not for a PR fix)')
     parser.add_argument('--body-file', help='the PR body (pr skill), when no PR is open for the work')
 

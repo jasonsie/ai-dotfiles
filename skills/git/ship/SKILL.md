@@ -39,6 +39,8 @@ PR no longer open, or no commit on top of the branch, stops the run.
 
 The message names the step, e.g. `ship stopped at checks: ...`; nothing is undone.
 
+- **preflight, the work name is not `<type>/<slug>`**: the worktree was made by `claude -w foo` or
+  by a subagent, so its name is Claude's, never a branch. Rerun with `--work <type>/<slug>`.
 - **checks**: the message names the failing command. Fix it in the worktree, commit, rerun.
   Nothing was pushed.
 - **push, origin has the branch** (PR fix): it moved on, or origin refused the push (a protected
