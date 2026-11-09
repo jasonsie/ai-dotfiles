@@ -66,15 +66,19 @@ def message(branch, when, description, merged, extra=()):
     return text + ('\n\n' + '\n'.join(extra) if extra else '')
 
 
-def archive(branch, description, merged, base, cwd=None, extra=(), dry=False):
-    """The archive tag's name, made at the branch tip when not there yet; None for a branch that is gone or has no commits of its own."""
-    code, tip, _ = git_run.sh(['git', 'rev-parse', '--verify', '-q', f'{branch}^{{commit}}'], cwd=cwd)
+def archive(branch, description, merged, base, cwd=None, extra=(), dry=False, ref=None):
+    """The archive tag's name, made at the branch tip when not there yet; None for a branch that is gone or has no commits of its own.
+
+    `ref` is the commit to tag when no local branch holds it (approve by PR number: the PR's head);
+    the name still comes from `branch`."""
+    ref = ref or branch
+    code, tip, _ = git_run.sh(['git', 'rev-parse', '--verify', '-q', f'{ref}^{{commit}}'], cwd=cwd)
     if code != 0 or not tip:
         return None
     name, there = tag_name(branch, tip, cwd)
     if there:
         return name
-    when = span(base, branch, cwd)
+    when = span(base, ref, cwd)
     if not when:
         return None
     git_run.act(['git', 'tag', '-a', name, tip, '-m', message(branch, when, description, merged, extra)], dry, cwd=cwd)

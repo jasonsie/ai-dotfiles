@@ -320,6 +320,10 @@ skills/git/                          a bundle; the installer links each skill by
 - **Steps:** preflight (a branch other than the base, no tracked changes), then the six.
   Each is skipped when done, so a stopped run is rerun as is; nothing is undone on failure.
   Each step's skill holds the fix for its own stops.
+- **By number:** `ai-dotfiles approve <n>` lands PR n from any session, with no local branch or
+  worktree: reviewer approval, archive tag at the PR head, merge commit, remote branch deleted,
+  then the main checkout fast-forwarded only when git can without touching uncommitted files
+  (never a stash or reset; otherwise skipped, with the reason). Each step is skipped when done.
 - **The reviewer:** GitHub refuses self-approval, so each repo names its own reviewer login,
   cached in `git config --local approve.reviewer`. None cached: exit 3, and the agent asks
   the user and reruns with `--reviewer LOGIN`. A login is cached only once it has a `gh auth`

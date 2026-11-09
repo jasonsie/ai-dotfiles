@@ -8,7 +8,7 @@
 #   ai-dotfiles check               verify live state (scripts/healthcheck.sh)
 #   ai-dotfiles worktree <command>  agents' linked worktrees: on, off, list, done, rm, prune, release, share
 #   ai-dotfiles commit check [args]  the size and message `git commit [args]` would get past the hook
-#   ai-dotfiles approve [flags]     land the reviewed branch: every git step below, in order
+#   ai-dotfiles approve [n] [flags] land PR n from any session, or the branch checked out here
 #   ai-dotfiles git <step> [flags]  one step: push, pr, review, reviewer, tag, merge, prune
 #   ai-dotfiles statusline          the status line Claude Code and Antigravity run: session JSON in, lines out
 #   Flags pass through, e.g. --dry-run, --target=claude; see each script's --help.
