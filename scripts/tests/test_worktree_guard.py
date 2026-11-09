@@ -857,5 +857,155 @@ class FlowTest(Repo):
         self.assertIn('not protected', reply['additionalContext'])
 
 
+class NativeTest(OriginRepo):
+    """Claude's WorktreeCreate and WorktreeRemove hooks: a repo that is on gets our shape, one that
+    is off gets what Claude would have made itself."""
+
+    def hook(self, kind, data, cwd=None):
+        """(status, stdout, stderr) of `hook <kind> --cli claude` fed `data` on stdin."""
+        out, err = io.StringIO(), io.StringIO()
+        data = {'session_id': 's1', 'cwd': str(cwd or self.repo), 'hook_event_name': 'x', **data}
+        with patch('sys.stdin', io.StringIO(json.dumps(data))), redirect_stdout(out), redirect_stderr(err):
+            status = guard.main(['hook', kind, '--cli', 'claude'])
+        return status, out.getvalue(), err.getvalue()
+
+    def create(self, name='bold-oak-a3f2', **kwargs):
+        return self.hook('create', {'name': name}, **kwargs)
+
+    def remove(self, path):
+        return self.hook('remove', {'worktree_path': str(path)})
+
+    def switch_on(self):
+        git(self.repo, 'config', '--local', guard.FLOW_KEY, 'true')
+
+    def made(self, name='bold-oak-a3f2'):
+        status, out, err = self.create(name)
+        self.assertEqual(status, 0, err)
+        return Path(out.splitlines()[-1])
+
+    def test_a_repo_that_is_on_gets_our_shape_from_freshly_fetched_origin(self):
+        self.switch_on()
+        (self.repo / '.worktreeinclude').write_text('.env\n')
+        (self.repo / '.env').write_text('SECRET=1\n')
+        ahead = self.advance_origin()
+        status, out, err = self.create()
+        linked = self.linked('bold-oak-a3f2')
+        self.assertEqual((status, out), (0, f'{linked}\n'))  # nothing but the path on stdout
+        self.assertEqual(git(linked, 'rev-parse', 'HEAD'), ahead)
+        self.assertEqual(subprocess.run(['git', '-C', str(linked), 'symbolic-ref', '-q', 'HEAD']).returncode, 1)
+        self.assertEqual(git(self.repo, 'branch', '--list'), '* main')
+        self.assertEqual((linked / '.env').read_text(), 'SECRET=1\n')  # the hook copies what Claude would not
+        meta = guard.read_meta(self.repo, 'bold-oak-a3f2')
+        self.assertEqual((meta['branch'], meta['base'], meta['from']), (None, ahead, 'origin/main'))
+        claim = guard.read_claim(guard.claim_file(linked))
+        self.assertEqual(claim['session'], 's1')  # the session that asked owns it
+
+    def test_a_repo_that_is_off_gets_claudes_own_default(self):
+        (self.repo / 'a.txt').write_text('local\n')
+        git(self.repo, 'commit', '-q', '-am', 'local work')  # ahead of origin: the base is HEAD
+        (self.repo / '.worktreeinclude').write_text('.env\n')
+        (self.repo / '.env').write_text('SECRET=1\n')
+        self.advance_origin()
+        status, out, err = self.create()
+        linked = self.linked('bold-oak-a3f2')
+        self.assertEqual((status, out), (0, f'{linked}\n'))
+        self.assertEqual(git(linked, 'symbolic-ref', '--short', 'HEAD'), 'worktree-bold-oak-a3f2')
+        self.assertEqual(git(linked, 'rev-parse', 'HEAD'), git(self.repo, 'rev-parse', 'HEAD'))
+        self.assertEqual((linked / '.env').read_text(), 'SECRET=1\n')
+        self.assertFalse(guard.meta_file(self.repo, 'bold-oak-a3f2').exists())  # no sidecar, no claim, no exclude
+        self.assertFalse(guard.claim_file(linked).exists())
+        self.assertNotIn('worktrees', (self.repo / '.git/info/exclude').read_text())
+
+    def test_a_session_inside_a_linked_worktree_still_gets_one_beside_the_main_checkout(self):
+        first = self.made('one')
+        status, out, err = self.create('two', cwd=first)
+        self.assertEqual((status, out), (0, f'{self.linked("two")}\n'), err)
+        self.assertEqual(git(self.linked('two'), 'rev-parse', 'HEAD'), git(first, 'rev-parse', 'HEAD'))
+
+    def test_asking_again_for_a_worktree_that_is_there_returns_it_untouched(self):
+        for flow in (False, True):
+            if flow:
+                self.switch_on()
+            linked = self.made(f'again-{flow}')
+            (linked / 'a.txt').write_text('work\n')
+            self.assertEqual(self.made(f'again-{flow}'), linked)
+            self.assertEqual((linked / 'a.txt').read_text(), 'work\n')
+
+    def test_no_repo_a_bad_name_or_no_commit_fails_with_a_reason_and_no_path(self):
+        outside = self.repo.parent / 'plain'
+        outside.mkdir()
+        empty = self.repo.parent / 'empty'
+        empty.mkdir()
+        git(empty, 'init', '-q', '-b', 'main')
+        for cwd, name in ((outside, 'x'), (self.repo, ''), (self.repo, '../x'), (self.repo, '-x'), (self.repo, 'a/..'),
+                          (empty, 'x')):
+            for flow in (False, True):
+                if flow:
+                    self.switch_on()
+                status, out, err = self.create(name, cwd=cwd)
+                self.assertEqual((status, out), (1, ''), (cwd, name))
+                self.assertIn('worktree-guard:', err)
+        self.assertFalse((self.repo / '.claude').exists())
+
+    def test_a_name_with_a_slash_becomes_one_folder(self):
+        self.assertEqual(self.made('feat/x'), self.linked('feat-x'))
+
+    def test_remove_deletes_our_shape_with_its_record_and_claim(self):
+        self.switch_on()
+        linked = self.made()
+        (linked / 'a.txt').write_text('uncommitted\n')  # Claude asked or checked first: the hook obeys
+        status, out, err = self.remove(linked)
+        self.assertEqual((status, out), (0, ''), err)
+        self.assertFalse(linked.exists())
+        self.assertFalse(guard.meta_file(self.repo, 'bold-oak-a3f2').exists())
+        self.assertFalse(guard.claim_file(linked).exists())
+        self.assertNotIn(str(linked), git(self.repo, 'worktree', 'list'))
+
+    def test_remove_keeps_a_tag_for_commits_the_detached_worktree_made(self):
+        self.switch_on()
+        linked = self.made()
+        (linked / 'a.txt').write_text('two\n')
+        git(linked, 'commit', '-q', '-am', 'change a')
+        tip = git(linked, 'rev-parse', 'HEAD')
+        self.assertEqual(self.remove(linked)[0], 0)
+        self.assertFalse(linked.exists())
+        tags = git(self.repo, 'tag', '--list', 'archive/*').split()
+        self.assertEqual([git(self.repo, 'rev-list', '-n', '1', t) for t in tags], [tip])
+
+    def test_remove_in_a_repo_that_is_off_deletes_the_folder_and_claudes_branch(self):
+        linked = self.made()
+        git(self.repo, 'branch', 'keep-me')
+        status, out, err = self.remove(linked)
+        self.assertEqual((status, out), (0, ''), err)
+        self.assertFalse(linked.exists())
+        self.assertEqual(sorted(git(self.repo, 'branch', '--format=%(refname:short)').split()), ['keep-me', 'main'])
+
+    def test_remove_leaves_a_branch_the_worktree_was_moved_to(self):
+        linked = self.made()
+        git(linked, 'switch', '-q', '-c', 'my-own-branch')
+        self.assertEqual(self.remove(linked)[0], 0)
+        self.assertFalse(linked.exists())
+        self.assertIn('my-own-branch', git(self.repo, 'branch', '--format=%(refname:short)').split())
+
+    def test_remove_of_what_is_gone_or_not_a_worktree_succeeds_and_touches_nothing(self):
+        linked = self.made()
+        self.assertEqual(self.remove(linked)[0], 0)
+        self.assertEqual(self.remove(linked)[0], 0)  # already gone
+        plain = self.repo.parent / 'plain'
+        plain.mkdir()
+        (plain / 'f').write_text('x')
+        self.assertEqual(self.remove(plain)[0], 0)
+        self.assertTrue((plain / 'f').exists())  # not git's worktree: left alone
+        self.assertEqual(self.hook('remove', {})[0], 0)
+
+    def test_the_script_prints_only_the_path_when_run_as_claude_runs_it(self):
+        env = {**os.environ, guard.ENV: str(self.repo.parent / 'state')}
+        data = json.dumps({'session_id': 's1', 'cwd': str(self.repo), 'hook_event_name': 'WorktreeCreate',
+                           'name': 'cli-run'})
+        run = subprocess.run([sys.executable, str(SCRIPT), 'hook', 'create', '--cli', 'claude'], input=data,
+                             capture_output=True, text=True, env=env)
+        self.assertEqual((run.returncode, run.stdout), (0, f'{self.linked("cli-run")}\n'), run.stderr)
+
+
 if __name__ == '__main__':
     unittest.main()
