@@ -228,6 +228,24 @@ class GuardTest(Repo):
         self.assertEqual((linked / '.env').read_text(), 'SECRET=1\n')
         self.assertFalse((linked / 'build').exists())
 
+    def test_make_worktree_without_a_branch_detaches_and_keeps_the_rest(self):
+        (self.repo / '.worktreeinclude').write_text('.env\n')
+        git(self.repo, 'add', '.worktreeinclude')
+        git(self.repo, 'commit', '-q', '-m', 'include')
+        (self.repo / '.env').write_text('SECRET=1\n')
+        head = git(self.repo, 'rev-parse', 'HEAD')
+        me = {'session': 's', 'cli': 'claude', 'pid': ME, 'started': guard.started(ME)}
+        linked = guard.make_worktree(self.repo, 'fix-x', head, None, source=self.repo, owner=me,
+                                     table=guard.process_table())
+        self.assertEqual(linked, self.linked('fix-x'))
+        self.assertEqual(git(linked, 'rev-parse', 'HEAD'), head)
+        self.assertEqual(subprocess.run(['git', '-C', str(linked), 'symbolic-ref', '-q', 'HEAD']).returncode, 1)
+        self.assertEqual(git(self.repo, 'branch', '--list'), '* main')
+        self.assertEqual((linked / '.env').read_text(), 'SECRET=1\n')
+        self.assertEqual(git(self.repo, 'status', '--porcelain'), '')
+        self.assertIsNone(guard.read_meta(self.repo, 'fix-x')['branch'])
+        self.assertEqual(guard.read_claim(guard.claim_file(linked))['session'], 's')
+
     def test_a_failure_says_the_edit_was_not_protected(self):
         broken = Path(tempfile.mkstemp()[1])  # the state "folder" is a file: claims cannot be kept
         self.addCleanup(broken.unlink)
