@@ -7,22 +7,29 @@ its `tui.status_line` list, and Pi's own footer already shows them. Up to three 
 
   📁 ~/repo  🌿 main ⎇ agent-2  🤖 Fable 5.1 · max · ⚡fast  📟 v2.1.318
   🧠 Context: 93% [=========-]
-  ⏳ 5h 23%  7d 41%  💰 $0.12
+  ⏳ 5h 23% → 14:00  7d 41% → Thu 08:00  💰 $0.12
 
 Line 1: the folder; the git branch (the short commit when detached) and, inside a linked
 worktree, its name; the model with its effort when the CLI sends one, "thinking off" and
 "⚡fast" only when so; the CLI's version. Line 2: the context window left, from the CLI's own
-percentage, "?" before the first reply. Line 3: rate-limit windows and the cost, each when the
-CLI sends it; no line when it sends neither. The two CLIs name fields differently (Claude:
-effort.level, cost.total_cost_usd, rate_limits; Antigravity: model.effort, cost.total_usd,
-quota); each lookup tries both. The script never fails: on bad input it prints what it can and
-exits 0, so a broken payload cannot blank the line. Runs on any python3 (3.9+).
+percentage, "?" before the first reply. Line 3: the rate-limit windows and the cost, each when
+the CLI sends it; no line when it sends neither. A window shows how much of it is used and the
+local time it resets (with the weekday when that is not today); a window whose reset has passed
+is left out, since its figure is stale. The figures are those of the session's last API
+response: the CLI re-runs the script on every change in the session and at each reset time, not
+on a clock, so a figure can lag what another session has spent since. The two CLIs name fields
+differently (Claude: effort.level, cost.total_cost_usd, rate_limits with resets_at; Antigravity:
+model.effort, cost.total_usd, quota with reset_time); each lookup tries both. The script never
+fails: on bad input it prints what it can and exits 0, so a broken payload cannot blank the line.
+Runs on any python3 (3.9+).
 """
+from datetime import datetime
 import json
 import os
 from pathlib import Path
 import subprocess
 import sys
+import time
 
 COLORS = {
     'dir': 117, 'git': 150, 'model': 147, 'detail': 245, 'version': 249,
@@ -110,25 +117,53 @@ def context_line(data):
     return '🧠 ' + paint(color, f'Context: {label} [{"=" * filled}{"-" * (10 - filled)}]')
 
 
-def limits(data):
-    """'5h 23%' per rate-limit window Claude sends; 'bucket 6%' used per quota bucket Antigravity sends."""
+def epoch(value):
+    """A reset time as epoch seconds: Claude's resets_at (a number) or Antigravity's reset_time (ISO 8601,
+    'Z' allowed); None when absent or unreadable."""
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        return float(value)
+    if isinstance(value, str):
+        try:
+            return datetime.fromisoformat(value.replace('Z', '+00:00')).timestamp()
+        except ValueError:
+            return None
+    return None
+
+
+def clock(at, now, tz=None):
+    """'14:00' for a time today, 'Thu 08:00' for one on another day, in the local zone (or `tz`)."""
+    when = datetime.fromtimestamp(at, tz)
+    today = datetime.fromtimestamp(now, tz).date()
+    return when.strftime('%H:%M' if when.date() == today else '%a %H:%M')
+
+
+def limits(data, now=None):
+    """(label, percent used, reset epoch or None) per window still running: Claude's rate-limit windows,
+    then Antigravity's quota buckets (the share used, from the fraction left)."""
+    now = time.time() if now is None else now
     found = []
     for key, label in WINDOWS:
         used = get(data, 'rate_limits', key, 'used_percentage')
         if used is not None:
-            found.append(f'{label} {round(used)}%')
+            found.append((label, used, epoch(get(data, 'rate_limits', key, 'resets_at'))))
     for bucket, status in get(data, 'quota', default={}).items():
         fraction = get(status, 'remaining_fraction')
         if fraction is not None:
-            found.append(f'{bucket} {round((1 - fraction) * 100)}%')
-    return found
+            reset = epoch(get(status, 'reset_time'))
+            seconds = get(status, 'reset_in_seconds')
+            if reset is None and isinstance(seconds, (int, float)):
+                reset = now + seconds
+            found.append((bucket, (1 - fraction) * 100, reset))
+    return [(label, used, reset) for label, used, reset in found if reset is None or reset > now]
 
 
-def usage_line(data):
+def usage_line(data, now=None, tz=None):
+    now = time.time() if now is None else now
     parts = []
-    windows = limits(data)
+    windows = [paint('limits', f'{label} {round(used)}%') + (paint('detail', f' → {clock(reset, now, tz)}') if reset else '')
+               for label, used, reset in limits(data, now)]
     if windows:
-        parts.append('⏳ ' + paint('limits', '  '.join(windows)))
+        parts.append('⏳ ' + '  '.join(windows))
     cost = get(data, 'cost', 'total_cost_usd')
     cost = get(data, 'cost', 'total_usd') if cost is None else cost
     if isinstance(cost, (int, float)) and cost > 0:
@@ -152,11 +187,12 @@ def folder_of(data):
     return get(data, 'workspace', 'current_dir') or get(data, 'cwd') or os.getcwd()
 
 
-def render(data, facts=None):
-    """The lines for one payload; `facts` is (branch, worktree), looked up in git when not given."""
+def render(data, facts=None, now=None, tz=None):
+    """The lines for one payload; `facts` is (branch, worktree), looked up in git when not given;
+    `now` and `tz` fix the clock and zone the reset times are shown in (the system's when not given)."""
     folder = folder_of(data)
     lines = [first_line(data, folder, git_facts(folder) if facts is None else facts), context_line(data)]
-    usage = usage_line(data)
+    usage = usage_line(data, now, tz)
     return lines + [usage] if usage else lines
 
 

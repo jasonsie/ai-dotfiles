@@ -1,3 +1,4 @@
+from datetime import timezone
 import io
 import json
 import os
@@ -6,6 +7,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from unittest.mock import patch
 
@@ -14,6 +16,8 @@ from support import ROOT, load
 statusline = load('statusline.py')
 
 HOME = '/Users/me'
+NOW = 1794195900  # 2026-11-09 03:45 UTC, a Monday
+UTC = timezone.utc
 # The payloads each CLI documents (code.claude.com/docs/en/statusline, antigravity.google/docs/cli/statusline).
 CLAUDE = {
     'cwd': f'{HOME}/Developer/repo', 'session_id': 'abc',
@@ -26,8 +30,8 @@ CLAUDE = {
                        'current_usage': {'input_tokens': 8500, 'output_tokens': 1200,
                                          'cache_creation_input_tokens': 5000, 'cache_read_input_tokens': 2000}},
     'exceeds_200k_tokens': False, 'fast_mode': False, 'effort': {'level': 'max'}, 'thinking': {'enabled': True},
-    'rate_limits': {'five_hour': {'used_percentage': 23.4, 'resets_at': 1},
-                    'seven_day': {'used_percentage': 41.2, 'resets_at': 2}},
+    'rate_limits': {'five_hour': {'used_percentage': 23.4, 'resets_at': 1794204000},    # 06:00 UTC the same day
+                    'seven_day': {'used_percentage': 41.2, 'resets_at': 1794441600}},   # Thursday 00:00 UTC
 }
 ANTIGRAVITY = {
     'cwd': f'{HOME}/project', 'session_id': 'x', 'conversation_id': 'x',
@@ -39,7 +43,8 @@ ANTIGRAVITY = {
                        'current_usage': {'input_tokens': 63382, 'output_tokens': 346,
                                          'cache_creation_input_tokens': 0, 'cache_read_input_tokens': 20857}},
     'exceeds_200k_tokens': False, 'product': 'antigravity',
-    'quota': {'gemini-weekly': {'remaining_fraction': 0.9378, 'reset_time': '2026-07-06T07:50:32Z'}},
+    'quota': {'gemini-weekly': {'remaining_fraction': 0.9378, 'reset_time': '2026-11-12T07:50:32Z',
+                                'reset_in_seconds': 260132}},
     'agent_state': 'idle', 'vcs': {'type': 'git'}, 'sandbox': {'enabled': False},
     'cost': {'total_usd': 0.4213, 'subagent_usd': 0, 'estimated': False},
 }
@@ -57,20 +62,20 @@ class RenderTest(unittest.TestCase):
         self.addCleanup(env.stop)
 
     def lines(self, data, facts=('main', '')):
-        return [plain(line) for line in statusline.render(data, facts)]
+        return [plain(line) for line in statusline.render(data, facts, NOW, UTC)]
 
     def test_claude_payload(self):
         self.assertEqual(self.lines(CLAUDE), [
             '📁 ~/Developer/repo  🌿 main  🤖 Fable 5.1 · max  📟 v2.1.318',
             '🧠 Context: 93% [=========-]',
-            '⏳ 5h 23%  7d 41%  💰 $0.12',
+            '⏳ 5h 23% → 06:00  7d 41% → Thu 00:00  💰 $0.12',
         ])
 
     def test_antigravity_payload(self):
         self.assertEqual(self.lines(ANTIGRAVITY), [
             '📁 ~/project  🌿 main  🤖 Gemini 4 Argon · medium  📟 v1.4.5',  # the effort is not repeated
             '🧠 Context: 85% [========--]',
-            '⏳ gemini-weekly 6%  💰 $0.42',
+            '⏳ gemini-weekly 6% → Thu 07:50  💰 $0.42',
         ])
 
     def test_worktree_thinking_off_and_fast_mode(self):
@@ -100,6 +105,34 @@ class RenderTest(unittest.TestCase):
         self.assertEqual(len(self.lines({'cost': {'total_cost_usd': 0}})), 2)
         self.assertEqual(self.lines({'cost': {'total_usd': 1.5}})[-1], '💰 $1.50')
         self.assertEqual(self.lines({'rate_limits': {'spend_limit': {'used_percentage': 62.8}}})[-1], '⏳ spend 63%')
+
+    def test_a_window_whose_reset_has_passed_is_left_out(self):
+        data = {'rate_limits': {'five_hour': {'used_percentage': 90, 'resets_at': NOW - 1},
+                                'seven_day': {'used_percentage': 41.2, 'resets_at': 1794441600}}}
+        self.assertEqual(self.lines(data)[-1], '⏳ 7d 41% → Thu 00:00')
+        stale = {'quota': {'gemini-weekly': {'remaining_fraction': 0.5, 'reset_time': '2026-11-01T00:00:00Z'}}}
+        self.assertEqual(len(self.lines(stale)), 2)
+        self.assertEqual(len(self.lines({'rate_limits': {'five_hour': {'used_percentage': 90, 'resets_at': NOW}}})), 2)
+
+    def test_reset_time_fallbacks(self):
+        self.assertEqual(statusline.epoch(1794204000), 1794204000.0)
+        self.assertEqual(statusline.epoch('2026-11-12T07:50:32Z'), 1794469832.0)
+        self.assertEqual(statusline.epoch('2026-11-12T07:50:32+00:00'), 1794469832.0)
+        for unreadable in (None, 'soon', True, [1]):
+            self.assertIsNone(statusline.epoch(unreadable))
+        seconds_only = {'quota': {'b': {'remaining_fraction': 0.25, 'reset_in_seconds': 3600}}}
+        self.assertEqual(statusline.limits(seconds_only, NOW), [('b', 75.0, NOW + 3600)])
+        unreadable = {'quota': {'b': {'remaining_fraction': 0.25, 'reset_time': 'soon'}}}
+        self.assertEqual(statusline.limits(unreadable, NOW), [('b', 75.0, None)])
+        self.assertEqual(self.lines(unreadable)[-1], '⏳ b 75%')
+
+    def test_reset_times_are_shown_in_the_local_zone_by_default(self):
+        self.addCleanup(time.tzset)  # back to the system zone once patch.dict has restored TZ
+        with patch.dict(os.environ, {'TZ': 'Asia/Taipei'}):
+            time.tzset()
+            line = plain(statusline.usage_line(CLAUDE, NOW))
+        self.assertEqual(line, '⏳ 5h 23% → 14:00  7d 41% → Thu 08:00  💰 $0.12')
+        self.assertIn(str(statusline.COLORS['detail']), statusline.usage_line(CLAUDE, NOW, UTC))
 
     def test_tilde(self):
         self.assertEqual(statusline.tilde('/Users/me', '/Users/me/'), '~')

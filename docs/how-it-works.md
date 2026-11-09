@@ -251,15 +251,19 @@ session as JSON on stdin and shows what it prints.
 ```text
 📁 ~/repo  🌿 main ⎇ agent-2  🤖 Fable 5.1 · max · ⚡fast  📟 v2.1.318
 🧠 Context: 93% [=========-]
-⏳ 5h 23%  7d 41%  💰 $0.12
+⏳ 5h 23% → 14:00  7d 41% → Thu 08:00  💰 $0.12
 ```
 
 - **Line 1:** the folder; the branch, with the worktree's name when worktree-guard moved the
   session into a linked one; the model with its effort, `thinking off` and `⚡fast` only when
   so; the CLI's version.
 - **Line 2:** the context left, from the CLI's own percentage, `?` before the first reply.
-  **Line 3:** rate-limit windows (Claude: 5h, 7d, spend; Antigravity: its quota buckets) and the
-  cost, each when the CLI sends it; no line when it sends neither.
+  **Line 3:** the rate-limit windows (Claude: 5h, 7d, spend; Antigravity: its quota buckets) and
+  the cost, each when the CLI sends it; no line when it sends neither. A window shows the share
+  used and the local time it resets, with the weekday when that is not today; a window whose
+  reset has passed is left out. The figures are those of the session's last API response: the
+  CLI re-runs the script on changes in the session and at each reset time, not on a clock, so
+  they can lag what other sessions have spent since.
 - **Codex** runs no script: `tui.status_line` lists its own items (`current-dir`, `git-branch`,
   `model-with-reasoning`, `codex-version`, `context-remaining`). **Pi**'s built-in footer already
   shows the folder, branch, model, thinking level, context and cost; only an extension could
