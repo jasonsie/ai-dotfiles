@@ -88,6 +88,24 @@ class PreReplyTest(unittest.TestCase):
         self.assertEqual(agent_hooks.render('pi', 'pre', Note('n')), {'note': 'n'})
         self.assertIsNone(agent_hooks.render('codex', 'end', Note('ignored')))
 
+    def test_a_shown_reply_adds_what_the_person_sees_to_the_reply_it_wraps(self):
+        Deny, Note, Rewrite, Shown = agent_hooks.Deny, agent_hooks.Note, agent_hooks.Rewrite, agent_hooks.Shown
+        for cli in ('claude', 'codex'):  # a top-level systemMessage, and nothing Codex's PreToolUse rejects
+            alone = agent_hooks.render(cli, 'pre', Shown(None, 'made fix/x'))
+            self.assertEqual(alone, {'systemMessage': 'made fix/x'})
+            both = agent_hooks.render(cli, 'pre', Shown(Deny('busy'), 'made fix/x'))
+            self.assertEqual(both['hookSpecificOutput']['permissionDecision'], 'deny')
+            self.assertEqual(both['systemMessage'], 'made fix/x')
+            self.assertEqual(set(both), {'hookSpecificOutput', 'systemMessage'})
+        self.assertEqual(agent_hooks.render('pi', 'pre', Shown(None, 'made', 'fix/x')), {'status': 'fix/x'})
+        self.assertEqual(agent_hooks.render('pi', 'pre', Shown(Note('n'), 'gone', None)), {'note': 'n', 'status': None})
+        self.assertEqual(agent_hooks.render('pi', 'pre', Shown(Rewrite({'path': '/l'}), '', 'fix/x')),
+                         {'input': {'path': '/l'}, 'status': 'fix/x'})
+        self.assertEqual(agent_hooks.render('agy', 'pre', Shown(None, 'made')), {'decision': 'allow'})
+        self.assertEqual(agent_hooks.render('agy', 'pre', Shown(Deny('busy'), 'made')),
+                         {'decision': 'deny', 'reason': 'busy'})
+        self.assertIsNone(agent_hooks.render('codex', 'end', Shown(None, 'ignored')))
+
     def test_a_pre_event_carries_the_action_input_and_pid(self):
         event = agent_hooks.read('claude', 'pre', {'session_id': 's', 'tool_name': 'Bash',
                                                     'tool_input': {'command': 'ls'}})
