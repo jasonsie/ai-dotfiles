@@ -582,13 +582,18 @@ def clash(event, state, busy, claim, me, table):
 def leftovers(worktree, previous, state):
     warned = state.setdefault('warned', [])
     count = changes_in(worktree)
-    if not count or str(worktree) in warned:
+    main = main_of(worktree)
+    meta = read_meta(main, worktree.name) if worktree.parent == main / LINKED else None  # one we made
+    ahead = unpushed(worktree, 'HEAD', meta.get('base')) if meta else 0
+    if not (count or ahead) or str(worktree) in warned:
         return ''
     warned.append(str(worktree))
     last = f' (last owner: {who(previous)}, no longer running)' if previous else ''
-    return (f'worktree-guard: {worktree} already had {count} uncommitted change(s) when this session '
-            f'started editing it{last}. Check git status; keep them out of your commits unless your task '
-            'is to finish them.')
+    held = ' and '.join(x for x in (f'{count} uncommitted change(s)' if count else '',
+                                    f'{ahead} commit(s) not pushed' if ahead else '') if x)
+    return (f'worktree-guard: {worktree} already had {held} when this session '
+            f'started editing it{last}. Check git status and git log; keep them out of your commits unless '
+            'your task is to finish them.')
 
 
 def naming_dir():
@@ -844,11 +849,12 @@ def remove(main, name, force=False, quiet_refusal=False):
     return True, lines
 
 
-def unpushed(main, ref):
-    """How many of the work's commits no remote-tracking ref has; one when git cannot tell."""
+def unpushed(main, ref, base=None):
+    """How many of the work's commits no remote-tracking ref has (given a `base` commit, not
+    counting it or its ancestors); one when git cannot tell."""
     if not ref:
         return 0
-    count = git(main, 'rev-list', '--count', ref, '--not', '--remotes', check=False)
+    count = git(main, 'rev-list', '--count', ref, '--not', '--remotes', *([base] if base else []), check=False)
     return int(count) if count and count.isdigit() else 1
 
 
@@ -889,6 +895,15 @@ def sweep(main, gone=False):
     return lines
 
 
+def left_behind(risk):
+    """`owner gone, 2 commits not pushed, 1 file uncommitted`: what an owner-less worktree holds."""
+    def count(n, noun, what):
+        return f"{n} {noun}{'' if n == 1 else 's'} {what}" if n else ''
+    parts = (count(risk.get('unpushed', 0), 'commit', 'not pushed'),
+             count(risk.get('uncommitted', 0), 'file', 'uncommitted'))
+    return ', '.join(['owner gone', *filter(None, parts)])
+
+
 def cmd_list(args):
     main = repo_main(args.repo)
     found = linked_worktrees(main)
@@ -903,8 +918,10 @@ def cmd_list(args):
         state = ('no commits yet' if not span(main, meta.get('base', ''), ref) else
                  'merged' if merged(main, ref, meta) else 'not merged')
         count = changes_in(linked) if linked.is_dir() else 0
+        risk = at_risk(main, name, meta) if linked.is_dir() and not claim else {}
+        left = f'  LEFT BEHIND: {left_behind(risk)}' if risk else ''
         print(f"{name}  {label_of(meta, branch)}  from {meta.get('from')}  {state}"
-              f"{f', {count} uncommitted' if count else ''}  owner: {who(claim) if claim else 'none'}"
+              f"{f', {count} uncommitted' if count else ''}  owner: {who(claim) if claim else 'none'}{left}"
               f"{'  - ' + meta['description'] if meta.get('description') else ''}")
     return 0
 

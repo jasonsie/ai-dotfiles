@@ -590,6 +590,57 @@ class SweepTest(OriginRepo):
         self.assertTrue(busy.is_dir())
         self.assertFalse(guard.claim_file(busy).exists())  # released: the owner is gone
 
+    def test_list_flags_what_was_left_with_counts(self):
+        wt = self.leftover()
+        (wt / 'a.txt').write_text('edited\n')
+        (wt / 'new.txt').write_text('x\n')
+        (wt / 'other.txt').write_text('y\n')
+        self.assertIn('owner gone, 3 files uncommitted', self.cli('list', '--repo', str(self.repo))[1])
+        git(wt, 'add', '-A')
+        git(wt, 'commit', '-q', '-m', 'wip')
+        git(wt, 'commit', '-q', '--allow-empty', '-m', 'more')
+        out = self.cli('list', '--repo', str(self.repo))[1]
+        self.assertIn('fix-l1  fix/l1 (no branch)', out)
+        self.assertIn('LEFT BEHIND: owner gone, 2 commits not pushed', out)
+        (wt / 'a.txt').write_text('again\n')
+        self.assertIn('owner gone, 2 commits not pushed, 1 file uncommitted', self.cli('list', '--repo', str(self.repo))[1])
+
+    def test_list_does_not_flag_a_live_owner_or_work_with_nothing_to_lose(self):
+        me = {'session': 's1', 'cli': 'claude', 'pid': ME, 'started': guard.started(ME)}
+        live = guard.make_worktree(self.repo, 'fix-live', self.base, None, source=self.repo, owner=me,
+                                   table=guard.process_table(), meta={'work': 'fix/live'})
+        (live / 'a.txt').write_text('edited\n')
+        out = self.cli('list', '--repo', str(self.repo))[1]
+        self.assertIn('fix-live', out)
+        self.assertNotIn('LEFT BEHIND', out)
+
+    def test_a_new_session_takes_over_a_flagged_worktree_and_hears_what_it_holds(self):
+        wt = self.leftover()
+        self.commit(wt)
+        (wt / 'new.txt').write_text('x\n')
+        data = {'session_id': 'new1', 'cwd': str(wt), 'pid': PARENT, 'tool_name': 'Edit',
+                'tool_input': {'file_path': str(wt / 'a.txt')}}
+        reply = self.run_hook('claude', data)['hookSpecificOutput']
+        self.assertNotEqual(reply.get('permissionDecision'), 'deny')
+        self.assertIn('1 uncommitted change(s)', reply['additionalContext'])
+        self.assertIn('1 commit(s) not pushed', reply['additionalContext'])
+        self.assertEqual(guard.read_claim(guard.claim_file(wt))['session'], 'new1')
+        self.assertNotIn('LEFT BEHIND', self.cli('list', '--repo', str(self.repo))[1])
+        self.sweep()
+        self.assertTrue(wt.is_dir())  # owned again
+
+    def test_rm_of_a_flagged_worktree_tags_its_tip_before_deleting_it(self):
+        wt = self.leftover()
+        self.commit(wt)
+        tip = git(wt, 'rev-parse', 'HEAD')
+        status, out = self.cli('rm', 'fix-l1', '--repo', str(self.repo))
+        self.assertEqual(status, 1)
+        self.assertTrue(wt.is_dir())
+        status, out = self.cli('rm', 'fix-l1', '--force', '--repo', str(self.repo))
+        self.assertEqual(status, 0, out)
+        self.assertEqual(git(self.repo, 'rev-list', '-n', '1', 'archive/l1'), tip)
+        self.assertFalse(wt.exists())
+
     def test_a_sweep_that_fails_does_not_stop_the_work(self):
         self.leftover()
         with patch.object(guard, 'remove', side_effect=RuntimeError('boom')):
