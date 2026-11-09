@@ -253,8 +253,8 @@ session as JSON on stdin and shows what it prints.
 ⏳ 5h 23% → 14:00  7d 41% → Thu 08:00  💰 $0.12
 ```
 
-- **Line 1:** the folder; the branch, with the worktree's name when worktree-guard moved the
-  session into a linked one; the model with its effort, `thinking off` and `⚡fast` only when
+- **Line 1:** the folder; the branch, with the worktree's name when the session works in a
+  linked one; the model with its effort, `thinking off` and `⚡fast` only when
   so; the CLI's version.
 - **Line 2:** the context left, from the CLI's own percentage, `?` before the first reply.
   **Line 3:** the rate-limit windows (Claude: 5h, 7d, spend; Antigravity: its quota buckets) and
