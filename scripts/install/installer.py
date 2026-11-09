@@ -11,6 +11,12 @@ writes every change or none: it refuses a path whose state is no longer `before`
 up each file it replaces, sets each path atomically, and on failure puts every changed
 path back. What a step may replace, and what it records, stays in the step.
 
+The links and hook commands a step writes name the checkout the live setup runs from,
+live_root(): the repo's main checkout when the step runs in a linked worktree (`ai-dotfiles
+worktree new` makes one per task and `ship` deletes it), else this checkout. What a step
+installs is still read from the checkout it runs in, so a dry run in a worktree previews what
+installing would change once the work merges.
+
 Run directly, it checks config/ai-clis.json and warns when a CLI's folder override
 (CLAUDE_CONFIG_DIR, CODEX_HOME, PI_CODING_AGENT_DIR) disagrees with it; the variables
 themselves are never read for paths.
@@ -56,6 +62,24 @@ def path(home, cli, kind):
     """Where a CLI reads one kind of file, under `home`; None when it has none."""
     where = clis()[cli].get(kind)
     return home / where[2:] if where else None
+
+
+def live_root(workspace):
+    """The main checkout when `workspace` is a linked worktree's top folder, else `workspace` (also when
+    git is missing or fails). GIT_DIR and GIT_WORK_TREE are dropped, so a git hook's cannot steer it."""
+    workspace = Path(workspace).resolve()
+    env = {key: value for key, value in os.environ.items() if key not in ('GIT_DIR', 'GIT_WORK_TREE')}
+    try:
+        done = subprocess.run(['git', '-C', str(workspace), 'rev-parse', '--path-format=absolute', '--show-toplevel',
+                               '--git-dir', '--git-common-dir'], capture_output=True, text=True, timeout=5, env=env)
+    except (OSError, subprocess.SubprocessError):
+        return workspace
+    lines = done.stdout.splitlines()
+    if done.returncode != 0 or len(lines) != 3:
+        return workspace
+    top, git_dir, common = (Path(line).resolve() for line in lines)
+    linked = top == workspace and git_dir != common and common.name == '.git'
+    return common.parent if linked else workspace
 
 
 def scope(target):

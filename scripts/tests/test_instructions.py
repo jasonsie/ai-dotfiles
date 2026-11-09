@@ -61,6 +61,19 @@ class GlobalInstructionsTest(unittest.TestCase):
         self.assertEqual(len(self.backups()), 1)
         self.assertEqual(original_times, {p: p.lstat().st_mtime_ns for p in self.paths.values()})
 
+    def test_from_a_linked_worktree_it_links_the_main_checkouts_copy(self):
+        live = self.root / "main checkout"
+        target = live / "config/global-agents.md"
+        target.parent.mkdir(parents=True)
+        target.write_text("# Shared preferences, as merged\n")
+        self.assertEqual(self.install(apply=True, live=live), len(CLIS))
+        self.assertEqual({os.readlink(p) for p in self.paths.values()}, {str(target)})
+        self.assertEqual(self.install(live=live), 0)  # the main checkout's links are ours
+        self.assertEqual(self.uninstall(live=live), len(CLIS))
+        self.source.write_text("x" * 32 * 1024)  # the worktree's copy is the one checked
+        with self.assertRaisesRegex(ValueError, "32 KiB"):
+            self.install(live=live)
+
     def test_replaces_an_empty_file_and_backs_it_up(self):
         empty = self.seed("agy", "")
         empty.chmod(0o600)

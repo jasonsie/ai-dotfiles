@@ -297,7 +297,8 @@ def run(home, target, write, uninstall, repo=WORKSPACE):
 
 def main():
     args = installer.parser(__doc__).parse_args()
-    return installer.finish('hooks', lambda: run(args.home, args.target, not args.dry_run, args.uninstall))
+    return installer.finish('hooks', lambda: run(args.home, args.target, not args.dry_run, args.uninstall,
+                                                 repo=installer.live_root(WORKSPACE)))
 
 
 if __name__ == '__main__':

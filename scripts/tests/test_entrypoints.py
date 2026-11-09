@@ -8,6 +8,9 @@ import tempfile
 import unittest
 
 from support import ROOT
+import installer
+
+LIVE = installer.live_root(ROOT)  # where installs link: the main checkout when the suite runs in a worktree
 
 
 class EntrypointsTest(unittest.TestCase):
@@ -33,9 +36,9 @@ class EntrypointsTest(unittest.TestCase):
             if '.local/state' in str(path):
                 continue
             if path.is_symlink():
-                if str(ROOT) in os.readlink(path):
+                if str(LIVE) in os.readlink(path):
                     found.append(path)
-            elif path.is_file() and str(ROOT) in path.read_text(errors='ignore'):
+            elif path.is_file() and str(LIVE) in path.read_text(errors='ignore'):
                 found.append(path)
         return found
 
@@ -45,7 +48,7 @@ class EntrypointsTest(unittest.TestCase):
         out = self.run_script()
         self.assertIn('Hint: add', out)  # ~/.local/bin is not on this PATH
         command = self.home / '.local/bin/ai-dotfiles'
-        self.assertEqual(Path(os.readlink(command)), ROOT / 'scripts/ai-dotfiles')
+        self.assertEqual(Path(os.readlink(command)), LIVE / 'scripts/ai-dotfiles')
         self.assertTrue((self.home / '.claude/CLAUDE.md').is_symlink())
         self.assertNotIn(' 1 changes', self.run_script('--dry-run'))
         self.assertTrue(self.into_repo())
@@ -137,6 +140,33 @@ class EntrypointsTest(unittest.TestCase):
         self.assertTrue((work / 'NEW.txt').is_file())
         self.assertIn('Done.', result.stdout)
         self.assertEqual(Path(os.readlink(self.home / '.local/bin/ai-dotfiles')), work / 'scripts/ai-dotfiles')
+
+    def test_a_linked_worktree_installs_into_its_main_checkout(self):
+        """ship runs the Verify block in a worktree it then deletes, so nothing live may name the worktree."""
+        git = lambda repo, *a: subprocess.run(['git', '-C', str(repo), *a], check=True, capture_output=True)  # noqa: E731
+        main = Path(self.temp.name).resolve() / 'main'
+        subprocess.run(['git', 'clone', '-q', str(ROOT), str(main)], check=True)
+        for folder in ('scripts', 'config', 'skills'):  # the working copy, committed so the worktree has it
+            shutil.rmtree(main / folder, ignore_errors=True)
+            shutil.copytree(ROOT / folder, main / folder, ignore=shutil.ignore_patterns('__pycache__'))
+        git(main, 'add', '-A')
+        git(main, '-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '--allow-empty', '-m', 'working copy')
+        linked = main / '.claude/worktrees/fix-x'
+        git(main, 'worktree', 'add', '-q', '--detach', str(linked))
+
+        def run(checkout, *args):
+            done = subprocess.run(['bash', str(checkout / 'scripts/install.sh'), *args], env=self.env,
+                                  capture_output=True, text=True)
+            self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+            return done.stdout
+
+        run(linked)
+        named = [path for path in self.home.rglob('*') if '.local/state' not in str(path) and str(linked) in (
+            os.readlink(path) if path.is_symlink() else path.read_text(errors='ignore') if path.is_file() else '')]
+        self.assertEqual(named, [])
+        self.assertEqual(Path(os.readlink(self.home / '.local/bin/ai-dotfiles')), main / 'scripts/ai-dotfiles')
+        for checkout in (linked, main):
+            self.assertNotRegex(run(checkout, '--dry-run'), r'(?m)(^|: )[1-9][0-9]* changes')
 
 
 if __name__ == '__main__':

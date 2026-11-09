@@ -3,6 +3,7 @@ import io
 import json
 import os
 from pathlib import Path
+import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -199,6 +200,20 @@ class InstallerTest(unittest.TestCase):
             self.assertEqual(installer.finish('step', lambda: installer.edit(self.home, bytes)), 1)
         self.assertEqual(out.getvalue(), 'step: 2 changes\n')
         self.assertIn('step: Not a file', err.getvalue())
+
+    def test_the_live_root_of_a_linked_worktree_is_its_main_checkout(self):
+        main = self.home / 'main repo'
+        linked = main / '.claude/worktrees/fix-x'
+        git = lambda *args: subprocess.run(['git', *args], check=True, capture_output=True)  # noqa: E731
+        git('init', '-q', str(main))
+        git('-C', str(main), '-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '--allow-empty', '-m', 'x')
+        git('-C', str(main), 'worktree', 'add', '-q', '--detach', str(linked))
+        self.assertEqual(installer.live_root(linked), main)
+        self.assertEqual(installer.live_root(main), main)
+        inside = main / 'config'  # a folder in a checkout is not a checkout
+        inside.mkdir()
+        self.assertEqual(installer.live_root(inside), inside)
+        self.assertEqual(installer.live_root(self.home), self.home)  # no git here
 
 
 if __name__ == '__main__':
