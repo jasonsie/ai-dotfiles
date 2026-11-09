@@ -31,8 +31,8 @@ Merging and removing belong to the person: `rm` archives the branch as `archive/
 
 ## Commands
 
-`ai-dotfiles worktree on | off | new | list | done | rm | prune | release | share`; `--help`
-describes each. `on`/`off`, `release` (clear a stale owner) and `share` (let every session
+`ai-dotfiles worktree on | off | new | shipped | list | done | rm | prune | release | share`; `--help`
+describes each. `shipped` is what `ship` runs. `on`/`off`, `release` (clear a stale owner) and `share` (let every session
 edit a worktree) are the person's, run in a terminal; the guard refuses them from an agent,
 so ask the user.
 
@@ -56,7 +56,11 @@ gated. A repo that is off behaves as before.
    are moved into the worktree for you; name files by their paths there.
 3. **Work there only.** Edit, test and commit in the worktree, on its detached HEAD. The
    main checkout is never edited by an agent, and another session's worktree is refused.
-4. **Gone for good.** `list` shows a worktree with no branch as `<type>/<slug> (no branch)`;
+4. **Finish.** Done and committed: run the `ship` skill (`ai-dotfiles ship`). It runs the
+   repo's checks, pushes the work as the branch `<type>/<slug>`, opens the PR and deletes
+   the worktree; your session is then back in the main checkout, and your next first edit
+   starts a new task.
+5. **Gone for good.** Work that was never shipped: `list` shows a worktree with no branch as `<type>/<slug> (no branch)`;
    `rm` tags its tip `archive/<slug>`, and refuses unpushed or uncommitted work without
    `--force`.
 
