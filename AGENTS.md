@@ -11,19 +11,20 @@ Codex CLI, Pi, and Antigravity. The mechanism and layout are in
 |---|---|---|
 | `config/ai-clis.json` | Which CLIs are on, and where each reads things; the desired state | every step, via `scripts/install/installer.py` |
 | `config/global-agents.md` | Global rules for every CLI, live through links | `scripts/install/instructions.py` |
-| `config/cli-settings.json` | Per-CLI `enforce` and `default` keys | `scripts/install/settings.py` |
+| `config/cli-settings.json` | Per-CLI `enforce` keys (safety settings, the status line) and `default` keys (model choices) | `scripts/install/settings.py` |
 | `config/mcp-servers.json` | Shared MCP servers | `scripts/install/mcp.py` |
 | `config/plugins.json` | The plugin list: each plugin's GitHub source, pin (exact version) and target CLIs | `scripts/install/plugins.py` |
 | `config/upstream-docs.json` | The documentation sources mirrored for agents: each CLI's docs, Google's and Meta's style and docs-writing guides, a `when` label per page | `scripts/upstream/sync-upstream.py` (weekly workflow) |
 | `skills/` | Shared skills; `skills.lock` pins adapted upstream skills | `scripts/install/skills.py` |
 | `skills/daily-log/` | The `daily-log` command (the daily logger's grammar and writer) and `day_pass.py`, the day pass: the evidence and, with `--write`, the session that writes from it | `scripts/install/skills.py` (links), `scripts/install/launchd.py` (the 04:00 LaunchAgent) |
 | `scripts/agent_sessions.py` | Every CLI's session store (transcripts) behind one interface, for the day pass | — |
+| `scripts/statusline.py` | The status line Claude Code and Antigravity run as `ai-dotfiles statusline`: folder, branch and worktree, model with effort, version, context left, rate limits and cost. Codex lists the same items in `tui.status_line`; Pi's footer has them built in | `scripts/install/settings.py` (the `statusLine` keys) |
 | `skills/worktree-guard/` | The hook that moves a session clashing with another in one worktree into a linked worktree, and the `ai-dotfiles worktree` commands | `scripts/install/hooks.py` (hook entries) |
 | `skills/small-commits/` | The hook that gates `git commit` on size (300 lines warn, 600 wall), subject and trailers, and the `ai-dotfiles commit check` command | `scripts/install/hooks.py` (hook entries), `scripts/ai-dotfiles` (`commit check`) |
 | `skills/portable-plugin/` | The rules a plugin's files follow to run in all four CLIs, the check, and the release step | `scripts/install/skills.py` |
 | `skills/git/` | A bundle: the git step skills (`push-branch`, `open-pr`, `approve-pr`, `archive-tag`, `merge-pr`, `prune-branch`), each with its own script, and `approve`, which runs them in order; `scripts/git_run.py` is the runner they share | `scripts/install/skills.py` (each linked by its own name), `scripts/ai-dotfiles` (`approve`, `git <step>`) |
 | `scripts/agent_hooks.py` | Every CLI's hook format behind one interface, for the skills' hooks; `agent_hooks.ts` is Pi's extension for all of them | `scripts/install/skills.py` (Pi's link) |
-| `scripts/ai-dotfiles` | Global command: `install`, `update`, `uninstall`, `check`, `worktree`, `commit`, `approve`, `git` | `scripts/install/skills.py` |
+| `scripts/ai-dotfiles` | Global command: `install`, `update`, `uninstall`, `check`, `worktree`, `commit`, `approve`, `git`, `statusline` | `scripts/install/skills.py` |
 | `scripts/install/installer.py` | What every step shares: reading `ai-clis.json`, safe writes | — |
 | `scripts/install/hooks.py` | One hook entry per event in each CLI's native hook file; ours are found by their command; retired ones taken out | — |
 | `scripts/install/plugins.py` | Each listed plugin at its release tag through each CLI's own plugin manager, read back after; each manifest checked at its tag (name, dependencies); its bin/ commands linked into `~/.local/bin` from a checkout at the tag; a receipt tells installed from taken over; every outside command through one runner | — |
@@ -45,7 +46,8 @@ setup.
 - `config/global-agents.md` holds only rules that apply in every repository and every CLI.
   Keep it free of `@` imports and HTML comments: Claude parses them, the other CLIs do not.
 - Never symlink a CLI's settings file (the CLIs write back to them); add keys to
-  `cli-settings.json`, under `enforce` for safety settings or `default` for model choices.
+  `cli-settings.json`, under `enforce` for settings this repo owns (safety, the status line) or
+  `default` for model choices.
 - Logic two skills need lives in one skill (its `scripts/`); the others import it, never copy
   it. Code every step of a bundle needs goes in the bundle's `scripts/`. A bundle
   (`skills/git/`) is this repo's grouping only: the CLIs read one level of skill folders, so

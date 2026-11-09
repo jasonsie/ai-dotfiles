@@ -20,7 +20,7 @@ skill list to taste.
 |---|---|---|
 | `config/ai-clis.json` | Which CLIs are on, and the path each one reads for instructions, settings, MCP, skills and hooks | Drives every step below; a CLI switched off is cleaned out |
 | `config/global-agents.md` | Rules loaded in every project by every CLI | Symlinked as `~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, `~/.pi/agent/AGENTS.md`, `~/.gemini/GEMINI.md` |
-| `config/cli-settings.json` | `enforce`: safety settings, restored on every install. `default`: model choices, written only when the CLI has none | Merged into each CLI's settings file (never symlinked, because CLIs write to these files) |
+| `config/cli-settings.json` | `enforce`: settings this repo owns (safety settings, the status line), restored on every install. `default`: model choices, written only when the CLI has none | Merged into each CLI's settings file (never symlinked, because CLIs write to these files) |
 | `config/mcp-servers.json` | MCP servers every CLI should have (today: context7 for library docs) | `claude`, `codex` and `pi mcp add`; merged into Antigravity's `mcp_config.json` |
 | `config/plugins.json` | The plugins every Mac gets: each one's GitHub repo, exact version and target CLIs (today: web-clipper for all four, zkfy for Claude) | Each CLI's own plugin manager at the release tag; a plugin's `bin/` commands in `~/.local/bin` from a checkout at that tag |
 | `skills/<name>/` | Shared skills. Skills adapted from other repos are pinned in `skills/skills.lock` with source, commit and license | Symlinked into `~/.claude/skills`, `~/.agents/skills` (Codex and Pi), `~/.gemini/config/skills` |
@@ -28,6 +28,7 @@ skill list to taste.
 | `skills/worktree-guard/` | A hook that moves a second session working in the same checkout into its own git worktree | Hook entries in each CLI's hook file (Codex runs it only after approval in `/hooks`); a Pi extension; `ai-dotfiles worktree` commands |
 | `skills/small-commits/` | A hook that gates `git commit` on size, subject and trailers | Hook entries in each CLI's hook file (Codex runs it only after approval in `/hooks`); a Pi extension; `ai-dotfiles commit check` |
 | `skills/git/` | The git skills: `approve` lands a branch the user reviewed (push, PR, approval by the repo's reviewer account, archive tag, merge, branch deleted), each step a skill of its own | Linked by name like every skill; `ai-dotfiles approve`, `ai-dotfiles git <step>`; the reviewer is cached per repo in `git config --local approve.reviewer` |
+| `scripts/statusline.py` | The status line Claude Code and Antigravity draw: folder, branch and worktree, model with effort, version, context left, rate limits and cost | `statusLine` in both settings files runs `ai-dotfiles statusline`; Codex lists the same items in `tui.status_line`; Pi's footer has them built in |
 | `config/upstream-docs.json` | The documentation sources mirrored into `docs/upstream/` | Refreshed weekly by a GitHub Action |
 | `docs/upstream/` | Machine-written mirrors of each CLI's official docs and of Google's and Meta's style guides, with indexes | Read by agents through the `upstream-docs` skill; never installed |
 

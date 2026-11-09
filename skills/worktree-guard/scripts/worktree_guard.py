@@ -500,6 +500,22 @@ def moved_text(event, moved, claim):
     return first + how + fresh + unrelated + done
 
 
+def make_worktree(main, name, base, branch, source, owner=None, table=None, meta=None):
+    """The one path that makes a linked worktree: `main/.claude/worktrees/<name>` at commit `base`,
+    on a new `branch` (None: detached), kept out of `git status`, with the gitignored files
+    `.worktreeinclude` lists copied from `source`, its sidecar written and, given an `owner`
+    (claim dict) and process `table`, claimed for that owner. Returns the worktree's path."""
+    linked = main / LINKED / name
+    git(main, 'worktree', 'add', '-q', *(('-b', branch) if branch else ('--detach',)), str(linked), base)
+    exclude(main)
+    copy_included(source, linked)
+    write_meta(main, name, {'name': name, 'branch': branch, 'base': base, **(meta or {}),
+                            'created': int(time.time())})
+    if owner:
+        take(linked, owner, table)
+    return linked
+
+
 def clash(event, state, busy, claim, me, table):
     if state.get('moved'):
         return Deny(f"worktree-guard: {busy} is busy: {who(claim)} is editing it. This session works in "
@@ -510,18 +526,13 @@ def clash(event, state, busy, claim, me, table):
         return Note(f'worktree-guard: {busy} is busy ({who(claim)}) but has no commit to start a linked '
                     'worktree from; this edit was not protected.')
     name = linked_name(main, event)
-    linked = main / LINKED / name
-    git(main, 'worktree', 'add', '-q', '-b', BRANCH_PREFIX + name, str(linked), base)
-    exclude(main)
-    copy_included(busy, linked)
+    linked = make_worktree(main, name, base, BRANCH_PREFIX + name, source=busy, owner=me, table=table,
+                           meta={'from': branch or base[:12], 'busy': str(busy), 'cli': event.cli,
+                                 'session': str(event.session), 'model': event.model})
     moved = {'busy': str(busy), 'linked': str(linked), 'name': name, 'branch': BRANCH_PREFIX + name,
              'from': branch or base[:12], 'base': base, 'default': default_ref(busy),
              'owner': {k: claim.get(k) for k in ('cli', 'session')}}
     state['moved'] = moved
-    write_meta(main, name, {'name': name, 'branch': moved['branch'], 'from': moved['from'], 'base': base,
-                            'busy': str(busy), 'cli': event.cli, 'session': str(event.session),
-                            'model': event.model, 'created': int(time.time())})
-    take(linked, me, table)
     text = moved_text(event, moved, claim)
     if event.cli == 'claude':
         return Deny(text)

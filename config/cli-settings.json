@@ -3,7 +3,12 @@
   "claude": {
     "enforce": {
       "skipDangerousModePermissionPrompt": false,
-      "skipAutoPermissionPrompt": false
+      "skipAutoPermissionPrompt": false,
+      "statusLine": {
+        "type": "command",
+        "command": "~/.local/bin/ai-dotfiles statusline",
+        "padding": 0
+      }
     },
     "default": {
       "model": "opus",
@@ -14,7 +19,8 @@
   "codex": {
     "enforce": {
       "approval_policy": "on-request",
-      "sandbox_mode": "workspace-write"
+      "sandbox_mode": "workspace-write",
+      "tui.status_line": ["current-dir", "git-branch", "model-with-reasoning", "codex-version", "context-remaining"]
     },
     "default": {
       "model": "gpt-6-astra",
@@ -29,7 +35,11 @@
   },
   "agy": {
     "enforce": {
-      "enableTerminalSandbox": true
+      "enableTerminalSandbox": true,
+      "statusLine": {
+        "type": "command",
+        "command": "~/.local/bin/ai-dotfiles statusline"
+      }
     }
   }
 }
