@@ -9,6 +9,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import Mock, patch
 
 from support import ROOT
 from test_git_skills import FAIL, OK, OLD, PR, TIP, land  # also loads the step skills
@@ -62,20 +63,20 @@ class ShipTest(unittest.TestCase):
         (self.main / '.claude/worktrees/fix-x.json').write_text(json.dumps({'name': 'fix-x', 'work': 'fix/x'}))
         self.body = self.main / 'body.md'
         self.body.write_text('## Summary\n')
+        self.shipped = Mock(return_value=(True, ['worktree-guard: removed fix-x (fix/x); its session is back in ' + str(self.main)]))
         self.answers = {
             'git rev-parse --show-toplevel': str(self.linked),
-            'git rev-parse --path-format=absolute --git-common-dir': str(self.main / '.git'),
             'git branch --show-current': '',   # detached
             'git ls-remote --heads origin refs/heads/fix/x': '',
             'gh pr list': '[]',
             'gh pr create': NEW_PR,
             'bash -c': OK,
-            'python3': 'worktree-guard: removed fix-x (fix/x); its session is back in ' + str(self.main),
         }
 
     def ship(self, argv=None, **answers):
         argv = ['--title', 'fix(x): the thing', '--body-file', str(self.body)] if argv is None else argv
-        return land(argv, ship.main, **{**self.answers, **answers})
+        with patch.object(ship.guard, 'main_of', return_value=self.main), patch.object(ship.guard, 'shipped', self.shipped):
+            return land(argv, ship.main, **{**self.answers, **answers})
 
     def test_runs_the_checks_pushes_opens_the_pr_then_deletes_the_worktree(self):
         code, output, err, fake = self.ship()
@@ -86,34 +87,34 @@ class ShipTest(unittest.TestCase):
         self.assertTrue(fake.ran(f'git push -q origin HEAD:refs/heads/fix/x'))
         self.assertTrue(fake.ran(f'gh pr create --base main --head fix/x --title fix(x): the thing --body-file {self.body}'))
         calls = [c for c, _ in fake.calls]
-        order = [next(i for i, c in enumerate(calls) if c.startswith(p))
-                 for p in ('bash -c', 'git push', 'gh pr create', 'python3')]
-        self.assertEqual(order, sorted(order), 'checks, push, PR, then the worktree goes')
+        order = [next(i for i, c in enumerate(calls) if c.startswith(p)) for p in ('bash -c', 'git push', 'gh pr create')]
+        self.assertEqual(order, sorted(order), 'checks, push, then the PR')
+        self.assertLess(output.index('pr '), output.index('worktree '), 'the worktree goes after the PR')
         self.assertIn(f'shipped {NEW_PR}', output)
-        self.assertIn(f'shipped fix-x --repo {self.main}', fake.ran('python3')[0])
-        self.assertEqual(fake.ran('python3')[0].split()[1], str(ship.GUARD))
+        self.shipped.assert_called_once_with(self.main, 'fix-x')
         self.assertIn('ExitWorktree', output.splitlines()[-1])
         self.assertIn(str(self.main), output.splitlines()[-1])
 
     def test_the_checks_run_in_the_worktree(self):
         _, _, _, fake = self.ship()
         self.assertEqual({cwd for call, cwd in fake.dirs if call.startswith('bash -c')}, {str(self.linked)})
-        self.assertEqual({cwd for call, cwd in fake.dirs if call.startswith('python3')}, {str(self.main)},
-                         'the cleanup runs from the main checkout, not from the folder it deletes')
+        self.shipped.assert_called_once_with(self.main, 'fix-x')  # the main checkout, not the folder it deletes
 
     def test_a_failing_check_stops_before_the_push_naming_the_command(self):
         code, output, err, fake = self.ship(**{'bash -c shellcheck': (2, 'SC1000', 'bad quoting')})
         self.assertEqual(code, 1)
         self.assertIn('checks: `shellcheck scripts/*.sh scripts/ai-dotfiles` failed (exit 2): bad quoting', err)
         self.assertEqual(fake.ran('bash -c'), ['bash -c ' + c for c in CHECKS[:2]], 'later checks do not run')
-        for mutating in ('git push', 'gh pr create', 'python3'):
+        for mutating in ('git push', 'gh pr create'):
             self.assertEqual(fake.ran(mutating), [], mutating)
+        self.shipped.assert_not_called()
 
     def test_a_branch_already_on_origin_elsewhere_is_refused(self):
         code, _, err, fake = self.ship(**{'git ls-remote --heads origin refs/heads/fix/x': f'{OLD}\trefs/heads/fix/x'})
         self.assertEqual(code, 1)
         self.assertIn('push: origin already has fix/x at bbbbbbb', err)
-        self.assertEqual(fake.ran('git push') + fake.ran('gh pr create') + fake.ran('python3'), [])
+        self.assertEqual(fake.ran('git push') + fake.ran('gh pr create'), [])
+        self.shipped.assert_not_called()
 
     def test_a_rerun_after_the_push_skips_it_and_a_known_pr_is_reused(self):
         code, output, err, fake = self.ship([], **{
@@ -123,7 +124,7 @@ class ShipTest(unittest.TestCase):
         self.assertIn('push       already pushed', output)
         self.assertIn('pr         #7 exists (open)', output)
         self.assertEqual(fake.ran('git push') + fake.ran('gh pr create'), [])
-        self.assertTrue(fake.ran('python3'), 'the worktree still goes')
+        self.shipped.assert_called_once()  # the worktree still goes
 
     def test_an_existing_pr_needs_no_title_or_body(self):
         code, output, err, fake = self.ship([], **{'gh pr list': json.dumps([PR])})
@@ -145,10 +146,11 @@ class ShipTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn('gh pr create', err)
         self.assertTrue(fake.ran('git push'))
-        self.assertEqual(fake.ran('python3'), [])
+        self.shipped.assert_not_called()
 
     def test_a_worktree_that_refuses_to_go_is_reported_after_the_pr_exists(self):
-        code, output, err, fake = self.ship(**{'python3': (1, '', 'worktree-guard: kept fix-x: 1 uncommitted change(s)')})
+        self.shipped.return_value = (False, ['worktree-guard: kept fix-x: 1 uncommitted change(s)'])
+        code, output, err, fake = self.ship()
         self.assertEqual(code, 1)
         self.assertIn(f'shipped {NEW_PR}', output)
         self.assertIn('worktree: kept fix-x: 1 uncommitted change(s)', err)
@@ -171,20 +173,66 @@ class ShipTest(unittest.TestCase):
         self.assertIn('ship: fix-x was not made by `ai-dotfiles worktree new`', err)
         self.assertEqual(fake.ran('bash -c') + fake.ran('git push'), [])
 
+    def name_it(self, work):
+        """The record a worktree made by `claude -w foo` or a subagent has: Claude's own name as the work."""
+        (self.main / '.claude/worktrees/fix-x.json').write_text(json.dumps({'name': 'fix-x', 'work': work}))
+
+    def test_a_work_name_that_is_not_type_slash_slug_needs_work_and_never_becomes_a_branch(self):
+        self.name_it('foo')
+        code, _, err, fake = self.ship()
+        self.assertEqual(code, 1)
+        self.assertIn("ship: the work name 'foo' is not <type>/<slug>; pass --work <type>/<slug>", err)
+        self.assertEqual(fake.ran('bash -c') + fake.ran('git push') + fake.ran('gh pr create'), [])
+        self.shipped.assert_not_called()
+
+    def test_work_names_the_branch_when_the_recorded_name_is_not_one(self):
+        self.name_it('foo')
+        code, output, err, fake = self.ship(['--work', 'fix/y', '--title', 't', '--body-file', str(self.body)],
+                                            **{'git ls-remote --heads origin refs/heads/fix/y': ''})
+        self.assertEqual(code, 0, output + err)
+        self.assertEqual(fake.ran('git push'), ['git push -q origin HEAD:refs/heads/fix/y'])
+        self.assertTrue(fake.ran('gh pr create --base main --head fix/y'))
+
+    def test_work_must_be_type_slash_slug_and_cannot_rename_a_good_name(self):
+        self.name_it('foo')
+        code, _, err, fake = self.ship(['--work', 'Bar', '--title', 't', '--body-file', str(self.body)])
+        self.assertEqual(code, 1)
+        self.assertIn("ship: --work 'Bar' is not <type>/<slug>", err)
+        self.assertEqual(fake.ran('git push'), [])
+        self.name_it('fix/x')
+        code, _, err, fake = self.ship(['--work', 'fix/y', '--title', 't', '--body-file', str(self.body)])
+        self.assertEqual(code, 1)
+        self.assertIn("ship: this worktree's work is already fix/x; --work is only for a name that is not <type>/<slug>", err)
+        self.assertEqual(fake.ran('git push'), [])
+
     def test_dry_run_changes_nothing(self):
         code, output, err, fake = self.ship(['--dry-run', '--title', 't', '--body-file', str(self.body)])
         self.assertEqual(code, 0, err)
-        self.assertEqual(fake.ran('bash -c') + fake.ran('git push') + fake.ran('gh pr create') + fake.ran('python3'), [])
+        self.assertEqual(fake.ran('bash -c') + fake.ran('git push') + fake.ran('gh pr create'), [])
+        self.shipped.assert_not_called()
         for line in ("would  bash -c 'shellcheck", 'would  git push -q origin HEAD:refs/heads/fix/x', 'would  gh pr create',
-                     'would  python3'):
+                     'would  delete the worktree fix-x'):
             self.assertIn(line, output)
         self.assertIn('would ship', output)
 
-    def test_a_repo_without_a_verify_block_has_no_checks(self):
+    def test_a_repo_without_a_verify_block_stops_before_the_push_unless_no_checks_is_passed(self):
         (self.linked / 'AGENTS.md').write_text('# Repo\n')
-        code, output, err, fake = self.ship()
+        code, _, err, fake = self.ship()
+        self.assertEqual(code, 1)
+        self.assertIn('checks: AGENTS.md has no Verify block; add one, or pass --no-checks to ship without checks', err)
+        self.assertEqual(fake.ran('bash -c') + fake.ran('git push') + fake.ran('gh pr create'), [])
+        self.shipped.assert_not_called()
+        (self.linked / 'AGENTS.md').unlink()  # no AGENTS.md at all is the same
+        self.assertEqual(self.ship()[0], 1)
+        code, output, err, fake = self.ship(['--no-checks', '--title', 't', '--body-file', str(self.body)])
         self.assertEqual(code, 0, err)
-        self.assertIn('checks     none: AGENTS.md has no Verify block', output)
+        self.assertIn('checks     skipped (--no-checks)', output)
+        self.assertEqual(fake.ran('bash -c'), [])
+        self.assertTrue(fake.ran('git push'))
+
+    def test_no_checks_skips_a_verify_block_that_is_there(self):
+        code, output, err, fake = self.ship(['--no-checks', '--title', 't', '--body-file', str(self.body)])
+        self.assertEqual(code, 0, err)
         self.assertEqual(fake.ran('bash -c'), [])
 
 
@@ -200,23 +248,23 @@ class FixShipTest(unittest.TestCase):
         (self.linked / 'AGENTS.md').write_text(VERIFY)
         self.meta = self.main / '.claude/worktrees/feat-thing.json'
         self.set_meta(base=OLD)
+        self.shipped = Mock(return_value=(True, ['worktree-guard: removed feat-thing (feat/thing); its session is back in ' + str(self.main)]))
         self.remote = 'git ls-remote --heads origin refs/heads/feat/thing'
         self.answers = {
             'git rev-parse --show-toplevel': str(self.linked),
-            'git rev-parse --path-format=absolute --git-common-dir': str(self.main / '.git'),
             'git branch --show-current': '',
             self.remote: f'{OLD}\trefs/heads/feat/thing',
             'git merge-base --is-ancestor': OK,
             'gh pr list': json.dumps([PR]),
             'bash -c': OK,
-            'python3': 'worktree-guard: removed feat-thing (feat/thing); its session is back in ' + str(self.main),
         }
 
     def set_meta(self, **fields):
         self.meta.write_text(json.dumps({'name': 'feat-thing', 'work': 'feat/thing', **fields}))
 
     def ship(self, argv=(), **answers):
-        return land(list(argv), ship.main, **{**self.answers, **answers})
+        with patch.object(ship.guard, 'main_of', return_value=self.main), patch.object(ship.guard, 'shipped', self.shipped):
+            return land(list(argv), ship.main, **{**self.answers, **answers})
 
     def test_it_pushes_to_the_prs_branch_updates_the_pr_and_deletes_the_worktree(self):
         self.set_meta(pr=7, base=OLD)
@@ -228,10 +276,10 @@ class FixShipTest(unittest.TestCase):
         self.assertEqual(fake.ran('gh pr create'), [], 'no new PR')
         self.assertTrue(fake.ran('git fetch -q origin feat/thing'), 'the branch is fetched to compare')
         self.assertIn('shipped https://github.com/o/r/pull/7', output)
-        self.assertIn(f'shipped feat-thing --repo {self.main}', fake.ran('python3')[0])
+        self.shipped.assert_called_once_with(self.main, 'feat-thing')
         calls = [c for c, _ in fake.calls]
-        order = [next(i for i, c in enumerate(calls) if c.startswith(p)) for p in ('bash -c', 'git push', 'python3')]
-        self.assertEqual(order, sorted(order), 'checks, push, then the worktree goes')
+        order = [next(i for i, c in enumerate(calls) if c.startswith(p)) for p in ('bash -c', 'git push')]
+        self.assertEqual(order, sorted(order), 'checks, then the push')
 
     def test_a_branch_that_moved_on_origin_stops_before_the_push_and_deletes_nothing(self):
         self.set_meta(pr=7, base=OLD)
@@ -239,7 +287,8 @@ class FixShipTest(unittest.TestCase):
                                           'git merge-base --is-ancestor': FAIL})
         self.assertEqual(code, 1)
         self.assertIn('push: origin has feat/thing at ccccccc, which this worktree does not contain', err)
-        self.assertEqual(fake.ran('git push') + fake.ran('python3'), [])
+        self.assertEqual(fake.ran('git push'), [])
+        self.shipped.assert_not_called()
 
     def test_a_push_origin_refuses_stops_with_its_message_and_deletes_nothing(self):
         self.set_meta(pr=7, base=OLD)
@@ -247,7 +296,7 @@ class FixShipTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn('git push: remote: protected branch', err)
         self.assertNotIn('shipped', output)
-        self.assertEqual(fake.ran('python3'), [])
+        self.shipped.assert_not_called()
 
     def test_a_pr_that_is_no_longer_open_stops_before_the_checks(self):
         self.set_meta(pr=7, base=OLD)
@@ -270,13 +319,14 @@ class FixShipTest(unittest.TestCase):
         self.assertEqual(code, 0, err)
         self.assertIn('push       already pushed', output)
         self.assertEqual(fake.ran('git push'), [])
-        self.assertTrue(fake.ran('python3'))
+        self.shipped.assert_called_once()
 
     def test_a_failing_check_stops_before_the_push(self):
         self.set_meta(pr=7, base=OLD)
         code, _, err, fake = self.ship(**{'bash -c shellcheck': (2, '', 'bad')})
         self.assertEqual(code, 1)
-        self.assertEqual(fake.ran('git push') + fake.ran('python3'), [])
+        self.assertEqual(fake.ran('git push'), [])
+        self.shipped.assert_not_called()
 
     def test_a_branch_gone_from_origin_is_not_recreated(self):
         self.set_meta(pr=7, base=OLD)
@@ -289,7 +339,8 @@ class FixShipTest(unittest.TestCase):
         self.set_meta(pr=7, base=OLD)
         code, output, err, fake = self.ship(['--dry-run'])
         self.assertEqual(code, 0, err)
-        self.assertEqual(fake.ran('git push') + fake.ran('python3') + fake.ran('gh pr create'), [])
+        self.assertEqual(fake.ran('git push') + fake.ran('gh pr create'), [])
+        self.shipped.assert_not_called()
         self.assertIn('would  git push -q origin HEAD:refs/heads/feat/thing', output)
 
     def test_work_that_is_not_a_pr_fix_still_cannot_take_an_existing_branch(self):

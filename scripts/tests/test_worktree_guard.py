@@ -515,6 +515,27 @@ class SweepTest(OriginRepo):
         self.assertTrue(busy.is_dir())
         self.assertFalse(guard.claim_file(busy).exists())  # released: the owner is gone
 
+    def test_a_session_ending_sweeps_the_repos_it_worked_in_not_only_ones_it_released(self):
+        """It ran `worktree new` (its worktree shipped and went, so no claim is left to release), or
+        was stopped at the main checkout: either way the repo it touched is swept at its end."""
+        git(self.repo, 'config', '--local', guard.FLOW_KEY, 'true')
+        for session, command in (('s1', 'ai-dotfiles worktree new fix/z'), ('s2', 'ai-dotfiles worktree pr 7')):
+            wt = self.leftover()
+            self.shell('claude', session, ME, command)
+            self.assertTrue(wt.is_dir())  # a hook call does not sweep
+            self.run_hook('claude', {'session_id': session}, kind='end')
+            self.assertFalse(wt.exists(), command)
+        wt = self.leftover()
+        self.assertTrue(self.edit('claude', 's3', ME))  # stopped at the main checkout: claims nothing
+        self.run_hook('claude', {'session_id': 's3'}, kind='end')
+        self.assertFalse(wt.exists())
+
+    def test_a_repo_that_is_off_is_not_swept_for_a_session_that_only_ran_a_command_there(self):
+        wt = self.leftover()
+        self.shell('claude', 's1', ME, 'ai-dotfiles worktree new fix/z')
+        self.run_hook('claude', {'session_id': 's1'}, kind='end')
+        self.assertTrue(wt.is_dir())
+
     def test_list_flags_what_was_left_with_counts(self):
         wt = self.leftover()
         (wt / 'a.txt').write_text('edited\n')
@@ -944,6 +965,21 @@ class FlowTest(Repo):
                 'tool_input': {'file_path': str(self.linked('fix-x') / 'a.txt')}}
         self.assertIsNone(self.run_hook('claude', data))
 
+    def test_a_linked_worktree_outside_the_guards_folder_is_left_alone(self):
+        """Codex's and Antigravity's app worktrees: not gated, not claimed, whoever edits them."""
+        self.on()
+        elsewhere = self.repo.parent / 'app worktree'
+        git(self.repo, 'worktree', 'add', '-q', '--detach', str(elsewhere))
+        for cli, session, pid in (('claude', 'aaaa1111', ME), ('codex', 'bbbb2222', PARENT)):
+            data = {'session_id': session, 'cwd': str(elsewhere), 'pid': pid, 'tool_name': 'Edit',
+                    'tool_input': {'file_path': str(elsewhere / 'a.txt')}}
+            if cli == 'codex':
+                data = {**data, 'tool_name': 'apply_patch', 'tool_input': {
+                    'command': '*** Begin Patch\n*** Update File: a.txt\n@@\n-one\n+two\n*** End Patch\n'}}
+            self.assertTrue(self.plain(self.run_hook(cli, data)), cli)
+        self.assertEqual(list(guard.state_root().glob('claims/*.json')), [])
+        self.assertTrue(self.plain(self.shell('claude', 'aaaa1111', ME, f'git -C {shlex.quote(str(elsewhere))} commit -am x')))
+
     def test_a_guard_failure_never_blocks_an_edit(self):
         self.on()
         data = {'session_id': 's', 'cwd': str(self.repo), 'tool_name': 'Edit',
@@ -1274,7 +1310,10 @@ class ShippedTest(OriginRepo):
         guard.SESSIONS.save('sess-ship', {**state, 'warned': ['x']})
         self.commit_and_push()
         self.assertEqual(self.shipped()[0], 0)
-        self.assertEqual(guard.SESSIONS.load('sess-ship'), {'warned': ['x']})
+        state = guard.SESSIONS.load('sess-ship')
+        self.assertEqual(state['warned'], ['x'])
+        self.assertEqual(state['repos'], [str(self.repo)], 'the repo stays noted for the sweep at its end')
+        self.assertNotIn('moved', state)
 
     def test_work_not_on_a_remote_is_kept(self):
         (self.wt / 'a.txt').write_text('two\n')

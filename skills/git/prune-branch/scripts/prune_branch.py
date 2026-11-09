@@ -64,7 +64,7 @@ def fast_forward(base, dry):
     if ref != f'refs/heads/{base}':
         on = ref.removeprefix('refs/heads/') if ref else 'a detached HEAD'
         return f'skipped: the main checkout is on {on}, not {base}'
-    git_run.out(['git', 'fetch', '-q', 'origin', base], what='git fetch')
+    git_run.act(['git', 'fetch', '-q', 'origin', base], dry)  # a dry run compares with the last fetch
     head = git_run.out(['git', '-C', path, 'rev-parse', 'HEAD'])
     target = git_run.out(['git', '-C', path, 'rev-parse', f'origin/{base}'])
     if head == target:

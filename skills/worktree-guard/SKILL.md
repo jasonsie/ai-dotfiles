@@ -11,19 +11,6 @@ one session: the first session to edit a worktree owns it until it ends, and ano
 session's edit there is refused. The hook in [scripts/worktree_guard.py](scripts/worktree_guard.py)
 does the gating; this skill is what a session does.
 
-## Older agent worktrees
-
-The guard used to move a second session's first edit into `.claude/worktrees/<cli>-<session>`
-on branch `agent/<cli>-<session>`. It no longer makes them; ones already there stay and are
-the person's to clear:
-
-- `ai-dotfiles worktree list` shows them; from inside one, `ai-dotfiles worktree done
-  "<one-line description>"` records its summary.
-- `ai-dotfiles worktree rm <name>` archives the branch as `archive/<name>` (the description
-  becomes the tag's), then deletes worktree and branch; merge the branch first
-  (`git merge <branch>` in the main checkout), or it refuses an unmerged one without `--force`.
-  `prune` removes every merged, clean, unowned one.
-
 ## Commands
 
 `ai-dotfiles worktree on | off | new | pr | shipped | list | done | rm | prune | release | share`; `--help`
@@ -45,6 +32,8 @@ deleted the guard tells Codex in one line. Not an error: the notice is how Codex
 main checkout (or a git command that changes it) is stopped with "name this work". Reads pass.
 The edited file's repo decides, wherever the session started; a file outside git is never
 gated. A repo that is off gets nothing: no owner, no move, no message.
+In a repo that is on, only the main checkout and the worktrees under `.claude/worktrees/` are gated
+or claimed; a linked worktree elsewhere (Codex's or Antigravity's app makes them) is left alone.
 
 ## Name the work (first edit, repo on)
 
@@ -85,6 +74,8 @@ bound), it still makes the worktree and prints its path; the first edit there cl
 When a worktree is made, and when a session ends, the guard deletes the linked worktrees whose
 owner is gone and that have nothing to lose: no uncommitted or untracked files, and every
 commit on a remote-tracking ref (pushed). One nobody has claimed yet is spared for an hour.
+A session's end sweeps every repo that is on where it edited, claimed a worktree or ran `worktree
+new` or `pr`.
 Anything else stays, and `list` marks it `LEFT BEHIND: owner gone, 2 commits not pushed, 1 file
 uncommitted`.
 
@@ -125,3 +116,16 @@ Desktop app), so use `worktree new` from a session started in the repo instead.
 - **"worktree-guard failed ... not protected"**: that edit ran unguarded; say so in your reply.
 - The guard sees file-edit tools and git; in a repo that is on, change files through those
   rather than `sed -i`, redirects or generators.
+
+## Older agent worktrees
+
+The guard used to move a second session's first edit into `.claude/worktrees/<cli>-<session>`
+on branch `agent/<cli>-<session>`. It no longer makes them; ones already there stay and are
+the person's to clear:
+
+- `ai-dotfiles worktree list` shows them; from inside one, `ai-dotfiles worktree done
+  "<one-line description>"` records its summary.
+- `ai-dotfiles worktree rm <name>` archives the branch as `archive/<name>` (the description
+  becomes the tag's), then deletes worktree and branch; merge the branch first
+  (`git merge <branch>` in the main checkout), or it refuses an unmerged one without `--force`.
+  `prune` removes every merged, clean, unowned one.

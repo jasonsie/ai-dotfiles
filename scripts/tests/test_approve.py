@@ -154,6 +154,14 @@ class ByNumberTest(unittest.TestCase):
                           and ' merge-base ' not in c and ' rev-parse ' not in c and ' diff ' not in c and ' ls-files ' not in c], [])
         self.assertIn('would  gh pr merge 7 --merge', output)
         self.assertIn('would land', output)
+        self.assertEqual(fake.ran('git fetch'), [], 'a dry run writes no refs, and a fetch does')
+        self.assertIn('would  git fetch', output)
+
+    def test_a_dry_run_whose_pr_head_is_not_fetched_says_so_instead_of_skipping_the_tag(self):
+        code, output, _, fake = run(['7', '--dry-run'], **{**BEHIND, 'git rev-parse --verify -q ' + TIP + '^{commit}': FAIL})
+        self.assertEqual(code, 0, output)
+        self.assertIn('would tag archive/x at aaaaaaa', output)
+        self.assertEqual(fake.ran('git tag') + fake.ran('git fetch'), [])
 
     def test_every_step_is_skipped_when_done(self):
         code, output, err, fake = run(['7'], **{
