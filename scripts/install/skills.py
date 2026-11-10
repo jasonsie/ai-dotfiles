@@ -61,8 +61,11 @@ def owns_commands(selected, uninstall):
     return not uninstall or set(selected) == set(installer.clis())
 
 
-def plan(home, selected, workspace, owned, uninstall=False):
-    """Link changes for the selected CLIs, and the receipt's next list of owned links."""
+def plan(home, selected, workspace, owned, uninstall=False, live=None):
+    """Link changes for the selected CLIs, and the receipt's next list of owned links. Skills are found
+    in `workspace`; every link names the same path under `live` (installer.live_root), the workspace
+    when not given."""
+    live = live or workspace
     entries = installer.clis()
     roots = {installer.path(home, cli, 'skills') for cli in selected}
     # A folder stays linked while a CLI switched on reads it, unless this run uninstalls that CLI.
@@ -70,7 +73,7 @@ def plan(home, selected, workspace, owned, uninstall=False):
             if entry['on'] and not (uninstall and cli in selected)}
     link_roots = set() if uninstall else roots & keep
     managed_roots = link_roots | (roots - keep)
-    commands = {str(home / BIN / name): str(workspace / target) for name, target in COMMANDS.items()}
+    commands = {str(home / BIN / name): str(live / target) for name, target in COMMANDS.items()}
     others = set(commands) if owns_commands(selected, uninstall) else set()
     extensions = installer.path(home, 'pi', 'extensions') if 'pi' in selected else None
     extension = str(extensions / PI_EXTENSION) if extensions else None
@@ -81,11 +84,12 @@ def plan(home, selected, workspace, owned, uninstall=False):
     desired = {}
     if link_roots:
         found = skills(workspace / 'skills')
-        desired = {str(root / name): str(folder) for root in sorted(link_roots) for name, folder in found.items()}
+        desired = {str(root / name): str(live / folder.relative_to(workspace))
+                   for root in sorted(link_roots) for name, folder in found.items()}
     if not uninstall:
         desired.update(commands)
         if extension and entries['pi']['on'] and Path(extension).parent.parent.is_dir():
-            desired[extension] = str(workspace / PI_EXTENSION_TARGET)
+            desired[extension] = str(live / PI_EXTENSION_TARGET)
     changes = []
     for path, target in desired.items():
         current = installer.state(Path(path))
@@ -102,10 +106,10 @@ def plan(home, selected, workspace, owned, uninstall=False):
     return changes, links
 
 
-def install(home, selected, workspace=WORKSPACE, apply=False, uninstall=False, path_env=None):
+def install(home, selected, workspace=WORKSPACE, apply=False, uninstall=False, path_env=None, live=None):
     receipt = home / RECEIPT
     owned = json.loads(receipt.read_text())['links'] if receipt.is_file() else {}
-    changes, links = plan(home, selected, workspace, owned, uninstall)
+    changes, links = plan(home, selected, workspace, owned, uninstall, live)
     if links != owned:
         changes.append((receipt, installer.state(receipt), installer.receipt({'version': 1, 'links': links})))
     old = home / COMMAND_RECEIPT
@@ -124,7 +128,8 @@ def install(home, selected, workspace=WORKSPACE, apply=False, uninstall=False, p
 def main():
     args = installer.parser(__doc__).parse_args()
     return installer.finish('skills', lambda: install(
-        args.home, installer.scope(args.target), apply=not args.dry_run, uninstall=args.uninstall))
+        args.home, installer.scope(args.target), apply=not args.dry_run, uninstall=args.uninstall,
+        live=installer.live_root(WORKSPACE)))
 
 
 if __name__ == '__main__':

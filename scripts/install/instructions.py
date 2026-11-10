@@ -68,9 +68,9 @@ def save(home, entries):
     return backup
 
 
-def uninstall(home, clis, *, workspace=WORKSPACE, apply=False):
-    home, workspace = home.expanduser().resolve(), workspace.resolve()
-    source = workspace / SOURCE
+def uninstall(home, clis, *, workspace=WORKSPACE, apply=False, live=None):
+    home = home.expanduser().resolve()
+    source = Path(live or workspace).resolve() / SOURCE  # what our links name
     changes = []  # (cli, path, our link, the original to restore)
     for cli in clis:
         path = installer.path(home, cli, "instructions")
@@ -89,7 +89,9 @@ def uninstall(home, clis, *, workspace=WORKSPACE, apply=False):
     return len(changes)
 
 
-def install(home, clis, *, workspace=WORKSPACE, apply=False, replace_existing=False):
+def install(home, clis, *, workspace=WORKSPACE, apply=False, replace_existing=False, live=None):
+    """Link each CLI's instructions to `live` (installer.live_root; the workspace when not given)
+    after checking the workspace's copy."""
     home, workspace = home.expanduser().resolve(), workspace.resolve()
     source = workspace / SOURCE
     if not source.is_file():  # an empty file is valid: no shared instructions
@@ -98,10 +100,11 @@ def install(home, clis, *, workspace=WORKSPACE, apply=False, replace_existing=Fa
         raise ValueError(
             "Shared instructions must stay below Codex's 32 KiB default limit"
         )
+    target = Path(live or workspace).resolve() / SOURCE  # what the links name
     changes = []  # (cli, path, state before)
     for cli in clis:
         path = installer.path(home, cli, "instructions")
-        if not path.is_symlink() and path.resolve() == source.resolve():
+        if not path.is_symlink() and path.resolve() in (source.resolve(), target.resolve()):
             raise ValueError(f"Instruction destination is the shared source: {path}")
         for parent in path.parents:
             if parent.exists() and not parent.is_dir():
@@ -112,7 +115,7 @@ def install(home, clis, *, workspace=WORKSPACE, apply=False, replace_existing=Fa
                 raise ValueError(
                     f"{override} shadows shared instructions; resolve it before installation"
                 )
-        if path.is_symlink() and path.resolve() == source.resolve():
+        if path.is_symlink() and path.resolve() == target.resolve():
             print(f"Unchanged: {path}")
             continue
         before = installer.state(path)
@@ -127,7 +130,7 @@ def install(home, clis, *, workspace=WORKSPACE, apply=False, replace_existing=Fa
         changes.append((cli, path, before))
 
     # Every destination is validated before any of them is touched.
-    link = [(path, before, ("link", str(source))) for _, path, before in changes]
+    link = [(path, before, ("link", str(target))) for _, path, before in changes]
     installer.show(link, apply)
     if apply and changes:
         print(f"Backup: {save(home, changes)}")
@@ -135,14 +138,14 @@ def install(home, clis, *, workspace=WORKSPACE, apply=False, replace_existing=Fa
     return len(changes)
 
 
-def run(home, target, write, uninstall_all, replace_existing, workspace=WORKSPACE):
+def run(home, target, write, uninstall_all, replace_existing, workspace=WORKSPACE, live=None):
     """Link the CLIs switched on and unlink those switched off; --uninstall unlinks all."""
     selected = installer.scope(target)
     if uninstall_all:
-        return uninstall(home, selected, workspace=workspace, apply=write)
+        return uninstall(home, selected, workspace=workspace, apply=write, live=live)
     on, off = installer.split(selected)
-    return (install(home, on, workspace=workspace, apply=write, replace_existing=replace_existing)
-            + uninstall(home, off, workspace=workspace, apply=write))
+    return (install(home, on, workspace=workspace, apply=write, replace_existing=replace_existing, live=live)
+            + uninstall(home, off, workspace=workspace, apply=write, live=live))
 
 
 def main():
@@ -150,7 +153,8 @@ def main():
     parser.add_argument("--replace-existing", action="store_true")
     args = parser.parse_args()
     return installer.finish("instructions", lambda: run(
-        args.home, args.target, not args.dry_run, args.uninstall, args.replace_existing))
+        args.home, args.target, not args.dry_run, args.uninstall, args.replace_existing,
+        live=installer.live_root(WORKSPACE)))
 
 
 if __name__ == "__main__":

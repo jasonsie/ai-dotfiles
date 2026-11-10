@@ -55,6 +55,21 @@ class InstallSkillsTest(unittest.TestCase):
         for target in (*skills.COMMANDS.values(), skills.PI_EXTENSION_TARGET):
             self.assertTrue((skills.WORKSPACE / target).is_file(), target)
 
+    def test_from_a_linked_worktree_skills_are_read_there_and_linked_into_the_main_checkout(self):
+        live = self.root / 'main checkout'
+        (self.repo / 'skills/gamma').mkdir()  # new in the worktree, not merged yet
+        (self.repo / 'skills/gamma/SKILL.md').write_text('---\nname: gamma\n---\n')
+        self.extension.parent.parent.mkdir(parents=True)  # Pi is set up
+        with redirect_stdout(io.StringIO()):
+            skills.install(self.home, CLIS, self.repo, True, False, '', live=live)
+        links = self.links()
+        self.assertIn(str(live / 'skills/gamma'), links.values())
+        self.assertEqual(links[f'{skills.BIN}/ai-dotfiles'], str(live / 'scripts/ai-dotfiles'))
+        self.assertEqual(links[str(self.extension.relative_to(self.home))], str(live / skills.PI_EXTENSION_TARGET))
+        self.assertEqual([t for t in links.values() if not t.startswith(f'{live}/')], [])
+        with redirect_stdout(io.StringIO()):
+            self.assertEqual(skills.install(self.home, CLIS, self.repo, False, False, '', live=live), 0)
+
     def test_a_bundle_is_flattened_and_a_clash_refused(self):
         (self.repo / 'skills/git/push-branch').mkdir(parents=True)
         (self.repo / 'skills/git/push-branch/SKILL.md').write_text('---\nname: push-branch\n---\n')

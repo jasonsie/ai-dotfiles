@@ -60,6 +60,13 @@ changes. `ai-dotfiles` (linked on the first run) wraps the entry points from any
 `install`, `update` (fast-forward pull of `main` on a clean tree, then install),
 `uninstall`, `check`.
 
+Run in a linked worktree (`.claude/worktrees/<name>`, which `ship` deletes), the steps read
+what they install from the worktree but name the main checkout in every link and hook command
+(`installer.live_root()`). So `--dry-run` there previews what installing will change once the
+work merges, and the healthcheck measures this Mac against the main checkout; its tests and
+portability check stay the worktree's. Something the work adds, such as a new skill, is linked
+before the main checkout has it, so install for real from the main checkout after the merge.
+
 ## Which CLIs: config/ai-clis.json
 
 Each entry names a CLI, switches it `on` or off, and says where it reads its global
