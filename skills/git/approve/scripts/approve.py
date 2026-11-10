@@ -16,6 +16,10 @@ so a run that stopped can be rerun:
   tag         archive/<name> at the branch tip, pushed                (archive-tag, git tag)
   merge       a merge commit                                          (merge-pr, git merge)
   prune       base checked out and pulled; branch deleted everywhere  (prune-branch, git prune)
+  main        run in a linked worktree: the main checkout fast-forwarded, as below
+  worktree    run in a linked worktree: it is deleted, last, so only the archive tag is left;
+              kept, with why, unless worktree-guard made it in a repo whose flow is on, no other
+              live session owns it and it holds nothing origin lacks (prune-branch, worktree-guard)
 
 With a PR number nothing is local: no branch, no worktree, no preflight. The PR is read from
 GitHub, then, each step skipped when done:
@@ -28,7 +32,13 @@ GitHub, then, each step skipped when done:
   main        the main checkout fast-forwarded to origin/<base>, only when git can without
               touching uncommitted files (never a stash or reset); otherwise skipped, with why
 
+Run in the linked worktree that holds PR <n>'s work (its branch checked out there, or the guard's
+record naming the branch or the PR), that worktree ends as in the one-run form: prune before main,
+worktree after it. Any other worktree is left alone, and so is that one while it holds uncommitted
+files or commits the PR's head lacks: then its branch and folder stay (a skipped: worktree line).
+
 With --dry-run nothing is fetched (a fetch writes refs): the plan reads what the last fetch left.
+When the run's worktree is deleted, the last line says where the session is: the main checkout.
 
 Nothing is undone on failure: the run stops, names the step, and exits 1. Exit 3 means no
 reviewer is known for this repo: ask the user which login reviews here and rerun with
@@ -91,8 +101,10 @@ def run_number(args):
     step('tag', tag(repo, pr, dry, ref=repo.tip))
     step('merge', merge_pr.merge(pr, dry))
     step('branch', 'deleted on origin' if prune_branch.delete_remote(repo.branch, dry) else 'gone already')
-    step('main', prune_branch.fast_forward(repo.base, dry))
+    back = prune_branch.finish(repo, dry, number=pr['number'])
     print(('would land ' if dry else 'landed ') + pr['url'])
+    if back:
+        print(back)
 
 
 def run(args):
@@ -110,8 +122,10 @@ def run(args):
     step('review', approve_pr.review(pr, login, token, dry))
     step('tag', tag(repo, pr, dry))
     step('merge', merge_pr.merge(pr, dry))
-    step('prune', prune_branch.prune(repo, dry))
+    back = prune_branch.finish(repo, dry)
     print(('would land ' if dry else 'landed ') + pr['url'])
+    if back:
+        print(back)
 
 
 def configure(parser):

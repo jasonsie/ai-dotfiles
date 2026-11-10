@@ -1345,6 +1345,68 @@ class ShippedTest(OriginRepo):
         self.assertFalse(self.linked('fix-y').exists())
 
 
+class LandedTest(OriginRepo):
+    """`landed(worktree)`: approve's last step, run inside the worktree once its PR is merged and tagged."""
+
+    def setUp(self):
+        super().setUp()
+        self.assertEqual(self.cli('on', '--repo', str(self.repo))[0], 0)
+        self.shell('claude', 'sess-land', ME, 'ai-dotfiles worktree new fix/x')  # this process is the owner
+        self.assertEqual(self.cli('new', 'fix/x', '--repo', str(self.repo))[0], 0)
+        self.wt = self.linked('fix-x')
+        (self.wt / 'a.txt').write_text('two\n')
+        git(self.wt, 'commit', '-q', '-am', 'change a')
+        git(self.wt, 'push', '-q', 'origin', 'HEAD:refs/heads/main')  # merged; its branch deleted, as approve leaves it
+        git(self.repo, 'fetch', '-q', 'origin')
+
+    def test_merged_work_goes_with_its_record_owner_and_binding_and_no_second_tag(self):
+        done, lines = guard.landed(self.wt)
+        self.assertTrue(done, lines)
+        self.assertIn('removed fix-x', lines[0])
+        self.assertFalse(self.wt.exists())
+        self.assertFalse(guard.meta_file(self.repo, 'fix-x').exists())
+        self.assertFalse(guard.claim_file(self.wt).exists())
+        self.assertNotIn('moved', guard.SESSIONS.load('sess-land'))
+        self.assertEqual(git(self.repo, 'tag', '--list'), '', 'approve made the one tag already')
+        self.assertEqual(git(self.repo, 'branch', '--list'), '* main')
+
+    def test_a_dry_run_says_so_and_deletes_nothing(self):
+        done, lines = guard.landed(self.wt, dry=True)
+        self.assertTrue(done)
+        self.assertIn('would remove fix-x', lines[0])
+        self.assertTrue(self.wt.exists())
+
+    def test_a_repo_whose_flow_is_off_keeps_it(self):
+        self.cli('off', '--repo', str(self.repo))
+        self.assertEqual(guard.landed(self.wt), (False, [f'worktree-guard: kept fix-x: the worktree flow is off in {self.repo}']))
+        self.assertTrue(self.wt.exists())
+
+    def test_a_worktree_the_guard_did_not_make_is_kept(self):
+        hand = self.linked('by-hand')
+        git(self.repo, 'worktree', 'add', '-q', '--detach', str(hand), 'origin/main')
+        self.assertEqual(guard.landed(hand), (False, ['worktree-guard: kept by-hand: worktree-guard did not make it']))
+        self.assertTrue(hand.exists())
+
+    def test_another_live_sessions_worktree_is_kept(self):
+        other = subprocess.Popen(['sleep', '30'])  # alive, and not this process or an ancestor of it
+        self.addCleanup(other.wait)
+        self.addCleanup(other.kill)
+        guard.write_claim(guard.claim_file(self.wt), {'session': 'other123', 'cli': 'codex', 'pid': other.pid,
+                                                       'started': guard.started(other.pid)})
+        done, lines = guard.landed(self.wt)
+        self.assertFalse(done)
+        self.assertIn('codex session other123 still works there', lines[0])
+        self.assertTrue(self.wt.exists())
+
+    def test_uncommitted_or_unpushed_work_is_kept(self):
+        (self.wt / 'new.txt').write_text('x\n')
+        self.assertIn('1 uncommitted change', guard.landed(self.wt)[1][0])
+        git(self.wt, 'add', 'new.txt')
+        git(self.wt, 'commit', '-q', '-m', 'after the merge')
+        self.assertIn('a commit of it is on no remote', guard.landed(self.wt)[1][0])
+        self.assertTrue(self.wt.exists())
+
+
 class SeenTest(OriginRepo):
     """Codex has no status line to follow a steered session and Pi's footer is the extension's to set, so
     the guard tells them, on the session's next tool call, that a worktree was made or deleted."""

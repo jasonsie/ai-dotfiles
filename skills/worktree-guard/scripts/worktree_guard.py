@@ -966,6 +966,30 @@ def shipped(main, name):
                   f'its session is back in {main}']
 
 
+def landed(worktree, dry=False):
+    """Delete the linked worktree an approve run is in, once its work is merged and archive-tagged:
+    (done, lines to print). The deletion is `shipped`'s, so its record, owner and the session's
+    binding go with it and no second tag is made. Kept, with why, in a repo whose flow is off, when
+    the guard did not make it, while another live session owns it, and, as `shipped` keeps it, while
+    it holds uncommitted changes or a commit on no remote (a dry run checks all but these two)."""
+    worktree = Path(worktree).resolve()
+    main, name = main_of(worktree), worktree.name
+    linked = main / LINKED / name
+    claim = owner_of(linked) if worktree == linked else None
+    why = ''
+    if not flow_on(main):
+        why = f'the worktree flow is off in {main}'
+    elif worktree != linked or read_meta(main, name) is None:
+        why = 'worktree-guard did not make it'
+    elif claim and claim.get('pid') not in {os.getpid(), *lineage(process_table(), os.getpid())}:
+        why = f'{who(claim)} still works there'
+    if why:
+        return False, [f'worktree-guard: kept {name}: {why}']
+    if dry:
+        return True, [f'worktree-guard: would remove {name} unless it holds uncommitted changes or a commit on no remote']
+    return shipped(main, name)
+
+
 def cmd_list(args):
     main = repo_main(args.repo)
     found = linked_worktrees(main)

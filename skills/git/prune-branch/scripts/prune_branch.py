@@ -1,11 +1,17 @@
 #!/usr/bin/env python3
-"""prune-branch: after the merge, the base checked out and pulled, the branch gone.
+"""prune-branch: after the merge, the base checked out and pulled, the branch gone, and the worktree.
 
   ai-dotfiles git prune [--dry-run]
 
 Run on the merged branch: checks out the base, pulls it fast-forward, deletes the branch
 locally and on origin. In a linked worktree whose base is checked out in another worktree,
 HEAD is detached at origin/<base> instead (git lets one worktree hold a branch). Tag it first (archive-tag): the deleted branch is kept nowhere else.
+
+Run in a linked worktree, it then fast-forwards the main checkout when git can without touching
+uncommitted files, and deletes the worktree, last: only the archive tag is left. worktree-guard
+deletes it (its record, owner and the session's binding go too) or keeps it, with why: in a repo
+whose flow is off, one the guard did not make, one another live session owns, or one holding
+uncommitted changes or a commit on no remote. Kept is a `skipped:` line, not a stop.
 """
 from __future__ import annotations
 
@@ -15,6 +21,12 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'scripts'))
 import git_run  # noqa: E402  (the bundle's runner, in skills/git/scripts)
 from git_run import Stop  # noqa: E402
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / 'worktree-guard' / 'scripts'))
+import worktree_guard as guard  # noqa: E402  (a worktree's record and its deletion)
+
+BACK = ('Back in {}. Claude Code: call ExitWorktree (action keep) or cd there; the next first edit '
+        'starts a new task.')
 
 
 def held_elsewhere(base):
@@ -110,9 +122,86 @@ def prune(repo, dry):
     return ', '.join(done) or 'nothing left'
 
 
+def here():
+    """(the worktree this run is in, the main checkout, the branch checked out here or None), from
+    git's list of worktrees, which names the main checkout first."""
+    top = Path(git_run.out(['git', 'rev-parse', '--show-toplevel']))
+    trees = []
+    for line in git_run.out(['git', 'worktree', 'list', '--porcelain']).splitlines():
+        if line.startswith('worktree '):
+            trees.append([Path(line.split(' ', 1)[1]), None])
+        elif line.startswith('branch ') and trees:
+            trees[-1][1] = line.split(' ', 1)[1].removeprefix('refs/heads/')
+    return top, trees[0][0], next((branch for path, branch in trees if path == top), None)
+
+
+def holds(top, main, checked_out, branch, number):
+    """Whether the linked worktree `top` holds PR `number`'s work: its `branch` is checked out
+    there, or worktree-guard's record of it names that branch (the work shipped as it) or that PR
+    (a fix `worktree pr <n>` made)."""
+    if checked_out == branch:
+        return True
+    meta = guard.read_meta(main, top.name) if top.parent == main / guard.LINKED else None
+    return bool(meta) and (meta.get('work') == branch or meta.get('pr') == number)
+
+
+def unlanded(tip, dry):
+    """What this worktree holds that the landed commit `tip` lacks: 'uncommitted files', 'commits',
+    or '' for nothing. A dry run that has not fetched `tip` cannot tell, and says nothing."""
+    if git_run.out(['git', 'status', '--porcelain']):
+        return 'uncommitted files'
+    known = git_run.sh(['git', 'rev-parse', '--verify', '-q', f'{tip}^{{commit}}'])[0] == 0
+    if (known or not dry) and git_run.sh(['git', 'merge-base', '--is-ancestor', 'HEAD', tip])[0] != 0:
+        return 'commits'
+    return ''
+
+
+def leave(top, base, dry):
+    """(step line, deleted): the linked worktree this run is in, deleted now that its work is merged
+    and tagged; worktree-guard keeps it, with why, when it is not safe to. Origin's base is fetched
+    first: with the branch deleted, the merge is what puts the worktree's commits on a remote."""
+    git_run.act(['git', 'fetch', '-q', 'origin', base], dry)
+    done, lines = guard.landed(top, dry)
+    said = ' '.join(lines).replace('worktree-guard: ', '')
+    return (said, not dry) if done else (f'skipped: {said}', False)
+
+
+def finish(repo, dry, number=None):
+    """The local end of a landing, after the merge, one step line each; returns where the session is
+    when its worktree was deleted (BACK), else None.
+
+    Plain (`approve`, `git prune`): prune; run in a linked worktree, then the main checkout
+    fast-forwarded and the worktree deleted. By number (`approve <n>`): the main checkout
+    fast-forwarded, and, run in the linked worktree holding PR <n>'s work, that worktree pruned
+    before it and deleted after, unless it holds work the PR lacks: then its branch and folder
+    stay. (The plain form needs no such check: its push made the branch's tip the PR's head.)
+    The deletion is last: nothing can run in its folder after it."""
+    top, main, checked_out = here()
+    linked = top != main
+    own = linked and (number is None or holds(top, main, checked_out, repo.branch, number))
+    held = unlanded(repo.tip, dry) if own and number is not None else ''
+    if number is None or (own and not held):
+        git_run.step('prune', prune(repo, dry))
+    if number is not None or linked:
+        git_run.step('main', fast_forward(repo.base, dry))
+    if held:
+        git_run.step('worktree', f'skipped: {top.name} holds {held} that PR #{number} does not have; its '
+                                 'branch and folder stay')
+    if not own or held:
+        return None
+    said, gone = leave(top, repo.base, dry)
+    git_run.step('worktree', said)
+    return BACK.format(main) if gone else None
+
+
+def run(args):
+    back = finish(git_run.preflight(), args.dry_run)
+    if back:
+        print(back)
+
+
 def main(argv=None):
-    return git_run.cli('prune', __doc__, lambda args: git_run.step('prune', prune(git_run.preflight(), args.dry_run)),
-                       argv=argv)
+    return git_run.cli('prune', __doc__, run, argv=argv)
 
 
 if __name__ == '__main__':

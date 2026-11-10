@@ -105,6 +105,9 @@ Spec: issue #57; tickets #58-#70 (sub-issues of #57, with blocked-by links).
   uncommitted work.
 - `approve` fast-forwards the main checkout only when git can without touching uncommitted
   files; it never stashes or resets.
+- **A5** (2026-11-09). Approve's last step, run in the work's own worktree, deletes it after
+  the branch: only the archive tag is left. Why (user): CS PRs #11 and #12 landed through the
+  one-run `approve`, which left each worktree detached on disk.
 
 ## Birdview
 
