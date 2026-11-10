@@ -9,6 +9,9 @@ open question below. Once built, fold it into `docs/how-it-works.md` and delete 
 - **R2.** The worked example is PostgreSQL, in three steps: set up the environment (pgAdmin 4,
   how to use the GUI); understand the basic concepts, with an index map of the whole subject;
   then advanced topics such as migrating a database.
+- **R3.** Two jobs, restated by the user at Q3 (2026-11-10): **ask** anything about the subject
+  being learned, and get a **map**, the whole index of the subject at a glance. R1's "faster"
+  is measured against those two jobs, not against lessons.
 
 ## Facts, 2026-11-10
 
@@ -51,13 +54,16 @@ open question below. Once built, fold it into `docs/how-it-works.md` and delete 
 
 ## Open questions
 
+Reworked after R3: the tree is now map plus ask, and lessons are a question, not a given.
 Asked in this order; each depends on the ones above it.
 
-1. Its shape (Q3, asked): a new skill beside `teach`, a rework of `teach`, or an agent.
-2. The map: format, node contents, size, where it lives, handed over or built together.
-3. Where the map's facts come from and how far they are trusted.
-4. Stage 0: what "environment ready" means and who does the installing.
-5. Progress: per-node state, who marks it, and the link to the 1d/3d/7d ladder.
-6. Stage 2: how an advanced topic such as a migration is taught.
-7. What is measured to know the learning got faster.
-8. The four CLIs: what is shared and what is a documented native difference.
+1. Scope (Q4, asked): map and ask only, or with a check after answers, or with lessons too.
+2. How an answer and the map meet: is every answer placed on a node, and does it change it.
+3. The ask reply: `tutor`'s four-move template, a freer answer, or a choice per question.
+4. The map: format, node contents, size, where it lives, handed over or built together.
+5. Where the map's and the answers' facts come from and how far they are trusted.
+6. Stage 0: what "environment ready" means and who does the installing.
+7. Shape: a new skill, `tutor` extended, `teach` reworked, or an agent.
+8. The 1d/3d/7d ladder: in or out.
+9. What is measured to know the learning got faster.
+10. The four CLIs: what is shared and what is a documented native difference.
