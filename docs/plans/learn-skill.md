@@ -97,7 +97,7 @@ open question below. Once built, fold it into `docs/how-it-works.md` and delete 
 Reworked after R3: the tree is now map plus ask, and lessons are out (D4).
 Asked in this order; each depends on the ones above it.
 
-1. The ask reply (Q7, asked)'s limits: `tutor`'s one claim and nine sentences per reply, or freer.
+1. The ask reply's length and limits (Q7, asked): `tutor`'s one claim and nine sentences, or freer.
 2. The map: format, node contents, size, where it lives, handed over or built together.
 3. Where the map's and the answers' facts come from and how far they are trusted.
 4. Stage 0: what "environment ready" means and who does the installing.
