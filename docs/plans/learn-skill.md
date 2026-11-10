@@ -85,17 +85,23 @@ open question below. Once built, fold it into `docs/how-it-works.md` and delete 
   again (to confirm at the end). Not chosen: the tool marks state itself, asks before
   marking, or the user marks by hand.
 
+- **D6. A question off the map adds its topic to the map.** The tool answers, adds the
+  missing topic under the right stage and says so in one line ("Added *Connection pooling*
+  under Stage 2, Performance"). The map only gains topics; it still tracks no progress (D5).
+  Why: an off-map question shows the index was incomplete, and the map's job is the whole
+  index (Q6). Not chosen: suggest and wait for a yes (one more reply each time); a fixed map
+  rebuilt only on request (asked topics never reach the index).
+
 ## Open questions
 
 Reworked after R3: the tree is now map plus ask, and lessons are out (D4).
 Asked in this order; each depends on the ones above it.
 
-1. A question about something the map lacks (Q6, asked): does the map grow.
-2. The ask reply's limits: `tutor`'s one claim and nine sentences per reply, or freer.
-3. The map: format, node contents, size, where it lives, handed over or built together.
-4. Where the map's and the answers' facts come from and how far they are trusted.
-5. Stage 0: what "environment ready" means and who does the installing.
-6. Shape: a new skill, `tutor` extended, `teach` reworked, or an agent.
-7. The 1d/3d/7d ladder: out after D5; confirm at the end.
-8. What is measured to know the learning got faster.
-9. The four CLIs: what is shared and what is a documented native difference.
+1. The ask reply (Q7, asked)'s limits: `tutor`'s one claim and nine sentences per reply, or freer.
+2. The map: format, node contents, size, where it lives, handed over or built together.
+3. Where the map's and the answers' facts come from and how far they are trusted.
+4. Stage 0: what "environment ready" means and who does the installing.
+5. Shape: a new skill, `tutor` extended, `teach` reworked, or an agent.
+6. The 1d/3d/7d ladder: out after D5; confirm at the end.
+7. What is measured to know the learning got faster.
+8. The four CLIs: what is shared and what is a documented native difference.
