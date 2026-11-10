@@ -77,19 +77,25 @@ open question below. Once built, fold it into `docs/how-it-works.md` and delete 
   for every kind (weak for GUI steps); no follow-up (nothing shows what stuck); `teach`'s
   lessons and quizzes (the multi-session course R3 moved away from).
 
+- **D5. The map is an index only; it holds no progress.** No per-node state (learned, shaky,
+  asked); an answer and its follow-up never mark the map. Why: the user wants the map as a
+  plain index of the subject (Q5). Consequences: a navigation answer ("what next") works from
+  the map's order and prerequisites and from what the user says they know, not from recorded
+  progress; the 1d/3d/7d ladder has no weak items to take, so it is out unless asked for
+  again (to confirm at the end). Not chosen: the tool marks state itself, asks before
+  marking, or the user marks by hand.
+
 ## Open questions
 
 Reworked after R3: the tree is now map plus ask, and lessons are out (D4).
 Asked in this order; each depends on the ones above it.
 
-1. How an answer and the map meet (Q5, asked): does an answer or its follow-up change the
-   node's state, and who writes it.
-2. A question about something the map lacks: does the map grow.
-3. The ask reply's limits: `tutor`'s one claim and nine sentences per reply, or freer.
-4. The map: format, node contents, size, where it lives, handed over or built together.
-5. Where the map's and the answers' facts come from and how far they are trusted.
-6. Stage 0: what "environment ready" means and who does the installing.
-7. Shape: a new skill, `tutor` extended, `teach` reworked, or an agent.
-8. The 1d/3d/7d ladder: in or out.
-9. What is measured to know the learning got faster.
-10. The four CLIs: what is shared and what is a documented native difference.
+1. A question about something the map lacks (Q6, asked): does the map grow.
+2. The ask reply's limits: `tutor`'s one claim and nine sentences per reply, or freer.
+3. The map: format, node contents, size, where it lives, handed over or built together.
+4. Where the map's and the answers' facts come from and how far they are trusted.
+5. Stage 0: what "environment ready" means and who does the installing.
+6. Shape: a new skill, `tutor` extended, `teach` reworked, or an agent.
+7. The 1d/3d/7d ladder: out after D5; confirm at the end.
+8. What is measured to know the learning got faster.
+9. The four CLIs: what is shared and what is a documented native difference.
