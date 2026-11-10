@@ -22,6 +22,16 @@ open question below. Once built, fold it into `docs/how-it-works.md` and delete 
   items on a 1d/3d/7d ladder from the journal. They need items to exist; nothing makes them
   for a new subject.
 - So retention and question answering are covered. Nothing covers R2's three steps.
+- `teach` picks the next lesson in one place (`skills/teach/SKILL.md:85-89`). It differs from
+  its pin by two lines, and upstream `main` matches the pin today, so every line changed in
+  `teach` becomes a `local_edits` entry to re-apply on each upstream bump.
+- `tutor` reads `MISSION.md` and the last three learning records (`skills/tutor/SKILL.md:31`),
+  not `reference/`. A Markdown file at the workspace root is the one place both can read.
+- A study line for the 1d/3d/7d ladder needs a whole-number id. The engine's config and
+  curriculum format live outside this repo and were not read.
+- 45 skills: 17 user-invoked, 28 model-invoked. Tests bind a skill's frontmatter
+  (`test_skills.py`) and require `which-skill` to name it (`test_which_skill.py`); 654 tests
+  pass here in 49 s.
 
 ## Decisions
 
@@ -32,16 +42,22 @@ open question below. Once built, fold it into `docs/how-it-works.md` and delete 
   hands-on first (no view of progress or of what is skipped), retention first (the engine does
   it already), task first (holes in the fundamentals).
 
+- **D2. Any technical subject; stage 0 is optional.** A map has a setup stage only when the
+  subject has a tool to install or run (PostgreSQL, Docker). A theory subject (statistics,
+  system design) starts at core concepts. Why: the user wants theory subjects covered too
+  (Q2). Cost accepted: the skill needs a rule for when to skip stage 0, and "ready" is checked
+  by a command only when there is one. Not chosen: tool subjects only (too narrow); any
+  subject at all (`teach` already does that, and setup and hands-on tasks become vague).
+
 ## Open questions
 
 Asked in this order; each depends on the ones above it.
 
-1. Which subjects the skill serves (Q2, asked).
-2. Its shape: a new skill beside `teach`, a rework of `teach`, or an agent.
-3. The map: format, node contents, size, where it lives, handed over or built together.
-4. Where the map's facts come from and how far they are trusted.
-5. Stage 0: what "environment ready" means and who does the installing.
-6. Progress: per-node state, who marks it, and the link to the 1d/3d/7d ladder.
-7. Stage 2: how an advanced topic such as a migration is taught.
-8. What is measured to know the learning got faster.
-9. The four CLIs: what is shared and what is a documented native difference.
+1. Its shape (Q3, asked): a new skill beside `teach`, a rework of `teach`, or an agent.
+2. The map: format, node contents, size, where it lives, handed over or built together.
+3. Where the map's facts come from and how far they are trusted.
+4. Stage 0: what "environment ready" means and who does the installing.
+5. Progress: per-node state, who marks it, and the link to the 1d/3d/7d ladder.
+6. Stage 2: how an advanced topic such as a migration is taught.
+7. What is measured to know the learning got faster.
+8. The four CLIs: what is shared and what is a documented native difference.
