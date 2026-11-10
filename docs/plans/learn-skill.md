@@ -69,14 +69,23 @@ open question below. Once built, fold it into `docs/how-it-works.md` and delete 
   explanation need different shapes. Not chosen: concept and GUI only (errors, comparisons
   and "what next" left without a shape); one shape for all (GUI answers turn into prose).
 
+- **D4. A follow-up matched to the kind, and no lessons.** Concept: one short recall question
+  in the user's own words. GUI how-to: "do it now and tell me what you see". Command or error:
+  a small variant to run. Comparison and navigation: none. The user may ignore any follow-up.
+  Why: an answer only read fades within days; recall or doing is what makes it stick, and
+  doing a GUI step is stronger practice than recalling it (Q4). Not chosen: one recall line
+  for every kind (weak for GUI steps); no follow-up (nothing shows what stuck); `teach`'s
+  lessons and quizzes (the multi-session course R3 moved away from).
+
 ## Open questions
 
-Reworked after R3: the tree is now map plus ask, and lessons are a question, not a given.
+Reworked after R3: the tree is now map plus ask, and lessons are out (D4).
 Asked in this order; each depends on the ones above it.
 
-1. Scope (Q4, asked again after D3): a check after answers, per kind, or none, or lessons too.
-2. How an answer and the map meet: is every answer placed on a node, and does it change it.
-3. The ask reply: `tutor`'s four-move template, a freer answer, or a choice per question.
+1. How an answer and the map meet (Q5, asked): does an answer or its follow-up change the
+   node's state, and who writes it.
+2. A question about something the map lacks: does the map grow.
+3. The ask reply's limits: `tutor`'s one claim and nine sentences per reply, or freer.
 4. The map: format, node contents, size, where it lives, handed over or built together.
 5. Where the map's and the answers' facts come from and how far they are trusted.
 6. Stage 0: what "environment ready" means and who does the installing.
