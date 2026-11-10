@@ -52,12 +52,29 @@ open question below. Once built, fold it into `docs/how-it-works.md` and delete 
   by a command only when there is one. Not chosen: tool subjects only (too narrow); any
   subject at all (`teach` already does that, and setup and hands-on tasks become vague).
 
+- **D3. Ask takes five kinds of question, each with its own answer shape.** Every answer
+  lands on a map node.
+  - Concept or theory ("what is MVCC"): a plain explanation, one small example, the node.
+  - Tool or GUI how-to ("restore a backup in pgAdmin 4"): numbered click path from the tool's
+    official docs for the user's version, what should show after each step; the user may
+    paste a screenshot when stuck, since the agent cannot see the screen.
+  - Command or error ("`deadlock detected`", "write this join"): the exact command or query,
+    run here to show real output when the tool can be installed, else marked untested.
+  - Comparison or choice ("pg_dump or pg_upgrade"): a short table, then a recommendation for
+    the user's case.
+  - Navigation ("what next", "where does VACUUM fit"): from the map, the node, what it needs
+    and what it unlocks.
+
+  Why: the user asks about theory and about the tools' GUI alike (Q4a); a click path and an
+  explanation need different shapes. Not chosen: concept and GUI only (errors, comparisons
+  and "what next" left without a shape); one shape for all (GUI answers turn into prose).
+
 ## Open questions
 
 Reworked after R3: the tree is now map plus ask, and lessons are a question, not a given.
 Asked in this order; each depends on the ones above it.
 
-1. Scope (Q4, asked): map and ask only, or with a check after answers, or with lessons too.
+1. Scope (Q4, asked again after D3): a check after answers, per kind, or none, or lessons too.
 2. How an answer and the map meet: is every answer placed on a node, and does it change it.
 3. The ask reply: `tutor`'s four-move template, a freer answer, or a choice per question.
 4. The map: format, node contents, size, where it lives, handed over or built together.
