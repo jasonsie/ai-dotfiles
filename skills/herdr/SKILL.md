@@ -12,9 +12,10 @@ This skill is the pointer to it.
    opens with the `HERDR_ENV` check: outside a Herdr pane, say so and stop. When `herdr` is
    not on PATH, say Herdr is not installed (`brew install herdr`) and stop.
 2. **Spawned agents, worktree flow on.** In a repo where `ai-dotfiles worktree list` shows
-   `flow: on`, start each agent you spawn with `--cwd` set to the main checkout. Its first
-   edit there is stopped with "name this work", and it makes its own worktree with
-   `ai-dotfiles worktree new` and ships its own PR (the `worktree-guard` skill). Your own
-   worktree belongs to your session, so an agent started in it has its edits refused. Make
-   worktrees with `ai-dotfiles worktree new`: those from `herdr worktree` sit outside
-   `.claude/worktrees/`, where the guard does not reach.
+   `flow: on`, split each spawned agent's pane with `--cwd` set to the main checkout (the
+   parent of `git rev-parse --path-format=absolute --git-common-dir`), then `agent start`
+   in it. Its first edit there is stopped with "name this work", and it makes its own
+   worktree with `ai-dotfiles worktree new` and ships its own PR (the `worktree-guard`
+   skill). Your own worktree belongs to your session, so an agent started in it has its
+   edits refused. Make worktrees with `ai-dotfiles worktree new`: those from
+   `herdr worktree` sit outside `.claude/worktrees/`, where the guard does not reach.
