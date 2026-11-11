@@ -291,6 +291,34 @@ session as JSON on stdin and shows what it prints.
   it once. An uninstall removes the two `statusLine` keys, which would otherwise run a command
   that is gone.
 
+## Herdr
+
+Herdr (`brew install herdr`) is a terminal multiplexer for coding agents: a background server
+owns the panes and knows which agent runs in each, and its CLI lets one agent split a pane,
+start another agent there, prompt it, wait on it and read its output. This repo carries only
+the `herdr` skill. Herdr itself, its integrations and `~/.config/herdr/config.toml` are set up
+by hand on each Mac: Herdr owns those files, and not every Mac runs it.
+
+- **The skill is a pointer.** `skills/herdr/` tells the agent to load `herdr --skill`, the skill
+  the installed binary prints, so its text always matches the version on that Mac (it changes
+  between releases). It adds one rule: in a repo with the flow switch on, a spawned agent starts
+  in the main checkout and makes its own worktree, because worktree-guard gives each worktree to
+  one session. `herdr worktree` makes worktrees outside `.claude/worktrees/`, which the guard
+  leaves alone, so the skill names `ai-dotfiles worktree new` instead.
+- **Integrations, once per Mac:** `herdr integration install pi`, then `claude`, `codex` and
+  `antigravity-cli`. Pi's is an extension, `~/.pi/agent/extensions/herdr-agent-state.ts`, that
+  reports Pi's state (working, idle, blocked), which `herdr agent prompt --wait` waits on. The
+  other three are a hook script plus Herdr's own entries in the CLI's hook file (Codex also gets
+  `[features] hooks = true` in `config.toml`, and asks for the hook's approval in `/hooks`). They
+  report the session, so a pane comes back in it after a server restart; Herdr still reads those
+  three CLIs' state off the screen. The hooks step finds its own entries by their command and
+  leaves Herdr's alone. `herdr integration status` lists them and their versions;
+  `herdr integration uninstall <cli>` takes one out.
+- **Upgrade:** `brew upgrade herdr`, then install the integrations again so their versions match
+  the new binary. The running server keeps the old binary until it restarts (`herdr status`
+  shows it). A restart stops every pane's process, the agent's that asked included, so the person
+  does it from a terminal outside Herdr, once the integrations are in.
+
 ## Small commits
 
 A hook on every shell command gates `git commit` (PreToolUse on Bash / `run_command`; Pi
