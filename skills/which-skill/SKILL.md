@@ -87,6 +87,9 @@ has the reasoning and each CLI's commands.
   questionnaire to fill in.
 - **`wizard`**: steps only a human can take (credentials, a third-party dashboard, a
   one-off migration) as an interactive bash script.
+- **`herdr`**: inside a Herdr pane, drive Herdr (split panes, run commands, start, prompt
+  and wait on other agents) by loading the skill the installed `herdr` prints; in a
+  flow-on repo each agent it spawns makes its own worktree.
 - **`wait-what`**: the last message didn't land; the agent re-pitches it plainly.
 - **`teach`**: learn a concept over several sessions in a workspace folder.
 - **`tutor`**: one question about one source, taught in four moves (locate, gap, build,
