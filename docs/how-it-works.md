@@ -15,13 +15,15 @@ config/              the sources the installers apply
   mcp-servers.json     MCP servers shared by the CLIs
   plugins.json         the plugin list: each plugin's GitHub source, pin and target CLIs
   upstream-docs.json   the documentation sources mirrored into docs/upstream/
+  cloud.json           the skills cloud sessions leave out, each with the reason
 skills/              shared skills; skills.lock pins adapted ones; daily-log/ holds the
                      daily-log command and the day pass; worktree-guard/ and small-commits/
                      their hooks; git/ a bundle: the git step skills and approve
 scripts/             ai-dotfiles, install.sh, uninstall.sh, healthcheck.sh (entry points);
                      agent_hooks.py and agent_sessions.py (the CLIs' hook formats and
                      session stores behind one interface); agent_hooks.ts (Pi's extension);
-                     statusline.py (the status line Claude Code and Antigravity run)
+                     statusline.py (the status line Claude Code and Antigravity run);
+                     cloud_session.py (what a cloud session on this repo gets at start)
   install/             installer.py (shared by every step) and one file per step
   upstream/            the weekly docs sync and its pull request report
   tests/               unit tests for all of the above
@@ -30,6 +32,7 @@ docs/
   onboarding.md        this repo's report from /onboard
   agents/              the engineering skills' setup: issue tracker, triage labels, domain docs
   upstream/            machine-written mirrors of upstream docs, their indexes, and the skill catalogs
+.claude/settings.json  the hooks a cloud session on this repo runs; see Cloud sessions
 ```
 
 ## The flow
@@ -346,6 +349,7 @@ commit); `scripts/small_commits.py` in it is the hook.
 - **Installed by `scripts/install/hooks.py`** as a second feature beside worktree-guard: one
   PreToolUse entry per CLI with the shell matcher (Antigravity: `ai-dotfiles-small-commits-pre`).
   State, the sizes a session was warned about, is in `~/.local/state/ai-dotfiles/small-commits/`.
+  A cloud session on this repo runs the same hook from `.claude/settings.json` (Cloud sessions).
 
 ## Approve
 
@@ -399,6 +403,69 @@ skills/git/                          a bundle; the installer links each skill by
   gets the date; a tag already at the tip is reused.
 - **`--dry-run`** prints each change it would make; read-only commands still run. A dry run of
   `approve <n>` fetches nothing, since a fetch writes refs.
+
+## Cloud sessions
+
+A cloud session is Claude Code on a fresh Ubuntu VM that Anthropic runs: claude.ai/code, the
+phone's Code tab, `claude --cloud`. It reads three things: the repo's clone, the cloud
+environment set on claude.ai (setup script, variables, network level) and the claude.ai account
+(its synced skills and connectors). Nothing `ai-dotfiles install` writes on a Mac reaches it:
+`~/.claude`, `~/.claude.json` and `~/.local/bin` stay on the Mac. A cloud session on this repo
+gets its setup from the committed `.claude/settings.json`:
+
+```text
+.claude/settings.json   two hooks, each run only when CLAUDE_CODE_REMOTE is true
+  SessionStart          scripts/cloud_session.py start:
+                          the global rules (config/global-agents.md) as context;
+                          each skill linked into .claude/skills/ (relative links into skills/,
+                            ignored by git), all but config/cloud.json's local_only, then
+                            reloadSkills (Claude Code 2.1.152 or later);
+                          scripts/ first on PATH through CLAUDE_ENV_FILE, so ai-dotfiles runs
+  PreToolUse on Bash    the small-commits hook
+```
+
+- **On a Mac nothing changes.** The gate is false there, so only the user-level hooks run and
+  no `.claude/skills/` is made. Links committed to the repo would list every skill again in each
+  linked worktree, a folder below the main checkout; so they are made in the cloud clone only. A
+  part of `start` that fails is named in the session's context. `scripts/tests/test_cloud.py`
+  runs both hooks against a temporary clone.
+- **Gaps, documented rather than emulated:**
+  - **One repository, outside Projects:** a session with several repositories, or a thread in a
+    claude.ai Project, runs none of the repo's hooks, so it gets none of the above; a Project
+    thread does not read `.claude/skills/` either.
+  - **GitHub:** the session's GitHub proxy refuses `gh pr` and `gh issue` (GraphQL), tag pushes,
+    branch deletes and repositories the session is not on; `gh api` REST works on its own repo.
+    So the git steps stay on the Mac: a cloud session pushes its `claude/…` branch, the session's
+    Create PR opens the PR, and `approve <n>` lands it. The skills that use the GitHub tracker
+    (to-spec, to-tickets, triage, wayfinder, implement-spec, spec-review) reach issues through
+    `gh api` only.
+  - **The Mac's own:** daily-log, Herdr, worktree-guard (a cloud session already works alone on
+    its branch), Codex, Pi, Antigravity, LSP plugins, Claude in Chrome and computer use.
+  - **Plugins and MCP:** a cloud session installs no plugins from settings; zkfy's
+    `cloud/setup.sh` with `CLAUDE_CODE_PLUGIN_DIRS` is the plugin route (jasonsie/zkfy#9). context7
+    lives in `~/.claude.json`, and the Trusted network level does not allow its host.
+  - **Settings:** user settings are not read. Set `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` on the
+    environment, and pick `/model` and `/effort` per session (`CLAUDE_CODE_EFFORT_LEVEL` would
+    override `/effort` in every session). Whether `/advisor` works in the cloud is unverified.
+  - **Network:** the Default environment's network level is Trusted: package registries and
+    GitHub. Other hosts answer `403 host_not_allowed` until the level is Custom or Full.
+- **Other repositories get none of this yet:** their sessions need a setup script that fetches
+  this repo, which waits on a spike (jasonsie/ai-dotfiles#80).
+- **Remote Control has no gaps:** the phone drives a session on the Mac, with every tool, while
+  the Mac is awake.
+- **Check a session:** paste this probe into a cloud session on this repo.
+
+  ```text
+  Cloud probe for ai-dotfiles. Push nothing. Answer as one table (item, result):
+  1. echo "$CLAUDE_CODE_REMOTE"; claude --version; command -v ai-dotfiles gh python3
+  2. Is "Report to me telegraphically" in your context? Is AGENTS.md?
+  3. ls .claude/skills | wc -l; can you invoke grilling, which-skill and tdd? Is approve absent?
+  4. Which MCP servers and plugins do you have? The advisor, Workflow and agent-team tools?
+  5. gh api repos/jasonsie/ai-dotfiles -q .full_name ; gh pr list   (expect the second to 403)
+  6. curl -s -o /dev/null -w '%{http_code}\n' https://context7.com https://example.com
+  7. Run `git commit --allow-empty -m probe`: the small-commits hook should block it. If it
+     commits, run `git reset --soft HEAD~1` and say "hook missing".
+  ```
 
 ## Upstream updates
 
@@ -475,3 +542,6 @@ skills/git/                          a bundle; the installer links each skill by
 - **Leftover:** a linked worktree whose owner is gone. One with nothing to lose is deleted when a
   worktree is made or a session ends; one holding uncommitted files or unpushed commits stays,
   listed as LEFT BEHIND, until a session takes it over or `worktree rm` drops it.
+- **Cloud session:** Claude Code on a VM Anthropic runs (claude.ai/code, the phone's Code tab,
+  `claude --cloud`). It reads the clone, the cloud environment and the claude.ai account, never a
+  Mac's home folder; see Cloud sessions.
