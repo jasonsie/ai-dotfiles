@@ -11,6 +11,9 @@ is not on PATH. Pi has no hooks, so while it is on and set up it gets scripts/ag
 (worktree-guard) in its extensions folder; the daily-log-only extension it used to link is
 removed.
 
+With --cloud (a cloud session's VM, set up by scripts/cloud/setup.sh) it leaves out the skills
+config/cloud.json keeps local, and any command named after one (daily-log).
+
 An existing entry this script did not create is refused, unless it already is the wanted
 link. A link it created that is no longer wanted is removed; a link the user changed is
 left alone. A receipt records what it owns, and a failed run restores every link it
@@ -36,6 +39,7 @@ COMMAND_RECEIPT = installer.STATE + '/command.json'  # left by install-command.p
 PI_EXTENSION = 'ai-dotfiles-hooks.ts'
 PI_EXTENSION_TARGET = 'scripts/agent_hooks.ts'
 PI_RETIRED = ('ai-dotfiles-daily-log.ts',)  # extensions this script linked before; removed when found
+CLOUD = 'config/cloud.json'  # local_only: the skills a cloud session's VM leaves out, each with why
 
 
 def skills(source):
@@ -56,16 +60,28 @@ def skills(source):
     return found
 
 
+def local_only(workspace):
+    """{skill: why it stays on the Mac} from config/cloud.json."""
+    return json.loads((Path(workspace) / CLOUD).read_text())['local_only']
+
+
+def cloud_skills(workspace):
+    """{name: folder} of the skills a cloud session gets: every skill but config/cloud.json's local_only."""
+    local = local_only(workspace)
+    return {name: folder for name, folder in skills(Path(workspace) / 'skills').items() if name not in local}
+
+
 def owns_commands(selected, uninstall):
     """The commands serve every CLI: each install links them; only a full uninstall removes them."""
     return not uninstall or set(selected) == set(installer.clis())
 
 
-def plan(home, selected, workspace, owned, uninstall=False, live=None):
+def plan(home, selected, workspace, owned, uninstall=False, live=None, cloud=False):
     """Link changes for the selected CLIs, and the receipt's next list of owned links. Skills are found
     in `workspace`; every link names the same path under `live` (installer.live_root), the workspace
-    when not given."""
+    when not given. `cloud` leaves out config/cloud.json's local_only skills and their commands."""
     live = live or workspace
+    local = local_only(workspace) if cloud else {}
     entries = installer.clis()
     roots = {installer.path(home, cli, 'skills') for cli in selected}
     # A folder stays linked while a CLI switched on reads it, unless this run uninstalls that CLI.
@@ -73,7 +89,8 @@ def plan(home, selected, workspace, owned, uninstall=False, live=None):
             if entry['on'] and not (uninstall and cli in selected)}
     link_roots = set() if uninstall else roots & keep
     managed_roots = link_roots | (roots - keep)
-    commands = {str(home / BIN / name): str(live / target) for name, target in COMMANDS.items()}
+    commands = {str(home / BIN / name): str(live / target) for name, target in COMMANDS.items()
+                if name not in local}
     others = set(commands) if owns_commands(selected, uninstall) else set()
     extensions = installer.path(home, 'pi', 'extensions') if 'pi' in selected else None
     extension = str(extensions / PI_EXTENSION) if extensions else None
@@ -85,7 +102,7 @@ def plan(home, selected, workspace, owned, uninstall=False, live=None):
     if link_roots:
         found = skills(workspace / 'skills')
         desired = {str(root / name): str(live / folder.relative_to(workspace))
-                   for root in sorted(link_roots) for name, folder in found.items()}
+                   for root in sorted(link_roots) for name, folder in found.items() if name not in local}
     if not uninstall:
         desired.update(commands)
         if extension and entries['pi']['on'] and Path(extension).parent.parent.is_dir():
@@ -106,10 +123,11 @@ def plan(home, selected, workspace, owned, uninstall=False, live=None):
     return changes, links
 
 
-def install(home, selected, workspace=WORKSPACE, apply=False, uninstall=False, path_env=None, live=None):
+def install(home, selected, workspace=WORKSPACE, apply=False, uninstall=False, path_env=None, live=None,
+            cloud=False):
     receipt = home / RECEIPT
     owned = json.loads(receipt.read_text())['links'] if receipt.is_file() else {}
-    changes, links = plan(home, selected, workspace, owned, uninstall, live)
+    changes, links = plan(home, selected, workspace, owned, uninstall, live, cloud)
     if links != owned:
         changes.append((receipt, installer.state(receipt), installer.receipt({'version': 1, 'links': links})))
     old = home / COMMAND_RECEIPT
@@ -126,10 +144,13 @@ def install(home, selected, workspace=WORKSPACE, apply=False, uninstall=False, p
 
 
 def main():
-    args = installer.parser(__doc__).parse_args()
+    options = installer.parser(__doc__)
+    options.add_argument('--cloud', action='store_true',
+                         help="a cloud session's VM: leave out the skills config/cloud.json keeps local")
+    args = options.parse_args()
     return installer.finish('skills', lambda: install(
         args.home, installer.scope(args.target), apply=not args.dry_run, uninstall=args.uninstall,
-        live=installer.live_root(WORKSPACE)))
+        live=installer.live_root(WORKSPACE), cloud=args.cloud))
 
 
 if __name__ == '__main__':

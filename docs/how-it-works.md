@@ -24,6 +24,7 @@ scripts/             ai-dotfiles, install.sh, uninstall.sh, healthcheck.sh (entr
                      session stores behind one interface); agent_hooks.ts (Pi's extension);
                      statusline.py (the status line Claude Code and Antigravity run);
                      cloud_session.py (what a cloud session on this repo gets at start)
+  cloud/               environment.sh (a cloud environment's setup script) and setup.sh (what it runs)
   install/             installer.py (shared by every step) and one file per step
   upstream/            the weekly docs sync and its pull request report
   tests/               unit tests for all of the above
@@ -164,7 +165,7 @@ Rules the step follows:
   CLI cannot load as shipped is filled with that CLI's own feature where one exists (commands
   as skills, Antigravity's own `hooks.json` and `mcp_config.json`, a Pi extension for hooks
   and MCP), else documented. The rules, with the facts behind them and the trial-install
-  commands, are the `portable-plugin` skill. web-clipper 2.2.1 and zkfy 1.8.0 go to all four CLIs.
+  commands, are the `portable-plugin` skill. web-clipper 2.2.1 and zkfy 1.8.1 go to all four CLIs.
 
 Adding, bumping or removing a plugin is a hand edit of `config/plugins.json`, applied by
 `ai-dotfiles install`; a release in a plugin repo ends by bumping its pin here. `ai-dotfiles
@@ -441,19 +442,47 @@ gets its setup from the committed `.claude/settings.json`:
     `gh api` only.
   - **The Mac's own:** daily-log, Herdr, worktree-guard (a cloud session already works alone on
     its branch), Codex, Pi, Antigravity, LSP plugins, Claude in Chrome and computer use.
-  - **Plugins and MCP:** a cloud session installs no plugins from settings; zkfy's
-    `cloud/setup.sh` with `CLAUDE_CODE_PLUGIN_DIRS` is the plugin route (jasonsie/zkfy#9). context7
-    lives in `~/.claude.json`, and the Trusted network level does not allow its host.
+  - **Plugins and MCP:** a cloud session installs no plugins from its settings. They load through
+    `CLAUDE_CODE_PLUGIN_DIRS`, which the environment below sets up. context7 is added to the VM's
+    `~/.claude.json` there, but the Trusted network level does not allow its host.
   - **Settings:** user settings are not read. Set `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` on the
     environment, and pick `/model` and `/effort` per session (`CLAUDE_CODE_EFFORT_LEVEL` would
     override `/effort` in every session). Whether `/advisor` works in the cloud is unverified.
-  - **Network:** the Default environment's network level is Trusted: package registries and
-    GitHub. Other hosts answer `403 host_not_allowed` until the level is Custom or Full.
-- **Other repositories get none of this yet:** their sessions need a setup script that fetches
-  this repo, which waits on a spike (jasonsie/ai-dotfiles#80).
+  - **Network:** a new environment's network level is Trusted ("Limited" in the dialog): package
+    registries and GitHub. Other hosts answer `403 host_not_allowed` until the level is Custom or
+    Full.
+- **Every repository, through the cloud environment.** A cloud environment's setup script gives
+  every session started in it the Mac's setup, whatever the repo. Paste `scripts/cloud/environment.sh`
+  as the setup script of the environment the sessions use (here, Default), and set the variable the
+  report's last line gives: `CLAUDE_CODE_PLUGIN_DIRS=/opt/ai-plugins/web-clipper:/opt/ai-plugins/zkfy`.
+  The script clones this repo to `/opt/ai-dotfiles` and runs `scripts/cloud/setup.sh`:
+
+  ```text
+  install.sh --cloud  ~/.claude/CLAUDE.md, the settings keys, context7, the skills config/cloud.json
+                      does not keep local, small-commits' hook; no plugins step, no launchd
+  ai-dotfiles         linked into /usr/local/bin
+  plugins             each one config/plugins.json gives Claude, at its release tag, in /opt/ai-plugins;
+                      then the plugin's own cloud/setup.sh, with every pin as <NAME>_REF
+  report              /opt/ai-dotfiles-setup.txt, ok or FAIL per step; the setup never fails a session
+  ```
+
+  - **When changes arrive.** The setup's result is cached for about a week. A change on `main`
+    reaches new sessions within that week, or at once after any edit of the environment's setup
+    script.
+  - **What the spike settled** (jasonsie/ai-dotfiles#80):
+    - a setup script clones public repos but not private ones, which is why this repo is public;
+    - the session loads what the setup writes into the VM's `~/.claude`;
+    - plugins load through `CLAUDE_CODE_PLUGIN_DIRS`.
+  - **A session on this repo** in that environment also runs the repo's own hooks. The rules come
+    twice, the commit gate runs twice with one verdict, and each skill loads once (personal over
+    project).
+  - **Platforms.** This amends ADR-0005 Q3 (macOS only): a cloud session's Linux VM is a second
+    platform, for Claude Code alone. launchd and the healthcheck's launchd check step aside off
+    macOS.
 - **Remote Control has no gaps:** the phone drives a session on the Mac, with every tool, while
   the Mac is awake.
-- **Check a session:** paste this probe into a cloud session on this repo.
+- **Check a session:** paste this probe into a cloud session on this repo. On another repo, ask for
+  `cat /opt/ai-dotfiles-setup.txt` and `ls ~/.claude/skills | wc -l`.
 
   ```text
   Cloud probe for ai-dotfiles. Push nothing. Answer as one table (item, result):
@@ -542,6 +571,8 @@ gets its setup from the committed `.claude/settings.json`:
 - **Leftover:** a linked worktree whose owner is gone. One with nothing to lose is deleted when a
   worktree is made or a session ends; one holding uncommitted files or unpushed commits stays,
   listed as LEFT BEHIND, until a session takes it over or `worktree rm` drops it.
+- **Cloud environment:** the claude.ai settings a cloud session runs in: network level, variables and
+  setup script. `scripts/cloud/environment.sh` is this repo's setup script.
 - **Cloud session:** Claude Code on a VM Anthropic runs (claude.ai/code, the phone's Code tab,
   `claude --cloud`). It reads the clone, the cloud environment and the claude.ai account, never a
   Mac's home folder; see Cloud sessions.
