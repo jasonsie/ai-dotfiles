@@ -3,7 +3,7 @@
 This repo is the single source for the owner's **global** AI CLI setup: Claude Code,
 Codex CLI, Pi, and Antigravity. The mechanism and layout are in
 [docs/how-it-works.md](docs/how-it-works.md); earlier decisions are in git history.
-`CLAUDE.md` links to this file.
+Every CLI reads this file as the project's instructions; there is no `CLAUDE.md`.
 
 ## Map
 
@@ -15,6 +15,7 @@ Codex CLI, Pi, and Antigravity. The mechanism and layout are in
 | `config/mcp-servers.json` | Shared MCP servers | `scripts/install/mcp.py` |
 | `config/plugins.json` | The plugin list: each plugin's GitHub source, pin (exact version) and target CLIs | `scripts/install/plugins.py` |
 | `config/cloud.json` | The skills cloud sessions leave out, each with the reason | `scripts/cloud_session.py` (links the rest in a cloud session) |
+| `scripts/cloud/` | A cloud environment's setup: `environment.sh`, pasted on claude.ai, clones this repo and runs `setup.sh` (`install.sh --cloud`, the plugins at their pins) | the cloud environment |
 | `.claude/settings.json` | The hooks a cloud session on this repo runs ("Cloud sessions" in how-it-works) | the cloud session |
 | `config/upstream-docs.json` | The documentation sources mirrored for agents: each CLI's docs, Google's and Meta's style and docs-writing guides, a `when` label per page | `scripts/upstream/sync-upstream.py` (weekly workflow) |
 | `skills/` | Shared skills; `skills.lock` pins adapted upstream skills | `scripts/install/skills.py` |
@@ -75,7 +76,7 @@ setup.
 
 ```bash
 python3 -m unittest discover -s scripts/tests      # Python 3.11+
-shellcheck scripts/*.sh scripts/ai-dotfiles
+shellcheck scripts/*.sh scripts/cloud/*.sh scripts/ai-dotfiles
 bash scripts/install.sh --dry-run                  # expect 0 changes on a configured Mac
 bash scripts/healthcheck.sh
 ```
