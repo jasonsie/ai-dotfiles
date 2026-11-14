@@ -196,7 +196,7 @@ cron ──▶ sync job ──▶ docs mirror ──▶ mirror files ──▶ u
 | change a global rule | `config/global-agents.md` |
 | enforce or default a CLI setting | `config/cli-settings.json`, then `scripts/install/settings.py` |
 | add an MCP server | `config/mcp-servers.json` |
-| add or update a skill | `skills/<name>/`, `skills/skills.lock`, `skills/which-skill/SKILL.md` |
+| add or update a skill | `skills/<name>/`, `skills/skills.lock`, `skills/which-skill/SKILL.md`, `config/cloud.json` when a cloud session cannot run it |
 | change how a step writes files | `scripts/install/installer.py` |
 | support a new CLI's hooks, or a tool name | `TOOLS`, `MATCHERS`, `read()`, `render()` in `scripts/agent_hooks.py` |
 | add a hooked skill | a `Feature` in `scripts/install/hooks.py`, a handler in `scripts/agent_hooks.ts` |

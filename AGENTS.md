@@ -14,6 +14,8 @@ Codex CLI, Pi, and Antigravity. The mechanism and layout are in
 | `config/cli-settings.json` | Per-CLI `enforce` keys (safety settings, the status line) and `default` keys (model choices) | `scripts/install/settings.py` |
 | `config/mcp-servers.json` | Shared MCP servers | `scripts/install/mcp.py` |
 | `config/plugins.json` | The plugin list: each plugin's GitHub source, pin (exact version) and target CLIs | `scripts/install/plugins.py` |
+| `config/cloud.json` | The skills cloud sessions leave out, each with the reason | `scripts/cloud_session.py` (links the rest in a cloud session) |
+| `.claude/settings.json` | The hooks a cloud session on this repo runs ("Cloud sessions" in how-it-works) | the cloud session |
 | `config/upstream-docs.json` | The documentation sources mirrored for agents: each CLI's docs, Google's and Meta's style and docs-writing guides, a `when` label per page | `scripts/upstream/sync-upstream.py` (weekly workflow) |
 | `skills/` | Shared skills; `skills.lock` pins adapted upstream skills | `scripts/install/skills.py` |
 | `skills/daily-log/` | The `daily-log` command (the daily logger's grammar and writer) and `day_pass.py`, the day pass: the evidence and, with `--write`, the session that writes from it | `scripts/install/skills.py` (links), `scripts/install/launchd.py` (the 04:00 LaunchAgent) |
@@ -58,6 +60,8 @@ setup.
   the `upstream-docs` skill; `collect-docs` adds a source.
 - A newer upstream version of a pinned skill replaces ours: remove it, add theirs, re-apply
   its `local_edits` from `skills/skills.lock`, and update `which-skill` (a test checks it).
+- A skill a cloud session cannot run (it needs the Mac, or a GitHub call the cloud refuses)
+  gets its reason in `config/cloud.json`.
 - Keep `config/` and `scripts/` free of machine paths (`/Users/<name>`, `/opt/homebrew`);
   the healthcheck enforces this.
 - No credentials in this repo. Per-project rules belong to each project, not here.
