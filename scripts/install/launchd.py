@@ -138,7 +138,11 @@ def load(home, plist, uninstall):
 
 
 def install(home, apply=False, uninstall=False):
-    """Write the plist and load it, or boot the job out and remove the plist; the number of changes."""
+    """Write the plist and load it, or boot the job out and remove the plist; the number of changes.
+    Off macOS (a cloud session's Linux VM) there is no launchd, so nothing is scheduled or removed."""
+    if sys.platform != 'darwin':
+        print('launchd: not macOS; nothing scheduled')
+        return 0
     claude = None
     if not uninstall:
         found = shutil.which('claude')

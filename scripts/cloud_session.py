@@ -44,13 +44,12 @@ def link_skills(root):
     sys.path.insert(0, str(Path(__file__).resolve().parent / 'install'))
     import skills as skill_folders  # scripts/install/skills.py: the repo's skill discovery
 
-    local = json.loads((root / 'config/cloud.json').read_text())['local_only']
     folder = root / '.claude/skills'
     folder.mkdir(parents=True, exist_ok=True)
     made = 0
-    for name, source in sorted(skill_folders.skills(root / 'skills').items()):
+    for name, source in sorted(skill_folders.cloud_skills(root).items()):
         link = folder / name
-        if name in local or link.exists() or link.is_symlink():
+        if link.exists() or link.is_symlink():
             continue
         link.symlink_to(os.path.relpath(source, folder))
         made += 1

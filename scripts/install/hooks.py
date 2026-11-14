@@ -71,9 +71,11 @@ def small_commits(repo=WORKSPACE):
     return Feature('small-commits', Path(repo) / COMMITS_MARK, COMMITS_MARK, events, COMMITS_TIMEOUT)
 
 
-def features(repo=WORKSPACE):
-    """The features whose hooks are installed, found in the checkout at `repo`."""
-    return [worktree_guard(repo), small_commits(repo)]
+def features(repo=WORKSPACE, cloud=False):
+    """The features whose hooks are installed, found in the checkout at `repo`. A cloud session's
+    VM (`cloud`) gets small-commits alone: the session already works alone on its own branch, and
+    worktree-guard's records belong to a Mac."""
+    return [small_commits(repo)] if cloud else [worktree_guard(repo), small_commits(repo)]
 
 
 def handler(cli, mode, script, timeout):
@@ -288,17 +290,19 @@ def install(home, add, remove=(), apply=False, chosen=None):
     return len(changes) + len(folders)
 
 
-def run(home, target, write, uninstall, repo=WORKSPACE):
+def run(home, target, write, uninstall, repo=WORKSPACE, cloud=False):
     """Hooks for the CLIs switched on; none for those switched off, or for any on --uninstall."""
     selected = installer.scope(target)
     on, off = ((), selected) if uninstall else installer.split(selected)
-    return install(home, on, off, write, features(repo))
+    return install(home, on, off, write, features(repo, cloud))
 
 
 def main():
-    args = installer.parser(__doc__).parse_args()
+    options = installer.parser(__doc__)
+    options.add_argument('--cloud', action='store_true', help="a cloud session's VM: small-commits alone")
+    args = options.parse_args()
     return installer.finish('hooks', lambda: run(args.home, args.target, not args.dry_run, args.uninstall,
-                                                 repo=installer.live_root(WORKSPACE)))
+                                                 repo=installer.live_root(WORKSPACE), cloud=args.cloud))
 
 
 if __name__ == '__main__':

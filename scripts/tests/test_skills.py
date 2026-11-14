@@ -51,6 +51,23 @@ class InstallSkillsTest(unittest.TestCase):
     def skill_links(self):
         return {path: target for path, target in self.links().items() if '/skills/' in path}
 
+    def test_a_cloud_install_leaves_out_the_local_only_skills_and_their_commands(self):
+        """A cloud session's VM gets every skill but config/cloud.json's local_only, and no command
+        named after one (daily-log)."""
+        (self.repo / 'skills/daily-log').mkdir()
+        (self.repo / 'skills/daily-log/SKILL.md').write_text('---\nname: daily-log\n---\n')
+        (self.repo / 'config').mkdir()
+        (self.repo / 'config/cloud.json').write_text(json.dumps(
+            {'version': 1, 'local_only': {'beta': 'needs the Mac', 'daily-log': 'needs the Mac'}}))
+        self.assertEqual(sorted(skills.cloud_skills(self.repo)), ['alpha'])
+        out = io.StringIO()
+        with redirect_stdout(out):
+            skills.install(self.home, ['claude'], self.repo, apply=True, path_env='', cloud=True)
+        claude = where('claude', 'skills')
+        self.assertEqual(sorted(p for p in self.links() if p.startswith(claude)), [f'{claude}/alpha'])
+        self.assertTrue(self.command.is_symlink())
+        self.assertFalse(self.daily_log.exists())
+
     def test_the_repo_has_what_the_links_point_at(self):
         for target in (*skills.COMMANDS.values(), skills.PI_EXTENSION_TARGET):
             self.assertTrue((skills.WORKSPACE / target).is_file(), target)

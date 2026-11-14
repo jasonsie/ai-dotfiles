@@ -75,6 +75,17 @@ class InstallHooksTest(unittest.TestCase):
             self.assertEqual(feature.mark, mark)
             self.assertTrue(feature.script.is_file())
 
+    def test_a_cloud_install_takes_the_commit_gate_and_leaves_the_guard_out(self):
+        """A cloud session already works alone on its own branch, so worktree-guard stays off its VM."""
+        self.assertEqual([f.name for f in hooks.features(self.repo, cloud=True)], ['small-commits'])
+        with redirect_stdout(io.StringIO()):
+            hooks.run(self.home, 'claude', True, False, repo=self.repo, cloud=True)
+        data = json.loads((self.home / '.claude/settings.json').read_text())
+        self.assertEqual(sorted(data['hooks']), ['PreToolUse'])
+        commands = [h['command'] for group in data['hooks']['PreToolUse'] for h in group['hooks']]
+        self.assertEqual(len(commands), 1)
+        self.assertIn(hooks.COMMITS_MARK, commands[0])
+
     def test_the_registry_and_the_hook_formats_agree_on_which_clis_have_a_hook_file(self):
         have = {cli for cli in installer.clis() if installer.path(self.home, cli, 'hooks')}
         self.assertEqual(have, set(agent_hooks.HOOK_FILE_CLIS))

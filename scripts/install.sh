@@ -3,11 +3,13 @@
 #
 # Usage:
 #   bash scripts/install.sh [--dry-run] [--update] [--target=all|<cli>]
-#                           [--instructions-only] [--replace-instructions]
+#                           [--instructions-only] [--replace-instructions] [--cloud]
 #   Writes by default; --dry-run previews and writes nothing. --update first pulls this
 #   repo (fast-forward only; clean tree on main), then installs. config/ai-clis.json says
 #   which CLIs are on: a run sets those up and takes this repo's links and hooks out of the
-#   ones switched off; --target=<cli> limits a run to one CLI listed there.
+#   ones switched off; --target=<cli> limits a run to one CLI listed there. --cloud is a
+#   Claude Code cloud session's VM (scripts/cloud/setup.sh runs it): Claude alone, the skills
+#   config/cloud.json does not keep local, small-commits' hook; no plugins step, no launchd.
 #
 # Steps (each is idempotent, dry-run aware, and backs up before writing):
 #   1. instructions  config/global-agents.md       → each CLI's global entry (symlink)
@@ -35,9 +37,10 @@ DRY_RUN=0
 UPDATE=0
 INSTRUCTIONS_ONLY=0
 REPLACE_INSTRUCTIONS=0
+CLOUD=0
 PASS=()
 
-usage() { sed -n '2,26p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,28p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
 
 for arg in "$@"; do
   case "$arg" in
@@ -46,11 +49,19 @@ for arg in "$@"; do
     --update) UPDATE=1; continue ;;
     --instructions-only) INSTRUCTIONS_ONLY=1 ;;
     --replace-instructions) REPLACE_INSTRUCTIONS=1 ;;
+    --cloud) CLOUD=1 ;;
     --help|-h) usage; exit 0 ;;
     *) printf '[ERR] Unknown argument: %s\n' "$arg" >&2; usage >&2; exit 1 ;;
   esac
   PASS+=("$arg")
 done
+# A cloud session's VM runs Claude Code alone, and Claude reads ~/.claude only once it exists.
+CLOUD_ARGS=()
+if [ "$CLOUD" = "1" ]; then
+  TARGET="claude"
+  CLOUD_ARGS=(--cloud)
+  [ "$DRY_RUN" = "1" ] || mkdir -p "$HOME/.claude"
+fi
 
 if [ "$UPDATE" = "1" ]; then
   echo "== update"
@@ -105,15 +116,23 @@ echo "== mcp"
 "$PYTHON" "$SCRIPT_DIR/install/mcp.py" --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
 
 echo "== skills"
-"$PYTHON" "$SCRIPT_DIR/install/skills.py" --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
+"$PYTHON" "$SCRIPT_DIR/install/skills.py" --target "$TARGET" ${DRY[@]+"${DRY[@]}"} ${CLOUD_ARGS[@]+"${CLOUD_ARGS[@]}"}
 
 echo "== plugins"
-"$PYTHON" "$SCRIPT_DIR/install/plugins.py" --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
+if [ "$CLOUD" = "1" ]; then
+  echo "plugins: skipped in a cloud session (scripts/cloud/setup.sh clones them at their pins)"
+else
+  "$PYTHON" "$SCRIPT_DIR/install/plugins.py" --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
+fi
 
 echo "== hooks"
-"$PYTHON" "$SCRIPT_DIR/install/hooks.py" --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
+"$PYTHON" "$SCRIPT_DIR/install/hooks.py" --target "$TARGET" ${DRY[@]+"${DRY[@]}"} ${CLOUD_ARGS[@]+"${CLOUD_ARGS[@]}"}
 
 echo "== launchd"
-"$PYTHON" "$SCRIPT_DIR/install/launchd.py" ${DRY[@]+"${DRY[@]}"}
+if [ "$CLOUD" = "1" ]; then
+  echo "launchd: skipped in a cloud session"
+else
+  "$PYTHON" "$SCRIPT_DIR/install/launchd.py" ${DRY[@]+"${DRY[@]}"}
+fi
 
 [ "$DRY_RUN" = "1" ] && echo "Preview only: nothing written. Run again without --dry-run to write." || echo "Done. Verify: ai-dotfiles check"

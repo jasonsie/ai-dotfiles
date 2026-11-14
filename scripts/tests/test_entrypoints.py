@@ -50,6 +50,24 @@ class EntrypointsTest(unittest.TestCase):
                 found.append(path)
         return found
 
+    def test_a_cloud_install_sets_up_claude_alone_without_plugins_or_launchd(self):
+        """scripts/cloud/setup.sh runs install.sh --cloud on a cloud session's VM: Claude's rules, the
+        skills a cloud session can run and the commit gate; no other CLI, plugin manager or launchd."""
+        checkout = self.working_copy()
+        out = self.run_script('--cloud', '--target=codex', root=checkout)  # --cloud means Claude, whatever follows
+        self.assertIn('plugins: skipped in a cloud session', out)
+        self.assertIn('launchd: skipped in a cloud session', out)
+        self.assertEqual(Path(os.readlink(self.home / '.claude/CLAUDE.md')), checkout / 'config/global-agents.md')
+        local = json.loads((checkout / 'config/cloud.json').read_text())['local_only']
+        names = {p.name for p in (self.home / '.claude/skills').iterdir()}
+        self.assertIn('grilling', names)
+        self.assertEqual(names & set(local), set())
+        hooks = json.dumps(json.loads((self.home / '.claude/settings.json').read_text())['hooks'])
+        self.assertIn('small_commits.py', hooks)
+        self.assertNotIn('worktree_guard.py', hooks)
+        for other in ('.codex', '.pi', '.gemini', '.agents', 'Library'):
+            self.assertFalse((self.home / other).exists(), other)
+
     def test_install_writes_by_default_and_uninstall_leaves_nothing_pointing_into_the_repo(self):
         self.run_script('--dry-run')
         self.assertEqual(list(self.home.iterdir()), [])

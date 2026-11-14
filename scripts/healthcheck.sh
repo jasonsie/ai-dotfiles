@@ -85,7 +85,9 @@ fi
 
 echo "-- launchd (the daily-log pass, 04:00 each day)"
 PLIST="$HOME/Library/LaunchAgents/com.ai-dotfiles.daily-log-day.plist"
-if ! command -v claude >/dev/null 2>&1; then
+if [ "$(uname -s)" != Darwin ]; then
+  skip "not macOS: no launchd"
+elif ! command -v claude >/dev/null 2>&1; then
   skip "claude not on PATH: nothing to schedule"
 elif [ ! -f "$PLIST" ]; then
   fail "not scheduled: $PLIST missing (run: ai-dotfiles)"

@@ -277,6 +277,16 @@ class LaunchdTest(unittest.TestCase):
         self.assertEqual(list(self.home.iterdir()), [])
         self.assertEqual(self.calls, [])
 
+    def test_off_macos_nothing_is_scheduled_or_removed(self):
+        """A cloud session's VM is Linux: no launchd, so the step steps aside instead of failing."""
+        with patch.object(launchd.sys, 'platform', 'linux'):
+            for apply, uninstall in ((False, False), (True, False), (True, True)):
+                self.output = ''
+                self.assertEqual(self.install(apply, uninstall), 0)
+                self.assertEqual(self.output, 'launchd: not macOS; nothing scheduled\n')
+        self.assertEqual(list(self.home.iterdir()), [])
+        self.assertEqual(self.calls, [])
+
     def test_without_claude_a_plist_already_there_is_left_alone(self):
         self.install(apply=True)
         old = self.plist.read_bytes()
