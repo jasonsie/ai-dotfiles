@@ -3,8 +3,9 @@ CLAUDE.local.md
 # Claude Code local settings (may contain MCP tokens/credentials)
 .claude/settings.local.json
 
+# .claude/settings.json is tracked: the hooks a cloud session on this repo runs.
+
 # Retired generator output (ADR-0005); keep ignored so stale local copies never get committed.
-/.claude/settings.json
 /.claude/settings.json.bak
 /.claude/agents/
 /.claude/commands/
