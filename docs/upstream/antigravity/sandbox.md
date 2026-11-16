@@ -29,13 +29,13 @@ Your **permission preset** controls whether the sandbox is used:
 | Preset | Sandbox | Commands |
 | :-- | :-- | :-- |
 | **Request Review** | Off | Always ask |
-| **Default** | On | Allowed in sandbox; ask outside |
-| **Auto (Preview)** | On | Allowed in sandbox; safe, reversible commands allowed outside |
+| **Default** _(default)_ | On | Allowed in sandbox; ask outside |
+| **Auto** | On | Allowed in sandbox; safe, reversible commands allowed outside |
 | **Turbo** | Off | Allowed without prompting, unrestricted |
 
 You can change your preset in three places:
 
-*   **For all projects**: Open **Settings** > **General** > **Global Permissions** > **Permission Preset**.
+*   **For all projects**: Open **Settings** > **General** > **Global Permissions** > **Permission Preset** (**Permissions** > **This Computer** if remote agents are available to you).
 *   **For a single project**: Override the global preset under **Settings** > **Projects**. Projects default to **Inherit Global** upon creation, which follows your global preset.
 *   **From the message box** (`v2.23.0+`): Choose a preset from the permissions picker. The picker changes your global preset, or the project’s preset if the project overrides it. To remove a project override, choose **Use Global Settings**.
 
@@ -43,14 +43,14 @@ Refer to **[Agent permissions](/docs/permissions)** for the full preset behavior
 
 Note
 
-**Auto (Preview)** is available in `v2.23.0+`. It isn’t currently available for business or enterprise accounts, including [Antigravity in Gemini Enterprise](/docs/enterprise).
+**Default** is selected by default (**Request Review** if the sandbox isn’t available). **Auto** (shown as **Auto (Preview)** in version 2.29.0 and earlier) is available in `v2.23.0+` on macOS and Linux and `v2.26.0+` on Windows when the sandbox is available. It isn’t currently available for business or enterprise accounts, including [Antigravity in Gemini Enterprise](/docs/enterprise).
 
 #### Unsandboxed commands
 
 Some commands cannot work inside the sandbox—for example, those needing network access or talking to system services. The agent can request to run such commands outside the sandbox, where they run on your host with full privileges:
 
 *   **Default**: Requests to run outside the sandbox always pause for your approval, unless the command is already covered by a `command` allow or deny rule.
-*   **Auto (Preview)** (`v2.23.0+`): Antigravity automatically checks commands that need to run outside the sandbox so safe, reversible commands run without prompting, while risky or irreversible commands still pause for your approval (unless covered by a `command` allow or deny rule).
+*   **Auto** (`v2.23.0+` on macOS and Linux, `v2.26.0+` on Windows): Antigravity automatically checks commands that need to run outside the sandbox so safe, reversible commands run without prompting, while risky or irreversible commands still pause for your approval (unless covered by a `command` allow or deny rule).
 
 To let a specific command run without prompting—inside or outside the sandbox—add a `command` allow rule:
 
@@ -136,7 +136,7 @@ The sandbox is built on native operating system primitives, so there are no virt
 
 ### CLI configuration
 
-Enable the sandbox in `~/.gemini/antigravity-cli/settings.json`, or interactively using `/config`:
+`auto` mode enables the terminal sandbox automatically. In other modes, including `default` mode, enable the sandbox in `~/.gemini/antigravity-cli/settings.json` or interactively using `/config`:
 
 ```json
 {
@@ -147,13 +147,13 @@ Enable the sandbox in `~/.gemini/antigravity-cli/settings.json`, or interactivel
 
 The configuration supports the following settings:
 
-*   **`enableTerminalSandbox`** (boolean, default: `false`): Runs agent commands inside the sandbox.
-*   **`toolPermission`** (string, default: `"request-review"`): Setting this to `"proceed-in-sandbox"` lets sandboxed commands run automatically, while commands that need to run outside the sandbox still prompt for review. Refer to [Settings](/docs/settings) for the other modes.
-*   **`agentMode`** (string, default: `""`, which is `default` mode): Setting `"agentMode": "auto"` (Preview) enables the terminal sandbox automatically so commands run inside the sandbox by default, and automatically evaluates commands that need to run outside the sandbox so safe, reversible commands run without prompting while risky or irreversible commands pause for approval. Refer to [Choose an execution mode](/docs/cli/modes).
+*   **`agentMode`** (string, default: `""`, which is `default` mode): Setting `"agentMode": "auto"` enables the terminal sandbox automatically so commands run inside the sandbox by default, and automatically evaluates commands that need to run outside the sandbox so safe, reversible commands run without prompting while risky or irreversible commands pause for approval. Refer to [Choose an execution mode](/docs/cli/modes).
+*   **`enableTerminalSandbox`** (boolean, default: `false`): Runs agent commands inside the sandbox. `auto` mode turns it on automatically.
+*   **`toolPermission`** (string, default: `"request-review"`): Outside `auto` mode, setting this to `"proceed-in-sandbox"` lets sandboxed commands run automatically, while commands that need to run outside the sandbox still prompt for review. Refer to [Settings](/docs/settings) for the other modes.
 
 Note
 
-`auto` mode is available in `v1.3.5+` on **macOS and Linux** and `v1.4.4+` on **Windows**.
+`auto` mode is available in `v1.3.5+` on **macOS and Linux** and `v1.4.4+` on **Windows** for personal accounts when the sandbox is available.
 
 #### CLI flags
 
@@ -193,8 +193,8 @@ The sandbox derives its access boundaries from your **[Permissions](/docs/permis
 
 The agent can also request to run a command outside the sandbox on its own—for example, to retry a command that failed due to sandbox restrictions. On Windows, this includes some package installs and commands that connect to servers running outside the sandbox. How Antigravity CLI handles these requests depends on your mode:
 
-*   **Modes other than `auto`**: These requests always require your approval unless the command matches a `command` allow rule (an `unsandboxed` allow rule for business and enterprise accounts).
 *   **`auto` mode** (`v1.3.5+` on macOS and Linux, `v1.4.4+` on Windows): Antigravity CLI automatically evaluates commands that need to run outside the sandbox so safe, reversible commands run without prompting while irreversible commands still prompt for confirmation.
+*   **Modes other than `auto`**: These requests always require your approval unless the command matches a `command` allow rule (an `unsandboxed` allow rule for business and enterprise accounts).
 
 #### Example
 

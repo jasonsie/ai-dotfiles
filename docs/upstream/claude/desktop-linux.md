@@ -56,7 +56,7 @@ The command prints nothing when it succeeds and a `curl:` error when it doesn't.
 gpg --show-keys /usr/share/keyrings/claude-desktop-archive-keyring.asc
 ```
 
-The fingerprint gpg prints should be `31DDDE24DDFAB679F42D7BD2BAA929FF1A7ECACE`. If gpg reports that the file can't be opened or contains no valid OpenPGP data, the download failed or returned the wrong content: confirm your network can reach `downloads.claude.ai`, then rerun the download command.
+The only fingerprint gpg prints should be `31DDDE24DDFAB679F42D7BD2BAA929FF1A7ECACE`. If gpg reports that the file can't be opened or contains no valid OpenPGP data, the download failed or returned the wrong content. Confirm your network can reach `downloads.claude.ai`, then rerun the download command.
 
 Register the repository:
 
@@ -74,7 +74,7 @@ sudo apt update && sudo apt install claude-desktop
 
 Launch **Claude** from your application launcher, or run `claude-desktop` from a terminal, and sign in with your Anthropic account.
 
-The Linux app signs in the same way as on macOS and Windows: with a claude.ai subscription, or through your organization's SSO. For API-key authentication, use the [CLI](https://code.claude.com/docs/en/quickstart.md). To use Desktop with Amazon Bedrock, Google Cloud's Agent Platform, Microsoft Foundry, or an LLM gateway instead, see [Claude Desktop on 3P](https://claude.com/docs/third-party/claude-desktop/overview). For proxy servers and custom certificate authorities in those deployments, see [network configuration](https://code.claude.com/docs/en/network-config.md).
+The Linux app signs in the same way as on macOS and Windows: with a claude.ai subscription, or through your organization's SSO. To use Desktop with a Claude API key, Amazon Bedrock, Google Cloud's Agent Platform, Microsoft Foundry, or an LLM gateway instead, see [Claude Desktop on 3P](https://claude.com/docs/third-party/claude-desktop/overview). For proxy servers and custom certificate authorities in those deployments, see [network configuration](https://code.claude.com/docs/en/network-config.md).
 
 ### Install from a downloaded file
 

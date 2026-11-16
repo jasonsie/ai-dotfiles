@@ -39,11 +39,13 @@ When starting a new conversation in a project, you choose how the agent interact
 *   **Local mode**: The agent works directly in your active local folders or Git checkouts. Best for quick, interactive edits in your current working folder.
 *   **New worktree mode**: Creates a new Git worktree for the conversation. Best for complex tasks, keeping your active working folder untouched and preventing parallel subagents from conflicting.
 
+In the **Knowledge Work** [interface layout](/docs/settings#interface-layout) (`v2.30.0+`), new conversations run directly in your project’s folders without showing the worktree selector.
+
 #### Scoped settings and permissions
 
 Settings and permissions are both scoped at the project level:
 
-*   **Settings**: When a project is created, it starts with the **Inherit Global** permission preset, following your global permission settings, with read and write access to all of your project’s folders. Under the **Default** preset, terminal commands run without prompting inside the [terminal sandbox](/docs/sandbox) and require approval to run outside it. With the [previous permission settings](/docs/agent-settings#previous-permission-settings), the agent asks for permission to run terminal commands. These settings can be modified and apply to all agents within this project.
+*   **Settings**: When a project is created, it starts with the **Inherit Global** permission preset, following your global permission settings, with read and write access to all of your project’s folders. Under the **Default** preset, terminal commands run without prompting inside the [terminal sandbox](/docs/sandbox) and require approval to run outside it (under **Auto**, commands outside the sandbox are evaluated automatically so only risky or irreversible actions pause for your approval). With the [previous permission settings](/docs/agent-settings#previous-permission-settings), the agent asks for permission to run terminal commands. These settings can be modified and apply to all agents within this project.
 *   **Permissions**: Projects inherit global permissions, and you can augment them at the project level so agents only have the exact access required for that specific project’s tasks.
 
 #### Workflows using projects

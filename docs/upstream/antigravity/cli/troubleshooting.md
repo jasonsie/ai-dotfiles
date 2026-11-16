@@ -58,10 +58,14 @@ To add the binary directory to your path on macOS or Linux, follow these steps:
 
 To add the binary directory to your path on Windows, follow these steps:
 
-1.  Open a PowerShell terminal as an Administrator and execute the following command:
+1.  Open a PowerShell terminal and run the following commands:
     
     ```powershell
-    [System.Environment]::SetEnvironmentVariable("Path", [System.Environment]::GetEnvironmentVariable("Path", "User") + ";C:\Program Files\Google\antigravity-cli", "User")
+    $binDir = "$env:LOCALAPPDATA\agy\bin"
+    $userPath = [System.Environment]::GetEnvironmentVariable("Path", "User")
+    if (($userPath -split ";") -notcontains $binDir) {
+        [System.Environment]::SetEnvironmentVariable("Path", (($userPath.TrimEnd(";"), $binDir | Where-Object { $_ }) -join ";"), "User")
+    }
     ```
     
 2.  Restart your terminal emulator for the system registry environment to refresh.
@@ -123,7 +127,7 @@ If you still experience access issues, ensure your user account has the necessar
 
 ### Symptom
 
-Pasting screenshots or media files using `Ctrl+V` within an SSH terminal returns a failure notification:
+Pasting screenshots or media files using Ctrl + V within an SSH terminal returns a failure notification:
 
 ```text
 Error: local pasteboard is empty or unreachable over SSH connection
@@ -139,7 +143,7 @@ Verify that you’re using supported terminal emulators and configurations:
 
 1.  **Use iTerm2 or Ghostty**: These emulators support advanced clip channels.
 2.  **Configure iTerm2 forwarding**: Enable clipboard access in your terminal settings:
-    *   Open iTerm2 Preferences (`Cmd+,`).
+    *   Open iTerm2 Preferences (Cmd + ,).
     *   Go to **General** > **Selection**.
     *   Select **Applications in terminal may access clipboard** (enabling OSC 52 write channels).
 3.  **Bypass multiplexers**: If running inside `tmux`, ensure your active configuration maps standard paste clips:

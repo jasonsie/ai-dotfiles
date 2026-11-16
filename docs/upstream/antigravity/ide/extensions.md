@@ -55,6 +55,12 @@ Agentic workflows, multi-step task execution, and diff reviews inside Eclipse on
 
 [Install & Eclipse Guide](/docs/ide/extensions/eclipse)
 
+### Other editors and tools (ACP)
+
+Antigravity also works in other editors that support the [Agent Client Protocol (ACP)](https://agentclientprotocol.com). Antigravity CLI includes an ACP server, `agy acp`, that these editors launch to run the agent in their own chat panel. Available features depend on the editor.
+
+[Other editors (ACP)](/docs/ide/extensions/acp)Connect VS Code, Zed, JetBrains IDEs, Android Studio, Xcode, and other ACP clients to Antigravity CLI.
+
 * * *
 
 ## Authentication and licensing

@@ -34,7 +34,7 @@ Scheduled tasks are available on Pro, Max, Ultra, Team, and Enterprise plans. Cr
 >
 > Two other features schedule work on your machine instead of in the cloud: [Desktop scheduled tasks](https://code.claude.com/docs/en/desktop-scheduled-tasks.md) and [`/loop`](https://code.claude.com/docs/en/scheduled-tasks). To choose among all three, see [Compare scheduling options](https://code.claude.com/docs/en/scheduled-tasks.md#compare-scheduling-options).
 
-Team and Enterprise Owners can turn off scheduled tasks for all members with the **Scheduled tasks (Was Routines)** toggle at [**Organization settings > Capabilities > Remote sessions**](https://claude.ai/admin-settings/capabilities). When the toggle is off, existing scheduled tasks stop running and members can't create new ones.
+Team and Enterprise Owners can turn off scheduled tasks for all members with the **Scheduled tasks (Was Routines)** or **Routines** toggle at [**Organization settings > Capabilities > Remote sessions**](https://claude.ai/admin-settings/capabilities). When the toggle is off, existing scheduled tasks stop running and members can't create new ones.
 
 If your Enterprise organization manages your access with [custom roles](https://support.claude.com/en/articles/13930452), you also need a role that includes the scheduled tasks permission. An Owner can add it in a role's **Remote sessions** section at [**Organization settings > Roles**](https://claude.ai/admin-settings/roles).
 
@@ -108,13 +108,13 @@ Each repository is cloned at the start of a run. Claude creates `claude/`-prefix
 
 **5. Select an environment**
 
-After you select a repository, **Cloud environment** appears below it. Pick a [cloud environment](https://code.claude.com/docs/en/cloud-environments.md) for the task. Environments control what the cloud session has access to:
+After you select a repository, **Cloud environment** appears below it. Pick a [cloud environment](https://code.claude.com/docs/en/cloud-environments.md) for the task. If an environment is already selected, you can keep it or select a different one. Environments control what the cloud session has access to:
 
 * **Network access**: set the level of internet access available during each run
 * **Environment variables**: provide values Claude can use during each run. They're [visible to anyone who uses the environment](https://code.claude.com/docs/en/cloud-environments.md#what-carries-over-from-your-setup), so in an Anthropic-hosted environment, store keys for the APIs Claude calls during a run as [network secrets](https://code.claude.com/docs/en/cloud-environments.md#add-network-secrets) instead. That section also lists the requests that never get a secret
 * **Setup script**: install dependencies and tools the task needs. The result is [cached](https://code.claude.com/docs/en/cloud-environments.md#environment-caching), so the script doesn't re-run on every session
 
-A **Default** environment is provided with **Trusted** network access, which allows only the [default allowlist](https://code.claude.com/docs/en/cloud-environments.md#default-allowed-domains) of package registries, cloud provider APIs, container registries, and common development domains through the session's network. Connectors you add to the task reach their services through Anthropic's servers, so they don't need allowlist changes.
+A **Default** environment is provided with **Limited** network access and **Allow package managers** checked. Its runs reach the [default allowlist](https://code.claude.com/docs/en/cloud-environments.md#default-allowed-domains): package registries, cloud provider APIs, container registries, and common development domains. Connectors you add to the task reach their services through Anthropic's servers, so they don't need allowlist changes.
 
 If your task needs to reach your own services directly, or a domain outside that list, edit the environment's [network access](https://code.claude.com/docs/en/cloud-environments.md#network-access) before running. To use a separate environment, [create one](https://code.claude.com/docs/en/cloud-environments.md#configure-your-environment) first.
 
@@ -434,7 +434,7 @@ In every other case, including a run that an API or GitHub trigger starts, Claud
 
 Each scheduled task uses a [cloud environment](https://code.claude.com/docs/en/cloud-environments.md) that controls network access, environment variables, and setup scripts. The task inherits the environment's network policy on every run.
 
-The **Default** environment uses **Trusted** network access, which allows only the [default allowlist](https://code.claude.com/docs/en/cloud-environments.md#default-allowed-domains) through the session's network. Requests on that path to hosts outside the allowlist fail with `403` and `x-deny-reason: host_not_allowed`. MCP connector traffic is routed through Anthropic's servers rather than that path, so the connectors you add to the task work without adding their hosts to **Allowed domains**. Remove any connectors you don't need under [Connectors](#connectors).
+The **Default** environment uses **Limited** access with **Allow package managers** checked, so its runs reach the [default allowlist](https://code.claude.com/docs/en/cloud-environments.md#default-allowed-domains). A request to a blocked host fails with [an error such as a `403` or `ENOTFOUND`](https://code.claude.com/docs/en/errors#host-not-allowed-in-a-cloud-session). MCP connector traffic is routed through Anthropic's servers, so the connectors you add to the task work without adding their hosts to **Allowed domains**. Remove any connectors you don't need under [Connectors](#connectors).
 
 To allow additional domains on one of your own environments, follow these steps. An [organization-shared environment](https://code.claude.com/docs/en/cloud-environments.md#organization-shared-environments) opens read-only here, so an Owner changes its network access from the **Cloud environments** page in [admin settings](https://claude.ai/admin-settings) instead.
 
@@ -450,9 +450,9 @@ Go to **Advanced settings > General > Cloud environment**, expanding **Advanced 
 
 Hover over the environment in the list and click the settings icon that appears on the right.
 
-**4. Change the network access level**
+**4. Add the domains**
 
-In the **Edit cloud environment** dialog, change **Network access** to **Custom** and enter your domains in **Allowed domains**. Check **Also include default list of common package managers** to keep the [default allowlist](https://code.claude.com/docs/en/cloud-environments.md#default-allowed-domains) alongside your custom domains. Select **Full** instead for unrestricted access.
+In the **Edit cloud environment** dialog, select **Limited** under **Network access** and enter your domains in **Allowed domains**. Check **Allow package managers** to allow the [default allowlist](https://code.claude.com/docs/en/cloud-environments.md#default-allowed-domains) alongside your own domains. Select **Full** instead for unrestricted access.
 
 **5. Save**
 
@@ -488,7 +488,7 @@ Scheduled tasks were previously called routines, and these places keep the earli
 * **Web address**: `claude.ai/code/routines`
 * **CLI**: the `/routines` alias for `/schedule`, the command's description, and Claude's replies while it sets up a task
 * **API**: the `/fire` endpoint path, its beta header, its response `type`, the `<routine-fire-payload>` tag, and the [Trigger a routine through the API](https://platform.claude.com/docs/en/api/claude-code/routines-fire) reference page
-* **Organization settings**: the **Scheduled tasks (Was Routines)** toggle
+* **Organization settings**: the **Scheduled tasks (Was Routines)** or **Routines** toggle
 
 ## Troubleshooting
 
@@ -507,9 +507,9 @@ The cause is usually one of the following:
 
 If the cause is your CLI sign-in or being inside a cloud session, you can still create and manage scheduled tasks at [claude.ai/code/routines](https://claude.ai/code/routines). You need a Pro, Max, Ultra, Team, or Enterprise account there. If scheduled tasks or cloud sessions are off for your organization or missing from your roles, you can't create them on the web either.
 
-### "Routines are disabled by your organization's policy"
+### Scheduled tasks are off for your organization
 
-An Owner in your Team or Enterprise organization has likely turned off the **Scheduled tasks (Was Routines)** toggle at [**Organization settings > Capabilities > Remote sessions**](https://claude.ai/admin-settings/capabilities). On Claude Code v2.1.227 or later, the same toggle also hides `/schedule` in the CLI. This is a server-side organization setting, so it cannot be overridden from your local configuration. Ask an Owner to turn scheduled tasks back on for your organization.
+Cloud scheduled tasks are off for your organization, and you can't change that from your local configuration. Ask your Team or Enterprise Owner whether they can turn on the **Scheduled tasks (Was Routines)** or **Routines** toggle at [**Organization settings > Capabilities > Remote sessions**](https://claude.ai/admin-settings/capabilities).
 
 ### "The last run" warnings
 
@@ -531,6 +531,6 @@ When a warning under **History** begins with "The last run", find it in the firs
 * [`/loop` and in-session scheduling](https://code.claude.com/docs/en/scheduled-tasks): schedule local tasks within an open CLI session
 * [Desktop scheduled tasks](https://code.claude.com/docs/en/desktop-scheduled-tasks.md): local scheduled tasks that run on your machine with access to local files
 * [Cloud environments](https://code.claude.com/docs/en/cloud-environments.md): configure network access, environment variables, and setup scripts for cloud sessions
-* [Projects](https://code.claude.com/docs/en/claude-projects.md): ongoing work Claude coordinates across parallel cloud sessions; scheduled tasks created from a project appear on its **Scheduled tasks** tab
+* [Projects](https://code.claude.com/docs/en/claude-projects.md): ongoing work Claude coordinates across parallel cloud sessions; scheduled tasks created from a project appear in its **Scheduled tasks** view
 * [MCP connectors](https://code.claude.com/docs/en/mcp.md): connect external services like Slack, Linear, and Google Drive
 * [GitHub Actions](https://code.claude.com/docs/en/github-actions.md): run Claude in your CI pipeline on repository events

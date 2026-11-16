@@ -56,7 +56,7 @@ This workflow uses the Antigravity agent to autonomously handle project transfor
 2.  Follow the export method based on the window that appears:
     
     *   If a **Zip and Download** button appears, click it.
-    *   Otherwise, open the Command Palette (`Cmd+Shift+P` on macOS or `Ctrl+Shift+P` on ChromeOS, Windows, or Linux) and run the **Firebase Studio: Zip & Download** command.
+    *   Otherwise, open the Command Palette (Cmd + Shift + P on macOS or Ctrl + Shift + P on ChromeOS, Windows, or Linux) and run the **Firebase Studio: Zip & Download** command.
 3.  Extract the folder locally and open it in Antigravity.
     
 4.  In the Agent pane within Antigravity, enter the following prompt. To optimize your workflow and conserve tokens, we recommend selecting the **Gemini Flash** model, which is designed for speed and efficiency in high-volume transformation tasks like file conversion:
@@ -117,7 +117,7 @@ Antigravity uses agent skills to publish your app using Firebase best practices:
 
 There are several ways you can continue your development in Antigravity:
 
-*   **Running workflows**: In Antigravity, you can seamlessly execute workflows and continue your work with the model by typing `@workflows <workflow_name>` into the agentic chat panel.
+*   **Running skills**: In Antigravity, you can run a skill and continue your work with the model by typing `/<skill-name>` into the agentic chat panel. If you have existing workflows, [migrate them to skills](/docs/migration/workflows-to-skills).
 *   **App Hosting deployments**: You can seamlessly deploy your apps directly through the agent using agent skills, or by using the platform-agnostic Firebase CLI and GitHub.
 *   **Troubleshooting**: If you experience deployment issues, try re-authenticating with the Firebase CLI or verifying your project secrets.
 

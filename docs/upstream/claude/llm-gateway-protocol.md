@@ -43,7 +43,7 @@ Google Cloud's Agent Platform is Google Cloud's Claude endpoint, formerly Vertex
 
 | Format | Selected by | Endpoints | Forward unchanged |
 | :- | :- | :- | :- |
-| Anthropic Messages | `ANTHROPIC_BASE_URL` | `/v1/messages`, `/v1/messages/count_tokens` (optional) | `anthropic-beta` and `anthropic-version` request headers |
+| Anthropic Messages | `ANTHROPIC_BASE_URL` | `/v1/messages`, `/v1/messages/count_tokens` (optional) | `anthropic-beta` and `anthropic-version` request headers, plus `Authorization` when a [claude.ai login](#request-headers) authenticates the request to Anthropic |
 | Amazon Bedrock InvokeModel | `ANTHROPIC_BEDROCK_BASE_URL` with `CLAUDE_CODE_USE_BEDROCK=1` | `/model/{model}/invoke`, `/model/{model}/invoke-with-response-stream`, `/model/{model}/count-tokens` (optional) | `anthropic_beta` and `anthropic_version` request body fields |
 | Google Cloud's Agent Platform rawPredict | `ANTHROPIC_VERTEX_BASE_URL` with `CLAUDE_CODE_USE_VERTEX=1` | `:rawPredict`, `:streamRawPredict`, `count-tokens:rawPredict` (optional) | `anthropic-beta` and `anthropic-version` request headers, and the `anthropic_version` request body field |
 
@@ -113,16 +113,16 @@ For the features each connection supports and the telemetry it sends to Anthropi
 
 Two client-side settings change what Claude Code assumes for a model ID it doesn't recognize, whichever connection method the developer uses:
 
-* **Context window**: Claude Code assumes 200K, or 1M when the ID carries `[1m]`. To declare the real window, see [Correct the window for a gateway or custom model ID](https://code.claude.com/docs/en/model-config.md#correct-the-window-for-a-gateway-or-custom-model-id)
+* **Context window**: Claude Code assumes a 1M token context window by default. To declare the real window, see [Correct the window for a gateway or custom model ID](https://code.claude.com/docs/en/model-config.md#correct-the-window-for-a-gateway-or-custom-model-id)
 * **Capabilities**: to give a gateway alias the capabilities of the model behind it, map that model's Anthropic ID to your alias with a [`modelOverrides`](https://code.claude.com/docs/en/errors#unrecognized-model-id-on-a-request) entry in the settings you distribute. For where the `ANTHROPIC_DEFAULT_*_MODEL_SUPPORTED_CAPABILITIES` variables apply, see [feature pass-through](#feature-pass-through)
 
 ## Request headers
 
-Claude Code includes these headers on API requests. Header names are case-insensitive on the wire. Forward `anthropic-version` and `anthropic-beta` unchanged, plus `anthropic-workspace-id` when the upstream is the [Claude Platform on AWS](https://code.claude.com/docs/en/claude-platform-on-aws.md); the rest the gateway may consume for routing, attribution, and tracing, and need not forward.
+Claude Code includes these headers on API requests. Header names are case-insensitive on the wire. Forward `anthropic-version` and `anthropic-beta` unchanged, plus `anthropic-workspace-id` when the upstream is the [Claude Platform on AWS](https://code.claude.com/docs/en/claude-platform-on-aws.md). Also forward `Authorization` when your gateway authenticates to Anthropic with the developer's claude.ai login and not a key of its own. The rest the gateway may consume for routing, attribution, and tracing, and need not forward.
 
 | Header | Description |
 | :- | :- |
-| `Authorization`, `x-api-key` | The developer's gateway credential, in one or both headers depending on which [credential variable](https://code.claude.com/docs/en/llm-gateway-connect.md#set-the-credential-variable) they set |
+| `Authorization`, `x-api-key` | The developer's gateway credential, in one or both headers depending on which [credential variable](https://code.claude.com/docs/en/llm-gateway-connect.md#set-the-credential-variable) they set. With a claude.ai login and no gateway credential, `Authorization` carries the login's token |
 | `anthropic-version` | API version, currently `2023-06-01`. Amazon Bedrock- and Google Cloud's Agent Platform-format requests also carry the `anthropic_version` body field, whose value is the provider dialect string, not this header's value |
 | `anthropic-beta` | Comma-separated capability values for the request. Forward the header verbatim; don't allowlist individual values, because the set changes with Claude Code releases. When the developer authenticates with a claude.ai login, which is possible when `ANTHROPIC_BASE_URL` is set without a gateway credential variable, this header also carries an OAuth capability that the upstream requires, and stripping it fails those requests with `401` |
 | `x-claude-code-session-id` | A unique identifier for the current Claude Code session. Use it to aggregate all requests from one session without parsing request bodies |
@@ -226,7 +226,7 @@ A gateway that rewrites or redacts request bodies for content inspection breaks 
 | Beta [tool fields](https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview) | Tool-related beta headers pair with tool schema fields such as `strict` and `defer_loading` | `400` naming the unrecognized tool schema field when the body passes through without its header. For `defer_loading`, see [Retry without tool search](#retry-without-tool-search) | Forward both, or [`CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS=1`](#disable-pre-release-capabilities) |
 | [Effort](https://platform.claude.com/docs/en/build-with-claude/effort) and [structured outputs](https://platform.claude.com/docs/en/build-with-claude/structured-outputs) | The `output_config` body field carries effort, structured-output format, and task budget settings; each pairs with its own beta header | `400` naming `output_config`, often `Extra inputs are not permitted`, on Amazon Bedrock and Google Cloud's Agent Platform upstreams | Forward the field and its headers together, or have developers set [`CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS=1`](#disable-pre-release-capabilities), which removes the format and task budget settings but not effort. To remove only the format, they can set [`CLAUDE_CODE_DISABLE_STRUCTURED_OUTPUTS=1`](https://code.claude.com/docs/en/env-vars) instead, which requires v2.1.288 or later |
 | Mid-conversation system messages | No beta header. Claude Code sends some reminder and attachment text as `role: "system"` entries in `messages` for Claude Opus 4.8, models released after it, and unrecognized model IDs | `400` such as `Unexpected role "system"` | Claude Code [retries without system messages](#automatic-retry-and-error-forwarding). To stop system messages on an alias of a model released before Claude Opus 4.8, add a [`modelOverrides` entry](#settings-for-unrecognized-model-ids) to the settings you distribute |
-| [Effort set per turn](https://code.claude.com/docs/en/prompt-caching.md#changing-effort-level) | On Opus 5.5, Sonnet 5.5, Haiku 5.5, and Fable 5.1, a beta header pairs with `output_config.effort` on `role: "system"` entries, either a system message or an entry with empty content | `400` with `messages.N: system content must contain at least one block` when your gateway strips the field from an empty entry | Forward both, or have developers set [`CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS=1`](#disable-pre-release-capabilities) to stop the field and the empty entries |
+| [Effort set per turn](https://code.claude.com/docs/en/prompt-caching.md#changing-effort-level) | On Opus 5.5, Sonnet 5.5, Haiku 5.5, Fable 5.2, and Fable 5.1, a beta header pairs with `output_config.effort` on `role: "system"` entries. An entry is a system message or one with empty content | `400` with `messages.N: system content must contain at least one block` when your gateway strips the field from an empty entry | Forward both, or have developers set [`CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS=1`](#disable-pre-release-capabilities) to stop the field and the empty entries |
 | [Prompt caching](https://code.claude.com/docs/en/prompt-caching.md) | No beta pairing. Claude Code attaches `cache_control` markers to `system` blocks and to `messages` entries, including `role: "system"` entries appended mid-conversation | No error: the conversation bills as uncached input on every turn, visible as high `input_tokens` with little or no cache activity in `usage` | Forward `cache_control` unchanged wherever it appears, and don't convert block-form `system` or message content to plain strings |
 | [Token counting](https://platform.claude.com/docs/en/build-with-claude/token-counting) | No beta pairing; uses the `count_tokens` endpoint | No error: Claude Code falls back to a character-based estimate, so `/context` shows approximate counts | Expose the endpoint for exact token counts |
 
@@ -240,23 +240,48 @@ When the upstream rejects one of these capabilities, Claude Code can retry the r
 * When the upstream rejects a `role: "system"` entry inside `messages`, Claude Code retries once without those mid-conversation system messages and carries their text in user messages instead. Later requests in the conversation keep that shape until the developer runs `/clear` or the conversation compacts
 * When the upstream rejects only the `cache_control` marker on a mid-conversation system message, Claude Code keeps the system messages and retries once with the marker moved. The marker goes on the last entry in `messages` that isn't a system message, in that retry and in later requests until Claude Code exits
 * When the upstream rejects a [thinking signature](https://platform.claude.com/docs/en/build-with-claude/extended-thinking), including with a `400` whose message says the block is `bound to a different conversation`, Claude Code removes earlier thinking blocks from the request, retries, and keeps them out of every later request. New responses still include thinking
-* When the gateway or its upstream rejects the [advisor tool](https://code.claude.com/docs/en/advisor.md) entry in `tools` as an unrecognized tool type, Claude Code retries the request once without that entry and its `anthropic-beta` value. Later requests to that base URL leave the advisor out until Claude Code exits, and `/advisor` is unavailable to the developer for that time. Claude Code recognizes this rejection by a `400` or `422` response whose message names the tool type after `Input tag`, such as `Input tag 'advisor_20260301'`. Before v2.1.280, Claude Code didn't retry this rejection
-* When the upstream rejects `output_config.effort` or its `anthropic-beta` value, Claude Code retries and adds neither to requests for that model until Claude Code exits. Your gateway needs no change if it forwards the upstream's `400` unmodified and the message:
+* When the gateway or its upstream rejects the [advisor tool](https://code.claude.com/docs/en/advisor.md) entry in `tools` as an unrecognized tool type, Claude Code retries once without that entry and its `anthropic-beta` value. [Later requests](#how-long-a-rejected-beta-value-stays-out) omit them. Claude Code recognizes this rejection by a `400` or `422` response whose message names the tool type after `Input tag`, such as `Input tag 'advisor_20260301'`. Before v2.1.280, Claude Code didn't retry this rejection
+* When the upstream rejects `output_config.effort` or its `anthropic-beta` value, the gateway sees the request once more without them. [Later requests](#how-long-a-rejected-beta-value-stays-out) omit them. Your gateway needs no change if it forwards the upstream's `400` unmodified and the message:
   * Names `output_config.effort` alongside `Extra inputs are not permitted`
   * Says the model doesn't support the effort parameter
   * Starts with `Unexpected value(s)` and lists `effort-2025-11-24` for the `anthropic-beta` header. Requires v2.1.310 or later. Developers whose [`ANTHROPIC_BETAS`](https://code.claude.com/docs/en/env-vars) lists the value keep sending it and getting the `400`, so have them remove that entry
-* When the upstream rejects the `context_management` field or its `anthropic-beta` value, the gateway sees the request once more without them. If the gateway sees them again in a later request and the upstream rejects them again, the same retry follows. Claude Code recognizes this rejection by its message, for example one containing `context_management: Extra inputs are not permitted`. Before v2.1.304, Claude Code didn't retry this rejection
+* When the upstream rejects the `context_management` field or its `anthropic-beta` value, the gateway sees the request once more without them. [Later requests](#how-long-a-rejected-beta-value-stays-out) omit them. Claude Code recognizes this rejection by its message, for example one containing `context_management: Extra inputs are not permitted`. Before v2.1.304, Claude Code didn't retry this rejection
+* When a `400` rejects another `anthropic-beta` value by name, the gateway sees the request once more without it if [the retry covers that value](#retry-without-a-rejected-beta-value)
 * When the upstream rejects a beta tool field other than `defer_loading`, such as `strict`, the `400` reaches the developer. Before it does, the gateway can see the request again [without the tool search fields](#retry-without-tool-search). To stop sending such fields, have developers set [`CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS=1`](#disable-pre-release-capabilities)
 
 The `bound to a different conversation` rejection comes from the API's [preserved thinking](https://platform.claude.com/docs/en/build-with-claude/preserved-thinking) check, which fails when `system`, `tools`, or earlier `messages` content differs from the request that produced the thinking. A gateway that rewrites any of that content can cause the rejection itself; [Libraries, proxies, and gateways](https://platform.claude.com/docs/en/build-with-claude/preserved-thinking#libraries-proxies-gateways) covers what to pass through unchanged.
 
 Most of this retry logic matches on the upstream's error wording, so forward error response bodies unmodified. A gateway that wraps upstream errors in its own envelope breaks the recovery path, even when it preserves the status code, unless the envelope's message carries a stable `capability_rejected:` token. [Claude apps gateway substitutes those tokens for cloud providers' error wording](https://code.claude.com/docs/en/claude-apps-gateway-config.md#upstream-error-messages), for example `capability_rejected: prompt_too_long`.
 
+#### Retry without a rejected beta value
+
+When a `400` rejects by name an `anthropic-beta` value that this retry covers, the gateway sees the request once more without it. [Later requests](#how-long-a-rejected-beta-value-stays-out) omit the value. Most values it covers require v2.1.314 or later.
+
+Your gateway needs no change if the message of the `400` it returns carries the value in either of these forms:
+
+* **The API's sentence**: the `Unexpected value(s)` sentence that lists the value for the `anthropic-beta` header
+* **A `beta_header:` token**: `capability_rejected: beta_header:` followed by the value, a [`capability_rejected:` token](#automatic-retry-and-error-forwarding)
+
+The retry doesn't cover cases such as a value with its own retry, a value Claude Code doesn't recognize, or a message that names no value:
+
+* **A value with its own retry, such as advisor or tool search**: the gateway sees [that capability's own retry](#automatic-retry-and-error-forwarding) instead
+* **A value Claude Code doesn't recognize**: a value that a developer set through `ANTHROPIC_BETAS` stays on each request, so the developer's requests keep failing with the `400`. Have the developer remove the entry
+* **A bare `invalid beta flag`**: Claude Code guesses which value the upstream rejected. If the request carried a value it guesses at, the gateway sees the request again without that value. If the `400` still reaches the developer, have your gateway name the rejected value in one of those forms
+
+#### How long a rejected beta value stays out
+
+| Upstream rejected | Requests that omit it | Until |
+| :- | :- | :- |
+| The advisor tool type, or the advisor's `anthropic-beta` value | Requests to the same base URL. `/advisor` is unavailable | Claude Code exits |
+| `output_config.effort` or its `anthropic-beta` value | Requests for the same model | Claude Code exits |
+| `context_management` or another `anthropic-beta` value the [retry by name](#retry-without-a-rejected-beta-value) covers | Requests in the same conversation | The conversation ends or Claude Code rebuilds its prompt, such as when the main conversation compacts |
+| `context_management` or another value that retry covers, when the error message opens with the API's own sentence for the rejection, such as `Unexpected value(s)`, or carries a `beta_header:` token | Also new conversations on the model the rejected request named, including after `/clear` | Claude Code exits |
+
 #### Retry without tool search
 
-On v2.1.305 or later, a request carrying [`defer_loading` fields and `tool_reference` blocks](https://code.claude.com/docs/en/mcp#tool-search-through-a-gateway) can arrive again without them after a `400` or `422` whose cause Claude Code doesn't recognize. After a successful retry, later requests omit them too.
+On v2.1.305 or later, Claude Code resends a request without [`defer_loading` fields and `tool_reference` blocks](https://code.claude.com/docs/en/mcp#tool-search-through-a-gateway) after a `400` or `422` that names tool search or whose cause it doesn't recognize. After a successful retry, later requests in that conversation omit them too.
 
-The developer's requests keep working without any change on the gateway, with their MCP tools loaded upfront. Claude Code tries tool search again later, so the gateway can see another rejected request followed by its retry. To keep the fields out of every request, have developers set `ENABLE_TOOL_SEARCH=false`. For tool search itself, Claude Code expects the gateway to forward the `defer_loading` fields and `tool_reference` blocks with their `anthropic-beta` value.
+The developer's requests keep working without any change on the gateway, with their MCP tools loaded upfront. When Claude Code tries tool search again, the gateway can see another rejected request followed by its retry. For tool search itself, Claude Code expects the gateway to forward the `defer_loading` fields and `tool_reference` blocks with their `anthropic-beta` value.
 
 ### Disable pre-release capabilities
 
@@ -274,6 +299,7 @@ The variable doesn't strip every `anthropic-beta` value. What it leaves in place
 * The top-level `output_config.effort` field. [Automatic retry and error forwarding](#automatic-retry-and-error-forwarding) covers an upstream that rejects it
 * The adaptive reasoning `thinking` field, which has no beta header
 * The `role: "system"` entries that carry [mid-conversation system messages](#feature-pass-through)
+* The `anthropic-beta` value and `safeguards` field for auto mode's [server-side classifier review](https://code.claude.com/docs/en/permission-modes.md#server-side-classifier-review), in sessions where that review stays on, such as when `/status` shows **Auto mode server** as `Enabled`. To turn the review off, set `CLAUDE_CODE_AUTO_MODE_SERVER=0` before starting the session. In the terminal, `/status` then shows **Auto mode server** as `Disabled`.
 * The OAuth `anthropic-beta` value that subscription authentication requires
 * Header values and body fields developers add themselves through [`ANTHROPIC_BETAS`](https://code.claude.com/docs/en/env-vars) or [`CLAUDE_CODE_EXTRA_BODY`](https://code.claude.com/docs/en/env-vars)
 

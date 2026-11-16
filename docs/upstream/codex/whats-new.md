@@ -9,6 +9,26 @@ For every versioned update, bug fix, and minor improvement, see the [ChatGPT and
 
 
 
+## November 9–13, 2026
+
+
+
+
+### Set custom instructions for your dot
+
+Tell your dot how you’d like it to respond and work with you. You can ask it to update your instructions in conversation or edit them in **Customize → Behavior**. [Learn how to set custom instructions](https://learn.chatgpt.com/docs/dots/controls).
+
+## [November 2–6, 2026](https://learn.chatgpt.com/docs/whats-new/november-2-6-2026)
+
+
+
+
+### Reply to your dot from an iOS notification
+
+Reply to your dot from a notification or share a photo from another app on iOS. This update also improves reliability on Windows and lets you report a problem to your main dot in conversation.
+
+[Read the full update →](https://learn.chatgpt.com/docs/whats-new/november-2-6-2026)
+
 ## [October 26–30, 2026](https://learn.chatgpt.com/docs/whats-new/october-26-30-2026)
 
 

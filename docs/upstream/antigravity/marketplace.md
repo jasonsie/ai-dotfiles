@@ -19,17 +19,17 @@ To browse and install Marketplace plugins in the Antigravity App, follow these s
 
 1.  In the left sidebar, click the **Customizations** tab (below **Automations**):
     
-    ![Customization tab](/assets/image/docs/plugins/customization-tab.png)
+    ![The left sidebar of the Antigravity App with Customizations selected below New Conversation and Automations](/assets/image/docs/plugins/customization-tab.png)
     
 2.  Click the **Marketplace** tab to view available plugins:
     
-    ![Marketplace tab](/assets/image/docs/plugins/marketplace-plugins.png)
+    ![The Marketplace tab of the Customizations page in the Antigravity App, with a search box, the featured Notion plugin with Add and Details buttons, and the Google Workspace plugins](/assets/image/docs/plugins/marketplace-plugins.png)
     
 3.  Click any plugin card to inspect its details and bundled capabilities:
     
-    ![Plugin details view](/assets/image/docs/plugins/plugin-card.png)
+    ![The Dart and Flutter plugin detail view in the Antigravity App, with an Add button, starter prompts, Overview, Skills, MCP, Agents, and Rules tabs, and the plugin's README](/assets/image/docs/plugins/plugin-card.png)
     
-4.  Click **+** on the plugin card to install it.
+4.  Click **Add** to install the plugin. You can also click **+** next to a plugin in the **Marketplace** list to install it without opening its details.
     
 
 ### Configure plugin credentials (API keys and OAuth)
@@ -45,7 +45,7 @@ To inspect, toggle, or uninstall existing plugins:
 
 1.  In the **Customizations** panel, click the **Installed** tab:
     
-    ![Installed plugins](/assets/image/docs/plugins/installed-plugins.png)
+    ![The Installed tab of the Customizations page in the Antigravity App, with five installed plugins, two of them marked Sign in required, above the Skills & Rules list](/assets/image/docs/plugins/installed-plugins.png)
     
 2.  Click the **⋮** menu beside any installed plugin (or open the plugin card) to enable, disable, or configure it.
     
@@ -217,7 +217,7 @@ Once a plugin is installed and enabled, its bundled capabilities are available i
 Explore related documentation and guides:
 
 *   **[Plugins](/docs/plugins)**: Learn how to configure, use, and manage installed plugins across the Antigravity App, Antigravity CLI, and Antigravity IDE.
-*   **[Build plugins](/docs/build-plugins)**: Author `plugin.json` manifests, bundle skills, MCP servers, custom agents, rules, and hooks, and validate your plugin locally with `agy plugin validate --strict`.
+*   **[Build plugins](/docs/build-plugins)**: Author `plugin.json` manifests, bundle skills, MCP servers, custom agents, rules, and hooks, and validate your plugin locally with `agy plugin validate`.
 *   **[Get your plugin in the marketplace](https://forms.gle/2EX5RFYPoJe1UgxR9)**: Fill out this interest form to submit your validated plugin to the Antigravity Marketplace.
 *   **[Build with Google](/docs/build-with-google)**: Explore curated Google plugins for Firebase, Android, Flutter, Chrome DevTools, BigQuery, and more.
 *   **[CLI reference](/docs/cli/reference)**: View all slash commands and keyboard shortcuts in the Antigravity CLI.

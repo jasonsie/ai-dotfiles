@@ -1,16 +1,25 @@
 > Source: https://antigravity.google/docs/ide/separate-chrome-profile
 > Mirror maintained by .github/workflows/sync-cli-docs.yml — do not edit by hand.
 
-# Separate Chrome profile
+# Chrome profile
 
-Available on: Antigravity IDE
+Available on: Antigravity App, Antigravity IDE
 
-To isolate the browser from your general browsing, it operates in a [separate Chrome profile](https://support.google.com/chrome/answer/2364824).
+Which browser profile the browser subagent uses depends on where it runs:
 
-Because Chrome profiles are isolated, this profile doesn’t share any cookies or sign-in information from your normal browsing profile. However, all sign-ins persist so that whenever you open the browser in the future, your accounts remain signed in.
+*   **Built-in browser in the Antigravity App (personal Google Accounts, `v2.30.0+`)**: The browser subagent runs directly inside the App’s built-in side-panel browser rather than Google Chrome. It keeps an isolated, persistent cookie profile per Antigravity account, separate from Chrome; refer to [Browser use](/docs/browser).
+*   **Google Chrome via [`/browser`](/docs/commands/browser) (Antigravity IDE, Antigravity CLI, and business/enterprise accounts in the Antigravity App)**: The subagent doesn’t create a separate Chrome profile. Instead, it connects to the Google Chrome that’s already running on your computer through Chrome’s remote debugging and works in that browser.
 
-If your normal Chrome browser is open when you launch this profile, it appears as a separate dock icon and runs as a separate application. If Chrome isn’t open beforehand, this application looks the same as your default profile. To return to your default profile, quit the application and relaunch Chrome.
+Because the Chrome-based `/browser` subagent works in your own Chrome, it shares the same cookies and sign-ins as your normal Chrome browsing. It can open pages on sites where you’re signed in, so allow only the sites that you want it to act on. For details, refer to [Allowlist and denylist](/docs/ide/allowlist-denylist).
 
-To change the location where your browser profile is created, modify the following setting in the **Browser** section:
+## Connect the subagent to Chrome
 
-![Browser Profile](/assets/image/docs/browser/browser-profile.png)
+1.  Open Google Chrome (version 144 or later).
+2.  Go to `chrome://inspect/#remote-debugging`.
+3.  Turn on **Allow remote debugging for this browser instance**.
+
+When the subagent connects, Chrome asks whether to allow remote debugging—click **Allow** within 60 seconds. Chrome must be running on the same local machine as your workspace (and in the Antigravity IDE or CLI, Node.js must be installed so `npx` is on your `PATH`). For details, refer to [Set up Chrome](/docs/commands/browser#set-up-chrome).
+
+## Built-in browser profile in the Antigravity App
+
+The Antigravity App’s built-in browser opens web pages in the side panel with its own cookies and sign-ins for each account that you use in Antigravity, persisting across tabs and app restarts. To clear visited URLs and autocomplete suggestions, go to **Settings** > **Browser** (`v2.30.0+`) > **Built-in Browser** and click **Clear** next to **Browsing History**. To clear cookies and storage for a specific site, click the connection security icon in the address bar and select **Delete cookies and site data**. The Antigravity IDE doesn’t include a built-in browser.
