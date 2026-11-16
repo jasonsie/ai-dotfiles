@@ -15,14 +15,14 @@ In the Antigravity App, the **Review** pane shows the changes in your project’
 
 In a conversation, do either of the following:
 
-*   In the **Overview** panel, click **Review**. If the panel is hidden, click **Toggle Overview Panel** at the top right of the conversation, or press Cmd+Option+O on macOS or Ctrl+Alt+O on Windows and Linux.
+*   In the **Overview** panel, click **Review**. If the panel is hidden, click **Toggle Overview Panel** at the top right of the conversation, or press Cmd + Option + O on macOS or Ctrl + Alt + O on Windows and Linux.
 *   Under an agent response that changed files, click **Review** on the card that summarizes the changes, such as **2 files changed**. The pane opens filtered to that turn, as described in [Review a single turn](#review-a-single-turn).
 
-The pane opens as a **Review** tab in the side panel, next to the conversation. To expand it over the conversation, click **Maximize Pane**, or press Cmd+Shift+M on macOS or Ctrl+Shift+M on Windows and Linux. To list the changed files, click **Toggle sidebar** at the top right of the pane.
+The pane opens as a **Review** tab in the side panel, next to the conversation. To expand it over the conversation, click **Maximize Pane**, or press Cmd + Shift + M on macOS or Ctrl + Shift + M on Windows and Linux. To list the changed files, click **Toggle sidebar** at the top right of the pane.
 
 In this example, the agent added a route and a test. The route file is staged, and the test file has unstaged changes:
 
-![The Review pane in the Antigravity App with Uncommitted selected. The diff of bookmarks.js, marked Staged with +12 -0, shows a new route in green below a +6 more lines button. The route returns one bookmark by ID, or a 404 not\_found error if there's no match. The sidebar lists bookmarks.js under Staged Changes and bookmarks.test.js under Changes, each with an M status letter](/assets/image/docs/review-changes/review-changes-app-pane.png)
+![The Review pane in the Antigravity App with Uncommitted selected. The diff of bookmarks.js, marked Staged with +10 -0, shows a new route in green below a +6 more lines button. The route returns one bookmark by ID, or a 404 not\_found error if there's no match. The sidebar lists bookmarks.js under Staged Changes and bookmarks.test.js under Changes, each with an M status letter](/assets/image/docs/review-changes/review-changes-app-pane.png)
 
 Each file in the sidebar shows a status letter. Hover over the letter to see its meaning:
 
@@ -79,11 +79,11 @@ Comment on specific lines to tell the agent what to change:
 
 Your comment appears below the lines it refers to, where you can edit or delete it:
 
-![An inline comment in the Review pane of the Antigravity App. Below line 20 of bookmarks.js, which returns a 404 not\_found error, a comment card reads Return 400 with error invalid\_id when the id is not a number, with Delete and Edit Comment buttons](/assets/image/docs/review-changes/review-changes-app-comment.png)
+![An inline comment in the Review pane of the Antigravity App. Below line 18 of bookmarks.js, which returns a 404 not\_found error, a comment card reads Return 400 with error invalid\_id when the id is not a number, with Delete and Edit Comment buttons](/assets/image/docs/review-changes/review-changes-app-comment.png)
 
 Comments are attached to your next message, and a chip such as **1 Comment** appears above the message box. Hover over the chip to preview your comments. Send the message, with or without more text, and the agent receives each comment with its file and line numbers.
 
-To reference lines without commenting, select them and click **Quote** in the popup, or press Cmd+L on macOS or Ctrl+L on Windows and Linux. A line-range reference, such as `bookmarks.js #L13-16`, is added to the message box.
+To reference lines without commenting, select them and click **Quote** in the popup, or press Cmd + L on macOS or Ctrl + L on Windows and Linux. A line-range reference, such as `bookmarks.js #L13-16`, is added to the message box.
 
 ### Stage, unstage, and discard files
 
@@ -109,7 +109,7 @@ To commit from the Review pane, do the following:
     
 3.  Type a commit message, or leave the box empty to have the agent write one based on the conversation and the files you’re committing.
     
-4.  Click **Commit**, or press Enter. To start a new line in the message, press Shift+Enter.
+4.  Click **Commit**, or press Enter. To start a new line in the message, press Shift + Enter.
     
 
 Here’s the **Commit** dialog for one staged file:

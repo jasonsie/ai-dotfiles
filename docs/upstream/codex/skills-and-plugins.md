@@ -71,14 +71,11 @@ To build a useful skill:
 
 For more details on building skills, see our dedicated guide below.
 
-[Build skills
+[Build skills](https://learn.chatgpt.com/docs/build-skills)
+
+Create, test, and share reusable skills with ChatGPT and Codex.
 
 
-
-      <Tools />
-    
-
-    Create, test, and share reusable skills with ChatGPT and Codex.](https://learn.chatgpt.com/docs/build-skills)
 
 ## Use plugins for tools and shared workflows
 

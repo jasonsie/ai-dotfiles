@@ -33,12 +33,13 @@ Settings are organized into four distinct scopes to keep configurations clean an
 
 Global settings apply across all workspaces:
 
+*   **Interface layout** (`v2.30.0+`, personal Google Accounts): Switch between the **Knowledge Work** and **Software Engineering** [interface layouts](#interface-layout) under **General** > **Interface Layout**.
 *   **Account settings**: Manage authentication sessions and toggle telemetry (enable or disable sharing interaction logs to improve models).
 *   **Global permissions**: Centralized default tool boundaries that apply to all conversations:
-    *   **Permission Preset**: Choose **Request Review**, **Default**, **Auto (Preview)** (`v2.23.0+`), or **Turbo**. You can also choose a preset from the permissions picker in the message box composer (`v2.23.0+`), which changes your global preset, or the project’s preset if the project overrides it. To remove a project override, choose **Use Global Settings**.
+    *   **Permission Preset**: Choose **Request Review**, **Default** (_default_), **Auto** (`v2.23.0+` on macOS and Linux, `v2.26.0+` on Windows), or **Turbo**. You can also choose a preset from the permissions picker in the message box composer (`v2.23.0+`), which changes your global preset, or the project’s preset if the project overrides it. To remove a project override, choose **Use Global Settings**.
     *   Fine-grained allow, ask, and deny rules (refer to **[Agent permissions](/docs/permissions)**).
 *   **Appearance**: Customize visual themes and panel layouts.
-*   **Browser integration**: Configure how the agent interacts with web surfaces.
+*   **Browser** (`v2.30.0+`): Configure **Open Links In**, **Download Location**, **Browsing History**, and **Browser Actuation Rules** under **Settings** > **Browser** (refer to **[Browser use](/docs/browser#configure-browser-settings)**).
 *   **Model usage**: Choose and configure default reasoning models.
 *   **Customizations**: Manage Model Context Protocol (MCP) servers, custom skills, and plugins.
 
@@ -54,7 +55,7 @@ Project settings apply exclusively within the scope of a specific project:
     *   **Local**: Select this in the new conversation view to work directly in the existing folders.
     *   **Worktree**: Select this to start a new worktree in the folders. If a folder does not have Git, the existing local folder is used instead.
 *   **Agent settings**: Configure project-specific agent behaviors:
-    *   **Permission settings** (updated permission system): Choose the project’s **Permission Preset**—**Inherit Global**, **Request Review**, **Default**, **Auto (Preview)** (`v2.23.0+`), or **Turbo**—controlling how the agent runs shell commands, accesses files, and uses the [terminal sandbox](/docs/sandbox) (refer to **[Agent permissions](/docs/permissions)** and **[Agent settings](/docs/agent-settings)**).
+    *   **Permission settings** (updated permission system): Choose the project’s **Permission Preset**—**Inherit Global**, **Request Review**, **Default**, **Auto** (`v2.23.0+` on macOS and Linux, `v2.26.0+` on Windows), or **Turbo**—controlling how the agent runs shell commands, accesses files, and uses the [terminal sandbox](/docs/sandbox) (refer to **[Agent permissions](/docs/permissions)** and **[Agent settings](/docs/agent-settings)**).
     *   **Terminal execution policy** ([previous permission settings](/docs/agent-settings#previous-permission-settings)): Control how the agent runs shell commands.
     *   **Outside of folder file access policy** (previous permission settings): Define how the agent accesses files outside the project boundary (Always Allow, Always Ask, or Always Deny).
     *   **Sandbox mode** (previous permission settings): Toggle the terminal sandbox container on or off within the custom security preset (refer to **[Terminal sandbox](/docs/sandbox)**).
@@ -74,6 +75,27 @@ Access shortcuts and feedback tools:
 
 *   **Shortcuts**: View and customize keyboard shortcut configurations.
 *   **Feedback**: Access the feedback form to send reports directly to the team.
+
+### Interface layout
+
+When signed in with a personal Google Account, **Settings** > **General** > **Interface Layout** (`v2.30.0+`) lets you choose between two interface configurations for the Antigravity App:
+
+*   **Knowledge Work**: _Simplified interface for research, writing, and everyday tasks._ Keeps focus on conversation, documents, artifacts, and folder outputs while hiding Git, terminal, and code-diff controls.
+*   **Software Engineering**: _Full interface for coding, developer tools, and managing agents._ Exposes Git worktrees and branch controls, inline diffs and change review, integrated terminals, subagent cards, and full customization lists.
+
+![The General page in Antigravity App Settings showing Interface Layout with Knowledge Work selected next to Software Engineering, followed by Global Permissions and Execution](/assets/image/docs/settings-interface-layout.png)
+
+During [first-launch setup](/docs/getting-started) with a personal Google Account, Antigravity picks an initial layout based on the role you select (**Knowledge Work** for _Knowledge Work_, _Science_, _Design_, and _Other_; **Software Engineering** for _Software Engineering_ and _Data & Analytics_), or starts in **Software Engineering** if you click **Skip**. Business and [Gemini Enterprise](/docs/enterprise) accounts always use the **Software Engineering** layout, and **Interface Layout** is not shown in settings.
+
+Switching layouts updates open and new conversations immediately without restarting the app. Both layouts run the exact same agent and support the same [models](/docs/models), [permission presets](/docs/permissions), [skills](/docs/skills), [rules](/docs/rules), [MCP servers](/docs/mcp), and [plugins](/docs/plugins)—switching only changes which controls are shown in the interface:
+
+| Area | Software Engineering | Knowledge Work |
+| :-- | :-- | :-- |
+| **Projects and folders** | Prompts for **Local** or **New worktree** mode on Git repos; shows Git branch pickers, GitHub controls, and **Open in IDE**; forks can target a new worktree. | Runs directly in your project’s folders without worktree or Git branch prompts; hides GitHub and **Open in IDE** controls; forks stay in the current folder (_Fork conversation in this folder_). |
+| **Conversation and approvals** | Keeps expandable `Worked for` tool groups, inline code diffs, line counts, and subagent cards in the thread; permission prompts include raw command-rule editors. | Shows a live progress line while the agent works that clears once the response finishes, keeping focus on replies and artifacts; permission prompts present plain-language summaries. |
+| **Side panel and Overview panel** | **Overview** includes **Review**, **Files**, **Terminal**, and **Extensions** rows, a **Customize Sections** menu, and sections for **Subagents**, **Background Tasks**, **Goals**, **Documents**, **Artifacts**, **Links**, **Modified Files**, and **Uploads**. | **Overview** stays hidden until the conversation produces output, omits **Review**, **Terminal**, and **Customize Sections**, labels the **Files** sidebar tree **Folders**, and focuses on **Documents**, **Artifacts**, **Links**, **Uploads**, and **Background Tasks**. |
+| **Customizations (`Installed` tab)** | Lists installed **Plugins**, **Skills & Rules**, **Custom Agents**, and **MCP Servers**. | Lists installed **Plugins** only (installed skills, rules, custom agents, and MCP tools remain active in the background). |
+| **Settings** | Displays developer subsections (**Terminal**, **Workspaces**, and **Labs**) and detailed permission rules directly. | Tucks advanced permission rules and developer subsections behind **Advanced Settings** in **Settings** > **General** and project settings, and hides the **Appearance** > **Conversation Steps** toggle and code syntax preview. |
 
 ### Data collection settings
 
@@ -200,12 +222,12 @@ The interactive settings panel (`/config`) and `settings.json` allow you to cust
 Manage how the agent interacts with your system and codebase:
 
 *   **Agent Mode (`agentMode`)**: Controls the session execution mode for file edits, command evaluation, and planning (can also be set per session with `--mode` or cycled with Shift + Tab; refer to [Choose an execution mode](/docs/cli/modes)):
-    *   `default` (the default; leave `agentMode` unset): Prompts for interactive diff review before modifying or creating files.
-    *   `accept-edits`: Automatically approves workspace file edits and creations.
-    *   `auto` (Preview): Automatically approves workspace file edits, runs terminal commands inside the [terminal sandbox](/docs/sandbox) by default, and automatically evaluates commands that need to run outside the sandbox so safe, reversible commands run without prompting while risky or irreversible commands pause for approval (shown as `auto` in the bottom-right status bar and `Auto mode: edits & safe commands auto-approved (shift+tab to cycle)` in the prompt input box).
+    *   `auto`: Automatically approves workspace file edits, runs terminal commands inside the [terminal sandbox](/docs/sandbox) by default, and automatically evaluates commands that need to run outside the sandbox so safe, reversible commands run without prompting while risky or irreversible commands pause for approval (shown as `auto` in the bottom-right status bar and `Auto mode: edits & safe commands auto-approved (shift+tab to cycle)` in the prompt input box).
+    *   `default` (the default; select `default` in `/config`, or leave `agentMode` unset or `""`): Prompts for interactive diff review before modifying or creating files, and follows `toolPermission` for commands.
+    *   `accept-edits`: Automatically approves workspace file edits and creations while continuing to follow `toolPermission` for commands.
     *   `plan`: Prepends `/plan` so the agent analyzes the codebase and outlines a plan before making edits.
-*   **Tool Permission (`toolPermission`)**: Controls when the agent asks for your approval before it uses a tool, such as running a terminal command. Deny rules in your [permissions](#permissions) block an action in every mode:
-    *   `request-review` (default): Prompts for your approval before running write, bash, web, or MCP tools, unless an allow rule covers the action.
+*   **Tool Permission (`toolPermission`)**: Controls when the agent asks for your approval before it uses a tool outside `auto` mode (and for `strict` and `always-proceed` overrides). Deny rules in your [permissions](#permissions) block an action in every mode:
+    *   `request-review` (default `toolPermission` value): Prompts for your approval before running write, bash, web, or MCP tools, unless an allow rule covers the action.
     *   `proceed-in-sandbox`: Runs terminal commands without prompting when Sandbox Mode is on and the command runs inside the terminal sandbox; otherwise prompts for review.
     *   `strict`: Prompts before every tool action, including file reads, even when an allow rule matches (overrides `auto` mode).
     *   `always-proceed`: Runs terminal commands, web requests, and MCP tools without prompting, except actions that match an ask or deny rule (highest risk, use with caution; overrides `auto` mode).
@@ -213,7 +235,7 @@ Manage how the agent interacts with your system and codebase:
     *   `asks-for-review` (default; **asks for review** in `/config`): The agent always waits for your review.
     *   `agent-decides` (**agent decides**): Currently works the same as `asks-for-review`.
     *   `always-proceed` (**always proceeds**): The agent continues without waiting for your review.
-*   **Sandbox Mode (`enableTerminalSandbox`)**: When enabled (`on`), restricts all agent-initiated terminal commands to a secure OS container. When `agentMode` is set to `auto`, the terminal sandbox is enabled automatically and only commands that need to run outside the sandbox are evaluated for automatic approval.
+*   **Sandbox Mode (`enableTerminalSandbox`)**: When enabled (`on`), restricts all agent-initiated terminal commands to a secure OS container. When `auto` mode is active, the terminal sandbox is enabled automatically and only commands that need to run outside the sandbox are evaluated for automatic approval.
 *   **Non-Workspace Access (`allowNonWorkspaceAccess`)**: When enabled (`on`), lets the agent read and edit files outside your workspace folders, subject to your Tool Permission, Agent Mode, and permission rules. Set to `off` by default for safety.
 
 Note
@@ -365,7 +387,7 @@ To completely disable a default hotkey, map its action to an empty array `[]`. I
 
 Note
 
-**Protected keys**: Crucial navigation shortcuts such as `cli.exit` (Ctrl + D / Ctrl + C) and `cli.enter` (Enter) are protected by the system and cannot be disabled.
+**Protected keys**: The system protects three navigation actions, which you can’t disable: `cli.exit` (Ctrl + D), `cli.escape` (Esc / Ctrl + C), and `cli.enter` (Enter).
 
 #### Restoring defaults
 

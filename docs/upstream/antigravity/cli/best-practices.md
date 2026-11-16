@@ -42,7 +42,7 @@ Type `@` in the prompt box to open path suggestions, and then select a file or d
 
 ### Attaching visual evidence
 
-If you’re debugging visual UI issues, rendering bugs, or frontend layout inconsistencies, capture a screenshot or video recording, copy it, and press `ctrl+v` inside the prompt box to attach it. The agent consults the media file to diagnose the issue.
+If you’re debugging visual UI issues, rendering bugs, or frontend layout inconsistencies, capture a screenshot or video recording, copy it, and press Ctrl + V inside the prompt box to attach it. The agent consults the media file to diagnose the issue.
 
 ## Configure your workspace environment
 
@@ -54,11 +54,11 @@ Create a `GEMINI.md` or `AGENTS.md` file at your workspace root to outline speci
 
 ### Establish structured permissions
 
-Tune your safety barriers in `~/.gemini/antigravity-cli/settings.json` based on your project risk level:
+For fewer prompts, switch to [`auto` mode](/docs/cli/modes), which runs shell commands inside the [terminal sandbox](/docs/sandbox) and automatically evaluates commands that need to run outside it. Otherwise, tune `toolPermission` in `~/.gemini/antigravity-cli/settings.json` based on your project risk level:
 
-*   **`request-review`** (default): Prompts you before executing any write operations, Bash commands, or remote network calls.
-*   **`proceed-in-sandbox`**: Restricts all terminal executions to a secure sandbox containment ring. Safe commands execute autonomously, while risky commands prompt for reviews.
-*   **`strict`**: Always prompts for all non-read operations, providing complete line-by-line transparency.
+*   **`request-review`** (default `toolPermission` value): Outside `auto` mode, prompts you before executing any write operations, Bash commands, or remote network calls.
+*   **`proceed-in-sandbox`**: Outside `auto` mode, restricts terminal executions to the sandbox containment ring so sandboxed commands run autonomously while commands outside the sandbox prompt for review.
+*   **`strict`**: Always prompts for all non-read operations (overrides `auto` mode), providing complete line-by-line transparency.
 
 ```json
 {
@@ -71,9 +71,9 @@ Tune your safety barriers in `~/.gemini/antigravity-cli/settings.json` based on 
 
 Use active session navigation tools to recover from engineering dead-ends or course-correct intermediate agent loops.
 
-### Course-correct early (`esc`)
+### Course-correct early (Esc)
 
-If you watch an agent execute an incorrect search pattern or write code that deviates from your intentions, press the global escape hatch key `esc` immediately to interrupt the turn and regain focus of a clean prompt.
+If you watch an agent execute an incorrect search pattern or write code that deviates from your intentions, press the global escape hatch key Esc immediately to interrupt the turn and regain focus of a clean prompt.
 
 ### Rewind history with `/rewind`
 
@@ -97,7 +97,7 @@ Antigravity CLI is designed to operate seamlessly within standard shell pipeline
 To automate quick queries or integrate agents into Git hooks, use the one-shot prompt flag `-p`:
 
 ```bash
-agy -p "Review this git diff and draft a conventional commit message" --cwd $(pwd)
+agy -p "Review this git diff and draft a conventional commit message"
 ```
 
 ### Fan out using parallel subagents

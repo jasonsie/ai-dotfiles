@@ -18,11 +18,15 @@
 
 Your dot is an always-on agent that keeps work moving across your tools and projects. You can keep talking to it while it works, and it reaches out with results or decisions that need you.
 
-Powered by GPT-6 Astra, your dot lives in the cloud and has its own computer and browser. You can reach it and it can keep working even when your computer is off. It can research, analyze data, prepare documents, and build software, using relevant context from past conversations and your preferences.
+New to delegating work to an agent? Start with [Working with agents](https://learn.chatgpt.com/docs/working-with-agents).
+
+We’re expanding the family of frontier models that power dots to include GPT-6.1 Terra. Your dot can draw on different models for different parts of its work. GPT-6.1 Terra builds on the GPT-6 series’ alignment improvements and uses safeguards developed for GPT-6 Astra.
+
+Your dot lives in the cloud and has its own computer and browser. You can reach it and it can keep working even when your computer is off. It can research, analyze data, prepare documents, and build software, using relevant context from past conversations and your preferences.
 
 <a id="access-to-dots"></a>
 
-**Dots are rolling out gradually to eligible accounts.** See [availability and access](#access) for plan, region, and workspace requirements.
+See [availability and access](#access) for plan, region, and workspace requirements.
 
 <a id="meet-your-o"></a>
 
@@ -118,7 +122,7 @@ Your dot has its own computer and browser in the cloud for research, files, and 
   }}
 />
 
-Connect your computer once through your dot’s profile to make its local files, code, and apps available for your dot’s work. You can connect only one personal computer at a time. The connection stays in place between tasks. Your computer must be online with the ChatGPT app open for your dot to use it. This permission is separate from connecting your computer to Codex or enabling Work Sync.
+Connect your computer once through your dot’s profile to make its local files, code, and apps available for your dot’s work. You can [connect more than one computer](https://learn.chatgpt.com/docs/dots/computers-and-apps#connect-your-computer) and tell your dot which one to use for a task. The connection stays in place between tasks. Your computer must be online with the ChatGPT app open for your dot to use it. This permission is separate from connecting your computer to Codex or enabling Work Sync.
 
 Your dot can use supported [plugins](https://learn.chatgpt.com/docs/plugins) installed and enabled for your account, with their connected accounts and existing permissions. For example, use Gmail to find relevant email, Google Drive to work with documents, and GitHub to investigate code and prepare changes. Each plugin must be connected and permitted to perform the actions you request. Local skills require a connected computer. Connecting a messaging channel doesn’t automatically grant access to your apps or computer.
 
@@ -261,13 +265,13 @@ Give your dot access to the relevant sources and tell it what to keep track of. 
 
 **For workspace admins:** See [Set up dots for work](https://learn.chatgpt.com/docs/enterprise/dots-admin-guide) for workspace setup, permissions, and security and governance guidance.
 
-Dots are rolling out gradually. You may not see dots immediately, even if your plan is eligible.
+Access depends on your plan, region, and workspace settings. Dots are rolling out gradually to eligible Pro and Business Premium accounts.
 
-- **Pro 100, Pro 200, and Pro 500:** For users over 18 outside the European Economic Area, United Kingdom, and Switzerland.
-- **Business Premium:** Rolling out worldwide.
-- **Enterprise:** Rolling out worldwide. Dots are off by default and must be enabled by a workspace administrator.
+- **Pro 100, Pro 200, and Pro 500:** For users aged 18 and older outside the European Economic Area, United Kingdom, and Switzerland.
+- **Business Premium:** Available in supported ChatGPT regions, subject to workspace eligibility.
+- **Enterprise, Edu, and Healthcare:** Generally available in eligible workspaces. Workspaces with UAE data or inference residency are ineligible. During the admin preview, your admin can enable access for your role. Starting November 18, 2026, access is on by default unless your workspace opts out.
 
-Conversations with your dot don’t count toward your ChatGPT usage limits. Tasks your dot starts or manages in Work or Codex count toward those products’ usage limits as usual. Your plan includes an allowance for deeper work, with extended limits for the first month after launch.
+For Pro and Business Premium, conversations with your dot don’t count toward your ChatGPT usage limits. Tasks your dot starts or manages in Work or Codex count toward those products’ usage limits as usual. Your plan includes an allowance for deeper work, with extended limits for the first month after launch. For Enterprise pricing and delegated task charges, see [Enterprise preview and billing](https://learn.chatgpt.com/docs/enterprise/dots-admin-guide#enterprise-preview-and-billing).
 
 You can create your dot in the ChatGPT mobile app, desktop app, or a desktop browser. Use the latest version of the mobile app for mobile setup. Mobile web is not supported.
 

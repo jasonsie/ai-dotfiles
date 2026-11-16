@@ -13,6 +13,8 @@ Type `/` inside the prompt box to open the typeahead command selection menu.
 | :-- | :-- | :-- | :-- |
 | **`/add-dir <path>`** | Utilities | — | Add a directory path to the active workspace. |
 | **[`/agents`](/docs/cli/commands/agents)** | Tools & Tasks | — | Open the [Agent Manager panel](/docs/cli/commands/agents) to switch custom agents and monitor background subagents. |
+| **[`/agy-customizations`](/docs/commands/agy-customizations)** `[request]` | Tools & Tasks | — | Load the [customization reference](/docs/commands/agy-customizations) so the agent can create, fix, or explain rules, skills, plugins, hooks, and MCP servers. |
+| **[`/antigravity-guide`](/docs/commands/antigravity-guide)** `[question]` | Utilities | — | Ask how to use or configure Antigravity and get an answer from the [official documentation](/docs). |
 | **`/artifact`** | Tools & Tasks | — | Open the Artifact Review panel. |
 | **[`/boost`](/docs/boost)** `<task>` | Reasoning | — | Run on-demand multi-agent deep reasoning loops. |
 | **[`/browser`](/docs/commands/browser)** `<task>` | Tools & Tasks | — | Delegate web browsing, UI verification, and in-browser debugging to the [browser subagent](/docs/commands/browser). |
@@ -23,7 +25,7 @@ Type `/` inside the prompt box to open the typeahead command selection menu.
 | **`/config`** | Configurations | `/settings` | Open the interactive Settings Editor overlay. |
 | **[`/context`](/docs/cli/commands/context)** | Utilities | — | Open the [context usage visualization panel](/docs/cli/commands/context). |
 | **`/copy [n|btw]`** | Utilities | — | Copy the last agent response, the n-th most recent response, or the latest [`/btw`](/docs/cli/commands/btw) answer. |
-| **[`/credits`](/docs/cli/commands/credits)** | Account | — | View remaining G1 credits and purchase links. |
+| **[`/credits`](/docs/cli/commands/credits)** | Account | — | View remaining AI credits and purchase links. |
 | **[`/diff`](/docs/cli/commands/diff)** | Utilities | — | Open the [interactive diff viewer](/docs/cli/commands/diff) to view changes, turns, and commits. |
 | **[`/effort`](/docs/cli/commands/effort) `[level]`** | Configurations | — | Set or inspect the active model’s [reasoning effort level](/docs/cli/commands/effort) (`low` through `max`, depending on the model). |
 | **`/exit`** | Core | `/quit` | Close the TUI session and restore your host shell. |
@@ -50,10 +52,12 @@ Type `/` inside the prompt box to open the typeahead command selection menu.
 | **`/skills`** | Tools & Tasks | — | Browse loaded local and global Agent Skills. Run `/skills reload` to reload skills from disk. |
 | **[`/statusline`](/docs/cli/commands/statusline)** | Configurations | — | Open the Status Bar customization overlay. |
 | **`/tasks`** | Tools & Tasks | — | Open the Task Manager panel to monitor background shell execution logs. |
+| **[`/swarm`](/docs/swarm)** `<task>` | Reasoning | — | Run a [swarm](/docs/swarm) of named workers and a verifier that coordinate on a shared message board. |
+| **[`/swarm board`](/docs/swarm#live-board)** | Reasoning | — | Open the [live swarm board](/docs/swarm#live-board) full screen (Alt+S). |
 | **[`/teamwork`](/docs/teamwork)** `<task>` | Reasoning | — | Launch [collaborative multi-agent teams](/docs/teamwork) for long-horizon projects (paid plans). |
 | **[`/title`](/docs/cli/commands/title) \[on/off\]** | Configurations | — | Toggle or set terminal window title updates. |
 | **[`/usage`](/docs/cli/commands/usage)** | Utilities | `/quota` | Display model quota usage. |
-| **[`/voice`](/docs/cli/commands/voice)** | Utilities | `/record` | Dictate a prompt using your microphone. |
+| **[`/voice`](/docs/cli/commands/voice)** | Utilities | — | Talk with the agent by voice (`/voice live`) or dictate a prompt (`/voice dictate`). `/record` always dictates. |
 
 ## Default keybindings
 
@@ -65,10 +69,10 @@ These hotkeys are always active regardless of which panel, overlay, or prompt is
 
 | Key | TUI Command | Action Behavior |
 | :-- | :-- | :-- |
-| **`Esc`** | `cli.escape` | Closes active panels, halts active streams, or clears empty prompts. |
-| **`Ctrl+C`** | `cli.exit` | Terminates the CLI session (prompts for confirmation if agent is working). |
-| **`Ctrl+D`** | `cli.exit` | Exits the CLI session (only when the prompt box is empty). |
-| **`Ctrl+L`** | `cli.clear_screen` | Refreshes and clears the visual terminal buffer. |
+| Esc | `cli.escape` | Closes active panels, halts active streams, or clears empty prompts. |
+| Ctrl + C | `cli.escape` | Interrupts the agent’s current turn. When nothing is running, press it twice to exit the CLI. |
+| Ctrl + D | `cli.exit` | Exits the CLI session (only when the prompt box is empty). |
+| Ctrl + L | `cli.clear_screen` | Refreshes and clears the visual terminal buffer. |
 
 ### Prompt focus keys
 
@@ -76,21 +80,23 @@ These keys are active when writing instructions inside the prompt box.
 
 | Key | TUI Command | Action Behavior |
 | :-- | :-- | :-- |
-| **`Enter`** | `cli.enter` | Submits your prompt or active menu selection to the agent. |
-| **`Shift+Enter`** / **`Ctrl+J`** | `prompt.insert_newline` | Inserts a clean newline without submitting. |
-| **`Shift+Tab`** | `cli.cycle_mode` | Cycles between execution modes (`default` > `accept-edits` > `auto` > `plan`; `auto` only where available). |
-| **`Ctrl+V`** | `edit.paste` | Pastes graphic media files or clipboard blocks into the prompt. |
-| **`Ctrl+O`** | `view.toggle_trajectory` | Expands or collapses detailed tool reasoning outputs. |
-| **`Ctrl+R`** | `view.review_artifact` | Opens the Artifact Review panel. |
-| **`Ctrl+G`** | `edit.open_editor` | Launches your default `$EDITOR` shell to compose your prompt. |
-| **`Alt+J`** | `subagent.jump_to_waiting` | Instantly switches focus to the next subagent awaiting confirmation. |
-| **`Ctrl+K`** | `subagent.approve_fast` | Instantly approves the pending subagent action listed in the status alert. |
-| **`Ctrl+A`** | `—` | Moves the prompt insertion cursor to the beginning of the line. |
-| **`Ctrl+E`** | `—` | Moves the prompt insertion cursor to the end of the line. |
-| **`Ctrl+_`** / **`Ctrl+Shift+-`** | `edit.undo` | Reverts the last edit. |
-| **`Ctrl+Shift+Z`** | `edit.redo` | Redoes the last undone text operation. |
-| **`Ctrl+D`** | `—` | Forward delete (only when the prompt box is non-empty). |
-| **`F5`** | `voice.start_dictation` | Starts or stops [voice dictation](/docs/cli/commands/voice). |
+| Enter | `cli.enter` | Submits your prompt or active menu selection to the agent. |
+| Shift + Enter / Ctrl + J | `prompt.insert_newline` | Inserts a clean newline without submitting. |
+| Shift + Tab | `cli.cycle_mode` | Cycles between execution modes (`default` > `accept-edits` > `auto` > `plan`; `auto` only where available). |
+| Ctrl + V | `edit.paste` | Pastes graphic media files or clipboard blocks into the prompt. |
+| Ctrl + O | `view.toggle_trajectory` | Expands or collapses detailed tool reasoning outputs. |
+| Ctrl + R | `view.review_artifact` | Opens the Artifact Review panel. |
+| Ctrl + G | `edit.open_editor` | Opens your prompt in your external editor (the `editor` setting; defaults to `$EDITOR`). |
+| Alt + J | `subagent.jump_to_waiting` | Instantly switches focus to the next subagent awaiting confirmation. |
+| Ctrl + K | `subagent.approve_fast` | Instantly approves the pending subagent action listed in the status alert. |
+| Alt + S | `swarm.board` | Opens the [live swarm board](/docs/swarm#live-board) full screen. |
+| Alt + X | `swarm.dismiss` | Dismisses a finished swarm’s [status row](/docs/swarm#live-status-line). |
+| Ctrl + A | `—` | Moves the prompt insertion cursor to the beginning of the line. |
+| Ctrl + E | `—` | Moves the prompt insertion cursor to the end of the line. |
+| Ctrl + \_ / Ctrl + Shift + \- | `edit.undo` | Reverts the last edit. |
+| Ctrl + Shift + Z | `edit.redo` | Redoes the last undone text operation. |
+| Ctrl + D | `—` | Forward delete (only when the prompt box is non-empty). |
+| F5 | `voice.start_dictation` | Starts or stops [voice dictation](/docs/cli/commands/voice). |
 
 ### Navigation and scrolling
 
@@ -98,11 +104,11 @@ These keys are active inside select panels, menus, and scrollable text boxes.
 
 | Key | TUI Command | Action Behavior |
 | :-- | :-- | :-- |
-| **`↑`** / **`↓`** | `navigation.up` / `navigation.down` | Scrolls highlighted selections up or down by one item. |
-| **`PgUp`** / **`Shift+↑`** | `navigation.page_up` / `navigation.half_page_up` | Scrolls the active text viewport up by one page block. |
-| **`PgDn`** / **`Shift+↓`** | `navigation.page_down` / `navigation.half_page_down` | Scrolls the active text viewport down by one page block. |
-| **`←`** / **`→`** | `navigation.left` / `navigation.right` | Swaps pages inside multipage structures (like the Session Picker). |
-| **`Tab`** | `navigation.tab` | Confirms the highlighted slash-command autofill option. |
+| ↑ / ↓ | `navigation.up` / `navigation.down` | Scrolls highlighted selections up or down by one item. |
+| PgUp / Shift + ↑ | `navigation.page_up` / `navigation.half_page_up` | PgUp scrolls the active text viewport up one page; Shift + ↑ scrolls up half a page. |
+| PgDn / Shift + ↓ | `navigation.page_down` / `navigation.half_page_down` | PgDn scrolls the active text viewport down one page; Shift + ↓ scrolls down half a page. |
+| ← / → | `navigation.left` / `navigation.right` | Swaps pages inside multipage structures (like the Session Picker). |
+| Tab | `navigation.tab` | Confirms the highlighted slash-command autofill option. |
 
 ### Tool confirmations
 
@@ -110,9 +116,9 @@ These keys are active during confirmation prompts.
 
 | Key | TUI Command | Action Behavior |
 | :-- | :-- | :-- |
-| **`y`** | `confirm.yes` | Authorizes the proposed tool, command, or active artifact. |
-| **`n`** | `confirm.no` | Rejects the proposed tool, command, or active artifact. |
-| **`A`** | `—` | (Inside Review panel) Approves all generated artifacts in one action (built-in shortcut). |
+| y | `confirm.yes` | Authorizes the proposed tool, command, or active artifact. |
+| n | `confirm.no` | Rejects the proposed tool, command, or active artifact. |
+| Shift + A | `—` | (Inside Review panel) Approves all generated artifacts in one action (built-in shortcut). |
 
 ## Command-line flags
 
@@ -120,7 +126,7 @@ Pass startup flags when launching `agy` to configure the session or run non-inte
 
 | Flag | Default | Description |
 | :-- | :-- | :-- |
-| **`--mode`** | `""` | Set the agent [execution mode](/docs/cli/modes) for this session: `accept-edits`, `auto` (Preview; `v1.3.5+` on macOS and Linux, `v1.4.4+` on Windows; requires the terminal sandbox; not available for business or enterprise accounts), or `plan`. |
+| **`--mode`** | `""` | Set the agent [execution mode](/docs/cli/modes) for this session: `accept-edits`, `auto` (`v1.3.5+` on macOS and Linux, `v1.4.4+` on Windows; requires the terminal sandbox; not available for business or enterprise accounts; if it isn’t available, the CLI runs in `default` mode and `auto` is hidden from Shift+Tab and `/config`), or `plan`. |
 | **`--model`** | — | Select the model for the current CLI session (refer to `agy models`). |
 | **`--effort`** | — | Set the [reasoning effort](/docs/cli/commands/effort) for the current CLI session (`low` through `max`, depending on the model). |
 | **`--agent`** | — | Select the agent for the current CLI session (refer to `agy agents`). |
@@ -137,6 +143,7 @@ Pass startup flags when launching `agy` to configure the session or run non-inte
 | **`--sandbox`** | `false` | Run in a terminal sandbox with OS containment restrictions enabled (in `v1.4.4+`, no effect if the sandbox isn’t available on your machine). |
 | **`--dangerously-skip-permissions`** | `false` | Auto-approve all tool permission requests without prompting. |
 | **`--remote-control`** | `false` | Create a [Remote Control](/docs/remote-control?tab=cli) connection for the CLI session on startup. |
+| **`--remote-agent`** | `false` | Run the session’s conversations on [Remote Agents](/docs/remote-agents?tab=cli). With `--project`, they open in the remote project with that name or ID; otherwise, they open in this machine’s default remote project. |
 | **`--project`** | — | Project ID or project name for the current CLI session. |
 | **`--new-project`** | `false` | Create a new project for this session. |
 | **`--log-file`** | — | Override the CLI log file path. |
@@ -162,7 +169,7 @@ To get autocomplete and validation in editors such as VS Code, add `"$schema": "
 
 | Option Key Name | Value Type | System Default | Parameter Characteristics & Options |
 | :-- | :-- | :-- | :-- |
-| **`agentMode`** | string | `""` (default mode) | Default startup [execution mode](/docs/cli/modes): `""` (standard `default` mode), `"accept-edits"` (auto-approve workspace file edits), `"auto"` (Preview; `v1.3.5+` on macOS and Linux, `v1.4.4+` on Windows; requires the terminal sandbox; auto-approves edits, runs commands in the terminal sandbox by default, and automatically checks any command that needs to run outside the sandbox so safe, reversible commands run without prompting while irreversible actions still prompt; not available for business or enterprise accounts), or `"plan"` (research and outline steps before writing code). Can be overridden per session with `--mode`. |
+| **`agentMode`** | string | `""` (default mode) | Default startup [execution mode](/docs/cli/modes): `""` (standard `default` mode), `"accept-edits"` (auto-approve workspace file edits), `"auto"` (`v1.3.5+` on macOS and Linux, `v1.4.4+` on Windows; requires the terminal sandbox; auto-approves edits, runs commands in the terminal sandbox by default, and automatically checks any command that needs to run outside the sandbox so safe, reversible commands run without prompting while irreversible actions still prompt; not available for business or enterprise accounts; if it isn’t available, the CLI runs in `default` mode and `auto` is hidden from Shift+Tab and `/config`), or `"plan"` (research and outline steps before writing code). Can be overridden per session with `--mode`. |
 | **`colorScheme`** | string | `"terminal"` | Color theme: `"light"`, `"solarized light"`, `"colorblind-friendly light"`, `"dark"`, `"solarized dark"`, `"colorblind-friendly dark"`, `"tokyo night"`, or `"terminal"` (inherits native shell colors). |
 | **`altScreenMode`** | string | `"default"` | Screen buffer usage: `"default"` (renders the conversation inline and opens full-screen views in the alternate screen), `"always"` (runs the whole TUI in the alternate screen), or `"never"` (never uses the alternate screen; available only in `settings.json`). |
 | **`toolPermission`** | string | `"request-review"` | Global safety presets: `"request-review"` (prompts for write, bash, web, and MCP tools unless an allow rule covers them), `"proceed-in-sandbox"` (runs terminal commands without prompting when the sandbox is on and the command runs inside it; in `v1.4.4+`, behaves like `"request-review"` if the sandbox isn’t available), `"always-proceed"` (runs commands, web requests, and MCP tools without prompting unless an ask or deny rule matches), or `"strict"` (prompts before every tool action, including file reads, even if an allow rule matches). Deny rules apply in every mode. |
@@ -170,9 +177,9 @@ To get autocomplete and validation in editors such as VS Code, add `"$schema": "
 | **`notifications`** | boolean | `false` | Rings the terminal bell and shows a desktop notification when the agent needs your approval or an answer, or finishes its turn. |
 | **`showTips`** | boolean | `true` | Displays helpful usage tips while the agent is generating responses. |
 | **`showFeedbackSurvey`** | boolean | `true` | Displays periodic quality feedback surveys upon active task completions. |
-| **`editor`** | string | `"auto"` | External editor for opening artifacts and files and for composing prompts (`Ctrl+G`): `"auto"` (uses `$EDITOR`, then falls back to `vim`, or to `edit` and `notepad` on Windows), `"vim"`, `"emacs"`, or any other editor command. |
+| **`editor`** | string | `"auto"` | External editor for opening artifacts and files and for composing prompts (Ctrl + G): `"auto"` (uses `$EDITOR`, then falls back to `vim`, or to `edit` and `notepad` on Windows), `"vim"`, `"emacs"`, or any other editor command. |
 | **`editorMode`** | string | `"default"` | Prompt editing model: `"default"` (flat text editing) or `"vim"` (modal editing). Distinct from `editor`, which selects an external program. Refer to [Vim editor mode](/docs/cli/vim-editor-mode). |
-| **`vimInsertFirst`** | boolean | `false` | Starts Vim editing in Insert mode and makes a bare `Enter` submit. Requires `editorMode` set to `"vim"`. |
+| **`vimInsertFirst`** | boolean | `false` | Starts Vim editing in Insert mode and makes a bare Enter submit. Requires `editorMode` set to `"vim"`. |
 | **`allowNonWorkspaceAccess`** | boolean | `false` | Lets the agent read and edit files outside your workspace folders, subject to `toolPermission`, `agentMode`, and your permission rules. |
 | **`enableTerminalSandbox`** | boolean | `false` | Restricts all local execution commands launched by agents to OS containment rings (in `v1.4.4+`, no effect if the sandbox isn’t available on your machine). |
 | **`useG1Credits`** | boolean | `false` | Uses your AI credits for model requests after your plan’s quota runs out. Not available for business accounts. |

@@ -5,7 +5,7 @@ Official Codex docs (CLI, IDE extension, cloud): configuration, sandboxing, MCP,
 
 Consult through the `upstream-docs` skill (`find`, `outline`, `show`): read a section, not a file.
 
-Pages: 195
+Pages: 201
 
 - [administration.md](administration.md): Set access and policy boundaries for ChatGPT, Codex developer tools, APIs, plugins, and connected systems
 - [agent-approvals-security.md](agent-approvals-security.md): How to securely operate Codex with sandboxing, approvals, and network controls
@@ -62,7 +62,6 @@ Pages: 195
 - [enterprise/agent-security.md](enterprise/agent-security.md): Manage Global policies and environment settings for ChatGPT Work and Codex
 - [enterprise/analytics-api.md](enterprise/analytics-api.md): Understand aggregated workspace reporting and Analytics API access
 - [enterprise/apps-and-connectors.md](enterprise/apps-and-connectors.md): Choose plugins for your team's work and manage who can install them, use connected apps, and take actions
-- [enterprise/bedrock-through-litellm.md](enterprise/bedrock-through-litellm.md): Connect Codex to Amazon Bedrock through a LiteLLM gateway
 - [enterprise/chatgpt-slack-and-teams.md](enterprise/chatgpt-slack-and-teams.md): Install @ChatGPT, configure shared access, and manage your Slack or Microsoft Teams deployment.
 - [enterprise/chatgpt-space.md](enterprise/chatgpt-space.md): Manage Library sharing permissions in Space, understand existing-access limits, and help members share pages and slide decks.
 - [enterprise/chatgpt-work-cloud-security.md](enterprise/chatgpt-work-cloud-security.md): Review cloud execution boundaries, connected accounts, browser and network controls, data retention, and audit visibility for ChatGPT Work
@@ -73,7 +72,9 @@ Pages: 195
 - [enterprise/compliance-api.md](enterprise/compliance-api.md): Understand the purpose and administration boundary of the Compliance API
 - [enterprise/configuration-server.md](enterprise/configuration-server.md): Serve configuration defaults and required settings to Codex from an HTTPS endpoint you operate.
 - [enterprise/connect-to-a-gateway.md](enterprise/connect-to-a-gateway.md): Configure a model gateway and authenticate with native gateway OAuth, an API key, or a credential helper.
-- [enterprise/dots-admin-guide.md](enterprise/dots-admin-guide.md): Set up dots access, apps, and Slack for your Enterprise workspace.
+- [enterprise/desktop-browser-policies.md](enterprise/desktop-browser-policies.md): Deploy and verify supported Chrome policies for the built-in desktop browser
+- [enterprise/dots-admin-guide.md](enterprise/dots-admin-guide.md): Configure dots access, manage personal dots, and review usage and admin activity in your Enterprise workspace.
+- [enterprise/dots-security.md](enterprise/dots-security.md): Review dots security controls, data handling, and audit and offboarding considerations
 - [enterprise/dynamic-groups.md](enterprise/dynamic-groups.md): Automatically manage group membership using SCIM user attributes
 - [enterprise/education-plans.md](enterprise/education-plans.md): Compare education plans, help members get access, and manage work across multiple workspaces.
 - [enterprise/gateway-compatibility.md](enterprise/gateway-compatibility.md): Check the gateway requirements for Codex
@@ -105,6 +106,7 @@ Pages: 195
 - [environments/git-worktrees.md](environments/git-worktrees.md): Use Git worktrees in Codex to run chats in parallel
 - [environments/local-environment.md](environments/local-environment.md): Configure common actions and setup scripts for worktrees
 - [environments/modes.md](environments/modes.md): Choose where a Codex chat runs and how its files stay isolated
+- [environments/network-file-systems.md](environments/network-file-systems.md): Configure a shared Codex home for interactive work across Linux hosts.
 - [extend/mcp.md](extend/mcp.md): Connect ChatGPT and Codex to your tools and information.
 - [extend/record-and-replay.md](extend/record-and-replay.md): Show ChatGPT or Codex a workflow once and turn it into a reusable skill
 - [feature-maturity.md](feature-maturity.md): How to interpret feature maturity levels in ChatGPT releases
@@ -125,7 +127,6 @@ Pages: 195
 - [mcp-server.md](mcp-server.md): Migrate from the removed Codex MCP server to the app server
 - [migrate-custom-gpts.md](migrate-custom-gpts.md): Guidance for Enterprise admins preparing their workspace and GPT creators migrating, testing, and sharing replacement plugins.
 - [mobile.md](mobile.md): Start, guide, approve, and review Codex tasks on a connected computer from your phone.
-- [model-catalogs.md](model-catalogs.md): Fetch version-specific Codex defaults, apply provider overrides, and serve a model catalog
 - [model-selection.md](model-selection.md): Find the right model for your use case
 - [models.md](models.md): Meet the AI models that power ChatGPT Work and Codex
 - [non-interactive-mode.md](non-interactive-mode.md): Use `codex exec` to run Codex in scripts and CI
@@ -145,7 +146,7 @@ Pages: 195
 - [reference/troubleshooting.md](reference/troubleshooting.md): FAQ and fixes for common ChatGPT desktop app issues
 - [remote-connections.md](remote-connections.md): Use Codex on mobile to access work on a connected computer, or connect the ChatGPT desktop app to projects over SSH
 - [sandboxing.md](sandboxing.md): How sandboxing works across ChatGPT and Codex clients
-- [sandboxing/auto-review.md](sandboxing/auto-review.md): How Codex routes sandbox-boundary approvals through a reviewer agent
+- [sandboxing/auto-review.md](sandboxing/auto-review.md): How Codex reviews approval requests and how to configure the reviewer's policy
 - [security-administration.md](security-administration.md): Manage permissions, security, and safety controls for ChatGPT and Codex developer tools
 - [security.md](security.md): Scan code, investigate findings, and review fixes with Codex Security.
 - [security/cli.md](security/cli.md): Sign in, scan a local repository, and review the scan scope and findings.
@@ -155,7 +156,9 @@ Pages: 195
 - [security/cli/ci/gitlab.md](security/cli/ci/gitlab.md): Scan GitLab merge requests and branches, publish SARIF findings, and optionally open draft merge requests with verified fixes.
 - [security/cli/faq.md](security/cli/faq.md): Answers about Codex Security scans, findings, false positives, coverage, cost, and CI.
 - [security/cli/reference.md](security/cli/reference.md): Arguments, output formats, scan artifacts, and exit codes for the Codex Security CLI.
-- [security/faq.md](security/faq.md): Understand Cloud scan results, validation, patches, and commit monitoring.
+- [security/faq.md](security/faq.md): Understand cloud scan results, validation, patches, and commit monitoring.
+- [security/findings-and-fixes.md](security/findings-and-fixes.md): Triage a finding, compare evidence from different scanners, and review a patch before opening a pull request.
+- [security/notifications.md](security/notifications.md): Send Daybreak scan events to a workspace webhook.
 - [security/plugin.md](security/plugin.md): Install the Codex Security plugin, run your first read-only scan, and review the result in Codex.
 - [security/plugin/changelog.md](security/plugin/changelog.md): Notable user-facing changes to the Codex Security plugin.
 - [security/plugin/code-changes.md](security/plugin/code-changes.md): Review pull requests and local changes for security regressions manually or in CI/CD.
@@ -167,9 +170,10 @@ Pages: 195
 - [security/plugin/triage-backlog.md](security/plugin/triage-backlog.md): Review existing security findings against a repository and order follow-up work.
 - [security/plugin/vulnerability-reports.md](security/plugin/vulnerability-reports.md): Turn findings, disclosure notes, source, and proof-of-concept material into vulnerability reports with supporting evidence.
 - [security/plugin/workbench.md](security/plugin/workbench.md): Start security scans, review findings, and inspect repository history in the Codex desktop app.
+- [security/scanner-imports.md](security/scanner-imports.md): Connect Wiz, Snyk Open Source, or Endor Labs, upload a scanner report, and choose which assessed findings to share.
 - [security/sdk.md](security/sdk.md): Run Codex Security scans from TypeScript, select targets, inspect results, and manage scan lifecycle.
 - [security/security-review.md](security/security-review.md): Configure and run in-depth security reviews for GitHub pull requests.
-- [security/setup.md](security/setup.md): Install Codex Security Cloud, scan a GitHub repository, and review findings.
+- [security/setup.md](security/setup.md): Connect GitHub, run your first security scan, and choose how to check future changes.
 - [security/threat-model.md](security/threat-model.md): Add deployment context and security assumptions to a monitored repository's threat model.
 - [sign-in-with-chatgpt.md](sign-in-with-chatgpt.md): Use your ChatGPT account in other apps, with usage limits that keep you in control.
 - [sites.md](sites.md): Build and share a website by describing it in ChatGPT or Codex
@@ -196,9 +200,11 @@ Pages: 195
 - [whats-new/devday-2026.md](whats-new/devday-2026.md): DevDay updates across ChatGPT, Codex, Sites, plugins, the API, and Enterprise.
 - [whats-new/dots-october-28-2026.md](whats-new/dots-october-28-2026.md): Reach your dot through iMessage or RCS on Android.
 - [whats-new/dots-october-9-2026.md](whats-new/dots-october-9-2026.md): This week in dots: mobile setup, more context from ChatGPT and Codex, and improvements to browsing, notifications, and everyday use.
+- [whats-new/november-2-6-2026.md](whats-new/november-2-6-2026.md): Reply and share on iOS, give feedback in conversation, and continue tasks more reliably on Windows.
 - [whats-new/october-26-30-2026.md](whats-new/october-26-30-2026.md)
 - [whats-new/october-5-9-2026.md](whats-new/october-5-9-2026.md)
 - [whats-new/september-28-october-2-2026.md](whats-new/september-28-october-2-2026.md)
 - [windows/windows-app.md](windows/windows-app.md): Use the ChatGPT desktop app on Windows with native sandbox and PowerShell support
 - [windows/windows-sandbox.md](windows/windows-sandbox.md): Configure and troubleshoot the native Codex sandbox on Windows
 - [windows/wsl.md](windows/wsl.md): Run and troubleshoot Codex in Windows Subsystem for Linux
+- [working-with-agents.md](working-with-agents.md): Understand how AI agents work and how to guide them while staying in control.

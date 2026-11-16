@@ -29,7 +29,7 @@ In most terminals you can also press Shift+Enter, but support varies by terminal
 
 | Terminal | Shift+Enter for newline |
 | :- | :- |
-| Ghostty, Kitty, iTerm2, WezTerm, Warp, Apple Terminal, Windows Terminal | Works without setup |
+| Ghostty, Kitty, iTerm2, WezTerm, Warp, Windows Terminal | Works without setup |
 | Other terminals that support the kitty keyboard protocol, such as foot and Alacritty 0.16 or later | Works without setup. Requires Claude Code v2.1.269 or later |
 | VS Code, Cursor, Devin Desktop, Alacritty before 0.16, Zed | Run `/terminal-setup` once |
 | gnome-terminal, JetBrains IDEs such as PyCharm and Android Studio | Not available; use Ctrl+J or `\` then Enter |
@@ -77,7 +77,7 @@ When Claude finishes a task or pauses for a permission prompt, and you appear to
 
 By default, Claude Code sends a desktop notification in some terminals, and a bell character or nothing in others:
 
-* **Ghostty, Kitty, and iTerm2**: a desktop notification, which iTerm2 shows only after you turn on its alert settings.
+* **Ghostty, Kitty, and iTerm2, when Claude Code detects them**: a desktop notification, which iTerm2 shows only after you turn on its alert settings.
 * **Apple Terminal**: no sound; a silent bell character when Claude Code finds "Audible bell" off in the front Terminal window's profile, otherwise nothing. That bell character shows as a window flash, or a Dock bounce while Terminal is in the background, if that profile's "Visual bell" or Dock bounce option is on.
 * **Other terminals**: nothing.
 
@@ -89,7 +89,7 @@ To make Claude Code send the bell character whatever the terminal or profile, se
 }
 ```
 
-The desktop notification reaches your local machine over SSH, so a remote session can still alert you. Ghostty and Kitty forward it to your OS notification center without further setup. iTerm2 requires you to enable forwarding:
+Over SSH from a terminal running outside tmux, set [`preferredNotifChannel`](https://code.claude.com/docs/en/settings-reference#preferrednotifchannel) to your local terminal's value, `"iterm2"`, `"kitty"`, or `"ghostty"`, on the machine running Claude Code. The desktop notification then reaches your local machine. Ghostty and Kitty forward it to your OS notification center without further setup. iTerm2 requires you to enable forwarding:
 
 **1. Open iTerm2 notification settings**
 
@@ -134,7 +134,7 @@ The tab title doesn't start with a status glyph in a terminal that reports suppo
 
 ## Configure tmux
 
-When Claude Code runs inside tmux, by default Shift+Enter submits instead of inserting a newline, and desktop notifications and the [progress bar](https://code.claude.com/docs/en/settings-reference.md#terminalprogressbarenabled) never reach the outer terminal. Add these lines to `~/.tmux.conf`, then run `tmux source-file ~/.tmux.conf` to apply them to the running server:
+When Claude Code runs inside tmux, by default Shift+Enter submits instead of inserting a newline, and desktop notifications don't reach the outer terminal. Add these lines to `~/.tmux.conf`, then run `tmux source-file ~/.tmux.conf` to apply them to the running server:
 
 ```bash ~/.tmux.conf theme={null}
 set -g allow-passthrough on
@@ -143,7 +143,7 @@ set -s extended-keys on
 set -as terminal-features 'xterm*:extkeys'
 ```
 
-The `allow-passthrough` line lets notifications and progress updates reach the outer terminal instead of being swallowed by tmux. The `extended-keys` lines let tmux distinguish Shift+Enter from plain Enter so the newline shortcut works.
+To send notifications from a visible pane to the outer terminal, keep the `allow-passthrough` line and set [`preferredNotifChannel`](https://code.claude.com/docs/en/settings-reference#preferrednotifchannel) to `"iterm2"`, `"kitty"`, or `"ghostty"`. With this sample, a pane in a window you aren't viewing sends none. The `extended-keys` lines let tmux distinguish Shift+Enter from plain Enter so the newline shortcut works.
 
 A [mod's `Image`](https://code.claude.com/docs/en/plugins/mods/reference#elements) needs the `allow-passthrough` and `focus-events` lines, along with the other [requirements for drawing inside tmux](https://code.claude.com/docs/en/plugins/mods/gallery.md#draw-an-image-inside-tmux). After you add the lines, also detach from tmux, attach again, and restart Claude Code.
 
@@ -335,7 +335,7 @@ In a wide terminal, each line of prose in Claude's responses runs the full width
 
 When you paste more than 800 characters or more than three lines into the prompt, Claude Code collapses the input to a placeholder such as `[Pasted text #1 +120 lines]` so the input box stays usable, and still sends the full content when you submit. For very large inputs such as entire files or long logs, write the content to a file and ask Claude to read it instead of pasting. The conversation transcript stays readable and Claude can refer to the file by path in later turns. The VS Code integrated terminal can also drop characters from very large pastes before they reach Claude Code, so use a file there.
 
-If the paste carries [invisible Unicode characters](https://code.claude.com/docs/en/interactive-mode.md#invisible-characters-in-prompts), Claude Code removes them when you press Enter and puts the cleaned prompt back in the input box for you to send with another Enter.
+If the paste carries [invisible Unicode characters](https://code.claude.com/docs/en/interactive-mode.md#invisible-characters-in-prompts), Claude Code removes them when you press Enter.
 
 ### How Claude treats pasted text
 
@@ -349,7 +349,7 @@ When you delete with a word or line shortcut such as `Ctrl+W` or `Ctrl+K`, or wi
 
 Claude Code keeps the content behind each `[Pasted text #N]` placeholder under `~/.claude/paste-cache/`, so when you recall a prompt from [command history](https://code.claude.com/docs/en/interactive-mode.md#command-history) and resubmit it, the full pasted content is sent again, including in a later session.
 
-Cache files older than [`cleanupPeriodDays`](https://code.claude.com/docs/en/settings-reference#cleanupperioddays) are deleted under the [retention sweep rules](https://code.claude.com/docs/en/claude-directory.md#cleaned-up-automatically), so a recalled prompt can reference pasted text that no longer exists. When you submit such a prompt, Claude Code never sends the literal `[Pasted text #N]` string, and shows a notification naming the missing paste:
+Cache files older than [`cleanupPeriodDays`](https://code.claude.com/docs/en/settings-reference#cleanupperioddays) are deleted under the [retention sweep rules](https://code.claude.com/docs/en/claude-directory.md#cleaned-up-automatically), so a recalled prompt can reference pasted text that no longer exists. When you submit such a prompt, Claude Code doesn't send the literal `[Pasted text #N]` string, and shows a notification naming the missing paste:
 
 * In a plain prompt with text remaining, Claude Code removes the placeholder and sends the remaining text.
 * In a [shell mode](https://code.claude.com/docs/en/interactive-mode.md#shell-mode-with-prefix) command or a `/` command, where the removal would change what runs, and in any prompt the removal leaves empty, Claude Code cancels the submission and keeps the original text in the input, with the placeholder still in it. Delete the placeholder or edit the command, then resubmit.

@@ -39,7 +39,7 @@
 | `Esc` | Interrupt Claude, or close a dialog | Stop the current response or tool call mid-turn so you can redirect. Claude keeps the work done so far. If you have [messages queued](#queue-messages-while-claude-works), Claude Code sends them next. When a dialog is open, `Esc` closes the dialog. While a footer item is selected, such as a row in the [subagent panel](https://code.claude.com/docs/en/sub-agents.md#run-subagents-in-foreground-or-background) below the prompt, `Esc` [deselects it](https://code.claude.com/docs/en/keybindings.md#footer-actions) instead of interrupting. On a permission prompt, `Esc` declines the action, the same as [**No** without a comment](https://code.claude.com/docs/en/permissions.md#add-a-comment-when-you-answer-a-permission-prompt) |
 | `Esc` + `Esc` | Clear input draft, or rewind | When the prompt input contains text, double `Esc` clears it and saves the draft to history so `Up` recalls it. When the input is empty, double `Esc` opens the [rewind menu](https://code.claude.com/docs/en/checkpointing.md) to restore or summarize code and conversation from a previous point |
 | `Ctrl+Enter` or `Ctrl+X Ctrl+S` | Send queued messages now | Sends your [queued messages](#queue-messages-while-claude-works), and your draft with them, right away. [When Claude Code sends what you queued](#when-claude-code-sends-what-you-queued) covers what happens to the turn Claude is working on. In [shell mode](#shell-mode-with-prefix), the key only queues your command. In terminals that don't report extended keys, `Ctrl+Enter` arrives as plain `Enter`; `Ctrl+X Ctrl+S` works in any terminal. Requires Claude Code v2.1.275 or later |
-| `Shift+Tab`, or `Alt+M` on Windows when the Node or Bun runtime doesn't enable VT input mode | Cycle permission modes | Cycle through `default` (labeled Manual in the mode indicator), `acceptEdits`, `plan`, and, when available, `bypassPermissions` and then `auto`. From `auto`, the first press switches to `default`. See [permission modes](https://code.claude.com/docs/en/permission-modes.md). On a file permission prompt, the same key closes an open [comment field](https://code.claude.com/docs/en/permissions.md#add-a-comment-when-you-answer-a-permission-prompt). With no field open, it selects the option that allows the action for the rest of the session, when the prompt offers that option |
+| `Shift+Tab`, or `Alt+M` on Windows when the Node or Bun runtime doesn't enable VT input mode | Cycle permission modes | Cycle through `default` (labeled Manual in the mode indicator), `acceptEdits`, and `plan`, then `bypassPermissions` and `auto` where available. See [permission modes](https://code.claude.com/docs/en/permission-modes.md). On a file permission prompt, the same key closes an open [comment field](https://code.claude.com/docs/en/permissions.md#add-a-comment-when-you-answer-a-permission-prompt). With no field open, it selects the option that allows the action for the rest of the session, when the prompt offers that option. At the plan approval prompt, it approves the plan |
 | `Option+P` (macOS) or `Alt+P` (Windows/Linux) | Switch model | Switch models without clearing your prompt |
 | `Option+T` (macOS) or `Alt+T` (Windows/Linux) | Toggle extended thinking | Enable or disable extended thinking mode. Has no effect on Opus 5.5, Sonnet 5.5, Haiku 5.5, or the Fable models, which always use extended thinking. Works on macOS without configuring Option as Meta |
 | `Option+O` (macOS) or `Alt+O` (Windows/Linux) | Toggle fast mode | Enable or disable [fast mode](https://code.claude.com/docs/en/fast-mode.md) |
@@ -84,7 +84,7 @@ You can't remap these shortcuts in the [keybindings configuration file](https://
 | :- | :- | :- |
 | Quick escape | `\` + `Enter` | Works in all terminals |
 | Option key | `Option+Enter` | After enabling [Option as Meta](https://code.claude.com/docs/en/terminal-config.md#enable-option-key-shortcuts-on-macos) on macOS |
-| Shift+Enter | `Shift+Enter` | Native in iTerm2, WezTerm, Ghostty, Kitty, Warp, Apple Terminal, Windows Terminal. For other terminals, see [Enter multiline prompts](https://code.claude.com/docs/en/terminal-config.md#enter-multiline-prompts) |
+| Shift+Enter | `Shift+Enter` | Native in iTerm2, WezTerm, Ghostty, Kitty, Warp, Windows Terminal. For other terminals, see [Enter multiline prompts](https://code.claude.com/docs/en/terminal-config.md#enter-multiline-prompts) |
 | Control sequence | `Ctrl+J` | Works in any terminal without configuration |
 | Paste mode | Paste directly | For code blocks, logs |
 
@@ -139,8 +139,6 @@ A plugin skill matches on its bare name too, so `/deploy` finds a skill named `m
 ## Vim editor mode
 
 Enable vim-style editing via `/config` → Editor mode.
-
-Claude Code keeps your vim mode and cursor position when you toggle the [transcript viewer](#transcript-viewer) with `Ctrl+O` or open and close a panel such as `/config`. If you leave the prompt in NORMAL mode, it's still in NORMAL mode when you return, with the cursor where you left it.
 
 ### Mode switching
 
@@ -254,7 +252,7 @@ Press `v` for character-wise selection or `V` for line-wise selection. Motions e
 | `d`/`x` | Delete selection |
 | `y` | Yank selection |
 | `c`/`s` | Change selection |
-| `p` | Replace selection with register contents |
+| `p`/`P` | Replace selection with register contents |
 | `r{char}` | Replace every selected character with `{char}` |
 | `~`/`u`/`U` | Toggle, lowercase, or uppercase selection |
 | `>`/`<` | Indent or dedent selected lines |
@@ -290,10 +288,12 @@ To get back a draft you cleared with `Ctrl+C`, press `Up`, either right away or 
 
 ### Reverse search with Ctrl+R
 
-Press `Ctrl+R` to interactively search through your command history. In [fullscreen rendering](https://code.claude.com/docs/en/fullscreen.md), `Ctrl+R` opens a search dialog instead: type to filter, press `Up` and `Down` to move through matches, and press `Ctrl+S` to cycle the scope through this session, this project, and all projects. Press `Enter` or `Tab` to place a match in the prompt input, or `Esc` to cancel. The steps below describe the classic renderer's inline search:
+Press `Ctrl+R` to interactively search through your command history. In [fullscreen rendering](https://code.claude.com/docs/en/fullscreen.md), `Ctrl+R` opens a search dialog instead. Type to filter in the dialog, and press `Up` and `Down` to move through the list of matches, with a preview pane showing the start of the highlighted match.
+
+In the dialog, press `Ctrl+S` to cycle the scope through this session, this project, and all projects. Press `Enter` or `Tab` to place a match in the prompt input, or `Esc` to cancel. The steps below describe the classic renderer's inline search:
 
 1. **Start search**: press `Ctrl+R` to activate reverse history search
-2. **Type query**: enter text to search for in previous commands. The search term is highlighted in matching results
+2. **Type query**: enter text to search for in previous commands. The current match appears in the prompt input.
 3. **Navigate matches**: press `Ctrl+R` again to cycle through older matches
 4. **Search scope**: the inline search always searches prompts from all projects
 5. **Accept match**:
@@ -303,9 +303,7 @@ Press `Ctrl+R` to interactively search through your command history. In [fullscr
    * Press `Ctrl+C` to cancel and restore your original input
    * Press `Backspace` on empty search to cancel
 
-The inline search scans your full prompt history, newest first, with duplicates collapsed to the newest occurrence. The fullscreen dialog searches your whole prompt history in the selected scope, newest first, with duplicates collapsed to the newest occurrence: the most recent prompts appear immediately, and matches from older prompts fill in as Claude Code loads the rest. Matching prompts display with the search term highlighted, so you can find and reuse previous inputs.
-
-Accepting a match or canceling the search takes effect immediately, even while Claude Code is still loading the history.
+To find an earlier prompt when all you remember is something long you pasted into it, such as an error log, press `Ctrl+R` and type a word from the paste. Requires Claude Code v2.1.314 or later.
 
 ## Background Bash commands
 
@@ -601,7 +599,7 @@ If more than one of the three places has a `spellcheck` setting, Claude Code use
 
 ### What Claude Code underlines
 
-Shortly after you pause typing, Claude Code underlines the words the dictionary doesn't know. It leaves the word you're still typing alone until you move past it, and it never changes your text. It also skips text that looks like code:
+Shortly after you pause typing, Claude Code underlines the words the dictionary doesn't know. It leaves the word you're still typing alone until you move past it. It also skips text that looks like code:
 
 * Commands such as `/help`, `@` mentions, URLs, file paths, and flags such as `--verbose`
 * Words with digits, underscores, or a capital letter after the first, and text in backticks
@@ -624,9 +622,12 @@ To find out which of these happened, start `claude --debug` with spell checking 
 
 Pasted text can carry Unicode characters that a terminal draws as nothing at all, such as tag characters, bidirectional controls, and zero-width spaces, so a prompt can contain text you never see. To keep copied text from carrying instructions your terminal doesn't draw, Claude Code removes those characters when you press Enter, before sending anything. It cleans both the prompt and the contents of any collapsed [pasted-text reference](https://code.claude.com/docs/en/terminal-config.md#paste-large-content) the prompt includes. Claude Code keeps the joiners that Persian and Indic scripts write and the selectors inside emoji sequences.
 
-If Claude Code removed anything, that Enter sends nothing. The cleaned prompt goes back into the input box with a notice such as `Removed 3 invisible characters · review and press Enter to send`, and pressing Enter again sends the text as shown.
+If Claude Code removed anything, it either sends the cleaned prompt or puts it back for you to review. To tell which, check the notice:
 
-When you pass a prompt on the command line, as in `claude "fix the login bug"`, Claude Code doesn't wait for a second Enter. It removes the characters, shows a notice, and sends the cleaned prompt. If the cleaned prompt would begin with `/`, Claude Code puts it in the input box for you to review and send instead.
+* **`Removed 3 invisible characters from your prompt`**: if the input box is empty, your prompt was sent without those characters. If the prompt is still there, it wasn't sent, so press Enter again.
+* **`Removed 3 invisible characters · review and press Enter to send`**: nothing was sent. Read the cleaned prompt in the input box, then press Enter to send it as shown.
+
+When you pass a prompt on the command line, as in `claude "fix the login bug"`, Claude Code removes the characters, shows a notice, and sends the cleaned prompt. If the cleaned prompt would begin with `/`, Claude Code puts it in the input box for you to review and send instead.
 
 ## Review changes with /diff
 
@@ -711,7 +712,13 @@ Once the answer appears, the overlay accepts these keys.
 
 In an attached [background session](https://code.claude.com/docs/en/agent-view.md#attach-to-a-session), `Left` detaches and returns you to agent view, even while the answer is still arriving. The side question keeps running while you're away. The next time you attach to the session, the overlay reopens with the side question, or with its answer. Before v2.1.257, `Left` didn't detach there.
 
-`/btw` sees your full conversation but has no tools. A [subagent](https://code.claude.com/docs/en/sub-agents.md) has tools and starts from the prompt it receives, or, for a [fork](https://code.claude.com/docs/en/sub-agents.md#fork-the-current-conversation), from a copy of this conversation. Use `/btw` to ask about what Claude already knows from this session; use a subagent to go find out something new.
+`/btw` sees your full conversation, or the [subagent transcript you have open](#ask-btw-about-a-subagent), but has no tools. A [subagent](https://code.claude.com/docs/en/sub-agents.md) has tools and starts from the prompt it receives. A [fork](https://code.claude.com/docs/en/sub-agents.md#fork-the-current-conversation) starts from a copy of this conversation. Use `/btw` to ask about what Claude already knows from this session; use a subagent to go find out something new.
+
+### Ask /btw about a subagent
+
+With a [subagent's transcript open](https://code.claude.com/docs/en/sub-agents.md#observe-and-steer-running-forks), Claude answers `/btw` from that transcript instead of the main conversation, so you can ask what the subagent did. A later `/btw` from that transcript sees only the side questions you asked from it. Requires Claude Code v2.1.314 or later.
+
+From an [agent team](https://code.claude.com/docs/en/agent-teams.md) teammate's transcript, Claude answers from the main conversation.
 
 ## Task list
 
@@ -752,7 +759,9 @@ Keep the session open. What happens next depends on how the wait ends:
 * **After your computer slept**: if it slept for more than about 30 minutes and the limit reset while it slept, the first line reads `Your usage limit has reset` and the second reads `Press enter to continue`. Press `Enter` to continue. After a shorter sleep, or one that ended before the reset, Claude Code continues on its own.
 * **Early**: when you finish adding [usage credits](https://code.claude.com/docs/en/costs.md#add-usage-credits-to-your-subscription) with `/usage-credits`, sign back in after `/upgrade`, or switch models with `/model` during the wait, Claude Code checks whether usage is available again and continues right away if it is. It doesn't check after an upgrade or purchase you make in a browser on your own. Under [`opusplan`](https://code.claude.com/docs/en/model-config#opusplan-model-setting) and other model settings that run plan mode on a different model, Claude Code waits for the reset instead.
 
-The continued task runs like any other turn. Claude Code still asks for [permissions](https://code.claude.com/docs/en/permissions.md) as usual, so the task can stop on a prompt while you're away. If it hits the limit again, Claude Code re-arms the wait on its own at most twice in a row, then stops and shows `Automatic continue stopped after repeated usage-limit hits · /rate-limit-options to try again`.
+In the continued task, Claude Code still asks for [permissions](https://code.claude.com/docs/en/permissions.md) as usual, so the task can stop on a prompt while you're away. If the task hits the limit again, the wait starts again.
+
+After three automatic continuations, automatic continue stops and the `Automatic continue stopped after repeated usage-limit hits` notification appears. Run `/rate-limit-options` to choose what to do next. When you send another prompt, or pick a wait from that menu, the count starts over. Automatic continue also stops after three continuations for a [`/goal`](https://code.claude.com/docs/en/goal) or [session-scoped scheduled task](https://code.claude.com/docs/en/scheduled-tasks.md) that runs through several reset windows.
 
 ### Cancel the wait
 

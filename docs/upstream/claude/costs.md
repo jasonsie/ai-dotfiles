@@ -23,7 +23,9 @@ This page covers Claude Code usage only: how to [track your costs](#track-your-c
 >
 > The Session block in `/usage` shows API token usage and is intended for API users. Claude Pro, Max, and Ultra subscribers have usage included in their subscription, so the session cost figure isn't relevant for billing purposes. Subscribers see plan usage bars, activity stats, and a usage breakdown on the same screen.
 
-The Session block at the top of `/usage` shows detailed token usage statistics for your current session. Claude Code computes the dollar figure locally from token counts at list price, unless a [`modelPricing`](https://code.claude.com/docs/en/settings-reference#modelpricing) table is in effect. An administrator sets one in your organization's managed settings so the figure uses your contracted rates, and while a table is in effect the `Total cost` line carries the note `at your organization's configured rates`. The figure is an estimate, so for authoritative billing see the Usage page in the [Claude Console](https://platform.claude.com/usage).
+The Session block at the top of `/usage` shows detailed token usage statistics for your current session.
+
+Claude Code computes the dollar figure locally from token counts at list price, unless a [`modelPricing`](https://code.claude.com/docs/en/settings-reference#modelpricing) table is in effect. An administrator sets one in your organization's managed settings so the figure uses your contracted rates, and while a table is in effect the `Total cost` line carries the note `at your organization's configured rates`. The figure is an estimate, so for authoritative billing see [Manage costs for your organization](#manage-costs-for-your-organization).
 
 ```text theme={null}
 Total cost:            $0.55
@@ -141,7 +143,7 @@ For Team and Enterprise members without billing access, the confirmation appears
 
 If you run `/usage-credits` again while your earlier request is waiting on an admin, Claude Code tells you a request has already been sent rather than sending a duplicate. After an admin dismisses your request, running the command again sends a new one. Before v2.1.222, a dismissed request also blocked new requests.
 
-On Pro and Max plans, when you reach your spend limit with usage credits still available, Claude Code prompts you to raise or remove the limit without leaving the CLI. If the server rejects the change, see [Could not update your spend limit](https://code.claude.com/docs/en/errors.md#could-not-update-your-spend-limit).
+On Pro, Max, and Ultra plans, when you reach your spend limit with usage credits left, Claude Code prompts you to raise or remove the limit without leaving the CLI. If the server rejects the change, see [Could not update your spend limit](https://code.claude.com/docs/en/errors.md#could-not-update-your-spend-limit).
 
 ## Manage costs for your organization
 
@@ -152,7 +154,7 @@ The table maps each setup to where you see spend, where you cap it, and how you 
 | Your setup | See spend | Cap spend | Per-user reporting |
 | :- | :- | :- | :- |
 | [Claude for Teams or Enterprise](#claude-for-teams-and-enterprise) | [Spend report in org analytics](https://support.claude.com/en/articles/12883420-view-usage-analytics-for-team-and-enterprise-plans) | Spend limits in admin settings | [Spend report CSV](https://support.claude.com/en/articles/12883420-view-usage-analytics-for-team-and-enterprise-plans); [Enterprise Analytics API](https://platform.claude.com/docs/en/api/admin/analytics) on Enterprise |
-| [Claude Console (API)](#claude-console) | [Console usage page](https://platform.claude.com/usage) | Workspace spend limits | [Console dashboard](https://platform.claude.com/claude-code), [Claude Code Analytics API](https://platform.claude.com/docs/en/build-with-claude/claude-code-analytics-api) |
+| [Claude Console (API)](#claude-console) | [Console Cost page](https://platform.claude.com/cost) | Workspace spend limits | [Console dashboard](https://platform.claude.com/claude-code), [Claude Code Analytics API](https://platform.claude.com/docs/en/build-with-claude/claude-code-analytics-api) |
 | [Amazon Bedrock, Google Cloud's Agent Platform, or Microsoft Foundry](#cloud-providers) | Your cloud billing console | Your cloud's budget controls | [OpenTelemetry](https://code.claude.com/docs/en/monitoring-usage.md) or an [LLM gateway](https://code.claude.com/docs/en/llm-gateway) |
 
 [OpenTelemetry export](https://code.claude.com/docs/en/monitoring-usage.md) works on every setup and is the only option that streams per-user token and cost metrics into your own observability stack in near real time.
@@ -196,7 +198,7 @@ API organizations manage Claude Code spend through [workspaces](https://platform
 >
 > For organizations with custom rate limits, Claude Code traffic in this workspace counts toward your organization's overall API rate limits. You can set a [workspace rate limit](https://platform.claude.com/docs/en/api/rate-limits#setting-lower-limits-for-workspaces) on this workspace's Limits page in the Claude Console to cap Claude Code's share and protect other production workloads.
 
-For per-user reporting, the [Console dashboard](https://platform.claude.com/claude-code) shows spend and accepted lines per member, and the [Claude Code Analytics API](https://platform.claude.com/docs/en/build-with-claude/claude-code-analytics-api) returns the same daily per-user metrics programmatically with an [Admin API key](https://platform.claude.com/settings/admin-keys). See [analytics for API customers](https://code.claude.com/docs/en/analytics.md#access-analytics-for-api-customers).
+For per-user reporting, the [Console dashboard](https://platform.claude.com/claude-code) shows spend and lines accepted per member, and the [Claude Code Analytics API](https://platform.claude.com/docs/en/build-with-claude/claude-code-analytics-api) returns daily per-user metrics programmatically with an [Admin API key](https://platform.claude.com/settings/admin-keys). See [analytics for API customers](https://code.claude.com/docs/en/analytics.md#access-analytics-for-api-customers).
 
 #### Rate limit recommendations
 
@@ -237,7 +239,7 @@ Developers usually bring limit questions to their admin, so it helps to know whi
   * Run `/usage-credits` to request usage beyond the allowance, if you have [usage credits](https://support.claude.com/en/articles/12429409-extra-usage-for-paid-claude-plans) turned on.
   * On Claude Code v2.1.234 or later, [wait and continue the interrupted task automatically after the reset](https://code.claude.com/docs/en/interactive-mode.md#wait-for-a-usage-limit-to-reset); that section lists when Claude Code starts the wait on its own and when the developer picks it from `/rate-limit-options`. To control for your fleet whether Claude Code starts that wait on its own, set [`autoContinueAtUsageLimit`](https://code.claude.com/docs/en/settings-reference#autocontinueatusagelimit) in [managed settings](https://code.claude.com/docs/en/settings.md#settings-precedence).
 * **"You've hit your individual spend limit", "org's monthly spend limit", or "team's shared budget"**: the developer's request would be billed to usage credits, and those credits have reached a spend limit you set. To let the developer continue, go to [**Organization settings > Usage**](https://claude.ai/admin-settings/usage) and increase the limit the message names. When the message also names a plan reset time, the developer can instead wait until then. See [the error reference](https://code.claude.com/docs/en/errors.md#youve-hit-your-monthly-spend-limit) for each variant.
-* **A spend limit message from a [Claude apps gateway](https://code.claude.com/docs/en/claude-apps-gateway)**: the developer passed a spend cap you set on your self-hosted gateway, and the gateway blocks their requests until the period resets or you raise the cap. See [gateway spend limits](https://code.claude.com/docs/en/claude-apps-gateway-spend-limits.md) for caps, reset schedules, and the message the developer sees.
+* **A spend limit message from a [Claude apps gateway](https://code.claude.com/docs/en/claude-apps-gateway)**: the developer passed a spend cap you set on your self-hosted gateway. The gateway blocks their requests until you raise the cap, or until the cap resets if it's above \$0. See [gateway spend limits](https://code.claude.com/docs/en/claude-apps-gateway-spend-limits.md) for caps, reset schedules, and the message the developer sees.
 * **A context or auto-compact warning**: not a usage limit. The conversation has grown close to the session's [auto-compact window](https://code.claude.com/docs/en/model-config.md#set-the-auto-compact-window), the threshold where Claude Code summarizes older history to free space. Point the developer at [reduce token usage](#reduce-token-usage).
 * **Unexpectedly high spend on an API or cloud-provider plan**: usually traces back to long sessions that were never cleared or to Opus left as the default model. The highest-impact habits to share are clearing between unrelated tasks and matching the model to the job, both covered in [reduce token usage](#reduce-token-usage).
 
@@ -293,9 +295,7 @@ MCP tool definitions are [deferred by default](https://code.claude.com/docs/en/m
 
 Custom [hooks](https://code.claude.com/docs/en/hooks.md) can preprocess data before Claude sees it. Instead of Claude reading a 10,000-line log file to find errors, a hook can grep for `ERROR` and return only matching lines, reducing context from tens of thousands of tokens to hundreds.
 
-A [skill](https://code.claude.com/docs/en/skills.md) can give Claude domain knowledge so it doesn't have to explore. For example, a "codebase-overview" skill could describe your project's architecture, key directories, and naming conventions. When Claude invokes the skill, it gets this context immediately instead of spending tokens reading multiple files to understand the structure.
-
-For example, this PreToolUse hook filters test output to show only failures:
+This PreToolUse hook trims test output to its last 100 lines:
 
 > [tab] settings.json
 >
@@ -321,17 +321,17 @@ For example, this PreToolUse hook filters test output to show only failures:
 
 > [tab] filter-test-output.sh
 >
-> The hook calls this script. Create the folder with `mkdir -p ~/.claude/hooks`, save the script below as `~/.claude/hooks/filter-test-output.sh`, and make it executable with `chmod +x ~/.claude/hooks/filter-test-output.sh`. It checks if the command is a test runner and modifies it to show only failures:
+> The hook calls this script. Create the folder with `mkdir -p ~/.claude/hooks`, save the script below as `~/.claude/hooks/filter-test-output.sh`, and make it executable with `chmod +x ~/.claude/hooks/filter-test-output.sh`. It checks if the command is a test runner and, if so, keeps only the last 100 lines of its output:
 >
 > ```bash theme={null}
 > #!/bin/bash
 > input=$(cat)
 > cmd=$(echo "$input" | jq -r '.tool_input.command')
 >
-> # If running tests, filter to show only failures
+> # If running tests, keep only the last 100 lines
 > pattern='^(npm test|pytest|go test)( [^;&|<>`$#\\[:cntrl:]]*)?$'
 > if [[ "$cmd" =~ $pattern ]]; then
->   filtered_cmd="$cmd 2>&1 | grep -A 5 -E '(FAIL|ERROR|error:)' | head -100"
+>   filtered_cmd="$cmd 2>&1 | tail -n 100"
 >   echo "$input" | jq --arg filtered "$filtered_cmd" \
 >     '{hookSpecificOutput: {hookEventName: "PreToolUse", updatedInput: (.tool_input + {command: $filtered})}}'
 > else
@@ -340,6 +340,8 @@ For example, this PreToolUse hook filters test output to show only failures:
 > ```
 
 To verify the setup, run `/hooks` and check that the hook appears under PreToolUse. You can also start Claude Code with `claude --debug-file ./claude-debug.txt` and ask Claude to run `npm test`. When the hook rewrites the command, that log file contains a `modified tool input keys` line listing `command` and the other Bash input fields.
+
+A [skill](https://code.claude.com/docs/en/skills.md) can give Claude domain knowledge so it doesn't have to explore. For example, a "codebase-overview" skill could describe your project's architecture, key directories, and naming conventions. When Claude invokes the skill, it gets this context immediately instead of spending tokens reading multiple files to understand the structure.
 
 ### Move instructions from CLAUDE.md to skills
 

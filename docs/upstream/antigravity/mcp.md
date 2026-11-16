@@ -31,24 +31,20 @@ With MCP, Antigravity can execute specific, safe actions defined by your connect
 
 ### Antigravity App
 
-In the Antigravity App, you can manage your MCP servers through the **Installed MCP Servers** section of your **Settings**.
+In the Antigravity App, you can manage your MCP servers in the **MCP Servers** section of the **Customizations** page.
 
 To view and update your MCP servers:
 
-1.  Click the **Settings** button on the bottom left of your screen.
-2.  Select **Customizations** and review the **Installed MCP Servers** section.
+1.  Click **Customizations** in the sidebar.
+2.  Click **Installed** and scroll to the **MCP Servers** section.
 
-To install an MCP server from the **Installed MCP Servers** section:
+To install an MCP server from the **MCP Servers** section:
 
-1.  Click **Add MCP**. This connects you to the MCP Store, a searchable list of available MCP servers.
-2.  Search or scroll down to an MCP server you’d like to install.
+1.  Click **Add MCP Server** (**+**). This opens a searchable list of available MCP servers.
+2.  Search or scroll to an MCP server you’d like to install.
 3.  Click **Add**.
 
-To manage your MCP servers from this screen:
-
-*   **Uninstall**: Click the trash can icon next to the MCP server in the list.
-*   **Disable or enable**: Click the toggle switch next to the MCP server in the list.
-*   **Refresh**: Click the refresh button.
+To manage an MCP server, click **More actions** (**⋮**) next to it, and then choose **Restart**, **Disable**, or **Delete**. To find your configuration file, click **Copy Config File Path** in the section header.
 
 ### Antigravity CLI
 
@@ -152,10 +148,11 @@ Each server entry under `mcpServers` must specify **one transport property** (`c
 | **`cwd`** | `string` | — | Working directory used when spawning a local `stdio` server process. |
 | **`headers`** | `object` | `{}` | Custom HTTP request headers sent with remote `serverUrl` connections (for example, `Authorization` or API key headers). |
 | **`authProviderType`** | `string` | — | Built-in authentication provider. Set to `"google_credentials"` to attach Google Application Default Credentials (ADC). |
-| **`oauth`** | `object` | — | Manual OAuth 2.0 client credentials (`clientId` and optional `clientSecret`) for remote servers that do not support Dynamic Client Registration (DCR). |
+| **`oauth`** | `object` | — | Manual OAuth 2.0 client credentials (`clientId` and optional `clientSecret`) for remote servers that do not support Client ID Metadata Documents (CIMD) or Dynamic Client Registration (DCR). |
 | **`disabled`** | `boolean` | `false` | When `true`, suspends the server connection without removing its configuration from `mcp_config.json`. |
 | **`enabledTools`** | `string[]` | — | Allowlist of tool names exposed to the agent from this server. When set, all other tools on the server are hidden. |
 | **`disabledTools`** | `string[]` | `[]` | Denylist of tool names withheld from the agent. |
+| **`tools`** | `object` | — | Per-tool settings keyed by tool name (`tools.<toolName>`). `eager` (boolean) registers the tool upfront instead of lazily (see [Tool loading](/docs/mcp#tool-loading-lazy-vs-eager)). `background` (`"off"` or `"always"`) controls background execution: `"always"` runs the tool’s calls as background tasks, and `"off"` runs them in the foreground. |
 | **`timeoutSeconds`** | `integer` | `180` per tool call, `300` to connect | Timeout, in seconds, for connecting to the server and listing its tools, and for each tool call. A negative value, such as `-1`, turns both off. See [MCP server timeouts](/docs/mcp#mcp-server-timeouts). |
 
 ### MCP server timeouts
@@ -187,6 +184,57 @@ The following example lets each tool call on the `sqlite-explorer` server run fo
   }
 }
 ```
+
+## Tool loading: lazy vs. eager
+
+Connected MCP servers can expose dozens of tools with large JSON schemas. Loading every tool definition into the model’s context window on every turn consumes tokens and increases latency, even when those tools aren’t used. To keep context usage low, Antigravity supports both **lazy** and **eager** tool loading.
+
+### Lazy loading (default)
+
+By default, all enabled MCP tools are **lazy-loaded**:
+
+1.  **Schema caching on disk**: When an MCP server connects, Antigravity writes each tool’s JSON schema (`name`, `description`, and `parameters`) to `<app-data-dir>/mcp/<serverName>/<toolName>.json` (`~/.gemini/antigravity/mcp/<serverName>/` in the Antigravity App and Antigravity IDE, or `~/.gemini/antigravity-cli/mcp/<serverName>/` in the Antigravity CLI), along with an optional `instructions.md` file if the server provides instructions during initialization.
+2.  **Compact system prompt**: Antigravity includes the exact `<app-data-dir>/mcp/<serverName>` directory path in the agent’s system prompt (so you don’t need to know the path for the agent to work) and lists each server’s tool names, grouped under `Eager` and `Lazy`, instead of full declarations.
+3.  **On-demand invocation**: When the agent needs a lazy-loaded tool, it reads `<app-data-dir>/mcp/<serverName>/<toolName>.json` to inspect the tool’s parameters and then invokes the tool through the built-in `call_mcp_tool` tool (passing `ServerName`, `ToolName`, and `Arguments`).
+
+### Eager loading
+
+When an enabled tool is configured with `"eager": true`, Antigravity registers its full description and parameter schema upfront in the model’s native tool declarations as `mcp_<serverName>_<toolName>` (listed under `Eager` in the system prompt).
+
+*   **Direct invocation**: The agent calls `mcp_<serverName>_<toolName>` directly in a single turn without reading the schema file from disk or calling `call_mcp_tool`.
+*   **Higher token footprint**: Because the tool’s full schema is sent to the model on every turn, reserve eager loading for frequently used core tools where saving an extra file-read step outweighs the per-turn token cost.
+
+Note
+
+If Antigravity is unable to write a server’s tool schema files to disk during initialization, it automatically falls back to eagerly loading all enabled tools for that server.
+
+### Configure eager tools
+
+To eagerly load specific tools from an MCP server, add a `tools` map to the server’s entry in `mcp_config.json` and set `"eager": true` for each tool you want pre-registered:
+
+```json
+{
+  "mcpServers": {
+    "sqlite-explorer": {
+      "command": "node",
+      "args": ["/usr/local/bin/sqlite-mcp-server.js"],
+      "env": {
+        "SQLITE_DB_PATH": "/var/data/app.db"
+      },
+      "tools": {
+        "read_query": {
+          "eager": true
+        },
+        "list_tables": {
+          "eager": true
+        }
+      }
+    }
+  }
+}
+```
+
+Any enabled tools on the server not listed with `"eager": true` remain lazy-loaded by default. Eager vs. lazy loading is evaluated after `enabledTools` and `disabledTools` are applied, so `"eager": true` only affects enabled tools; a tool marked `"eager": true` that is also in `disabledTools`, or missing from a non-empty `enabledTools` list, stays hidden.
 
 ## MCP authentication
 
@@ -221,7 +269,7 @@ gcloud auth application-default set-quota-project {QUOTA_PROJECT}
 
 ### OAuth
 
-Antigravity automatically handles OAuth for servers that support dynamic client registration (DCR). For these servers, no additional configuration is needed:
+Antigravity automatically handles OAuth 2.0 with Proof Key for Code Exchange (PKCE) for remote MCP servers that support [Client ID Metadata Documents (CIMD)](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-client-id-metadata-document) or [Dynamic Client Registration (DCR)](https://datatracker.ietf.org/doc/html/rfc7591). For these servers, no additional client configuration is needed:
 
 ```json
 {
@@ -233,7 +281,51 @@ Antigravity automatically handles OAuth for servers that support dynamic client 
 }
 ```
 
-If the server doesn’t support dynamic client registration, you can provide your client credentials manually:
+When connecting to an OAuth-protected MCP server, Antigravity discovers the server’s Protected Resource Metadata (`/.well-known/oauth-protected-resource`, whose `resource` value must match the MCP server URL) and the first entry in `authorization_servers` (`/.well-known/oauth-authorization-server` or `/.well-known/openid-configuration`), then resolves client credentials in the following order:
+
+1.  **Manual client credentials**: Uses `oauth.clientId` (and optional `oauth.clientSecret`) if specified in `mcp_config.json`.
+2.  **Client ID Metadata Document (CIMD)**: Uses Antigravity’s hosted metadata URL as the `client_id` if the authorization server metadata includes `"client_id_metadata_document_supported": true` (for a few built-in integrations, Antigravity uses its own pre-registered client before trying CIMD).
+3.  **Dynamic Client Registration (DCR)**: Registers a client dynamically if the authorization server metadata includes a `registration_endpoint`.
+
+#### Client ID Metadata Document (CIMD)
+
+Antigravity publishes its OAuth Client ID Metadata Document at the following URL. In the Antigravity IDE, CIMD support requires version 2.6.0 or later:
+
+```text
+https://antigravity.google/oauth/client-metadata.json
+```
+
+MCP servers and OAuth authorization servers can use CIMD to authenticate Antigravity clients without requiring dynamic client registration or manual per-user `clientId` setup:
+
+1.  Advertise `"client_id_metadata_document_supported": true`, `"code_challenge_methods_supported": ["S256"]` (PKCE is required), and a non-empty `issuer` in your authorization server metadata (`/.well-known/oauth-authorization-server` or `/.well-known/openid-configuration`).
+2.  When initiating the OAuth flow, Antigravity sends `client_id=https://antigravity.google/oauth/client-metadata.json`, `redirect_uri=https://antigravity.google/oauth-callback`, an `S256` PKCE challenge, and the RFC 8707 `resource` parameter in the authorization and token requests.
+3.  Your authorization server can either fetch and validate the JSON document from `https://antigravity.google/oauth/client-metadata.json` dynamically, or pre-allowlist that URL as a public client ID with `https://antigravity.google/oauth-callback` as the redirect URI.
+
+For reference, `https://antigravity.google/oauth/client-metadata.json` serves the following metadata:
+
+```json
+{
+  "client_id": "https://antigravity.google/oauth/client-metadata.json",
+  "client_name": "Google Antigravity",
+  "client_uri": "https://antigravity.google",
+  "logo_uri": "https://antigravity.google/assets/image/brand/antigravity-icon__full-color.png",
+  "redirect_uris": [
+    "https://antigravity.google/oauth-callback"
+  ],
+  "grant_types": [
+    "authorization_code",
+    "refresh_token"
+  ],
+  "response_types": [
+    "code"
+  ],
+  "token_endpoint_auth_method": "none"
+}
+```
+
+#### Manual client credentials
+
+If the server supports neither CIMD nor dynamic client registration, you can provide your client credentials manually:
 
 ```json
 {
@@ -255,26 +347,28 @@ If you provide client credentials manually, ensure the following URL is register
 https://antigravity.google/oauth-callback
 ```
 
+#### Authenticate a server
+
 To connect to an OAuth-enabled server:
 
-1.  Open [**Agent settings**](/docs/settings) with Cmd + , (macOS) or Ctrl + , (Windows and Linux).
+1.  In the Antigravity App, click **Customizations** in the sidebar, and then click **Installed**.
     
-2.  Navigate to the **Customizations** tab and click **Authenticate** next to the server.
+2.  Under **MCP Servers**, click **Authenticate** next to the server.
     
-    ![Click Authenticate](/assets/image/docs/tools/mcp-oauth-authenticate.png)
+    ![The MCP Servers section of the Customizations page with the bookmarks-docs server, a red status dot, an Authenticate button, and an Unauthorized error](/assets/image/docs/tools/mcp-oauth-authenticate.png)
     
 3.  Complete authentication in your browser and copy the authorization code.
     
     ![Copy authorization code](/assets/image/docs/tools/mcp-oauth-copy-code.png)
     
-4.  Paste the code back into the settings panel and click **Submit**.
+4.  Paste the code into the **Enter authorization code** field and click **Submit**.
     
-    ![Paste auth code](/assets/image/docs/tools/mcp-oauth-paste-code.png)
+    ![The bookmarks-docs server in the MCP Servers section with an Enter authorization code field and Submit and Cancel buttons](/assets/image/docs/tools/mcp-oauth-paste-code.png)
     
 
 Once authenticated, the server reconnects automatically.
 
-![Authenticated server](/assets/image/docs/tools/mcp-oauth-authenticated.png)
+![The bookmarks-docs server in the MCP Servers section with a green status dot, a Sign out button, and 2 tools enabled](/assets/image/docs/tools/mcp-oauth-authenticated.png)
 
 Access tokens are stored in `~/.gemini/antigravity/mcp_oauth_tokens.json`. Expired tokens are refreshed automatically, and invalid tokens are removed.
 
@@ -407,7 +501,7 @@ Install **Google Developer Knowledge** from the MCP Store as described in [Getti
 
 Once connected, you can ask the agent to ground its work in the docs. For example:
 
-```text
+```prompt
 Look up the current Antigravity hooks documentation and add a PreToolUse hook that blocks shell commands which modify files outside this workspace.
 ```
 

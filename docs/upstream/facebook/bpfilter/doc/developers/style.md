@@ -7,17 +7,8 @@
 
 This document describes the code style and guidelines to use for `bpfilter` contributors. ClangFormat is used to validate and enforce as many of those rules as possible based on `.clang-format` at the root of the repository. The `check` build target validates all source files, and the `fixstyle` build target can automatically fix all the violations.
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
-
-The CI will use the ClangFormat version from the latest Fedora release. If you use a different version, you might trigger violation(s) during the CI run, which we expect you to fix.
-
-</div>
+> [!NOTE]
+> The CI will use the ClangFormat version from the latest Fedora release. If you use a different version, you might trigger violation(s) during the CI run, which we expect you to fix.
 
 ## Formatting
 
@@ -51,7 +42,7 @@ Group and order includes as follows, with a blank line between groups:
 
 #include <bpfilter/chain.h>
 
-#include "cgen/program.h"
+#include "cgen/codegen.h"
 #include "ctx.h"
 ```
 
@@ -61,7 +52,7 @@ Prefer forward declarations over includes when only a pointer to a type is neede
 
 ``` c
 struct bf_chain;
-struct bf_program;
+struct bf_codegen;
 ```
 
 ## Naming conventions
@@ -69,7 +60,7 @@ struct bf_program;
 ### Functions and variables
 
 - Lowercase with underscores: `bf_chain_new()`, `bf_ctx_setup()`
-- Prefix with module name: `bf_chain_*`, `bf_program_*`, `bf_ctx_*`
+- Prefix with module name: `bf_chain_*`, `bf_codegen_*`, `bf_ctx_*`
 - Static functions and variables use leading underscore: `_bf_ctx_free()`
 - CLI utilities use `bfc_` prefix: `bfc_parse_file()`
 - Macros use uppercase with underscores: `EMIT()`, `TAKE_PTR()`, `ARRAY_SIZE()`

@@ -11,7 +11,7 @@ Plugins package reusable [skills](/docs/skills), [Model Context Protocol (MCP) s
 | :-- | :-- |
 | **Browse the Marketplace catalog** | **[Marketplace](/docs/marketplace)** — discover, install, and configure Google and partner plugins in the App and CLI. |
 | **Use and manage installed plugins** | **This page** — learn [what plugins bundle](#what-a-plugin-bundles), [how to use installed plugins](#using-installed-plugins), and [how to manage plugins by surface](#managing-plugins-by-surface). |
-| **Build, validate, and publish a plugin** | **[Build plugins](/docs/build-plugins)** — follow the 3-step quickstart, `plugin.json` manifest schema, component authoring guides, `agy plugin validate --strict`, and Marketplace submission. |
+| **Build, validate, and publish a plugin** | **[Build plugins](/docs/build-plugins)** — follow the 3-step quickstart, `plugin.json` manifest schema, component authoring guides, `agy plugin validate`, and Marketplace submission. |
 
 ## What a plugin bundles
 
@@ -33,7 +33,7 @@ Once a plugin is installed and enabled, its bundled components are available acr
 
 *   **Starter prompt chips**: In the Antigravity App (**Customizations > Marketplace** or **Customizations > Installed**), open a plugin’s detail page and click any **suggested prompt chip** at the top of the page to start a guided task immediately:
     
-    ![Plugin detail view showing starter prompt chips, component tabs, and README documentation](/assets/image/docs/plugins/plugin-card.png)
+    ![The Dart and Flutter plugin detail view in the Antigravity App, with an Add button, starter prompts, Overview, Skills, MCP, Agents, and Rules tabs, and the plugin's README](/assets/image/docs/plugins/plugin-card.png)
     
 *   **Automatic skill loading**: Describe your task in natural language. At session startup, Antigravity loads only the `name` and `description` of each enabled plugin skill and reads the full `SKILL.md` instructions on demand when your prompt matches.
     
@@ -82,7 +82,7 @@ Follow the instructions below to install, configure, enable, disable, or uninsta
     
 2.  Use the top segmented toggle to switch between **Marketplace** (all available plugins) and **Installed** (your installed plugins, skills, rules, and custom agents):
     
-    ![Installed plugins tab in Customizations](/assets/image/docs/plugins/installed-plugins.png)
+    ![The Installed tab of the Customizations page in the Antigravity App, with five installed plugins, two of them marked Sign in required, above the Skills & Rules list](/assets/image/docs/plugins/installed-plugins.png)
     
 3.  In the **Marketplace** tab, click **+** on a plugin card to install it, or click the card to inspect its starter prompts, **Overview**, **Skills**, **MCP**, **Agents**, and **Rules** tabs before clicking **Add**.
     
@@ -224,13 +224,15 @@ Outside an interactive TUI session, the Antigravity CLI exposes the `agy plugin`
     agy plugin uninstall <plugin_name>
     ```
     
-*   **Validate a plugin directory**: Validate `plugin.json`, component frontmatter, MCP server and hook configurations, and logo paths (`--strict` treats warnings as errors):
+*   **Validate a plugin directory**: Validate `plugin.json`, component frontmatter, MCP server and hook configurations, and logo paths (`--strict` treats warnings as errors; `--json` outputs machine-readable findings for CI):
     
     ```bash
     agy plugin validate ./my-plugin
     agy plugin validate --strict ./my-plugin
+    agy plugin validate --json ./my-plugin
     ```
     
+    If your repository includes files meant for other tools that Antigravity ignores or shadows (such as `.mcp.json`, `mcp.json`, a root `plugin.json`, or a root `AGENTS.md`), see [Warnings in multi-tool repositories](/docs/build-plugins#warnings-in-multi-tool-repositories).
 
 #### CLI filesystem location
 
@@ -275,4 +277,4 @@ Ready to create a custom plugin for your team or publish a partner integration t
 *   **[Quickstart: create your first plugin](/docs/build-plugins#quickstart-create-your-first-plugin)**
 *   **[`plugin.json` manifest reference and full JSON schema](/docs/build-plugins#manifest-file-pluginjson)**
 *   **[Authoring skills, MCP servers, custom agents, rules, and hooks](/docs/build-plugins#authoring-plugin-components)**
-*   **[Validating locally (`agy plugin validate --strict`) and submitting to the Marketplace](/docs/build-plugins#validating-and-publishing-plugins)**
+*   **[Validating locally (`agy plugin validate`) and submitting to the Marketplace](/docs/build-plugins#validating-and-publishing-plugins)**

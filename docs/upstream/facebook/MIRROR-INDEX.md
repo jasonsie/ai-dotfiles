@@ -64,8 +64,8 @@ Pages: 34
 
 | When | Page | KB |
 |---|---|---|
-| structuring code as a tree so humans can review it (Docusaurus agent skill) | [docusaurus/.agents/skills/code-style/SKILL.md](docusaurus/.agents/skills/code-style/SKILL.md) | 3 |
-| writing documentation, linting and formatting in Docusaurus (agent instructions) | [docusaurus/AGENTS.md](docusaurus/AGENTS.md) | 9 |
+| structuring code as a tree so humans can review it (Docusaurus agent skill) | [docusaurus/.agents/skills/code-style/SKILL.md](docusaurus/.agents/skills/code-style/SKILL.md) | 4 |
+| writing documentation, linting and formatting in Docusaurus (agent instructions) | [docusaurus/AGENTS.md](docusaurus/AGENTS.md) | 12 |
 | contributing to Docusaurus: code conventions | [docusaurus/CONTRIBUTING.md](docusaurus/CONTRIBUTING.md) | 18 |
 
 ## fboss (`main`, BSD)
@@ -87,8 +87,8 @@ Pages: 34
 |---|---|---|
 | writing component documentation (.doc.mjs files) | [astryx/.claude/skills/writing-component-docs.md](astryx/.claude/skills/writing-component-docs.md) | 6 |
 | designing a design-system API (Astryx conventions) | [astryx/docs/contributing/api-conventions.md](astryx/docs/contributing/api-conventions.md) | 25 |
-| designing a CLI (Astryx conventions) | [astryx/docs/contributing/cli-conventions.md](astryx/docs/contributing/cli-conventions.md) | 14 |
-| writing specification records | [astryx/docs/contributing/spec-writing.md](astryx/docs/contributing/spec-writing.md) | 12 |
+| designing a CLI (Astryx conventions) | [astryx/docs/contributing/cli-conventions.md](astryx/docs/contributing/cli-conventions.md) | 16 |
+| writing specification records | [astryx/docs/contributing/spec-writing.md](astryx/docs/contributing/spec-writing.md) | 16 |
 
 ## flipper (`main`, MIT)
 
