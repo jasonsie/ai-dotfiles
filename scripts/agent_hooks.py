@@ -12,11 +12,16 @@ matchers a feature needs. Everything that differs between the CLIs lives here.
 
 Kinds: 'pre' (before a tool call), 'tool' (after one), 'stop' (a turn ends), 'end' (the
 session ends), 'prompt' (the user submits one; never answered, and Antigravity has no such
-event). An Event names what the tool does (action: edit, shell, read or other) and carries its
-input; a 'prompt' Event carries the prompt and the transcript's path. Replies: Continue (a
-'stop'), Note, Deny and Rewrite (a 'pre').
+event). Kinds only some CLIs have (ONLY_IN), never answered: 'error' (a turn ends on an API
+error), 'permission' (a permission dialog is about to open), 'form' (an MCP server asks for
+input), 'start' (a session starts or resumes), 'interrupt' (the user stops a turn).
+An Event names what the tool does (action: edit, shell, read, ask or other) and carries its
+input; a 'prompt' Event carries the prompt and the transcript's path, a 'stop' Event the
+agent's last message and its background work. Replies: Continue (a 'stop'), Note, Deny and
+Rewrite (a 'pre').
 Pi has no hook file: a feature's Pi extension sends {session_id, cwd, tool_name, tool_input,
-pid} (a prompt: {session_id, cwd, prompt, transcript_path}) and applies {continue}, {block,
+pid} (a prompt: {session_id, cwd, prompt, source, transcript_path}; a stop: {...,
+last_assistant_message, outcome}; an end: {..., reason}) and applies {continue}, {block,
 reason}, {input, note} or {note}. Features import this file from the repo's scripts/ folder.
 Python 3.11+, stdlib only.
 """
@@ -33,8 +38,9 @@ import time
 
 CLIS = ('claude', 'codex', 'agy', 'pi')
 HOOK_FILE_CLIS = ('claude', 'codex', 'agy')  # Pi loads an extension instead
-TOOLS = {  # what each CLI's tools do; Codex reads through its shell
-    'claude': {'edit': {'Edit', 'Write', 'NotebookEdit'}, 'shell': {'Bash'}, 'read': {'Read', 'Glob', 'Grep'}},
+TOOLS = {  # what each CLI's tools do; Codex reads through its shell; 'ask' tools open a dialog for the user
+    'claude': {'edit': {'Edit', 'Write', 'NotebookEdit'}, 'shell': {'Bash'}, 'read': {'Read', 'Glob', 'Grep'},
+               'ask': {'AskUserQuestion', 'ExitPlanMode'}},
     'codex': {'edit': {'apply_patch', 'Edit', 'Write'}, 'shell': {'Bash'}, 'read': set()},
     'agy': {'edit': {'write_to_file', 'replace_file_content', 'multi_replace_file_content'},
             'shell': {'run_command'}, 'read': {'view_file', 'list_dir', 'find_by_name', 'grep_search'}},
@@ -43,16 +49,23 @@ TOOLS = {  # what each CLI's tools do; Codex reads through its shell
 EDIT_TOOLS = {cli: tools['edit'] for cli, tools in TOOLS.items()}
 # The installer's matchers per action; Codex matches apply_patch as Edit or Write.
 MATCHERS = {
-    'claude': {'edit': 'Edit|Write|NotebookEdit', 'shell': 'Bash', 'read': 'Read|Glob|Grep'},
+    'claude': {'edit': 'Edit|Write|NotebookEdit', 'shell': 'Bash', 'read': 'Read|Glob|Grep',
+               'ask': 'AskUserQuestion|ExitPlanMode'},
     'codex': {'edit': 'Edit|Write', 'shell': 'Bash'},
     'agy': {'edit': 'write_to_file|replace_file_content|multi_replace_file_content', 'shell': 'run_command',
             'read': 'view_file|list_dir|find_by_name|grep_search'},
 }
 NATIVE = {'pre': 'PreToolUse', 'tool': 'PostToolUse', 'stop': 'Stop', 'end': 'SessionEnd',
-          'prompt': 'UserPromptSubmit', 'create': 'WorktreeCreate', 'remove': 'WorktreeRemove'}
+          'prompt': 'UserPromptSubmit', 'create': 'WorktreeCreate', 'remove': 'WorktreeRemove',
+          'error': 'StopFailure', 'permission': 'PermissionRequest', 'form': 'Elicitation',
+          'start': 'SessionStart', 'interrupt': 'Interrupt'}
 NO_SESSION_END = ('agy',)  # Antigravity's hooks have no end-of-session event
 NO_PROMPT = ('agy',)  # nor one for a submitted prompt (PreInvocation carries no prompt text)
 CLAUDE_ONLY = ('create', 'remove')  # worktree events: only Claude Code lets a hook make and remove worktrees
+# Kinds only some hook-file CLIs have. Codex runs SessionStart only inside a session's first turn,
+# too late to report a resumed session, so 'start' is Claude Code's here.
+ONLY_IN = {'create': ('claude',), 'remove': ('claude',), 'error': ('claude',), 'form': ('claude',),
+           'start': ('claude',), 'permission': ('claude', 'codex'), 'interrupt': ('codex',)}
 # CLIs that do not flag the turn a hook's own Continue started; the store remembers it for them.
 UNFLAGGED_CONTINUATION = ('agy', 'pi')
 CONTINUED = 'pending'
@@ -77,6 +90,13 @@ class Event:
     prompt: str = ''             # what the user submitted (a 'prompt' event)
     transcript: str = ''         # the session's transcript file, when the CLI says
     subagent: bool = False       # the hook fired inside a subagent or an in-process teammate (Claude Code)
+    last_message: str = ''       # the agent's final message of the turn (a 'stop' event)
+    tasks: tuple = ()            # the types of the background tasks still in flight at a stop (Claude Code)
+    crons: int = 0               # the session's scheduled wake-ups at a stop (Claude Code)
+    error: str = ''              # the API error that ended the turn (an 'error' event)
+    source: str = ''             # where a prompt came from (Pi), or why a session started ('start')
+    reason: str = ''             # why the session ends (an 'end' event)
+    outcome: str = ''            # how the run ended: completed, aborted or error (Pi's 'stop')
 
 
 @dataclass(frozen=True)
@@ -140,11 +160,19 @@ def read(cli, kind, data):
         model_stopped = True
     pid, model = data.get('pid'), data.get('model') or data.get('modelName')
     action = action_of(cli, tool)
-    return Event(cli, kind, session, folder, tool, action == 'edit', bool(data.get('stop_hook_active')),
-                 model_stopped, action, tool_input if isinstance(tool_input, dict) else {},
-                 pid if isinstance(pid, int) and not isinstance(pid, bool) else None,
-                 model if isinstance(model, str) else '', text(data.get('name')), text(data.get('worktree_path')),
-                 text(data.get('prompt')), text(data.get('transcript_path')), bool(data.get('agent_id')))
+    tasks, crons = data.get('background_tasks'), data.get('session_crons')
+    return Event(cli, kind, session, folder, tool=tool, edit=action == 'edit',
+                 continuation=bool(data.get('stop_hook_active')), model_stopped=model_stopped, action=action,
+                 tool_input=tool_input if isinstance(tool_input, dict) else {},
+                 pid=pid if isinstance(pid, int) and not isinstance(pid, bool) else None,
+                 model=model if isinstance(model, str) else '', name=text(data.get('name')),
+                 path=text(data.get('worktree_path')), prompt=text(data.get('prompt')),
+                 transcript=text(data.get('transcript_path')), subagent=bool(data.get('agent_id')),
+                 last_message=text(data.get('last_assistant_message')),
+                 tasks=tuple(text(task.get('type')) for task in tasks if isinstance(task, dict))
+                 if isinstance(tasks, list) else (),
+                 crons=len(crons) if isinstance(crons, list) else 0, error=text(data.get('error')),
+                 source=text(data.get('source')), reason=text(data.get('reason')), outcome=text(data.get('outcome')))
 
 
 def render_pre(cli, reply):
@@ -283,9 +311,11 @@ def native_events(cli, wants):
     found = []
     for kind, actions in wants:
         if ((kind == 'end' and cli in NO_SESSION_END) or (kind == 'prompt' and cli in NO_PROMPT)
-                or (kind in CLAUDE_ONLY and cli != 'claude')):
+                or cli not in ONLY_IN.get(kind, (cli,))):
             continue
         actions = (actions,) if isinstance(actions, str) else actions or ()
         matcher = '|'.join(MATCHERS[cli][a] for a in actions if a in MATCHERS[cli]) or None
+        if actions and matcher is None:
+            continue  # none of these tools in this CLI: no entry, not one for every tool
         found.append((NATIVE[kind], kind, matcher))
     return tuple(found)

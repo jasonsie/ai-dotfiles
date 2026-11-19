@@ -53,6 +53,23 @@ class ReadTest(unittest.TestCase):
         bare = agent_hooks.read('codex', 'prompt', raw('codex', prompt=7, transcript_path=None))
         self.assertEqual((bare.prompt, bare.transcript), ('', ''))
 
+    def test_a_stop_event_carries_the_last_message_and_the_work_still_in_flight(self):
+        event = agent_hooks.read('claude', 'stop', raw('claude', last_assistant_message='Shall I?',
+                                                       background_tasks=[{'type': 'subagent'}, {'type': 'shell'}, 'x'],
+                                                       session_crons=[{'id': 'c1'}]))
+        self.assertEqual((event.last_message, event.tasks, event.crons), ('Shall I?', ('subagent', 'shell'), 1))
+        bare = agent_hooks.read('codex', 'stop', raw('codex', last_assistant_message=None, background_tasks={}))
+        self.assertEqual((bare.last_message, bare.tasks, bare.crons), ('', (), 0))
+        pi = agent_hooks.read('pi', 'stop', raw('pi', last_assistant_message='Done.', outcome='aborted'))
+        self.assertEqual((pi.last_message, pi.outcome), ('Done.', 'aborted'))
+
+    def test_the_other_kinds_carry_their_one_fact(self):
+        self.assertEqual(agent_hooks.read('claude', 'error', raw('claude', error='rate_limit')).error, 'rate_limit')
+        self.assertEqual(agent_hooks.read('claude', 'start', raw('claude', source='resume')).source, 'resume')
+        self.assertEqual(agent_hooks.read('pi', 'end', raw('pi', reason='reload')).reason, 'reload')
+        self.assertEqual(agent_hooks.read('pi', 'prompt', raw('pi', prompt='go', source='extension')).source, 'extension')
+        self.assertEqual(agent_hooks.read('claude', 'permission', raw('claude', tool='AskUserQuestion')).action, 'ask')
+
     def test_a_hook_fired_inside_a_subagent_or_teammate_says_so(self):
         self.assertTrue(agent_hooks.read('claude', 'prompt', raw('claude', agent_id='agent-abc', agent_type='Explore')).subagent)
         self.assertFalse(agent_hooks.read('claude', 'prompt', raw('claude', agent_type='reviewer')).subagent)  # --agent
@@ -81,6 +98,12 @@ class RenderTest(unittest.TestCase):
     def test_a_prompt_hook_prints_nothing_where_stdout_would_reach_the_model(self):
         for cli in ('claude', 'codex', 'pi'):
             self.assertIsNone(agent_hooks.render(cli, 'prompt', None), cli)
+
+    def test_the_kinds_never_answered_print_nothing(self):
+        # SessionStart's stdout becomes context, and a PermissionRequest reply would decide the dialog.
+        for cli in ('claude', 'codex', 'pi'):
+            for kind in ('error', 'permission', 'form', 'start', 'interrupt'):
+                self.assertIsNone(agent_hooks.render(cli, kind, None), (cli, kind))
 
 
 class PreReplyTest(unittest.TestCase):
@@ -244,6 +267,21 @@ class InstallTableTest(unittest.TestCase):
             self.assertEqual(agent_hooks.native_events(cli, wants),
                              (('UserPromptSubmit', 'prompt', None), ('SessionEnd', 'end', None)), cli)
         self.assertEqual(agent_hooks.native_events('agy', wants), ())
+
+    def test_kinds_a_cli_lacks_are_left_out(self):
+        wants = (('error', None), ('permission', None), ('form', None), ('start', None), ('interrupt', None))
+        self.assertEqual([event for event, _, _ in agent_hooks.native_events('claude', wants)],
+                         ['StopFailure', 'PermissionRequest', 'Elicitation', 'SessionStart'])
+        self.assertEqual([event for event, _, _ in agent_hooks.native_events('codex', wants)],
+                         ['PermissionRequest', 'Interrupt'])
+        self.assertEqual(agent_hooks.native_events('agy', wants), ())
+
+    def test_dialog_tools_are_matched_by_name_and_never_widen_to_every_tool(self):
+        wants = (('pre', ('ask',)),)
+        self.assertEqual(agent_hooks.native_events('claude', wants),
+                         (('PreToolUse', 'pre', 'AskUserQuestion|ExitPlanMode'),))
+        for cli in ('codex', 'agy'):  # no such tools: no entry at all, not a PreToolUse for every tool
+            self.assertEqual(agent_hooks.native_events(cli, wants), (), cli)
 
     def test_worktree_events_exist_for_claude_only_and_take_no_matcher(self):
         wants = (('create', None), ('remove', None))
