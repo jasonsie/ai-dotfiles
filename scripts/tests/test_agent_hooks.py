@@ -53,6 +53,11 @@ class ReadTest(unittest.TestCase):
         bare = agent_hooks.read('codex', 'prompt', raw('codex', prompt=7, transcript_path=None))
         self.assertEqual((bare.prompt, bare.transcript), ('', ''))
 
+    def test_a_hook_fired_inside_a_subagent_or_teammate_says_so(self):
+        self.assertTrue(agent_hooks.read('claude', 'prompt', raw('claude', agent_id='agent-abc', agent_type='Explore')).subagent)
+        self.assertFalse(agent_hooks.read('claude', 'prompt', raw('claude', agent_type='reviewer')).subagent)  # --agent
+        self.assertFalse(agent_hooks.read('claude', 'pre', raw('claude', tool='Edit', agent_id='')).subagent)
+
     def test_input_that_is_not_an_object_has_no_session(self):
         for data in ([], None, 'x', {'toolCall': []}):
             self.assertIsNone(agent_hooks.read('agy', 'tool', data).session)

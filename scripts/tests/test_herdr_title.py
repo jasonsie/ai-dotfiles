@@ -108,9 +108,22 @@ class CertainTest(Sandbox):
     def test_a_prompt_the_user_did_not_type_keeps_the_tag(self):
         for prompt in ('Another Claude session sent a message:\n<agent-message from="a1">/grilling done</agent-message>',
                        '[SYSTEM NOTIFICATION - NOT USER INPUT]\n<task-notification>approve</task-notification>',
-                       '<teammate-message teammate_id="discover">/research finished</teammate-message>', '   '):
+                       '<teammate-message teammate_id="discover">/research finished</teammate-message>',
+                       '<local-command-stdout>Set model to /plan</local-command-stdout>',
+                       '<bash-stdout>ran /tdd</bash-stdout>', '<system-reminder>\n/grilling</system-reminder>', '   '):
             self.hook('prompt', prompt=prompt)
         self.assertEqual(self.calls('herdr'), [])
+        self.assertEqual(self.calls('claude'), [])
+
+    def test_a_subagent_or_teammate_shares_the_pane_and_leaves_its_tag_alone(self):
+        self.hook('prompt', prompt='/grilling')
+        self.hook('prompt', prompt='/implement the reader', agent_id='agent-abc', agent_type='general-purpose')
+        self.hook('prompt', prompt='then explain it to me', agent_id='agent-abc', env={'FAKE_CLAUDE_SAYS': 'EXPLAIN'})
+        self.hook('end', agent_id='agent-abc')
+        time.sleep(0.5)  # long enough for a model's turn that must not have started
+        self.assertEqual([self.labels(call) for call in self.calls('herdr')], [GRILLING])
+        self.assertEqual(self.calls('claude'), [])
+        self.assertEqual(json.loads((self.home / 'state' / 's1.json').read_text())['tag'], 'GRILL')
 
 
 class EndTest(Sandbox):

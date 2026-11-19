@@ -350,7 +350,8 @@ EXPLAIN, NOTE, LAND, CLEAN); `config/herdr-title.json` lists them with their mea
   goes to Haiku, and the tag lands about three seconds later. Half the prompts are short answers
   such as `1` or `y`. Their purpose is in the question they answer, so the model also reads the
   end of the agent's last message and the session's current tag. A prompt you did not type (a
-  subagent's report, another session's message) keeps the tag. So does a model call that fails.
+  subagent's report, another session's message) keeps the tag. So does a model call that fails,
+  and so does anything inside a subagent or teammate, which shares the lead's pane.
 - **The model call** is `claude -p --model haiku` with no tools, no saved session, no user
   settings (so no hooks, plugins or MCP servers) and no `HERDR_*` variables. The hook starts it
   in a process of its own and does not wait, so a prompt is never delayed. One call takes about

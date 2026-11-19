@@ -76,6 +76,7 @@ class Event:
     path: str = ''               # the worktree being removed (Claude's 'remove' event)
     prompt: str = ''             # what the user submitted (a 'prompt' event)
     transcript: str = ''         # the session's transcript file, when the CLI says
+    subagent: bool = False       # the hook fired inside a subagent or an in-process teammate (Claude Code)
 
 
 @dataclass(frozen=True)
@@ -143,7 +144,7 @@ def read(cli, kind, data):
                  model_stopped, action, tool_input if isinstance(tool_input, dict) else {},
                  pid if isinstance(pid, int) and not isinstance(pid, bool) else None,
                  model if isinstance(model, str) else '', text(data.get('name')), text(data.get('worktree_path')),
-                 text(data.get('prompt')), text(data.get('transcript_path')))
+                 text(data.get('prompt')), text(data.get('transcript_path')), bool(data.get('agent_id')))
 
 
 def render_pre(cli, reply):

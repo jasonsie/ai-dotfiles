@@ -30,7 +30,8 @@ source for every answer below.
    `model.ask`. A short answer keeps the tag unless it starts other work: `1` inside a grill
    stays GRILL, `y` to "confirm and I will build it" becomes EXECUTE.
 3. **Kept as it was:** a prompt the user did not type (`machine`), a model that answers KEEP,
-   a model call that fails.
+   a model call that fails, and everything inside a subagent or teammate, which shares the
+   lead's pane.
 
 The tag comes off when the session ends.
 

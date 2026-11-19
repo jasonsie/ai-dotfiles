@@ -74,7 +74,10 @@
     "<task-notification",
     "<teammate-message",
     "<agent-message",
-    "<cross-session-message"
+    "<cross-session-message",
+    "<local-command-",
+    "<bash-",
+    "<system-reminder>"
   ],
   "model": {
     "name": "haiku",

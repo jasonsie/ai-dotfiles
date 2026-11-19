@@ -19,7 +19,8 @@ Who picks the tag:
   three seconds later. Half the prompts are short answers ("1", "y") whose purpose is in the
   question they answer, which is why the model sees the agent's last message.
 - A prompt the user did not type (a subagent's report, another session's message) leaves the
-  tag as it is. So does a model that says KEEP, fails, or answers after a newer prompt.
+  tag as it is. So does a model that says KEEP, fails, or answers after a newer prompt, and so
+  does every hook call from inside a subagent or teammate, which shares the pane.
 When the session ends the tag comes off. The tags, the command words, the skills and the
 model's instruction are config/herdr-title.json's. The CLIs' hook formats live in the repo's
 scripts/agent_hooks.py, their transcripts in scripts/agent_sessions.py.
@@ -131,7 +132,8 @@ def ask_later(request):
 
 def on_prompt(event, state):
     settings = config()
-    if not typed(event.prompt, settings):
+    # A subagent or teammate shares the lead's pane, and its prompts are not the user's.
+    if event.subagent or not typed(event.prompt, settings):
         return
     seq = time.time_ns()
     tag = certain(event.prompt, settings)
@@ -189,7 +191,10 @@ def cmd_classify(_args):
 
 
 def on_end(event):
-    """The session is over: its tag comes off the pane, and its state file goes."""
+    """The session is over: its tag comes off the pane, and its state file goes. A subagent's
+    or teammate's end is not the pane's."""
+    if event.subagent:
+        return
     herdr('pane', 'report-metadata', pane(), '--source', SOURCE, '--clear-state-labels', '--seq', str(time.time_ns()))
     if event.session:
         SESSIONS.file(event.session).unlink(missing_ok=True)
