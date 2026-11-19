@@ -1,29 +1,30 @@
 #!/usr/bin/env python3
-"""herdr-title: an agent's row in Herdr's sidebar says what its current prompt is for.
+"""herdr-title: an agent's row in Herdr's sidebar says what its prompt is for and whose move it is.
 
   herdr-title hook prompt --cli (claude|codex|pi)   JSON in; nothing out
   herdr-title hook end --cli (claude|codex|pi)      JSON in; nothing out
   herdr-title classify                              the model's turn for one prompt; the hook starts it
 
-Each time the user submits a prompt, the hook picks one tag for it and reports the tag to
-Herdr as the pane's state labels: `[GRILLING]` while the agent works, `[GRILLED]` once it is
-the user's move, `[BLOCKED]` at a permission dialog. Herdr switches between them from the
-state it detects itself and draws the label next to the tab's name.
+The label has three layers, type › status › result: `grill › run` while the agent works,
+`grill › wait` at a dialog, `grill › wait › done` once it finished and nobody has looked, and
+plain `idle` after a look. Each time the user submits a prompt, the hook picks the type and
+reports one label per state Herdr detects (working, blocked, done, idle, unknown); Herdr shows
+the one for the state it sees and draws it in the sidebar.
 
-Who picks the tag:
+Who picks the type:
 - A prompt that is a command word (`approve`, `approve 57`) or names a skill (`/grilling`,
-  `$tutor`, `/zkfy:zk-note`) is tagged at once, by the hook.
+  `$tutor`, `/zkfy:zk-note`) is typed at once, by the hook.
 - Any other prompt goes to a small model, in a process the hook starts and does not wait for
-  (`classify`): a headless `claude -p` that gets the session's current tag, the end of the
-  agent's last message and the prompt, and answers with one tag or KEEP. The tag lands about
+  (`classify`): a headless `claude -p` that gets the session's current type, the end of the
+  agent's last message and the prompt, and answers with one type or keep. The type lands about
   three seconds later. Half the prompts are short answers ("1", "y") whose purpose is in the
   question they answer, which is why the model sees the agent's last message.
 - A prompt the user did not type (a subagent's report, another session's message) leaves the
-  tag as it is. So does a model that says KEEP, fails, or answers after a newer prompt, and so
+  type as it is. So does a model that says keep, fails, or answers after a newer prompt, and so
   does every hook call from inside a subagent or teammate, which shares the pane.
-When the session ends the tag comes off. The tags, the command words, the skills and the
-model's instruction are config/herdr-title.json's. The CLIs' hook formats live in the repo's
-scripts/agent_hooks.py, their transcripts in scripts/agent_sessions.py.
+When the session ends the labels come off. The types, the words, the command words, the skills
+and the model's instruction are config/herdr-title.json's. The CLIs' hook formats live in the
+repo's scripts/agent_hooks.py, their transcripts in scripts/agent_sessions.py.
 
 Outside a Herdr pane (HERDR_ENV is not 1) nothing runs. A failure never blocks a prompt and
 prints nothing: a prompt hook's stdout would reach the model.
@@ -61,7 +62,7 @@ HERDR_TIMEOUT = 5
 # A skill named in a prompt: /name, $name or /plugin:name, not a piece of a path.
 NAMED = re.compile(r'(?<![\w/.:~-])[/$]((?:[a-z][a-z0-9-]*:)?[a-z][a-z0-9-]*)(?![\w/-]|\.\w)')
 NUMBERED = re.compile(r'\s+#?\d+$')  # the PR number after a command word
-KEEP = 'KEEP'  # the model's word for "this prompt changes nothing"
+KEEP = 'keep'  # the model's word for "this prompt changes nothing"
 # What the model reads: the end of the agent's last message, where its question is; a long
 # prompt's start and end, since a pasted log sits between the request and the question about it.
 REPLY_END = 800
@@ -78,24 +79,27 @@ def pane():
 
 
 def certain(prompt, settings):
-    """The tag a prompt names outright, or None: the prompt is a command word (with a PR number
-    or not: "approve", "Approve #57."), or the first skill in it that has a tag."""
+    """The type a prompt names outright, or None: the prompt is a command word (with a PR number
+    or not: "approve", "Approve #57."), or the first skill in it that has a type."""
     said = NUMBERED.sub('', prompt.strip().rstrip('.!').lower())
     if said in settings['commands']:
         return settings['commands'][said]
     skills = {**settings['outside'], **settings['skills']}
     for name in NAMED.findall(prompt):
-        tag = skills.get(name) or skills.get(name.split(':')[-1])
-        if tag:
-            return tag
+        kind = skills.get(name) or skills.get(name.split(':')[-1])
+        if kind:
+            return kind
     return None
 
 
-def labels(tag, settings):
-    """Herdr's label for each state it detects: working, the user's move (seen or not), blocked."""
-    forms = settings['tags'][tag]
-    yours = f"[{forms['done']}]"
-    return {'working': f"[{forms['working']}]", 'idle': yours, 'done': yours, 'blocked': f"[{settings['blocked']}]"}
+def labels(kind, settings):
+    """Herdr's label for each state it detects: working, blocked (a dialog), done (finished and
+    not seen yet), idle (seen) and unknown, as type › status › result."""
+    words = settings['words']
+    sep = words['separator']
+    wait = f"{kind}{sep}{words['wait']}"
+    return {'working': f"{kind}{sep}{words['run']}", 'blocked': wait, 'done': f"{wait}{sep}{words['done']}",
+            'idle': words['idle'], 'unknown': words['idle']}
 
 
 def herdr(*args):
@@ -108,10 +112,11 @@ def herdr(*args):
                        stderr=subprocess.DEVNULL, timeout=HERDR_TIMEOUT, check=False)
 
 
-def report(where, tag, seq, settings):
-    """Tag the pane. `seq` is when the prompt came: Herdr drops a report older than its last one."""
-    pairs = [arg for state, text in labels(tag, settings).items() for arg in ('--state-label', f'{state}={text}')]
-    herdr('pane', 'report-metadata', where, '--source', SOURCE, *pairs, '--seq', str(seq))
+def report(where, kind, seq, settings, cli):
+    """Label the pane. `seq` is when the prompt came: Herdr drops a report older than its last one.
+    The labels name the agent (`cli`): Herdr drops them when it exits, and hides them under another."""
+    pairs = [arg for state, text in labels(kind, settings).items() for arg in ('--state-label', f'{state}={text}')]
+    herdr('pane', 'report-metadata', where, '--source', SOURCE, '--agent', cli, *pairs, '--seq', str(seq))
 
 
 def typed(prompt, settings):
@@ -139,34 +144,45 @@ def on_prompt(event, state):
     tag = certain(event.prompt, settings)
     if tag:
         state.update(tag=tag, seq=seq)
-        report(pane(), tag, seq, settings)
+        report(pane(), tag, seq, settings, event.cli)
     else:
         ask_later({'cli': event.cli, 'session': event.session, 'pane': pane(), 'prompt': event.prompt,
                    'transcript': event.transcript, 'seq': seq})
 
 
 def ask(settings, current, said, prompt):
-    """The tag a small model gives the prompt, or None when it names none. It gets the session's
-    current tag, the end of the agent's last message and the prompt, through a headless
+    """The type a small model gives the prompt, or None when it names none. It gets the session's
+    current type, the end of the agent's last message and the prompt, through a headless
     `claude -p` that loads no user settings (so no hooks, plugins or MCP servers), saves no
     session, has no tools and cannot see the pane."""
     claude = shutil.which('claude')
     if not claude:
         return None
     model = settings['model']
-    listed = '\n'.join(f'{tag}: {forms["means"]}' for tag, forms in settings['tags'].items())
+    listed = '\n'.join(f'{kind}: {means}' for kind, means in settings['types'].items())
     question = (f"Current label: {current or 'none'}\n\nThe agent's last message ended:\n{said or '(none)'}\n\n"
                 f"The user's new prompt:\n{prompt}")
     folder = SESSIONS.folder / 'model'  # a folder without project settings of its own
     folder.mkdir(parents=True, exist_ok=True)
     run = subprocess.run([claude, '-p', question, '--model', model['name'], '--tools', '',
                           '--no-session-persistence', '--setting-sources', 'project', '--strict-mcp-config',
-                          '--system-prompt', '\n'.join(model['ask']).replace('{tags}', listed)],
+                          '--system-prompt', '\n'.join(model['type']).replace('{types}', listed)],
                          stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=model['timeout'], cwd=folder,
                          env={key: value for key, value in os.environ.items() if not key.startswith('HERDR_')})
-    words = re.findall(r'[A-Z]+', run.stdout.upper()) if run.returncode == 0 else []
-    word = next((word for word in words if word in settings['tags'] or word == KEEP), None)
+    word = pick(run.stdout if run.returncode == 0 else '', {*settings['types'], KEEP})
     return None if word == KEEP else word
+
+
+def pick(said, allowed):
+    """The word a model's answer gives, lower case, or None. A word in capitals counts first ("The
+    label is DEBUG."), then the answer's first word: the allowed words are everyday words too, so
+    one inside a sentence ("I would plan...") is not the answer."""
+    found = re.findall(r'[A-Za-z]+', said)
+    shouted = [word.lower() for word in found if word.isupper() and word.lower() in allowed]
+    if shouted:
+        return shouted[0]
+    first = found[0].lower() if found else ''
+    return first if first in allowed else None
 
 
 def classify(request):
@@ -181,7 +197,7 @@ def classify(request):
     state = SESSIONS.load(session)  # read again: a newer prompt may have been tagged while the model thought
     if tag and state.get('seq', 0) <= request['seq']:
         SESSIONS.save(session, {**state, 'tag': tag, 'seq': request['seq']})
-        report(request['pane'], tag, request['seq'], settings)
+        report(request['pane'], tag, request['seq'], settings, request['cli'])
 
 
 def cmd_classify(_args):
