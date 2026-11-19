@@ -21,6 +21,8 @@ AGY_PRE = 'ai-dotfiles-worktree-guard-pre'
 AGY_COMMITS = 'ai-dotfiles-small-commits-pre'
 OLD_MARK = 'skills/daily-log/scripts/daily_log.py'  # the retired Stop nudge
 OLD_TOOL, OLD_STOP = 'ai-dotfiles-daily-log-tool', 'ai-dotfiles-daily-log-stop'
+CLAUDE_EVENTS = ['Elicitation', 'PermissionRequest', 'PreToolUse', 'SessionEnd', 'SessionStart', 'Stop', 'StopFailure',
+                 'UserPromptSubmit', 'WorktreeCreate', 'WorktreeRemove']  # every event the three features use
 
 
 def old_handler(cli, mode, repo='/elsewhere/repo'):
@@ -102,17 +104,23 @@ class InstallHooksTest(unittest.TestCase):
         self.assertIn('Codex: approve the new hooks once with /hooks', self.output)
         self.assertEqual(self.install(), 0)  # agy too: its entry is recognised as ours
         claude = self.read('claude')['hooks']
+
+        def title(mode, cli='claude', timeout=10):
+            return {'hooks': [{'type': 'command', 'command': self.command(cli, mode, self.title), 'timeout': timeout}]}
+
         self.assertEqual(claude, {
             'PreToolUse': [
                 {'matcher': 'Edit|Write|NotebookEdit|Bash', 'hooks': [
                     {'type': 'command', 'command': self.command('claude', 'pre'), 'timeout': 60}]},
                 {'matcher': 'Bash', 'hooks': [
-                    {'type': 'command', 'command': self.command('claude', 'pre', self.commits), 'timeout': 30}]}],
+                    {'type': 'command', 'command': self.command('claude', 'pre', self.commits), 'timeout': 30}]},
+                {'matcher': 'AskUserQuestion|ExitPlanMode', **title('pre')}],
             'SessionEnd': [
                 {'hooks': [{'type': 'command', 'command': self.command('claude', 'end'), 'timeout': 60}]},
-                {'hooks': [{'type': 'command', 'command': self.command('claude', 'end', self.title), 'timeout': 10}]}],
-            'UserPromptSubmit': [
-                {'hooks': [{'type': 'command', 'command': self.command('claude', 'prompt', self.title), 'timeout': 10}]}],
+                title('end')],
+            'UserPromptSubmit': [title('prompt')],
+            'Stop': [title('stop')], 'StopFailure': [title('error')], 'PermissionRequest': [title('permission')],
+            'Elicitation': [title('form')], 'SessionStart': [title('start')],
             'WorktreeCreate': [{'hooks': [{'type': 'command', 'command': self.command('claude', 'create'), 'timeout': 60}]}],
             'WorktreeRemove': [{'hooks': [{'type': 'command', 'command': self.command('claude', 'remove'), 'timeout': 60}]}],
         })
@@ -121,7 +129,9 @@ class InstallHooksTest(unittest.TestCase):
         self.assertEqual([g['matcher'] for g in codex['PreToolUse']], ['Edit|Write|Bash', 'Bash'])
         self.assertIn('hook pre --cli codex', codex['PreToolUse'][0]['hooks'][0]['command'])
         self.assertIn(str(self.commits), codex['PreToolUse'][1]['hooks'][0]['command'].replace("'", ''))
-        self.assertEqual(sorted(codex), ['PreToolUse', 'SessionEnd', 'UserPromptSubmit'])  # worktree events are Claude's alone
+        self.assertEqual(sorted(codex), ['Interrupt', 'PermissionRequest', 'PreToolUse', 'SessionEnd', 'Stop',
+                                         'UserPromptSubmit'])  # worktree, error, form and start events are Claude's alone
+        self.assertEqual(codex['Interrupt'], [title('interrupt', 'codex', 3)])  # Codex allows 1 to 3 s
         self.assertNotIn('matcher', codex['SessionEnd'][0])
         self.assertIn('hook end --cli codex', codex['SessionEnd'][0]['hooks'][0]['command'])
 
@@ -156,11 +166,12 @@ class InstallHooksTest(unittest.TestCase):
         self.install(apply=True)
         data = self.read('claude')
         self.assertEqual(data['model'], 'opus')
-        self.assertEqual(data['hooks']['Stop'], [THEIRS])
+        self.assertEqual(data['hooks']['Stop'][0], THEIRS)  # theirs first, herdr-title's appended
+        self.assertEqual(len(data['hooks']['Stop']), 2)
         self.assertEqual(data['hooks']['SessionEnd'][0], THEIRS)  # theirs first, ours appended
         self.assertEqual(len(data['hooks']['SessionEnd']), 3)  # theirs, then the guard's and herdr-title's
         self.assertEqual(data['hooks']['PreToolUse'][0], bash)
-        self.assertEqual(len(data['hooks']['PreToolUse']), 3)  # theirs, then one group per feature
+        self.assertEqual(len(data['hooks']['PreToolUse']), 4)  # theirs, then one group per feature
         self.assertEqual(self.read('agy')['lint'], {'Stop': [OTHERS]})
 
     def test_moved_repo_replaces_its_own_entry_in_place(self):
@@ -383,7 +394,7 @@ class InstallHooksTest(unittest.TestCase):
             self.assertEqual(hooks.run(self.home, 'all', True, False, self.repo), 1)  # agy out
             self.assertEqual(hooks.run(self.home, 'all', False, False, self.repo), 0)
         self.assertEqual(self.read('agy'), seeds['agy'])
-        self.assertEqual(sorted(self.read('claude')['hooks']), ['PreToolUse', 'SessionEnd', 'Stop', 'UserPromptSubmit', 'WorktreeCreate', 'WorktreeRemove'])
+        self.assertEqual(sorted(self.read('claude')['hooks']), CLAUDE_EVENTS)
 
     def test_run_follows_the_target_and_uninstall_ignores_the_switches(self):
         with patch.object(installer, 'REGISTRY', registry(self.home, agy=False)), redirect_stdout(io.StringIO()):
@@ -396,18 +407,29 @@ class InstallHooksTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'unknown target'):
                 hooks.run(self.home, 'gemini', False, False, self.repo)
 
-    def test_claude_and_codex_run_herdr_title_on_each_prompt_and_at_session_end(self):
+    def test_claude_and_codex_run_herdr_title_at_each_prompt_turn_end_dialog_and_session_end(self):
         self.assertEqual([f.name for f in hooks.features(self.repo)], ['worktree-guard', 'small-commits', 'herdr-title'])
         self.install(('claude', 'codex'), apply=True)
-        for cli in ('claude', 'codex'):
+        for cli, modes in (('claude', {'UserPromptSubmit': 'prompt', 'Stop': 'stop', 'StopFailure': 'error',
+                                       'PermissionRequest': 'permission', 'Elicitation': 'form', 'SessionStart': 'start'}),
+                           ('codex', {'UserPromptSubmit': 'prompt', 'Stop': 'stop', 'PermissionRequest': 'permission'})):
             events = self.read(cli)['hooks']
             ours = {mode: {'hooks': [{'type': 'command', 'command': self.command(cli, mode, self.title), 'timeout': 10}]}
-                    for mode in ('prompt', 'end')}
-            self.assertEqual(events['UserPromptSubmit'], [ours['prompt']], cli)  # no matcher
+                    for mode in (*modes.values(), 'end')}
+            for event, mode in modes.items():
+                self.assertEqual(events[event], [ours[mode]], (cli, event))  # no matcher
             self.assertEqual(len(events['SessionEnd']), 2, cli)
             self.assertIn(hooks.GUARD_MARK, events['SessionEnd'][0]['hooks'][0]['command'], cli)  # the guard's stays
             self.assertEqual(events['SessionEnd'][1], ours['end'], cli)
         self.assertIn('hook prompt --cli codex', self.read('codex')['hooks']['UserPromptSubmit'][0]['hooks'][0]['command'])
+
+    def test_the_prompt_and_end_entries_codex_already_trusts_stay_byte_for_byte(self):
+        """Codex trusts a hook by the hash of its entry: an unchanged entry needs no new approval."""
+        self.install(('codex',), apply=True)
+        events = self.read('codex')['hooks']
+        for event, mode in (('UserPromptSubmit', 'prompt'), ('SessionEnd', 'end')):
+            (handler,) = events[event][-1]['hooks']
+            self.assertEqual(handler, {'type': 'command', 'command': self.command('codex', mode, self.title), 'timeout': 10})
 
     def test_antigravity_gets_no_herdr_title_entry_and_nothing_is_left_to_do(self):
         self.install(('agy',), apply=True)
@@ -466,11 +488,14 @@ class InstallHooksTest(unittest.TestCase):
         self.assertFalse(state.exists())
         claude = self.read('claude')
         self.assertEqual(claude['model'], 'opus')
-        self.assertEqual(sorted(claude['hooks']), ['PreToolUse', 'SessionEnd', 'Stop', 'UserPromptSubmit', 'WorktreeCreate', 'WorktreeRemove'])
-        self.assertEqual(claude['hooks']['Stop'], [THEIRS])  # the foreign group stays, ours is gone
+        self.assertEqual(sorted(claude['hooks']), CLAUDE_EVENTS)
+        self.assertEqual(claude['hooks']['Stop'][0], THEIRS)  # the foreign group stays, the old nudge is gone
+        self.assertIn(hooks.TITLE_MARK, claude['hooks']['Stop'][1]['hooks'][0]['command'])  # herdr-title's is new
+        self.assertNotIn(OLD_MARK, json.dumps(claude))
         codex = self.read('codex')['hooks']
         self.assertEqual(codex['PostToolUse'], [{'matcher': 'Edit|Write', 'hooks': [OTHERS]}])  # theirs kept
-        self.assertNotIn('Stop', codex)
+        (stop,) = codex['Stop']
+        self.assertIn(hooks.TITLE_MARK, stop['hooks'][0]['command'])
         agy = self.read('agy')
         self.assertEqual(sorted(agy), [AGY_COMMITS, AGY_PRE, 'lint'])
         self.assertEqual(self.install(), 0)
