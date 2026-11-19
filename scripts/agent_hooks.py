@@ -11,11 +11,14 @@ matchers a feature needs. Everything that differs between the CLIs lives here.
   native_events(cli, wants)              ((native event, kind, matcher), ...) for the installer
 
 Kinds: 'pre' (before a tool call), 'tool' (after one), 'stop' (a turn ends), 'end' (the
-session ends). An Event names what the tool does (action: edit, shell, read or other) and
-carries its input. Replies: Continue (a 'stop'), Note, Deny and Rewrite (a 'pre').
+session ends), 'prompt' (the user submits one; never answered, and Antigravity has no such
+event). An Event names what the tool does (action: edit, shell, read or other) and carries its
+input; a 'prompt' Event carries the prompt and the transcript's path. Replies: Continue (a
+'stop'), Note, Deny and Rewrite (a 'pre').
 Pi has no hook file: a feature's Pi extension sends {session_id, cwd, tool_name, tool_input,
-pid} and applies {continue}, {block, reason}, {input, note} or {note}. Features import this
-file from the repo's scripts/ folder. Python 3.11+, stdlib only.
+pid} (a prompt: {session_id, cwd, prompt, transcript_path}) and applies {continue}, {block,
+reason}, {input, note} or {note}. Features import this file from the repo's scripts/ folder.
+Python 3.11+, stdlib only.
 """
 from __future__ import annotations
 
@@ -46,8 +49,9 @@ MATCHERS = {
             'read': 'view_file|list_dir|find_by_name|grep_search'},
 }
 NATIVE = {'pre': 'PreToolUse', 'tool': 'PostToolUse', 'stop': 'Stop', 'end': 'SessionEnd',
-          'create': 'WorktreeCreate', 'remove': 'WorktreeRemove'}
+          'prompt': 'UserPromptSubmit', 'create': 'WorktreeCreate', 'remove': 'WorktreeRemove'}
 NO_SESSION_END = ('agy',)  # Antigravity's hooks have no end-of-session event
+NO_PROMPT = ('agy',)  # nor one for a submitted prompt (PreInvocation carries no prompt text)
 CLAUDE_ONLY = ('create', 'remove')  # worktree events: only Claude Code lets a hook make and remove worktrees
 # CLIs that do not flag the turn a hook's own Continue started; the store remembers it for them.
 UNFLAGGED_CONTINUATION = ('agy', 'pi')
@@ -70,6 +74,8 @@ class Event:
     model: str = ''              # the model, when the CLI says
     name: str = ''               # the new worktree's name (Claude's 'create' event)
     path: str = ''               # the worktree being removed (Claude's 'remove' event)
+    prompt: str = ''             # what the user submitted (a 'prompt' event)
+    transcript: str = ''         # the session's transcript file, when the CLI says
 
 
 @dataclass(frozen=True)
@@ -136,7 +142,8 @@ def read(cli, kind, data):
     return Event(cli, kind, session, folder, tool, action == 'edit', bool(data.get('stop_hook_active')),
                  model_stopped, action, tool_input if isinstance(tool_input, dict) else {},
                  pid if isinstance(pid, int) and not isinstance(pid, bool) else None,
-                 model if isinstance(model, str) else '', text(data.get('name')), text(data.get('worktree_path')))
+                 model if isinstance(model, str) else '', text(data.get('name')), text(data.get('worktree_path')),
+                 text(data.get('prompt')), text(data.get('transcript_path')))
 
 
 def render_pre(cli, reply):
@@ -180,7 +187,7 @@ def render(cli, kind, reply):
     """The JSON a CLI expects for `reply`, or None to print nothing."""
     if kind == 'pre':
         return render_pre(cli, reply)
-    if kind == 'end':
+    if kind in ('end', 'prompt'):  # a prompt hook's stdout would reach the model as context
         return None
     if isinstance(reply, Continue):
         if cli == 'claude':
@@ -274,7 +281,8 @@ def native_events(cli, wants):
         return ()
     found = []
     for kind, actions in wants:
-        if (kind == 'end' and cli in NO_SESSION_END) or (kind in CLAUDE_ONLY and cli != 'claude'):
+        if ((kind == 'end' and cli in NO_SESSION_END) or (kind == 'prompt' and cli in NO_PROMPT)
+                or (kind in CLAUDE_ONLY and cli != 'claude')):
             continue
         actions = (actions,) if isinstance(actions, str) else actions or ()
         matcher = '|'.join(MATCHERS[cli][a] for a in actions if a in MATCHERS[cli]) or None

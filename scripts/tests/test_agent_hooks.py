@@ -45,6 +45,14 @@ class ReadTest(unittest.TestCase):
         self.assertEqual((gone.name, gone.path), ('', '/w/x'))
         self.assertEqual(agent_hooks.read('claude', 'create', {'name': 7}).name, '')
 
+    def test_a_prompt_event_carries_the_text_and_the_transcript(self):
+        for cli in ('claude', 'codex', 'pi'):
+            event = agent_hooks.read(cli, 'prompt', raw(cli, prompt='approve 57', transcript_path='/t/s.jsonl'))
+            self.assertEqual((event.kind, event.session, event.prompt, event.transcript),
+                             ('prompt', 's1', 'approve 57', '/t/s.jsonl'), cli)
+        bare = agent_hooks.read('codex', 'prompt', raw('codex', prompt=7, transcript_path=None))
+        self.assertEqual((bare.prompt, bare.transcript), ('', ''))
+
     def test_input_that_is_not_an_object_has_no_session(self):
         for data in ([], None, 'x', {'toolCall': []}):
             self.assertIsNone(agent_hooks.read('agy', 'tool', data).session)
@@ -64,6 +72,10 @@ class RenderTest(unittest.TestCase):
                                  ('codex', 'tool'): None, ('codex', 'stop'): {},
                                  ('agy', 'tool'): {}, ('agy', 'stop'): {'decision': 'stop'},
                                  ('pi', 'tool'): None, ('pi', 'stop'): None})
+
+    def test_a_prompt_hook_prints_nothing_where_stdout_would_reach_the_model(self):
+        for cli in ('claude', 'codex', 'pi'):
+            self.assertIsNone(agent_hooks.render(cli, 'prompt', None), cli)
 
 
 class PreReplyTest(unittest.TestCase):
@@ -220,6 +232,13 @@ class InstallTableTest(unittest.TestCase):
         self.assertEqual(agent_hooks.native_events('codex', wants),
                          (('PreToolUse', 'pre', 'Edit|Write|Bash'), ('SessionEnd', 'end', None)))
         self.assertEqual([e for e, _, _ in agent_hooks.native_events('agy', wants)], ['PreToolUse'])
+
+    def test_the_prompt_event_is_left_out_where_the_cli_has_none(self):
+        wants = (('prompt', None), ('end', None))
+        for cli in ('claude', 'codex'):
+            self.assertEqual(agent_hooks.native_events(cli, wants),
+                             (('UserPromptSubmit', 'prompt', None), ('SessionEnd', 'end', None)), cli)
+        self.assertEqual(agent_hooks.native_events('agy', wants), ())
 
     def test_worktree_events_exist_for_claude_only_and_take_no_matcher(self):
         wants = (('create', None), ('remove', None))
