@@ -111,6 +111,21 @@ class CertainTest(Sandbox):
         self.assertEqual(self.calls('herdr'), [])
 
 
+class EndTest(Sandbox):
+    def test_session_end_takes_the_tag_off_and_forgets_the_session(self):
+        self.hook('prompt', prompt='/grilling')
+        kept = self.home / 'state' / 's1.json'
+        self.assertEqual(json.loads(kept.read_text())['tag'], 'GRILL')
+        done = self.hook('end')
+        self.assertEqual((done.returncode, done.stdout), (0, ''))
+        tagged, cleared = (call['argv'] for call in self.calls('herdr'))
+        self.assertEqual(cleared[:6], ['pane', 'report-metadata', 'w1:p1', '--source', 'user:ai-dotfiles-title',
+                                       '--clear-state-labels'])
+        # Herdr drops a report whose --seq is not above the source's last one.
+        self.assertGreater(int(cleared[cleared.index('--seq') + 1]), int(tagged[tagged.index('--seq') + 1]))
+        self.assertFalse(kept.exists())
+
+
 class QuietTest(Sandbox):
     def test_outside_herdr_nothing_runs_and_nothing_is_kept(self):
         for missing in ('HERDR_ENV', 'HERDR_PANE_ID'):

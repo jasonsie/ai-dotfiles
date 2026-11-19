@@ -2,6 +2,7 @@
 """herdr-title: an agent's row in Herdr's sidebar says what its current prompt is for.
 
   herdr-title hook prompt --cli (claude|codex|pi)   JSON in; nothing out
+  herdr-title hook end --cli (claude|codex|pi)      JSON in; nothing out
 
 Each time the user submits a prompt, the hook picks one tag for it and reports the tag to
 Herdr as the pane's state labels: `[GRILLING]` while the agent works, `[GRILLED]` once it is
@@ -9,7 +10,7 @@ the user's move, `[BLOCKED]` at a permission dialog. Herdr switches between them
 state it detects itself and draws the label next to the tab's name. A prompt that is a
 command word (`approve`, `approve 57`) or names a skill (`/grilling`, `$tutor`,
 `/zkfy:zk-note`) is tagged at once; a prompt the user did not type (a subagent's report,
-another session's message) leaves the tag as it is.
+another session's message) leaves the tag as it is. When the session ends the tag comes off.
 The tags, the command words and the skills are config/herdr-title.json's. The CLIs' hook
 formats live in the repo's scripts/agent_hooks.py.
 
@@ -114,9 +115,18 @@ def on_prompt(event, state):
         report(pane(), tag, seq, settings)
 
 
+def on_end(event):
+    """The session is over: its tag comes off the pane, and its state file goes."""
+    herdr('pane', 'report-metadata', pane(), '--source', SOURCE, '--clear-state-labels', '--seq', str(time.time_ns()))
+    if event.session:
+        SESSIONS.file(event.session).unlink(missing_ok=True)
+
+
 def cmd_hook(args):
     if not pane():
         return 0
+    if args.kind == 'end':
+        return agent_hooks.serve(args.cli, 'end', lambda data: on_end(agent_hooks.read(args.cli, 'end', data)))
     return agent_hooks.serve(args.cli, args.kind,
                              lambda data: agent_hooks.call(args.cli, args.kind, data, on_prompt, SESSIONS))
 
@@ -126,7 +136,7 @@ def parser():
                                   formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = top.add_subparsers(dest='command', required=True)
     hook = sub.add_parser('hook', help='the CLI hook: JSON on stdin')
-    hook.add_argument('kind', choices=('prompt',))
+    hook.add_argument('kind', choices=('prompt', 'end'))
     hook.add_argument('--cli', choices=CLIS, required=True)
     hook.set_defaults(run=cmd_hook)
     return top
