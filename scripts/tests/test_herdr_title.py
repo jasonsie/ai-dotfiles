@@ -6,6 +6,7 @@ how they were called.
 Run: python3 -m unittest discover -s scripts/tests -p 'test_herdr_title.py' -v
 """
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -51,8 +52,9 @@ class Sandbox(unittest.TestCase):
         return subprocess.run([sys.executable, str(SCRIPT), *args], input=json.dumps(data or {}), text=True,
                               capture_output=True, env={**self.env, **env}, timeout=30)
 
-    def hook(self, kind, cli='claude', session='s1', **fields):
-        return self.run_script('hook', kind, '--cli', cli, data={'session_id': session, 'cwd': '/w', **fields})
+    def hook(self, kind, cli='claude', session='s1', env=None, **fields):
+        return self.run_script('hook', kind, '--cli', cli, data={'session_id': session, 'cwd': '/w', **fields},
+                               **(env or {}))
 
     def calls(self, tool, wait=0):
         """The calls `tool` got so far; with `wait`, as soon as there are that many (5 s at most)."""
@@ -124,6 +126,88 @@ class EndTest(Sandbox):
         # Herdr drops a report whose --seq is not above the source's last one.
         self.assertGreater(int(cleared[cleared.index('--seq') + 1]), int(tagged[tagged.index('--seq') + 1]))
         self.assertFalse(kept.exists())
+
+
+class ModelTest(Sandbox):
+    """A prompt that names no purpose goes to a small model, in a process the hook does not wait for."""
+
+    def transcript(self, last):
+        """A Claude Code transcript whose last reply is `last`."""
+        rows = [{'type': 'user', 'timestamp': '2026-11-19T04:00:00Z', 'cwd': '/w', 'message': {'content': 'grill me'}},
+                {'type': 'assistant', 'timestamp': '2026-11-19T04:00:09Z',
+                 'message': {'content': [{'type': 'text', 'text': last}]}}]
+        path = self.home / 'session.jsonl'
+        path.write_text(''.join(json.dumps(row) + '\n' for row in rows))
+        return str(path)
+
+    def test_the_model_sees_the_agents_last_message_and_its_answer_tags_the_pane(self):
+        self.hook('prompt', prompt='/grilling')
+        path = self.transcript('That is every decision. Confirm and I will build it.')
+        self.hook('prompt', prompt='y', transcript_path=path, env={'FAKE_CLAUDE_SAYS': 'EXECUTE'})
+        tagged = self.calls('herdr', wait=2)
+        self.assertEqual(self.labels(tagged[1]), {'working': '[EXECUTING]', 'idle': '[EXECUTED]',
+                                                  'done': '[EXECUTED]', 'blocked': '[BLOCKED]'})
+        (asked,) = self.calls('claude')
+        flag, question, *options = asked['argv']
+        self.assertEqual(flag, '-p')
+        self.assertIn('Current label: GRILL', question)
+        self.assertIn('Confirm and I will build it.', question)
+        self.assertTrue(question.endswith('\ny'), question)
+        for name, value in (('--model', 'haiku'), ('--tools', ''), ('--setting-sources', 'project')):
+            self.assertEqual(options[options.index(name) + 1], value, name)
+        self.assertIn('--no-session-persistence', options)
+        self.assertIn('--strict-mcp-config', options)
+        system = options[options.index('--system-prompt') + 1]
+        self.assertIn('EXECUTE: make the change, build it, do the task', system)
+        self.assertIn('KEEP', system)
+        # The model's CLI must not know the pane: its own hooks would report to it.
+        self.assertEqual(asked['herdr_env'], [])
+        self.assertTrue(asked['cwd'].startswith(os.path.realpath(self.home / 'state')), asked['cwd'])
+        self.assertEqual(json.loads((self.home / 'state' / 's1.json').read_text())['tag'], 'EXECUTE')
+
+    def test_the_hook_returns_before_the_model_answers(self):
+        started = time.time()
+        self.hook('prompt', prompt='how does this work', env={'FAKE_CLAUDE_SAYS': 'EXPLAIN', 'FAKE_CLAUDE_SLEEP': '1.5'})
+        self.assertLess(time.time() - started, 1.0)
+        self.assertEqual(self.calls('herdr'), [])
+        (call,) = self.calls('herdr', wait=1)
+        self.assertEqual(self.labels(call)['working'], '[EXPLAINING]')
+
+    def classify(self, says='EXECUTE', code=0, **request):
+        """The model's turn by itself, as the hook starts it, with the model saying `says`."""
+        asked = {'cli': 'claude', 'session': 's1', 'pane': 'w1:p1', 'prompt': 'y', 'transcript': '', 'seq': 5, **request}
+        return self.run_script('classify', data=asked, FAKE_CLAUDE_SAYS=says, FAKE_CLAUDE_EXIT=str(code))
+
+    def test_keep_a_word_that_is_no_tag_or_a_failed_call_leaves_the_tag(self):
+        for says, code in (('KEEP', 0), ('banana', 0), ('', 0), ('EXECUTE', 1)):
+            done = self.classify(says, code)
+            self.assertEqual((done.returncode, done.stdout, done.stderr), (0, '', ''), says)
+        self.assertEqual(len(self.calls('claude')), 4)
+        (self.bin / 'claude').unlink()  # no claude on this machine
+        self.assertEqual(self.classify().returncode, 0)
+        self.assertEqual(self.calls('herdr'), [])
+
+    def test_an_answer_that_comes_after_a_newer_tag_is_dropped(self):
+        self.hook('prompt', prompt='/grilling')  # tagged now; the answer below is for a prompt before it
+        self.classify('EXECUTE', seq=5)
+        self.assertEqual([self.labels(call)['working'] for call in self.calls('herdr')], ['[GRILLING]'])
+        self.assertEqual(json.loads((self.home / 'state' / 's1.json').read_text())['tag'], 'GRILL')
+
+    def test_a_long_reply_is_cut_to_its_end_and_a_long_prompt_to_its_start_and_end(self):
+        path = self.transcript('Opening words. ' + 'r' * 3000 + ' Shall I build it?')
+        self.classify(transcript=path, prompt='First line. ' + 'p' * 3000 + ' why does it fail?')
+        question = self.calls('claude')[0]['argv'][1]
+        self.assertLess(len(question), 2000)
+        self.assertIn('Shall I build it?', question)  # a reply ends with what it asks
+        self.assertNotIn('Opening words.', question)
+        self.assertIn('First line.', question)
+        self.assertIn('why does it fail?', question)  # a pasted log comes before the question about it
+
+    def test_the_answer_may_come_in_lower_case_or_inside_a_sentence(self):
+        for session, says in enumerate(('execute\n', 'The label is DEBUG.', '**Review**', 'I would keep it: KEEP, not PLAN')):
+            self.classify(says, session=f's{session}')
+        self.assertEqual([self.labels(call)['working'] for call in self.calls('herdr')],
+                         ['[EXECUTING]', '[DEBUGGING]', '[REVIEWING]'])
 
 
 class QuietTest(Sandbox):

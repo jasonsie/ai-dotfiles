@@ -3,16 +3,26 @@
 
   herdr-title hook prompt --cli (claude|codex|pi)   JSON in; nothing out
   herdr-title hook end --cli (claude|codex|pi)      JSON in; nothing out
+  herdr-title classify                              the model's turn for one prompt; the hook starts it
 
 Each time the user submits a prompt, the hook picks one tag for it and reports the tag to
 Herdr as the pane's state labels: `[GRILLING]` while the agent works, `[GRILLED]` once it is
 the user's move, `[BLOCKED]` at a permission dialog. Herdr switches between them from the
-state it detects itself and draws the label next to the tab's name. A prompt that is a
-command word (`approve`, `approve 57`) or names a skill (`/grilling`, `$tutor`,
-`/zkfy:zk-note`) is tagged at once; a prompt the user did not type (a subagent's report,
-another session's message) leaves the tag as it is. When the session ends the tag comes off.
-The tags, the command words and the skills are config/herdr-title.json's. The CLIs' hook
-formats live in the repo's scripts/agent_hooks.py.
+state it detects itself and draws the label next to the tab's name.
+
+Who picks the tag:
+- A prompt that is a command word (`approve`, `approve 57`) or names a skill (`/grilling`,
+  `$tutor`, `/zkfy:zk-note`) is tagged at once, by the hook.
+- Any other prompt goes to a small model, in a process the hook starts and does not wait for
+  (`classify`): a headless `claude -p` that gets the session's current tag, the end of the
+  agent's last message and the prompt, and answers with one tag or KEEP. The tag lands about
+  three seconds later. Half the prompts are short answers ("1", "y") whose purpose is in the
+  question they answer, which is why the model sees the agent's last message.
+- A prompt the user did not type (a subagent's report, another session's message) leaves the
+  tag as it is. So does a model that says KEEP, fails, or answers after a newer prompt.
+When the session ends the tag comes off. The tags, the command words, the skills and the
+model's instruction are config/herdr-title.json's. The CLIs' hook formats live in the repo's
+scripts/agent_hooks.py, their transcripts in scripts/agent_sessions.py.
 
 Outside a Herdr pane (HERDR_ENV is not 1) nothing runs. A failure never blocks a prompt and
 prints nothing: a prompt hook's stdout would reach the model.
@@ -50,6 +60,11 @@ HERDR_TIMEOUT = 5
 # A skill named in a prompt: /name, $name or /plugin:name, not a piece of a path.
 NAMED = re.compile(r'(?<![\w/.:~-])[/$]((?:[a-z][a-z0-9-]*:)?[a-z][a-z0-9-]*)(?![\w/-]|\.\w)')
 NUMBERED = re.compile(r'\s+#?\d+$')  # the PR number after a command word
+KEEP = 'KEEP'  # the model's word for "this prompt changes nothing"
+# What the model reads: the end of the agent's last message, where its question is; a long
+# prompt's start and end, since a pasted log sits between the request and the question about it.
+REPLY_END = 800
+PROMPT_START, PROMPT_END = 500, 300
 
 
 def config():
@@ -104,15 +119,73 @@ def typed(prompt, settings):
     return bool(prompt.strip()) and not prompt.lstrip().startswith(tuple(settings['machine']))
 
 
+def ask_later(request):
+    """Hand the prompt to `classify` in a process of its own and return: the model takes
+    seconds, and the user's prompt must not wait for it."""
+    child = subprocess.Popen([sys.executable, str(Path(__file__).resolve()), 'classify'], stdin=subprocess.PIPE,
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+    with contextlib.suppress(OSError):
+        child.stdin.write(json.dumps(request).encode())
+        child.stdin.close()
+
+
 def on_prompt(event, state):
     settings = config()
     if not typed(event.prompt, settings):
         return
+    seq = time.time_ns()
     tag = certain(event.prompt, settings)
     if tag:
-        seq = time.time_ns()
         state.update(tag=tag, seq=seq)
         report(pane(), tag, seq, settings)
+    else:
+        ask_later({'cli': event.cli, 'session': event.session, 'pane': pane(), 'prompt': event.prompt,
+                   'transcript': event.transcript, 'seq': seq})
+
+
+def ask(settings, current, said, prompt):
+    """The tag a small model gives the prompt, or None when it names none. It gets the session's
+    current tag, the end of the agent's last message and the prompt, through a headless
+    `claude -p` that loads no user settings (so no hooks, plugins or MCP servers), saves no
+    session, has no tools and cannot see the pane."""
+    claude = shutil.which('claude')
+    if not claude:
+        return None
+    model = settings['model']
+    listed = '\n'.join(f'{tag}: {forms["means"]}' for tag, forms in settings['tags'].items())
+    question = (f"Current label: {current or 'none'}\n\nThe agent's last message ended:\n{said or '(none)'}\n\n"
+                f"The user's new prompt:\n{prompt}")
+    folder = SESSIONS.folder / 'model'  # a folder without project settings of its own
+    folder.mkdir(parents=True, exist_ok=True)
+    run = subprocess.run([claude, '-p', question, '--model', model['name'], '--tools', '',
+                          '--no-session-persistence', '--setting-sources', 'project', '--strict-mcp-config',
+                          '--system-prompt', '\n'.join(model['ask']).replace('{tags}', listed)],
+                         stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=model['timeout'], cwd=folder,
+                         env={key: value for key, value in os.environ.items() if not key.startswith('HERDR_')})
+    words = re.findall(r'[A-Z]+', run.stdout.upper()) if run.returncode == 0 else []
+    word = next((word for word in words if word in settings['tags'] or word == KEEP), None)
+    return None if word == KEEP else word
+
+
+def classify(request):
+    """The model's turn for one prompt: ask, then tag the pane with its answer."""
+    import agent_sessions  # the CLIs' transcripts; not needed by the hook itself
+    settings, session = config(), request['session']
+    said = agent_sessions.last_reply(request['cli'], request['transcript']) if request.get('transcript') else ''
+    prompt = request['prompt']
+    if len(prompt) > PROMPT_START + PROMPT_END:
+        prompt = f'{prompt[:PROMPT_START]}\n[...]\n{prompt[-PROMPT_END:]}'
+    tag = ask(settings, SESSIONS.load(session).get('tag'), said[-REPLY_END:], prompt)
+    state = SESSIONS.load(session)  # read again: a newer prompt may have been tagged while the model thought
+    if tag and state.get('seq', 0) <= request['seq']:
+        SESSIONS.save(session, {**state, 'tag': tag, 'seq': request['seq']})
+        report(request['pane'], tag, request['seq'], settings)
+
+
+def cmd_classify(_args):
+    with contextlib.suppress(Exception):  # nobody is listening: a failure leaves the tag as it is
+        classify(json.loads(sys.stdin.read()))
+    return 0
 
 
 def on_end(event):
@@ -139,6 +212,8 @@ def parser():
     hook.add_argument('kind', choices=('prompt', 'end'))
     hook.add_argument('--cli', choices=CLIS, required=True)
     hook.set_defaults(run=cmd_hook)
+    sub.add_parser('classify', help="the model's turn: a request as JSON on stdin (the hook starts it)"
+                   ).set_defaults(run=cmd_classify)
     return top
 
 
