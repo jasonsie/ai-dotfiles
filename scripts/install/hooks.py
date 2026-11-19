@@ -1,17 +1,21 @@
 #!/usr/bin/env python3
-"""Install the skills' hooks into each CLI: worktree-guard, small-commits; writes unless --dry-run.
+"""Install the skills' hooks into each CLI: worktree-guard, small-commits, herdr-title; writes unless --dry-run.
 
 worktree-guard (skills/worktree-guard/scripts/worktree_guard.py) runs before edits and shell
 commands (PreToolUse; Antigravity also before reads) and when a session ends (SessionEnd); for
 Claude Code it also makes and removes the worktrees Claude asks for (WorktreeCreate, WorktreeRemove).
 small-commits (skills/small-commits/scripts/small_commits.py) runs before shell commands, for
-`git commit`. Each feature's hooks are merged into the CLI's own hook file as one entry per
-event; every other hook stays as it is:
-  Claude Code   ~/.claude/settings.json      "hooks": PreToolUse, SessionEnd, WorktreeCreate, WorktreeRemove
-  Codex         ~/.codex/hooks.json          the same (approve once in /hooks)
-  Antigravity   ~/.gemini/config/hooks.json  a named entry per feature and event (no SessionEnd)
-Pi has no hooks: skills.py links scripts/agent_hooks.ts as its extension. The native events
-and matchers come from scripts/agent_hooks.py.
+`git commit`. herdr-title (skills/herdr-title/scripts/herdr_title.py) tags the agent's row in
+Herdr: it runs when the user submits a prompt (UserPromptSubmit) and when a session ends
+(SessionEnd), and outside a Herdr pane it does nothing. Antigravity has no prompt event, so
+it gets no herdr-title entry. Each feature's hooks are merged into the CLI's own hook file as
+one entry per event; every other hook stays as it is:
+  Claude Code   ~/.claude/settings.json      "hooks": PreToolUse, SessionEnd, UserPromptSubmit,
+                                             WorktreeCreate, WorktreeRemove
+  Codex         ~/.codex/hooks.json          PreToolUse, SessionEnd, UserPromptSubmit (approve once in /hooks)
+  Antigravity   ~/.gemini/config/hooks.json  a named entry per feature and event (PreToolUse alone)
+Pi has no hooks: skills.py links scripts/agent_hooks.ts as its extension, which plays all
+three features. The native events and matchers come from scripts/agent_hooks.py.
 
 An entry counts as a feature's when its command runs that feature's script; anything else in
 its place is refused. Hooks this script installed before and no longer does (daily-log's
@@ -46,6 +50,9 @@ GUARD_TIMEOUT = 60  # making a linked worktree in a big repository takes a while
 COMMITS_MARK = 'skills/small-commits/scripts/small_commits.py'
 COMMITS_WANTS = {cli: (('pre', ('shell',)),) for cli in agent_hooks.HOOK_FILE_CLIS}  # before `git commit`
 COMMITS_TIMEOUT = 30  # a diff of a big repository
+TITLE_MARK = 'skills/herdr-title/scripts/herdr_title.py'
+TITLE_WANTS = {cli: (('prompt', None), ('end', None)) for cli in agent_hooks.HOOK_FILE_CLIS}  # none for agy
+TITLE_TIMEOUT = 10  # it answers at once and does its slow work detached
 # Retired: the daily-log Stop nudge (PostToolUse + Stop in every CLI), replaced by the daily
 # pass in November 2026. Its entries, Antigravity names and state folder go on the next run.
 RETIRED_MARKS = ('skills/daily-log/scripts/daily_log.py',)
@@ -71,11 +78,16 @@ def small_commits(repo=WORKSPACE):
     return Feature('small-commits', Path(repo) / COMMITS_MARK, COMMITS_MARK, events, COMMITS_TIMEOUT)
 
 
+def herdr_title(repo=WORKSPACE):
+    events = {cli: agent_hooks.native_events(cli, wants) for cli, wants in TITLE_WANTS.items()}
+    return Feature('herdr-title', Path(repo) / TITLE_MARK, TITLE_MARK, events, TITLE_TIMEOUT)
+
+
 def features(repo=WORKSPACE, cloud=False):
     """The features whose hooks are installed, found in the checkout at `repo`. A cloud session's
-    VM (`cloud`) gets small-commits alone: the session already works alone on its own branch, and
-    worktree-guard's records belong to a Mac."""
-    return [small_commits(repo)] if cloud else [worktree_guard(repo), small_commits(repo)]
+    VM (`cloud`) gets small-commits alone: the session already works alone on its own branch,
+    worktree-guard's records belong to a Mac, and Herdr, whose rows herdr-title tags, runs there."""
+    return [small_commits(repo)] if cloud else [worktree_guard(repo), small_commits(repo), herdr_title(repo)]
 
 
 def handler(cli, mode, script, timeout):
