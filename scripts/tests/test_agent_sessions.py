@@ -597,5 +597,46 @@ class ReadTest(StoreTest):
         self.assertIsNone(self.read('claude', path))
 
 
+class LastReplyTest(StoreTest):
+    """The agent's last message to the user, whatever the day, read from the file's tail."""
+
+    def test_each_store_gives_its_last_assistant_text_and_a_later_prompt_does_not_hide_it(self):
+        files = {
+            'claude': self.claude('c', [claude_user(stamp(9), 'grill me'), claude_assistant(stamp(9, 1), 'Q1. Which?'),
+                                        claude_user(stamp(9, 2), '1'),
+                                        claude_assistant(stamp(9, 3), 'Noted.', 'Confirm and I will build it.'),
+                                        claude_user(stamp(9, 4), 'y')]),
+            'codex': self.codex('x', [codex_meta('x'), codex_message(stamp(9), 'user', 'review it'),
+                                      codex_message(stamp(9, 1), 'assistant', 'Two findings.'),
+                                      codex_message(stamp(9, 2), 'user', 'fix both')]),
+            'pi': self.pi('p', [pi_header('p'), pi_message(stamp(9), 'user', 'why?'),
+                                pi_message(stamp(9, 1), 'assistant', [pi_text('Because of the cache.')]),
+                                pi_message(stamp(9, 2), 'user', [pi_text('ok')])]),
+        }
+        self.assertEqual({cli: agent_sessions.last_reply(cli, path) for cli, path in files.items()},
+                         {'claude': 'Noted.\nConfirm and I will build it.', 'codex': 'Two findings.',
+                          'pi': 'Because of the cache.'})
+
+    def test_a_subagents_reply_inside_the_transcript_is_not_the_agents(self):
+        path = self.claude('c', [claude_assistant(stamp(9), 'Shall I ship it?'),
+                                 claude_assistant(stamp(9, 5), 'Subagent: 3 files read.', isSidechain=True)])
+        self.assertEqual(agent_sessions.last_reply('claude', path), 'Shall I ship it?')
+
+    def test_only_the_tail_is_read_and_a_line_cut_in_half_is_skipped(self):
+        path = self.claude('c', [claude_assistant(stamp(9), 'Old reply.'), claude_user(stamp(9, 1), 'x' * 500),
+                                 claude_assistant(stamp(9, 2), 'Last reply.'), claude_user(stamp(9, 3), 'y')])
+        *_, reply, prompt = path.read_bytes().splitlines(keepends=True)
+        # The tail starts 10 bytes into the 500-character prompt: that half line is dropped, the rest read.
+        self.assertEqual(agent_sessions.last_reply('claude', path, tail=len(reply) + len(prompt) + 10), 'Last reply.')
+        # The tail starts inside the last reply's own line: nothing older is looked for.
+        self.assertEqual(agent_sessions.last_reply('claude', path, tail=len(prompt) + len(reply) // 2), '')
+
+    def test_a_file_that_cannot_be_read_or_holds_no_reply_is_empty(self):
+        prompts = self.claude('c', [claude_user(stamp(9), 'hi'), '{{{'])
+        for path in (prompts, self.home / 'missing.jsonl', self.home, 'not\x00a path'):
+            self.assertEqual(agent_sessions.last_reply('claude', path), '', path)
+        self.assertEqual(agent_sessions.last_reply('agy', prompts), '')
+
+
 if __name__ == '__main__':
     unittest.main()

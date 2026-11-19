@@ -8,6 +8,7 @@ context, sessions in scratch folders). Everything that differs between the store
   window(day, cutoff_hour, tz)    [day at cutoff_hour, the next day at cutoff_hour) in local time
   sessions(start, end, home)      every Session with a turn in [start, end), oldest first
   read(cli, path, start, end)     one transcript's Session, or None
+  last_reply(cli, path)           the agent's last message in one transcript, from the file's tail
   is_temp(cwd)                    a scratch folder; sessions() drops the sessions that ran in one
 
 A Session's turns and files hold only what falls inside the window; its title and cwd belong to
@@ -38,6 +39,7 @@ TITLE_MAX = 80
 EDIT_TOOLS = {'claude': {'Edit', 'Write', 'NotebookEdit'}, 'pi': {'edit', 'write'}}
 # Claude Code lines that look like turns but are not: injected, a subagent's, a summary, an API error.
 NOT_A_TURN = ('isMeta', 'isSidechain', 'isCompactSummary', 'isApiErrorMessage')
+ALWAYS = (datetime.min.replace(tzinfo=timezone.utc), datetime.max.replace(tzinfo=timezone.utc))  # a window with no edges
 ROLLOUT = re.compile(r'rollout-\d{4}-\d\d-\d\dT\d\d-\d\d-\d\d-(.+)')
 PATCH_FILE = re.compile(r'^\*\*\* (?:Add File|Update File|Delete File|Move to): (.+)$', re.MULTILINE)
 
@@ -107,15 +109,42 @@ def read(cli: str, path: Path, start: datetime, end: datetime) -> Session | None
     try:
         with open(path, encoding='utf-8', errors='replace') as lines:
             for line in lines:
-                try:
-                    row = json.loads(line)
-                    if isinstance(row, dict):
-                        handle(reader, row)
-                except (ValueError, TypeError, AttributeError, KeyError, IndexError, RecursionError):
-                    continue
+                _feed(handle, reader, line)
     except (OSError, ValueError):  # ValueError: a path with a NUL in it
         return None
     return reader.session()
+
+
+def last_reply(cli: str, path, tail: int = 256 * 1024) -> str:
+    """The agent's last message to the user in one transcript: the text of its last assistant
+    turn, found in the file's last `tail` bytes so that a long session stays cheap. '' when
+    that tail holds none, the file cannot be read, or `cli` is unknown."""
+    handle = READERS.get(cli)
+    if handle is None:
+        return ''
+    try:
+        with open(path, 'rb') as file:
+            start = max(0, file.seek(0, os.SEEK_END) - tail)
+            file.seek(start)
+            lines = file.read().decode('utf-8', errors='replace').splitlines()
+    except (OSError, ValueError):
+        return ''
+    reader = _Reader(cli, Path(path), *ALWAYS)
+    for line in lines[1 if start else 0:]:  # a tail that starts inside the file starts inside a line
+        _feed(handle, reader, line)
+    replies = sorted((turn for turn in reader.turns if turn.role == 'assistant'), key=lambda turn: turn.at)
+    return replies[-1].text if replies else ''
+
+
+def _feed(handle, reader, line):
+    """Give one line of a transcript to its store's reader; a line that is not JSON, or not
+    shaped like the store's lines, is skipped."""
+    try:
+        row = json.loads(line)
+        if isinstance(row, dict):
+            handle(reader, row)
+    except (ValueError, TypeError, AttributeError, KeyError, IndexError, RecursionError):
+        pass
 
 
 def _aware(moment):

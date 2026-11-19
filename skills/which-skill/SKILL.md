@@ -90,6 +90,9 @@ has the reasoning and each CLI's commands.
 - **`herdr`**: inside a Herdr pane, drive Herdr (split panes, run commands, start, prompt
   and wait on other agents) by loading the skill the installed `herdr` prints; in a
   flow-on repo each agent it spawns makes its own worktree.
+- **`herdr-title`**: the tag on each agent's row in Herdr's sidebar, [GRILLING] while it
+  works and [GRILLED] when the move is yours, set by a hook from the purpose of the current
+  prompt; the skill explains a tag that is wrong or missing and where the tags are listed.
 - **`wait-what`**: the last message didn't land; the agent re-pitches it plainly.
 - **`teach`**: learn a concept over several sessions in a workspace folder.
 - **`tutor`**: one question about one source, taught in four moves (locate, gap, build,

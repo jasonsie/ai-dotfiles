@@ -48,6 +48,10 @@ class InstallHooksTest(unittest.TestCase):
     def commits(self):
         return self.repo / hooks.COMMITS_MARK
 
+    @property
+    def title(self):
+        return self.repo / hooks.TITLE_MARK
+
     def install(self, clis=agent_hooks.HOOK_FILE_CLIS, apply=False, uninstall=False):
         out = io.StringIO()
         with redirect_stdout(out):
@@ -69,8 +73,8 @@ class InstallHooksTest(unittest.TestCase):
         return shlex.join(['python3', str(script or self.guard), 'hook', mode, '--cli', cli]) + ' || true'
 
     def test_the_marker_names_the_script_the_hooks_run(self):
-        guard, commits = hooks.features()
-        for feature, mark in ((guard, hooks.GUARD_MARK), (commits, hooks.COMMITS_MARK)):
+        guard, commits, title = hooks.features()
+        for feature, mark in ((guard, hooks.GUARD_MARK), (commits, hooks.COMMITS_MARK), (title, hooks.TITLE_MARK)):
             self.assertEqual(feature.script, ROOT / mark)
             self.assertEqual(feature.mark, mark)
             self.assertTrue(feature.script.is_file())
@@ -104,7 +108,11 @@ class InstallHooksTest(unittest.TestCase):
                     {'type': 'command', 'command': self.command('claude', 'pre'), 'timeout': 60}]},
                 {'matcher': 'Bash', 'hooks': [
                     {'type': 'command', 'command': self.command('claude', 'pre', self.commits), 'timeout': 30}]}],
-            'SessionEnd': [{'hooks': [{'type': 'command', 'command': self.command('claude', 'end'), 'timeout': 60}]}],
+            'SessionEnd': [
+                {'hooks': [{'type': 'command', 'command': self.command('claude', 'end'), 'timeout': 60}]},
+                {'hooks': [{'type': 'command', 'command': self.command('claude', 'end', self.title), 'timeout': 10}]}],
+            'UserPromptSubmit': [
+                {'hooks': [{'type': 'command', 'command': self.command('claude', 'prompt', self.title), 'timeout': 10}]}],
             'WorktreeCreate': [{'hooks': [{'type': 'command', 'command': self.command('claude', 'create'), 'timeout': 60}]}],
             'WorktreeRemove': [{'hooks': [{'type': 'command', 'command': self.command('claude', 'remove'), 'timeout': 60}]}],
         })
@@ -113,7 +121,7 @@ class InstallHooksTest(unittest.TestCase):
         self.assertEqual([g['matcher'] for g in codex['PreToolUse']], ['Edit|Write|Bash', 'Bash'])
         self.assertIn('hook pre --cli codex', codex['PreToolUse'][0]['hooks'][0]['command'])
         self.assertIn(str(self.commits), codex['PreToolUse'][1]['hooks'][0]['command'].replace("'", ''))
-        self.assertEqual(sorted(codex), ['PreToolUse', 'SessionEnd'])  # worktree events are Claude's alone
+        self.assertEqual(sorted(codex), ['PreToolUse', 'SessionEnd', 'UserPromptSubmit'])  # worktree events are Claude's alone
         self.assertNotIn('matcher', codex['SessionEnd'][0])
         self.assertIn('hook end --cli codex', codex['SessionEnd'][0]['hooks'][0]['command'])
 
@@ -150,7 +158,7 @@ class InstallHooksTest(unittest.TestCase):
         self.assertEqual(data['model'], 'opus')
         self.assertEqual(data['hooks']['Stop'], [THEIRS])
         self.assertEqual(data['hooks']['SessionEnd'][0], THEIRS)  # theirs first, ours appended
-        self.assertEqual(len(data['hooks']['SessionEnd']), 2)
+        self.assertEqual(len(data['hooks']['SessionEnd']), 3)  # theirs, then the guard's and herdr-title's
         self.assertEqual(data['hooks']['PreToolUse'][0], bash)
         self.assertEqual(len(data['hooks']['PreToolUse']), 3)  # theirs, then one group per feature
         self.assertEqual(self.read('agy')['lint'], {'Stop': [OTHERS]})
@@ -159,7 +167,7 @@ class InstallHooksTest(unittest.TestCase):
         self.install(apply=True)
         self.repo = self.home / 'moved'
         self.assertEqual(self.install(apply=True), 3)
-        for event, count in (('PreToolUse', 2), ('SessionEnd', 1)):
+        for event, count in (('PreToolUse', 2), ('SessionEnd', 2), ('UserPromptSubmit', 1)):
             groups = self.read('codex')['hooks'][event]
             self.assertEqual(len(groups), count)
             for group in groups:
@@ -177,9 +185,10 @@ class InstallHooksTest(unittest.TestCase):
         self.repo = self.home / 'moved'
         self.assertEqual(self.install(('claude',), apply=True), 1)
         events = self.read('claude')['hooks']
-        self.assertEqual(len(events['SessionEnd']), 2)
+        self.assertEqual(len(events['SessionEnd']), 3)
         self.assertIn('moved', events['SessionEnd'][0]['hooks'][0]['command'])  # ours, where our group stood
         self.assertEqual(events['SessionEnd'][1], THEIRS)
+        self.assertIn('moved', events['SessionEnd'][2]['hooks'][0]['command'])  # herdr-title's
         self.assertEqual(events['PreToolUse'][0], THEIRS)
         self.assertIn('moved', events['PreToolUse'][1]['hooks'][0]['command'])
         self.assertEqual(self.install(('claude',)), 0)
@@ -192,7 +201,8 @@ class InstallHooksTest(unittest.TestCase):
         self.write('codex', data)
         self.assertEqual(self.install(('codex',), apply=True), 1)
         end = self.read('codex')['hooks']['SessionEnd']
-        self.assertEqual([hooks.holds_ours(group, hooks.GUARD_MARK) for group in end], [True, False])
+        self.assertEqual([hooks.holds_ours(group, hooks.GUARD_MARK) for group in end], [True, False, False])
+        self.assertEqual([hooks.holds_ours(group, hooks.TITLE_MARK) for group in end], [False, False, True])
         self.assertEqual(end[1], THEIRS)
         self.assertEqual(self.install(('codex',)), 0)
 
@@ -373,7 +383,7 @@ class InstallHooksTest(unittest.TestCase):
             self.assertEqual(hooks.run(self.home, 'all', True, False, self.repo), 1)  # agy out
             self.assertEqual(hooks.run(self.home, 'all', False, False, self.repo), 0)
         self.assertEqual(self.read('agy'), seeds['agy'])
-        self.assertEqual(sorted(self.read('claude')['hooks']), ['PreToolUse', 'SessionEnd', 'Stop', 'WorktreeCreate', 'WorktreeRemove'])
+        self.assertEqual(sorted(self.read('claude')['hooks']), ['PreToolUse', 'SessionEnd', 'Stop', 'UserPromptSubmit', 'WorktreeCreate', 'WorktreeRemove'])
 
     def test_run_follows_the_target_and_uninstall_ignores_the_switches(self):
         with patch.object(installer, 'REGISTRY', registry(self.home, agy=False)), redirect_stdout(io.StringIO()):
@@ -385,6 +395,48 @@ class InstallHooksTest(unittest.TestCase):
             self.assertEqual(hooks.run(self.home, 'agy', True, True, self.repo), 0)  # nothing of ours there
             with self.assertRaisesRegex(ValueError, 'unknown target'):
                 hooks.run(self.home, 'gemini', False, False, self.repo)
+
+    def test_claude_and_codex_run_herdr_title_on_each_prompt_and_at_session_end(self):
+        self.assertEqual([f.name for f in hooks.features(self.repo)], ['worktree-guard', 'small-commits', 'herdr-title'])
+        self.install(('claude', 'codex'), apply=True)
+        for cli in ('claude', 'codex'):
+            events = self.read(cli)['hooks']
+            ours = {mode: {'hooks': [{'type': 'command', 'command': self.command(cli, mode, self.title), 'timeout': 10}]}
+                    for mode in ('prompt', 'end')}
+            self.assertEqual(events['UserPromptSubmit'], [ours['prompt']], cli)  # no matcher
+            self.assertEqual(len(events['SessionEnd']), 2, cli)
+            self.assertIn(hooks.GUARD_MARK, events['SessionEnd'][0]['hooks'][0]['command'], cli)  # the guard's stays
+            self.assertEqual(events['SessionEnd'][1], ours['end'], cli)
+        self.assertIn('hook prompt --cli codex', self.read('codex')['hooks']['UserPromptSubmit'][0]['hooks'][0]['command'])
+
+    def test_antigravity_gets_no_herdr_title_entry_and_nothing_is_left_to_do(self):
+        self.install(('agy',), apply=True)
+        self.assertNotIn('herdr', json.dumps(self.read('agy')))
+        self.assertEqual(self.install(('agy',)), 0)
+        self.assertEqual(self.install(('agy',), apply=True, uninstall=True), 1)  # the guard's and the commit gate's
+        self.assertEqual(self.read('agy'), {})
+        self.assertEqual(self.install(('agy',), uninstall=True), 0)
+        self.assertEqual(hooks.features(self.repo)[2].agy_names, {})
+
+    def test_a_hand_made_prompt_hook_stays_on_install_and_on_uninstall(self):
+        for cli in ('claude', 'codex'):
+            self.write(cli, {'hooks': {'UserPromptSubmit': [THEIRS]}})
+        self.install(('claude', 'codex'), apply=True)
+        for cli in ('claude', 'codex'):
+            groups = self.read(cli)['hooks']['UserPromptSubmit']
+            self.assertEqual(groups[0], THEIRS, cli)  # theirs first, ours appended
+            self.assertEqual(len(groups), 2, cli)
+        self.install(('claude', 'codex'), apply=True, uninstall=True)
+        for cli in ('claude', 'codex'):
+            self.assertEqual(self.read(cli), {'hooks': {'UserPromptSubmit': [THEIRS]}}, cli)
+
+    def test_uninstall_takes_the_herdr_title_entries_out_and_leaves_no_empty_prompt_event(self):
+        self.install(('claude', 'codex'), apply=True)
+        self.install(('claude', 'codex'), apply=True, uninstall=True)
+        for cli in ('claude', 'codex'):
+            self.assertNotIn('herdr_title', self.path(cli).read_text(), cli)
+            self.assertNotIn('UserPromptSubmit', self.read(cli), cli)
+            self.assertEqual(self.read(cli), {}, cli)
 
     # --- the retired daily-log nudge --------------------------------------------------------
 
@@ -414,7 +466,7 @@ class InstallHooksTest(unittest.TestCase):
         self.assertFalse(state.exists())
         claude = self.read('claude')
         self.assertEqual(claude['model'], 'opus')
-        self.assertEqual(sorted(claude['hooks']), ['PreToolUse', 'SessionEnd', 'Stop', 'WorktreeCreate', 'WorktreeRemove'])
+        self.assertEqual(sorted(claude['hooks']), ['PreToolUse', 'SessionEnd', 'Stop', 'UserPromptSubmit', 'WorktreeCreate', 'WorktreeRemove'])
         self.assertEqual(claude['hooks']['Stop'], [THEIRS])  # the foreign group stays, ours is gone
         codex = self.read('codex')['hooks']
         self.assertEqual(codex['PostToolUse'], [{'matcher': 'Edit|Write', 'hooks': [OTHERS]}])  # theirs kept
