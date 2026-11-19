@@ -7,6 +7,7 @@
     "collect-docs": "surveys other repositories through gh api; the cloud answers 403 for a repository not attached to the session",
     "daily-log": "writes the journal under ~/Documents and runs from launchd, both on the Mac",
     "herdr": "drives Herdr panes, which run on the Mac",
+    "herdr-title": "explains the tag its hook puts on a Herdr pane; Herdr and the hook run on the Mac",
     "merge-pr": "merges through gh pr, which the cloud refuses (GraphQL)",
     "open-pr": "opens the PR through gh pr, which the cloud refuses (GraphQL); a cloud session has its own Create PR",
     "portable-plugin": "trial-installs in codex, pi and agy, which the cloud lacks, and releases by a tag push",
