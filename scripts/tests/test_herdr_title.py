@@ -1,11 +1,134 @@
 """herdr-title: an agent's row in Herdr says what its current prompt is for.
 
+The script runs as the CLIs run it, with a `herdr` and a `claude` on PATH that only write down
+how they were called.
+
 Run: python3 -m unittest discover -s scripts/tests -p 'test_herdr_title.py' -v
 """
 import json
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+import time
 import unittest
 
 from support import ROOT, load
+
+SCRIPT = ROOT / 'skills/herdr-title/scripts/herdr_title.py'
+FAKE = f'''#!{sys.executable}
+import json, os, sys, time
+name = os.path.basename(sys.argv[0])
+if name == 'claude':
+    time.sleep(float(os.environ.get('FAKE_CLAUDE_SLEEP', 0)))
+with open(os.environ['FAKE_LOG'], 'a') as log:
+    log.write(json.dumps({{'tool': name, 'argv': sys.argv[1:], 'cwd': os.getcwd(),
+                          'herdr_env': sorted(key for key in os.environ if key.startswith('HERDR_'))}}) + '\\n')
+if name == 'claude':
+    sys.stdout.write(os.environ.get('FAKE_CLAUDE_SAYS', ''))
+    sys.exit(int(os.environ.get('FAKE_CLAUDE_EXIT', 0)))
+'''
+GRILLING = {'working': '[GRILLING]', 'idle': '[GRILLED]', 'done': '[GRILLED]', 'blocked': '[BLOCKED]'}
+
+
+class Sandbox(unittest.TestCase):
+    """A Herdr pane with nothing real in it: fake commands, a state folder, a log of their calls."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.home = Path(self.tmp.name)
+        self.bin, self.log = self.home / 'bin', self.home / 'calls.jsonl'
+        self.bin.mkdir()
+        for name in ('herdr', 'claude'):
+            (self.bin / name).write_text(FAKE)
+            (self.bin / name).chmod(0o755)
+        self.env = {'PATH': f'{self.bin}:/usr/bin:/bin', 'HOME': str(self.home), 'FAKE_LOG': str(self.log),
+                    'HERDR_TITLE_STATE': str(self.home / 'state'),
+                    'HERDR_ENV': '1', 'HERDR_PANE_ID': 'w1:p1', 'HERDR_SOCKET_PATH': '/tmp/herdr.sock'}
+
+    def run_script(self, *args, data=None, **env):
+        return subprocess.run([sys.executable, str(SCRIPT), *args], input=json.dumps(data or {}), text=True,
+                              capture_output=True, env={**self.env, **env}, timeout=30)
+
+    def hook(self, kind, cli='claude', session='s1', **fields):
+        return self.run_script('hook', kind, '--cli', cli, data={'session_id': session, 'cwd': '/w', **fields})
+
+    def calls(self, tool, wait=0):
+        """The calls `tool` got so far; with `wait`, as soon as there are that many (5 s at most)."""
+        deadline = time.time() + 5
+        while True:
+            lines = self.log.read_text().splitlines() if self.log.exists() else []
+            found = [call for call in map(json.loads, lines) if call['tool'] == tool]
+            if len(found) >= wait or time.time() > deadline:
+                return found
+            time.sleep(0.05)
+
+    @staticmethod
+    def labels(call):
+        argv = call['argv']
+        return dict(argv[i + 1].split('=', 1) for i, arg in enumerate(argv) if arg == '--state-label')
+
+
+class CertainTest(Sandbox):
+    def test_a_skill_named_in_the_prompt_tags_the_pane_at_once(self):
+        done = self.hook('prompt', prompt='Show the status in the title. /grilling to align ahead of execution')
+        self.assertEqual((done.returncode, done.stdout), (0, ''))
+        (call,) = self.calls('herdr')
+        self.assertEqual(call['argv'][:5], ['pane', 'report-metadata', 'w1:p1', '--source', 'user:ai-dotfiles-title'])
+        self.assertEqual(self.labels(call), GRILLING)
+        self.assertEqual(self.calls('claude'), [])
+
+    def test_approve_alone_or_with_a_pr_number_is_a_command(self):
+        for session, prompt in enumerate(('approve', 'Approve 57', 'approve #57.', ' ship it ')):
+            self.hook('prompt', session=f's{session}', prompt=prompt)
+        self.assertEqual([self.labels(call)['working'] for call in self.calls('herdr')], ['[LANDING]'] * 4)
+
+    def test_a_sentence_that_only_contains_a_command_word_is_not_one(self):
+        self.hook('prompt', prompt='all approve and do them all for me')
+        self.assertEqual(self.calls('herdr'), [])
+
+    def test_a_plugins_skill_and_a_dollar_skill_count_and_the_first_one_wins(self):
+        prompts = ('take /zkfy:zk-note on each page', '$tutor based on this session',
+                   '/web-clipper:web-clipper, https://example.com/llm', '"/grill-me" first, then /plan.')
+        for session, prompt in enumerate(prompts):
+            self.hook('prompt', cli='codex', session=f's{session}', prompt=prompt)
+        self.assertEqual([self.labels(call)['working'] for call in self.calls('herdr')],
+                         ['[NOTING]', '[EXPLAINING]', '[NOTING]', '[GRILLING]'])
+
+    def test_a_path_or_an_unknown_name_is_not_a_skill(self):
+        for session, prompt in enumerate(('read /Users/me/research/x.md and docs/grilling.md',
+                                          'see https://example.com/plan and ~/onboard/notes',
+                                          '/model then /clear', 'costs $5 and $HOME/tdd.txt')):
+            self.hook('prompt', session=f's{session}', prompt=prompt)
+        self.assertEqual(self.calls('herdr'), [])
+
+    def test_a_prompt_the_user_did_not_type_keeps_the_tag(self):
+        for prompt in ('Another Claude session sent a message:\n<agent-message from="a1">/grilling done</agent-message>',
+                       '[SYSTEM NOTIFICATION - NOT USER INPUT]\n<task-notification>approve</task-notification>',
+                       '<teammate-message teammate_id="discover">/research finished</teammate-message>', '   '):
+            self.hook('prompt', prompt=prompt)
+        self.assertEqual(self.calls('herdr'), [])
+
+
+class QuietTest(Sandbox):
+    def test_outside_herdr_nothing_runs_and_nothing_is_kept(self):
+        for missing in ('HERDR_ENV', 'HERDR_PANE_ID'):
+            env = {key: value for key, value in self.env.items() if key != missing}
+            done = subprocess.run([sys.executable, str(SCRIPT), 'hook', 'prompt', '--cli', 'claude'], text=True,
+                                  input=json.dumps({'session_id': 's1', 'prompt': '/grilling'}),
+                                  capture_output=True, env=env, timeout=30)
+            self.assertEqual((done.returncode, done.stdout, done.stderr), (0, '', ''), missing)
+        self.assertFalse(self.log.exists())
+        self.assertFalse((self.home / 'state').exists())
+
+    def test_input_it_cannot_read_is_met_with_silence(self):
+        for args, text in ((('hook', 'prompt', '--cli', 'claude'), 'not json'),
+                           (('hook', 'prompt', '--cli', 'agy'), '{}'), (('hook', 'nonsense'), '{}')):
+            done = subprocess.run([sys.executable, str(SCRIPT), *args], input=text, text=True,
+                                  capture_output=True, env=self.env, timeout=30)
+            self.assertEqual((done.returncode, done.stdout, done.stderr), (0, '', ''), args)
+        self.assertEqual(self.calls('herdr'), [])
 
 
 class ConfigTest(unittest.TestCase):
