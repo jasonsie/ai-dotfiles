@@ -51,6 +51,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+import socket
 import subprocess
 import sys
 import time
@@ -75,6 +76,13 @@ AFTER = {'normal': ('done', 'idle'), 'open': ('wait', 'wait'), 'pending': ('run'
          'wait': ('run', 'run'), 'fail': ('fail', 'fail'), 'unknown': ('wait', 'wait')}
 SOURCE = 'user:ai-dotfiles-title'  # who reports, to Herdr; beside Herdr's own integration
 HERDR_TIMEOUT = 5
+NEED = 'need'  # the pane token on rows that wait for the user: ask, fail, or a wait with no result
+NEEDING = ('ask', 'fail', 'unknown')
+# Herdr's agent list with the rows that need the user first, then Herdr's own attention order.
+VIEW = {'source': SOURCE, 'label': 'needs you', 'sort': [
+    {'field': {'token': NEED}, 'order': 'desc'}, {'field': 'attention', 'order': 'desc'},
+    {'field': 'state_change_seq', 'order': 'desc'}]}
+SOCKET_TIMEOUT = 0.5  # a Herdr that does not answer at once is left alone
 # A skill named in a prompt: /name, $name or /plugin:name, not a piece of a path.
 NAMED = re.compile(r'(?<![\w/.:~-])[/$]((?:[a-z][a-z0-9-]*:)?[a-z][a-z0-9-]*)(?![\w/-]|\.\w)')
 NUMBERED = re.compile(r'\s+#?\d+$')  # the PR number after a command word
@@ -175,8 +183,25 @@ def report(session, settings):
     if state.get('ended') or not where or owner(where) != session:
         return
     pairs = [arg for status, text in labels(state, settings).items() for arg in ('--state-label', f'{status}={text}')]
-    herdr('pane', 'report-metadata', where, '--source', SOURCE, '--agent', state.get('cli', ''), *pairs,
+    need = ('--token', f'{NEED}=1') if state.get('mode') in NEEDING else ('--clear-token', NEED)
+    herdr('pane', 'report-metadata', where, '--source', SOURCE, '--agent', state.get('cli', ''), *pairs, *need,
           '--seq', str(seq))
+
+
+def set_view():
+    """Sort Herdr's agent list with the rows that need the user first (VIEW), through Herdr's socket:
+    Herdr 0.9.5 has no command for it. The view lasts until Herdr's server exits, so the hook sets
+    it again at each prompt and stop; a socket that is missing or slow changes nothing."""
+    path = os.environ.get('HERDR_SOCKET_PATH')
+    if not path:
+        return
+    request = {'id': 'herdr-title-view', 'method': 'agent.view.set', 'params': VIEW}
+    with contextlib.suppress(OSError, ValueError):
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as conn:
+            conn.settimeout(SOCKET_TIMEOUT)
+            conn.connect(path)
+            conn.sendall((json.dumps(request) + '\n').encode())
+            conn.recv(4096)  # Herdr's answer; nothing in it changes what the hook does
 
 
 def typed(event, settings):
@@ -227,6 +252,7 @@ def on_prompt(event):
         SESSIONS.save(event.session, state)
         PANES.save(where, {'session': event.session, 'cli': event.cli})
     report(event.session, settings)
+    set_view()
     if not kind:
         ask_later({'job': 'type', 'cli': event.cli, 'session': event.session, 'prompt': event.prompt,
                    'transcript': event.transcript, 'trigger': number})
@@ -361,6 +387,7 @@ def on_stop(event):
         state.update(event=number, mode=mode or 'pending', blocked=None)
         SESSIONS.save(event.session, state)
     report(event.session, settings)
+    set_view()
     if mode is None:
         background = any(task in settings['background'] for task in event.tasks) or event.crons > 0
         ask_later({'job': 'stop', 'cli': event.cli, 'session': event.session, 'trigger': number,
@@ -408,6 +435,7 @@ def on_start(event):
         SESSIONS.save(event.session, state)
         PANES.save(where, {'session': event.session, 'cli': event.cli})
     report(event.session, config())
+    set_view()
 
 
 def cmd_classify(_args):

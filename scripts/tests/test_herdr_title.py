@@ -8,9 +8,11 @@ Run: python3 -m unittest discover -s scripts/tests -p 'test_herdr_title.py' -v
 import json
 import os
 from pathlib import Path
+import socket
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import unittest
 
@@ -403,6 +405,55 @@ class StartTest(Sandbox):
         self.hook('prompt', session='other', prompt='/grilling')
         self.hook('start', source='resume')  # s1 comes back where the other session now works
         self.assertEqual(len(self.calls('herdr')), 3)
+
+
+class ViewTest(Sandbox):
+    """Rows that need the user carry a token, and Herdr's agent list sorts them first."""
+
+    def setUp(self):
+        super().setUp()
+        self.requests = []
+        path = Path(tempfile.mkdtemp(prefix='h', dir='/tmp')) / 's'  # a socket path stays short
+        self.addCleanup(lambda: path.unlink(missing_ok=True))
+        server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        server.bind(str(path))
+        server.listen()
+        self.addCleanup(server.close)
+        self.env['HERDR_SOCKET_PATH'] = str(path)
+
+        def serve():
+            while True:
+                try:
+                    conn, _ = server.accept()
+                except OSError:
+                    return
+                with conn:
+                    line = conn.makefile().readline()
+                    self.requests.append(json.loads(line))
+                    conn.sendall(b'{"id":"herdr-title-view","result":{"type":"agent_view","active":true}}\n')
+        threading.Thread(target=serve, daemon=True).start()
+
+    def need(self, call):
+        argv = call['argv']
+        if '--token' in argv:
+            return argv[argv.index('--token') + 1]
+        return 'cleared' if argv[argv.index('--clear-token') + 1] == 'need' else None
+
+    def test_a_typed_prompt_and_a_stop_set_the_view_with_the_rows_that_need_the_user_first(self):
+        self.hook('prompt', prompt='/tdd')
+        self.hook('stop', last_assistant_message='Which one?')
+        self.assertEqual(len(self.requests), 2)
+        request = self.requests[0]
+        self.assertEqual((request['method'], request['params']['source']), ('agent.view.set', 'user:ai-dotfiles-title'))
+        self.assertEqual(request['params']['sort'][0], {'field': {'token': 'need'}, 'order': 'desc'})
+
+    def test_the_need_token_follows_the_mode(self):
+        self.hook('prompt', prompt='/tdd')
+        self.hook('stop', last_assistant_message='Which one?')
+        self.hook('prompt', prompt='/tdd')
+        self.hook('error', error='overloaded')
+        self.assertEqual([self.need(call) for call in self.calls('herdr', wait=4)],
+                         ['cleared', 'need=1', 'cleared', 'need=1'])
 
 
 class OwnerTest(Sandbox):
