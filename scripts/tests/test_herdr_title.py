@@ -5,6 +5,7 @@ how they were called.
 
 Run: python3 -m unittest discover -s scripts/tests -p 'test_herdr_title.py' -v
 """
+import io
 import json
 import os
 from pathlib import Path
@@ -16,6 +17,7 @@ import tempfile
 import threading
 import time
 import unittest
+from unittest import mock
 
 from support import ROOT, load
 
@@ -138,10 +140,9 @@ class CertainTest(Sandbox):
         self.hook('prompt', prompt='/implement the reader', agent_id='agent-abc', agent_type='general-purpose')
         self.hook('prompt', prompt='then explain it to me', agent_id='agent-abc', env={'FAKE_CLAUDE_SAYS': 'EXPLAIN'})
         self.hook('end', agent_id='agent-abc')
-        time.sleep(0.5)  # long enough for a model's turn that must not have started
         self.assertEqual([self.labels(call) for call in self.calls('herdr')], [GRILL])
-        self.assertEqual(self.calls('claude'), [])
-        self.assertEqual(self.state()['type'], 'grill')
+        self.assertEqual({key: self.state()[key] for key in ('event', 'type', 'ended')},
+                         {'event': 1, 'type': 'grill', 'ended': False})  # TurnTest: no model's turn either
 
 
 class EndTest(Sandbox):
@@ -219,9 +220,8 @@ class ModelTest(Sandbox):
         self.assertEqual(self.state()['type'], 'execute')
 
     def test_the_hook_returns_before_the_model_answers(self):
-        started = time.time()
         self.hook('prompt', prompt='how does this work', env={'FAKE_CLAUDE_SAYS': 'EXPLAIN', 'FAKE_CLAUDE_SLEEP': '1.5'})
-        self.assertLess(time.time() - started, 1.0)
+        self.assertEqual(self.calls('claude'), [])  # the fake model writes its line only once it answers
         (first,) = self.calls('herdr')
         self.assertEqual(self.labels(first)['working'], 'run')  # no type yet
         self.assertEqual(self.labels(self.calls('herdr', wait=2)[1])['working'], 'explain › run')
@@ -292,9 +292,7 @@ class StopTest(Sandbox):
     def test_a_reply_that_ends_by_asking_is_ask_at_once(self):
         done = self.stopped('Built both.\n\nWhich name do you want, A or B?**')
         self.assertEqual((done.returncode, done.stdout), (0, ''))
-        self.assertEqual(self.after(2)[1], ('execute › wait › ask', 'execute › wait › ask'))
-        time.sleep(0.3)
-        self.assertEqual(self.calls('claude'), [])  # no model needed
+        self.assertEqual(self.after(2)[1], ('execute › wait › ask', 'execute › wait › ask'))  # TurnTest: no model
 
     def test_a_codex_reply_that_ends_with_its_plan_is_ask_at_once(self):
         done = self.stopped('<proposed_plan>\n1. Add the reader.\n</proposed_plan>\n', cli='codex')
@@ -337,16 +335,12 @@ class StopTest(Sandbox):
         path.write_text(''.join(json.dumps(row) + '\n' for row in rows))
         self.stopped('Stopping here until the limit resets.', session='s2', transcript_path=str(path))
         self.assertEqual(self.state('s2')['mode'], 'fail')
-        time.sleep(0.3)
-        self.assertEqual(self.calls('claude'), [])
 
     def test_pis_error_and_abort_are_known_at_once(self):
         self.stopped('Request failed.', cli='pi', outcome='error')
         self.assertEqual(self.state()['mode'], 'fail')
         self.stopped('Partial answer', cli='pi', outcome='aborted', session='s2')
         self.assertEqual(self.state('s2')['mode'], 'normal')
-        time.sleep(0.3)
-        self.assertEqual(self.calls('claude'), [])
 
     def test_an_open_ask_stays_through_a_turn_the_user_did_not_start(self):
         self.stopped('Shall I build it?')
@@ -354,8 +348,6 @@ class StopTest(Sandbox):
         self.assertEqual(self.labels(self.calls('herdr', wait=3)[2])['working'], 'execute › wait › ask')
         self.hook('stop', last_assistant_message='One of three reviewers is back.')
         self.assertEqual(self.state()['mode'], 'ask')
-        time.sleep(0.3)
-        self.assertEqual(self.calls('claude'), [])
 
     def test_a_scheduled_prompt_firing_is_not_typed_and_keeps_an_open_ask(self):
         long = 'Summarize the night. ' + 'x' * 1100
@@ -374,7 +366,8 @@ class StopTest(Sandbox):
         self.hook('stop', last_assistant_message='That is everything.',
                   env={'FAKE_CLAUDE_SAYS': 'ASK', 'FAKE_CLAUDE_SLEEP': '1'})
         self.hook('prompt', prompt='/grilling')  # the user moved on before the model answered
-        time.sleep(1.8)
+        self.calls('claude', wait=1)  # the fake model writes its line once it answers
+        time.sleep(0.5)  # a verdict it applied would be saved and reported at once
         self.assertEqual((self.state()['type'], self.state()['mode']), ('grill', 'normal'))
         self.assertEqual(self.labels(self.calls('herdr')[-1])['working'], 'grill › run')
 
@@ -610,6 +603,69 @@ class LabelTest(unittest.TestCase):
         self.assertEqual(self.labels(mode='ask'), {'working': 'wait › ask', 'blocked': 'wait', 'done': 'wait › ask',
                                                     'idle': 'wait › ask', 'unknown': 'wait › ask'})
         self.assertEqual(self.labels()['working'], 'run')
+
+
+class TurnTest(Sandbox):
+    """Which hook calls start a model's turn, in this process with the detached start replaced: a
+    turn that must not start shows at once, with no waiting for a process that should not exist."""
+
+    def setUp(self):
+        super().setUp()
+        self.module = load('../skills/herdr-title/scripts/herdr_title.py')
+        self.asked = []
+        self.module.ask_later = self.asked.append
+        patcher = mock.patch.dict(os.environ, self.env, clear=True)  # no TMUX or entrypoint of the runner's
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def call(self, kind, cli='claude', session='s1', **fields):
+        data = json.dumps({'session_id': session, 'cwd': '/w', **fields})
+        with mock.patch('sys.stdin', io.StringIO(data)), mock.patch('sys.stdout', io.StringIO()):
+            self.assertEqual(self.module.main(['hook', kind, '--cli', cli]), 0)
+
+    def test_a_prompt_starts_one_only_when_typed_and_naming_no_type(self):
+        self.call('prompt', prompt='/tdd')
+        self.call('prompt', prompt='<task-notification>a reviewer finished</task-notification>')
+        self.call('prompt', prompt='how does it work', agent_id='agent-1')  # a subagent's
+        self.assertEqual((self.asked, self.state()['event']), ([], 2))  # both of the session's prompts ran
+        self.call('prompt', prompt='how does it work')
+        self.assertEqual([(job['job'], job['trigger']) for job in self.asked], [('type', 3)])
+
+    def test_a_stop_starts_one_only_when_no_rule_decides_it(self):
+        self.call('prompt', prompt='/tdd')
+        self.call('stop', last_assistant_message='Which name do you want, A or B?')
+        self.call('prompt', prompt='<task-notification>a reviewer finished</task-notification>')
+        self.call('stop', last_assistant_message='One of three reviewers is back.')  # the ask stays open
+        self.assertEqual(self.state()['mode'], 'ask')
+        rows = [{'type': 'user', 'timestamp': '2026-11-19T04:00:00Z', 'message': {'content': 'build it'}},
+                {'type': 'user', 'isMeta': True, 'timestamp': '2026-11-19T04:00:05Z',
+                 'message': {'content': '[Usage limit reached; a short grace allowance remains.]'}}]
+        path = self.home / 'limit.jsonl'
+        path.write_text(''.join(json.dumps(row) + '\n' for row in rows))
+        self.call('prompt', prompt='/tdd')
+        self.call('stop', last_assistant_message='Stopping here.', transcript_path=str(path))
+        self.call('prompt', prompt='/tdd')
+        self.call('error', error='overloaded')
+        self.assertEqual((self.asked, self.state()['mode']), ([], 'fail'))
+        self.call('prompt', prompt='/tdd')
+        self.call('stop', last_assistant_message='All tests pass.')
+        self.assertEqual([job['job'] for job in self.asked], ['stop'])
+
+    def test_pis_error_and_abort_start_none(self):
+        for outcome, mode in (('error', 'fail'), ('aborted', 'normal')):
+            self.call('prompt', cli='pi', prompt='/tdd')
+            self.call('stop', cli='pi', last_assistant_message='Partial answer', outcome=outcome)
+            self.assertEqual((self.asked, self.state()['mode']), ([], mode), outcome)
+
+    def test_the_model_reads_the_replys_last_800_characters_and_learns_of_work_that_wakes_the_agent(self):
+        reply = 'Opening words. ' + 'r' * 3000 + ' I will report back.'
+        for work in ({'background_tasks': [{'type': 'shell', 'id': 'b1'}]},  # it may be a server that never ends
+                     {'background_tasks': [{'type': 'subagent', 'id': 'a1'}]},
+                     {'session_crons': [{'id': 'c1', 'prompt': 'check the build'}]}):
+            self.call('prompt', prompt='/tdd')
+            self.call('stop', last_assistant_message=reply, **work)
+        self.assertEqual([job['text'] for job in self.asked], [reply[-800:]] * 3)
+        self.assertEqual([job['background'] for job in self.asked], [False, True, True])
 
 
 class QuietTest(Sandbox):
