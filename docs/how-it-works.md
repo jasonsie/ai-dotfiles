@@ -360,9 +360,10 @@ their meanings, and the words.
   Codex plan block, reads `ask` at once. An API error, Pi's error or Claude Code's usage-limit
   note reads `fail` at once. Any other reply keeps `run` while Haiku reads its last 800
   characters and answers ask, wait or done. Wait counts only while Claude Code lists work of a
-  `background` type (agents, workflows, teammates, cloud sessions, MCP tasks) or a scheduled
-  prompt; a background command or a monitor may never end, so neither counts. On 191 real turn
-  endings it was right 91% of the time, and its mistakes lean to calling a finished job an ask.
+  `background` type (agents, workflows, teammates, cloud sessions, MCP tasks, monitors) or a
+  scheduled prompt; a background command may be a server that never ends, so it does not count.
+  On 191 real turn endings it was right 91% of the time, and its mistakes lean to calling a
+  finished job an ask.
 - **Dialogs.** A permission dialog reads `allow`. A question dialog, a plan to approve and an
   MCP form read `ask`. A subagent's permission dialog opens in your pane, so it counts.
 - **What leaves a label as it is.** A prompt you did not type (a report, another session's

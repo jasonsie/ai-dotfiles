@@ -695,11 +695,12 @@ class TurnTest(Sandbox):
         reply = 'Opening words. ' + 'r' * 3000 + ' I will report back.'
         for work in ({'background_tasks': [{'type': 'shell', 'id': 'b1'}]},  # it may be a server that never ends
                      {'background_tasks': [{'type': 'subagent', 'id': 'a1'}]},
+                     {'background_tasks': [{'type': 'monitor', 'id': 'm1'}]},  # each event it sees wakes the agent
                      {'session_crons': [{'id': 'c1', 'prompt': 'check the build'}]}):
             self.call('prompt', prompt='/tdd')
             self.call('stop', last_assistant_message=reply, **work)
-        self.assertEqual([job['text'] for job in self.asked], [reply[-800:]] * 3)
-        self.assertEqual([job['background'] for job in self.asked], [False, True, True])
+        self.assertEqual([job['text'] for job in self.asked], [reply[-800:]] * 4)
+        self.assertEqual([job['background'] for job in self.asked], [False, True, True, True])
 
 
 class QuietTest(Sandbox):

@@ -95,7 +95,7 @@
     "endings": ["</proposed_plan>"]
   },
   "usage_limit_note": "[Usage limit reached",
-  "background": ["subagent", "workflow", "teammate", "cloud session", "MCP task"],
+  "background": ["subagent", "workflow", "teammate", "cloud session", "MCP task", "monitor"],
   "model": {
     "name": "haiku",
     "timeout": 45,

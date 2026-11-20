@@ -347,9 +347,9 @@ def classify_type(request):
 def judge(request):
     """Ask what a stopped agent waits for, then set the session's mode by it, unless anything newer
     happened in the session meanwhile. ASK is ask; WAIT is wait only while Claude Code listed work
-    of a `background` type or a scheduled prompt, else done (a background command or a monitor may
-    never end); DONE is done; no answer is wait with no result, since an ask the model failed to
-    see costs the user more than a look."""
+    of a `background` type or a scheduled prompt, else done (a background command may be a server
+    that never ends); DONE is done; no answer is wait with no result, since an ask the model failed
+    to see costs the user more than a look."""
     settings, session = config(), request['session']
     word = pick(model(settings, '\n'.join(settings['model']['stop']),
                       f"The agent's last message ended:\n{request['text']}"), {'ask', 'wait', 'done'})
