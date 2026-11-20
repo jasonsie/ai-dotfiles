@@ -38,6 +38,15 @@ def git(cwd, *args):
     return subprocess.run(['git', '-C', str(cwd), *args], check=True, capture_output=True, text=True).stdout.strip()
 
 
+def switch_on(repo):
+    """The flow switch on, as /worktree-flow leaves it after the person's yes."""
+    git(repo, 'config', '--local', 'worktree-guard.flow', 'true')
+
+
+def switch_off(repo):
+    subprocess.run(['git', '-C', str(repo), 'config', '--local', '--unset', 'worktree-guard.flow'], capture_output=True)
+
+
 class GitChangesTest(unittest.TestCase):
     def test_git_commands_that_change_a_tree_or_the_index(self):
         self.assertEqual(guard.git_changes('git commit -m "a b"'), [''])
@@ -561,7 +570,7 @@ class SweepTest(OriginRepo):
         self.assertNotIn('LEFT BEHIND', out)
 
     def test_a_new_session_takes_over_a_flagged_worktree_and_hears_what_it_holds(self):
-        self.assertEqual(self.cli('on', '--repo', str(self.repo))[0], 0)  # a repo that is off keeps no owners
+        switch_on(self.repo)  # a repo that is off keeps no owners
         wt = self.leftover()
         self.commit(wt)
         (wt / 'new.txt').write_text('x\n')
@@ -677,7 +686,7 @@ class BoundTest(OriginRepo):
 
     def setUp(self):
         super().setUp()
-        self.assertEqual(self.cli('on', '--repo', str(self.repo))[0], 0)
+        switch_on(self.repo)
 
     def say(self, cli, session, pid, command):
         """The pre-hook call for a shell command the agent is about to run."""
@@ -814,7 +823,7 @@ STOP = 'ai-dotfiles worktree new <type>/<slug>'
 
 
 class FlowTest(Repo):
-    """The flow switch (`worktree on|off`) and the first-edit gate it arms, in all four CLIs."""
+    """The flow switch (set by /worktree-flow) and the first-edit gate it arms, in all four CLIs."""
 
     def cli(self, *args):
         out, err = io.StringIO(), io.StringIO()
@@ -823,7 +832,7 @@ class FlowTest(Repo):
         return status, out.getvalue() + err.getvalue()
 
     def on(self, repo=None):
-        self.assertEqual(self.cli('on', '--repo', str(repo or self.repo))[0], 0)
+        switch_on(repo or self.repo)
 
     def stopped(self, cli, reply):
         """Whether `reply`, in `cli`'s own format, denies and names the way out."""
@@ -861,17 +870,14 @@ class FlowTest(Repo):
         git(other, 'commit', '-q', '-m', 'init')
         return other
 
-    def test_on_and_off_set_one_local_config_key_and_list_shows_it(self):
+    def test_list_shows_the_switch_and_the_guard_cannot_flip_it(self):
         self.assertIn('flow: off', self.cli('list', '--repo', str(self.repo))[1])
-        self.assertIn('flow: on', self.cli('on', '--repo', str(self.repo))[1])
-        self.assertEqual(git(self.repo, 'config', '--local', '--get', guard.FLOW_KEY), 'true')
+        switch_on(self.repo)
         self.assertIn('flow: on', self.cli('list', '--repo', str(self.repo))[1])
-        self.assertEqual(self.cli('on', '--repo', str(self.repo))[0], 0)  # idempotent
-        self.assertIn('flow: off', self.cli('off', '--repo', str(self.repo))[1])
-        unset = subprocess.run(['git', '-C', str(self.repo), 'config', '--local', '--get', guard.FLOW_KEY],
-                               capture_output=True)
-        self.assertEqual(unset.returncode, 1)
-        self.assertEqual(self.cli('off', '--repo', str(self.repo))[0], 0)  # idempotent
+        for gone in ('on', 'off'):  # /worktree-flow is the only way in
+            status, output = self.cli(gone, '--repo', str(self.repo))
+            self.assertEqual(status, 2)
+            self.assertIn('invalid choice', output)
 
     def test_the_switch_is_per_repo_whichever_worktree_asks(self):
         self.on()
@@ -879,26 +885,20 @@ class FlowTest(Repo):
         self.assertIn('flow: on', self.cli('list', '--repo', str(self.linked('side')))[1])
         self.assertIn('flow: off', self.cli('list', '--repo', str(self.second_repo()))[1])
 
-    def test_on_outside_a_repo_says_so(self):
-        outside = Path(tempfile.mkdtemp())
-        self.addCleanup(outside.rmdir)
-        with self.assertRaises(SystemExit):
-            self.cli('on', '--repo', str(outside))
-
-    def test_an_agent_cannot_flip_the_switch_in_any_cli(self):
+    def test_an_agent_cannot_release_or_share_in_any_cli(self):
         for cli in CLIS:
-            for word in ('on', 'off'):
+            for word in ('release', 'share'):
                 reply = self.shell_in(cli, f'ai-dotfiles worktree {word}')
                 self.assertTrue(self.denied(cli, reply), (cli, word, reply))
-        for allowed in ('ai-dotfiles worktree list', 'ai-dotfiles worktree new fix/x', 'echo worktree on'):
+        for allowed in ('ai-dotfiles worktree list', 'ai-dotfiles worktree new fix/x', 'echo worktree release'):
             self.assertFalse(self.denied('claude', self.shell_in('claude', allowed)), allowed)
 
     def test_only_a_real_invocation_is_refused_not_text_that_mentions_one(self):
         wt = 'ai-dotfiles worktree'
-        refused = (f'{wt} release', f'{wt} share /x', f'cd /x && {wt} on', f'ls; {wt} off', f'true | {wt} on',
-                   f'cd /tmp\n{wt} on', f'FOO=1 {wt} share', f'sudo {wt} on', f'({wt} on)', f'ls || {wt} off',
-                   f'bash -c "{wt} on"', f"sh -lc '{wt} off'", 'python3 skills/worktree-guard/scripts/worktree_guard.py on',
-                   'worktree-guard release', f'cat <<EOF > f\ntext\nEOF\n{wt} on', f'echo "x" && cd y; {wt} off')
+        refused = (f'{wt} release', f'{wt} share /x', f'cd /x && {wt} share', f'ls; {wt} release', f'true | {wt} share',
+                   f'cd /tmp\n{wt} share', f'FOO=1 {wt} share', f'sudo {wt} release', f'({wt} share)', f'ls || {wt} release',
+                   f'bash -c "{wt} share"', f"sh -lc '{wt} release'", 'python3 skills/worktree-guard/scripts/worktree_guard.py share',
+                   'worktree-guard release', f'cat <<EOF > f\ntext\nEOF\n{wt} share', f'echo "x" && cd y; {wt} release')
         mentioned = (f'echo "{wt} on"', f"grep -n 'worktree release' notes.txt", f'git commit -m "docs: {wt} off"',
                      f"cat <<'EOF'\n{wt} on\nEOF", f'cat <<EOF > f\nrun {wt} release\nEOF', f'cat docs/{wt} on',
                      f'echo {wt}-on', f'{wt} list', f'{wt} new fix/x', f'echo hi # {wt} on', "echo 'a\nai-dotfiles worktree on'")
@@ -933,7 +933,7 @@ class FlowTest(Repo):
 
     def test_a_repo_that_is_switched_off_again_claims_and_says_nothing(self):
         self.on()
-        self.cli('off', '--repo', str(self.repo))
+        switch_off(self.repo)
         self.assertIsNone(self.edit('claude', 'aaaa1111', ME))
         self.assertIsNone(self.edit('codex', 'bbbb2222', PARENT))
         self.assertFalse(guard.claim_file(self.repo).exists())
@@ -946,7 +946,7 @@ class FlowTest(Repo):
         self.assertTrue(self.stopped('claude', self.run_hook('claude', data)))  # started in an off repo
         self.assertIsNone(self.edit('claude', 'aaaa1111', ME))  # the off repo's own file: plain
         self.on()
-        self.cli('off', '--repo', str(other))
+        switch_off(other)
         self.assertIsNone(self.run_hook('claude', {**data, 'cwd': str(self.repo)}))  # file in a repo now off
         self.assertTrue(self.stopped('claude', self.edit('claude', 'aaaa1111', ME)))  # cwd-independent
 
@@ -1154,7 +1154,7 @@ class PrTest(OriginRepo):
 
     def setUp(self):
         super().setUp()
-        self.assertEqual(self.cli('on', '--repo', str(self.repo))[0], 0)
+        switch_on(self.repo)
         bin = self.repo.parent / 'bin'
         bin.mkdir()
         (bin / 'gh').write_text('#!/bin/sh\necho "$@" >> "$GH_LOG"\n'
@@ -1278,7 +1278,7 @@ class ShippedTest(OriginRepo):
 
     def setUp(self):
         super().setUp()
-        self.assertEqual(self.cli('on', '--repo', str(self.repo))[0], 0)
+        switch_on(self.repo)
         self.shell('claude', 'sess-ship', ME, 'ai-dotfiles worktree new fix/x')  # the hook notes who runs it
         self.assertEqual(self.cli('new', 'fix/x', '--repo', str(self.repo))[0], 0)
         self.wt = self.linked('fix-x')
@@ -1350,7 +1350,7 @@ class LandedTest(OriginRepo):
 
     def setUp(self):
         super().setUp()
-        self.assertEqual(self.cli('on', '--repo', str(self.repo))[0], 0)
+        switch_on(self.repo)
         self.shell('claude', 'sess-land', ME, 'ai-dotfiles worktree new fix/x')  # this process is the owner
         self.assertEqual(self.cli('new', 'fix/x', '--repo', str(self.repo))[0], 0)
         self.wt = self.linked('fix-x')
@@ -1377,7 +1377,7 @@ class LandedTest(OriginRepo):
         self.assertTrue(self.wt.exists())
 
     def test_a_repo_whose_flow_is_off_keeps_it(self):
-        self.cli('off', '--repo', str(self.repo))
+        switch_off(self.repo)
         self.assertEqual(guard.landed(self.wt), (False, [f'worktree-guard: kept fix-x: the worktree flow is off in {self.repo}']))
         self.assertTrue(self.wt.exists())
 
@@ -1413,7 +1413,7 @@ class SeenTest(OriginRepo):
 
     def setUp(self):
         super().setUp()
-        self.assertEqual(self.cli('on', '--repo', str(self.repo))[0], 0)
+        switch_on(self.repo)
 
     def start(self, cli, session='sess-seen'):
         self.shell(cli, session, ME, 'ai-dotfiles worktree new fix/x')  # the hook notes who runs it

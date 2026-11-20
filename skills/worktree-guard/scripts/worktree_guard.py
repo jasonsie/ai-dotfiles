@@ -7,7 +7,6 @@
   worktree-guard done   DESCRIPTION [--path DIR]      a linked worktree's one-line summary
   worktree-guard rm     NAME [--force] [--repo DIR]   archive tag, then remove worktree and branch
   worktree-guard prune  [--repo DIR]                  rm every merged, clean, unowned one
-  worktree-guard on|off [--repo DIR]                  switch the repo's worktree flow (people only)
   worktree-guard new    <type>/<slug> [--repo DIR]    a detached worktree from origin's default branch
   worktree-guard pr     <n> [--repo DIR]              a detached worktree on open PR <n>'s branch, to fix it
   worktree-guard shipped NAME [--repo DIR]            delete a pushed worktree whose PR is open (ship runs it)
@@ -20,7 +19,7 @@ made before can still be listed and removed. An edit is a file-edit tool or a gi
 changes the working tree or the index. Subagents share their parent's ownership. A failure never
 blocks an edit; it says the edit was not protected.
 
-A repo whose flow is on (git config --local worktree-guard.flow true, set by `on`): a session
+A repo whose flow is on (git config --local worktree-guard.flow true, set by /worktree-flow): a session
 owns a worktree from its first edit there until it ends or its process is gone; an edit in a
 worktree another live session owns is refused. An edit of a file in the main checkout is
 stopped, and the agent is asked to name the work with
@@ -97,7 +96,7 @@ FOLDER_NAME = re.compile(r'[A-Za-z0-9][A-Za-z0-9._-]*')
 NAMING_SECONDS = 600  # how long the hook's note of a `worktree new` call stays good
 NAMING_KEEP_SECONDS = 3600  # after this a note is deleted, used or not
 UNCLAIMED_SECONDS = 3600  # a worktree nobody has claimed yet is left alone this long: its first edit is coming
-PERSON_ONLY = frozenset(('release', 'share', 'on', 'off'))  # worktree commands a person runs
+PERSON_ONLY = frozenset(('release', 'share'))  # worktree commands a person runs
 HEREDOC = re.compile(r'<<-?\s*([\'"]?)(\w+)\1[^\n]*\n.*?^[ \t]*\2[ \t]*$', re.M | re.S)
 SEPARATORS = frozenset(';&|()\n')
 COMMAND_PREFIXES = frozenset(('sudo', 'env', 'command', 'exec', 'time', 'nohup', 'nice', 'timeout', 'gtimeout'))
@@ -209,7 +208,7 @@ def ours(worktree):
 
 
 def flow_on(worktree):
-    """Whether the repo of `worktree` works through worktrees (`worktree on`)."""
+    """Whether the repo of `worktree` works through worktrees (/worktree-flow turns it on)."""
     return git(worktree, 'config', '--local', '--bool', '--get', FLOW_KEY, check=False) == 'true'
 
 
@@ -345,8 +344,7 @@ def guard_calls(command):
 
 
 def person_only(command):
-    """Whether a shell command line runs a person-only worktree command (`on`, `off`, `release`,
-    `share`)."""
+    """Whether a shell command line runs a person-only worktree command (`release`, `share`)."""
     return any(verb in PERSON_ONLY for verb, _ in guard_calls(command))
 
 
@@ -1044,16 +1042,6 @@ def cmd_prune(args):
     return 0
 
 
-def cmd_flow(args):
-    main = repo_main(args.repo)
-    if args.command == 'on':
-        git(main, 'config', '--local', FLOW_KEY, 'true')
-    else:
-        git(main, 'config', '--local', '--unset', FLOW_KEY, check=False)  # exit 5 when it was never set
-    print(f"worktree-guard: flow: {args.command} in {main}")
-    return 0
-
-
 def fetch(main, seconds=FETCH_SECONDS):
     """(fetched, why not): `git fetch origin`, never asking for a password."""
     try:
@@ -1348,10 +1336,6 @@ def parser():
     rm.add_argument('--force', action='store_true', help='also when owned, changed or unmerged')
     rm.add_argument('--repo', help='a folder in the repository (default: here)')
     rm.set_defaults(run=cmd_rm)
-    for name in ('on', 'off'):
-        command = sub.add_parser(name, help=f'switch the worktree flow {name} for the repo (for people)')
-        command.add_argument('--repo', help='a folder in the repository (default: here)')
-        command.set_defaults(run=cmd_flow)
     new = sub.add_parser('new', help='start work in its own worktree, from origin\'s default branch, with no branch')
     new.add_argument('name', help='<type>/<slug>, for example fix/prune-worktrees')
     new.add_argument('--repo', help='a folder in the repository (default: here)')

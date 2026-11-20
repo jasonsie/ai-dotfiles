@@ -13,9 +13,9 @@ does the gating; this skill is what a session does.
 
 ## Commands
 
-`ai-dotfiles worktree on | off | new | pr | shipped | list | done | rm | prune | release | share`; `--help`
+`ai-dotfiles worktree new | pr | shipped | list | done | rm | prune | release | share`; `--help`
 describes each. `shipped` is what `ship` runs; `approve`, run inside a worktree, deletes it the
-same way once its PR is merged. `on`/`off`, `release` (clear a stale owner) and `share` (let every session
+same way once its PR is merged. `release` (clear a stale owner) and `share` (let every session
 edit a worktree) are the person's, run in a terminal; the guard refuses them from an agent,
 so ask the user.
 
@@ -28,8 +28,9 @@ deleted the guard tells Codex in one line. Not an error: the notice is how Codex
 
 ## Flow switch
 
-`ai-dotfiles worktree on` sets the local git config `worktree-guard.flow true` in a repo;
-`off` removes it; `list` shows `flow: on|off`. In a repo that is on, an edit of a file in the
+The local git config `worktree-guard.flow true` turns a repo on; unset, it is off. The person
+flips it with `/worktree-flow` (the `worktree-flow` skill), never an agent on its own; `list`
+shows `flow: on|off`. In a repo that is on, an edit of a file in the
 main checkout (or a git command that changes it) is stopped with "name this work". Reads pass.
 The edited file's repo decides, wherever the session started; a file outside git is never
 gated. A repo that is off gets nothing: no owner, no move, no message.
