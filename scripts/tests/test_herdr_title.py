@@ -8,6 +8,7 @@ Run: python3 -m unittest discover -s scripts/tests -p 'test_herdr_title.py' -v
 import json
 import os
 from pathlib import Path
+import shutil
 import socket
 import subprocess
 import sys
@@ -454,6 +455,45 @@ class ViewTest(Sandbox):
         self.hook('error', error='overloaded')
         self.assertEqual([self.need(call) for call in self.calls('herdr', wait=4)],
                          ['cleared', 'need=1', 'cleared', 'need=1'])
+
+
+DRIVER = """
+import extension from %s;
+const on = {};
+extension({ on: (name, handler) => { on[name] = handler; } });
+const ctx = { cwd: "/w", isIdle: () => true, model: { id: "m" },
+              sessionManager: { getSessionId: () => "p1", getSessionFile: () => "" } };
+const pause = (ms) => new Promise((done) => setTimeout(done, ms));
+on.input({ text: "/tdd", source: "interactive" }, ctx);
+await pause(800);
+on.turn_end({ message: { role: "assistant", content: [{ type: "text", text: "Which name, A or B?" }] },
+              outcome: "completed" }, ctx);
+on.agent_settled({}, ctx);
+await pause(800);
+on.session_shutdown({ reason: "reload" }, ctx);
+on.input({ text: "an extension's prompt", source: "extension" }, ctx);
+await pause(800);
+"""
+
+
+@unittest.skipUnless(shutil.which('node'), 'Node runs Pi\'s extension here')
+class PiExtensionTest(Sandbox):
+    """scripts/agent_hooks.ts as Pi loads it: input, a settled run and a reload, against a fake pi."""
+
+    def test_pis_input_and_settled_run_label_the_pane_and_a_reload_keeps_it(self):
+        driver = self.home / 'driver.mjs'
+        driver.write_text(DRIVER % json.dumps(str(ROOT / 'scripts/agent_hooks.ts')))
+        done = subprocess.run(['node', '--experimental-strip-types', '--no-warnings', str(driver)],
+                              capture_output=True, text=True, env={**self.env, 'PATH': f'{self.bin}:{os.environ["PATH"]}'},
+                              timeout=60)
+        self.assertEqual(done.returncode, 0, done.stderr)
+        calls = self.calls('herdr', wait=3)
+        # Typed input, the settled run that asked, then the extension's prompt: not typed, so the ask stays.
+        self.assertEqual([self.labels(call)['working'] for call in calls],
+                         ['execute › run', 'execute › wait › ask', 'execute › wait › ask'])
+        self.assertEqual(self.labels(calls[1])['done'], 'execute › wait › ask')
+        self.assertEqual(calls[1]['argv'][5:7], ['--agent', 'pi'])
+        self.assertFalse(any('--clear-state-labels' in call['argv'] for call in calls))  # the reload kept them
 
 
 class OwnerTest(Sandbox):
