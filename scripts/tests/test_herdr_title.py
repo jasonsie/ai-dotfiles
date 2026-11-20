@@ -28,6 +28,8 @@ if name == 'claude':
 with open(os.environ['FAKE_LOG'], 'a') as log:
     log.write(json.dumps({{'tool': name, 'argv': sys.argv[1:], 'cwd': os.getcwd(),
                           'herdr_env': sorted(key for key in os.environ if key.startswith('HERDR_'))}}) + '\\n')
+if name == 'herdr':
+    time.sleep(float(os.environ.get('FAKE_HERDR_SLEEP', 0)))
 if name == 'claude':
     sys.stdout.write(os.environ.get('FAKE_CLAUDE_SAYS', ''))
     sys.exit(int(os.environ.get('FAKE_CLAUDE_EXIT', 0)))
@@ -369,6 +371,13 @@ class StopTest(Sandbox):
         self.assertEqual(self.after(1)[0], ('execute › wait', 'execute › wait'))  # until its stop hook answers
         self.hook('interrupt', cli='codex')
         self.assertEqual(self.after(2)[1], ('execute › wait › done', 'idle'))
+
+    def test_codexs_interrupt_and_end_give_up_on_a_hung_herdr_within_codexs_3_s_cap(self):
+        self.hook('prompt', cli='codex', prompt='/tdd')
+        for kind in ('interrupt', 'end'):
+            started = time.time()
+            self.hook(kind, cli='codex', env={'FAKE_HERDR_SLEEP': '30'})
+            self.assertLess(time.time() - started, 3.0, kind)
 
     def test_the_stop_of_a_session_the_pane_does_not_belong_to_changes_nothing(self):
         self.hook('prompt', prompt='/tdd')

@@ -75,7 +75,8 @@ SWARM = 'claude-swarm-'  # the tmux server Claude Code starts for an agent team'
 AFTER = {'normal': ('done', 'idle'), 'open': ('wait', 'wait'), 'pending': ('run', 'run'), 'ask': ('ask', 'ask'),
          'wait': ('run', 'run'), 'fail': ('fail', 'fail'), 'unknown': ('wait', 'wait')}
 SOURCE = 'user:ai-dotfiles-title'  # who reports, to Herdr; beside Herdr's own integration
-HERDR_TIMEOUT = 5
+HERDR_TIMEOUT = 5.0
+QUICK = 1.5  # Codex stops an Interrupt or SessionEnd hook at 3 s: those reports give up sooner
 NEED = 'need'  # the pane token on rows that wait for the user: ask, fail, or a wait with no result
 NEEDING = ('ask', 'fail', 'unknown')
 # Herdr's agent list with the rows that need the user first, then Herdr's own attention order.
@@ -162,17 +163,17 @@ def labels(state, settings):
             'done': form(done), 'idle': form(idle), 'unknown': form(idle)}
 
 
-def herdr(*args):
+def herdr(*args, timeout=HERDR_TIMEOUT):
     """Run one herdr command; a Herdr that is missing, slow or unhappy changes nothing."""
     binary = os.environ.get('HERDR_BIN_PATH') or shutil.which('herdr')
     if not binary:
         return
     with contextlib.suppress(OSError, subprocess.SubprocessError):
         subprocess.run([binary, *args], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-                       stderr=subprocess.DEVNULL, timeout=HERDR_TIMEOUT, check=False)
+                       stderr=subprocess.DEVNULL, timeout=timeout, check=False)
 
 
-def report(session, settings):
+def report(session, settings, timeout=HERDR_TIMEOUT):
     """Label the session's pane with its state as it is now. Herdr keeps only the report with the
     highest seq, and replaces every label with each: the seq is taken before the state is read, and
     every writer saves before it reports, so the report kept carries the latest state. A session
@@ -186,7 +187,7 @@ def report(session, settings):
     pairs = [arg for status, text in labels(state, settings).items() for arg in ('--state-label', f'{status}={text}')]
     need = ('--token', f'{NEED}=1') if state.get('mode') in NEEDING else ('--clear-token', NEED)
     herdr('pane', 'report-metadata', where, '--source', SOURCE, '--agent', state.get('cli', ''), *pairs, *need,
-          '--seq', str(seq))
+          '--seq', str(seq), timeout=timeout)
 
 
 def set_view():
@@ -420,7 +421,7 @@ def settle(event, mode):
             return
         state.update(event=state.get('event', 0) + 1, mode=mode, blocked=None)
         SESSIONS.save(event.session, state)
-    report(event.session, config())
+    report(event.session, config(), timeout=QUICK)
 
 
 def on_dialog(event, word):
@@ -464,7 +465,7 @@ def cmd_classify(_args):
 def clear(where, cli, seq):
     """Take the labels and the need token off the pane: Herdr keeps a token until it is cleared."""
     herdr('pane', 'report-metadata', where, '--source', SOURCE, '--agent', cli, '--clear-state-labels',
-          '--clear-token', NEED, '--seq', str(seq))
+          '--clear-token', NEED, '--seq', str(seq), timeout=QUICK)
 
 
 def on_end(event):
