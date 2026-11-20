@@ -29,13 +29,16 @@ repo's scripts/agent_hooks.py, their transcripts in scripts/agent_sessions.py.
 Outside a Herdr pane (HERDR_ENV is not 1) nothing runs. A failure never blocks a prompt and
 prints nothing: a prompt hook's stdout would reach the model.
 
-State: $HERDR_TITLE_STATE, else ~/.local/state/ai-dotfiles/herdr-title/ (each session's tag).
+State: $HERDR_TITLE_STATE, else ~/.local/state/ai-dotfiles/herdr-title/ (each session's type and
+mode; panes/ holds the session each pane belongs to). A teammate in Claude Code's agent-team tmux
+server and a headless `claude -p` started from a pane change nothing: they share its environment.
 Python 3.11+, stdlib only.
 """
 from __future__ import annotations
 
 import argparse
 import contextlib
+import fcntl
 import io
 import json
 import os
@@ -56,7 +59,14 @@ ENV = 'HERDR_TITLE_STATE'
 DEFAULT_STATE = '~/.local/state/ai-dotfiles/herdr-title'
 KEEP_SECONDS = 7 * 24 * 3600
 SESSIONS = agent_hooks.Store(ENV, DEFAULT_STATE, KEEP_SECONDS)
+PANES = agent_hooks.Store(ENV, DEFAULT_STATE, KEEP_SECONDS, sub='panes')  # the session each pane belongs to
 CLIS = ('claude', 'codex', 'pi')  # the CLIs that hand over each prompt
+SWARM = 'claude-swarm-'  # the tmux server Claude Code starts for an agent team's teammates
+# What a session's labels say under Herdr's done and idle states, by the session's mode: normal
+# (a typed prompt; a stop judged done), open (a Codex prompt, until its stop hook answers), pending
+# (a stop being judged), ask, wait (its own background work runs on), fail, unknown (no verdict).
+AFTER = {'normal': ('done', 'idle'), 'open': ('wait', 'wait'), 'pending': ('run', 'run'), 'ask': ('ask', 'ask'),
+         'wait': ('run', 'run'), 'fail': ('fail', 'fail'), 'unknown': ('wait', 'wait')}
 SOURCE = 'user:ai-dotfiles-title'  # who reports, to Herdr; beside Herdr's own integration
 HERDR_TIMEOUT = 5
 # A skill named in a prompt: /name, $name or /plugin:name, not a piece of a path.
@@ -78,6 +88,29 @@ def pane():
     return os.environ.get('HERDR_PANE_ID') if os.environ.get('HERDR_ENV') == '1' else None
 
 
+def outsider(cli):
+    """Whether the call comes from a session that only shares the pane's environment: a teammate in
+    the tmux server Claude Code runs for an agent team, or a headless `claude -p` started from the
+    pane (Claude Code marks its hooks sdk-cli)."""
+    if SWARM in os.environ.get('TMUX', ''):
+        return True
+    return cli == 'claude' and os.environ.get('CLAUDE_CODE_ENTRYPOINT', '').startswith('sdk-')
+
+
+@contextlib.contextmanager
+def locked():
+    """One writer at a time: the hook and its detached model turns change the same state files."""
+    SESSIONS.folder.mkdir(parents=True, exist_ok=True, mode=0o700)
+    with open(SESSIONS.folder / '.lock', 'a') as handle:
+        fcntl.flock(handle, fcntl.LOCK_EX)
+        yield
+
+
+def owner(where):
+    """The session the pane belongs to: the last one the user typed a prompt into there."""
+    return PANES.load(where).get('session') if where else None
+
+
 def certain(prompt, settings):
     """The type a prompt names outright, or None: the prompt is a command word (with a PR number
     or not: "approve", "Approve #57."), or the first skill in it that has a type."""
@@ -92,14 +125,26 @@ def certain(prompt, settings):
     return None
 
 
-def labels(kind, settings):
+def labels(state, settings):
     """Herdr's label for each state it detects: working, blocked (a dialog), done (finished and
-    not seen yet), idle (seen) and unknown, as type › status › result."""
+    not seen yet), idle (seen) and unknown, as type › status › result. Without a type yet, the
+    type layer is left out: `run`, `wait › ask`."""
     words = settings['words']
     sep = words['separator']
-    wait = f"{kind}{sep}{words['wait']}"
-    return {'working': f"{kind}{sep}{words['run']}", 'blocked': wait, 'done': f"{wait}{sep}{words['done']}",
-            'idle': words['idle'], 'unknown': words['idle']}
+    head = f"{state['type']}{sep}" if state.get('type') else ''
+
+    def form(word):  # run, wait or idle, or a result under wait
+        if word == 'idle':
+            return words['idle']
+        if word in ('run', 'wait'):
+            return head + words[word]
+        return f"{head}{words['wait']}{sep}{words[word]}"
+
+    mode = state.get('mode', 'normal')
+    done, idle = AFTER.get(mode, AFTER['normal'])
+    # An open ask stays while the agent's background work keeps Herdr's working state on.
+    return {'working': form('ask' if mode == 'ask' else 'run'), 'blocked': form(state.get('blocked') or 'wait'),
+            'done': form(done), 'idle': form(idle), 'unknown': form(idle)}
 
 
 def herdr(*args):
@@ -112,17 +157,29 @@ def herdr(*args):
                        stderr=subprocess.DEVNULL, timeout=HERDR_TIMEOUT, check=False)
 
 
-def report(where, kind, seq, settings, cli):
-    """Label the pane. `seq` is when the prompt came: Herdr drops a report older than its last one.
-    The labels name the agent (`cli`): Herdr drops them when it exits, and hides them under another."""
-    pairs = [arg for state, text in labels(kind, settings).items() for arg in ('--state-label', f'{state}={text}')]
-    herdr('pane', 'report-metadata', where, '--source', SOURCE, '--agent', cli, *pairs, '--seq', str(seq))
+def report(session, settings):
+    """Label the session's pane with its state as it is now. Herdr keeps only the report with the
+    highest seq, and replaces every label with each: the seq is taken before the state is read, and
+    every writer saves before it reports, so the report kept carries the latest state. A session
+    that has ended or no longer owns its pane reports nothing. The labels name the agent: Herdr
+    drops them when it exits, and hides them while another agent runs in the pane."""
+    seq = time.time_ns()
+    state = SESSIONS.load(session)
+    where = state.get('pane')
+    if state.get('ended') or not where or owner(where) != session:
+        return
+    pairs = [arg for status, text in labels(state, settings).items() for arg in ('--state-label', f'{status}={text}')]
+    herdr('pane', 'report-metadata', where, '--source', SOURCE, '--agent', state.get('cli', ''), *pairs,
+          '--seq', str(seq))
 
 
-def typed(prompt, settings):
+def typed(event, settings):
     """Whether the user wrote this prompt: not empty, and not a report from a subagent, another
-    session or the harness, which arrive as prompts too and say nothing about the user's purpose."""
-    return bool(prompt.strip()) and not prompt.lstrip().startswith(tuple(settings['machine']))
+    session or the harness, which arrive as prompts too and say nothing about the user's purpose
+    (Pi says so itself: an extension's prompt)."""
+    prompt = event.prompt
+    return (bool(prompt.strip()) and not prompt.lstrip().startswith(tuple(settings['machine']))
+            and event.source != 'extension')
 
 
 def ask_later(request):
@@ -135,19 +192,38 @@ def ask_later(request):
         child.stdin.close()
 
 
-def on_prompt(event, state):
-    settings = config()
-    # A subagent or teammate shares the lead's pane, and its prompts are not the user's.
-    if event.subagent or not typed(event.prompt, settings):
+def on_prompt(event):
+    """A typed prompt makes the session the pane's own and starts a turn in normal mode, reported at
+    once with the current type; a prompt the user did not type only counts in the pane's own session.
+    Every turn boundary bumps `event`, so a model's late answer can tell it is stale."""
+    settings, where = config(), pane()
+    if event.subagent:  # a subagent or in-process teammate shares the pane; its prompts are not the user's
         return
-    seq = time.time_ns()
-    tag = certain(event.prompt, settings)
-    if tag:
-        state.update(tag=tag, seq=seq)
-        report(pane(), tag, seq, settings, event.cli)
-    else:
-        ask_later({'cli': event.cli, 'session': event.session, 'pane': pane(), 'prompt': event.prompt,
-                   'transcript': event.transcript, 'seq': seq})
+    if not typed(event, settings):
+        with locked():
+            state = SESSIONS.load(event.session)
+            if not state or owner(where) != event.session:
+                return
+            if state.get('mode') not in ('ask', 'fail', 'open'):  # an open ask or a failure waits for the user
+                state['mode'] = 'normal'
+            state.update(event=state.get('event', 0) + 1, typed_turn=False, blocked=None)
+            SESSIONS.save(event.session, state)
+        report(event.session, settings)
+        return
+    kind = certain(event.prompt, settings)
+    with locked():
+        state = SESSIONS.load(event.session)
+        number = state.get('event', 0) + 1
+        state.update(event=number, typed=number, typed_turn=True, mode='open' if event.cli == 'codex' else 'normal',
+                     blocked=None, ended=False, cli=event.cli, pane=where)
+        if kind:
+            state['type'] = kind
+        SESSIONS.save(event.session, state)
+        PANES.save(where, {'session': event.session, 'cli': event.cli})
+    report(event.session, settings)
+    if not kind:
+        ask_later({'job': 'type', 'cli': event.cli, 'session': event.session, 'prompt': event.prompt,
+                   'transcript': event.transcript, 'trigger': number})
 
 
 def ask(settings, current, said, prompt):
@@ -186,43 +262,73 @@ def pick(said, allowed):
 
 
 def classify(request):
-    """The model's turn for one prompt: ask, then tag the pane with its answer."""
+    """The model's turn for one prompt: ask for the type, then relabel the pane with it, unless a
+    newer prompt came while the model thought. The mode stays as the session has it by then."""
     import agent_sessions  # the CLIs' transcripts; not needed by the hook itself
     settings, session = config(), request['session']
     said = agent_sessions.last_reply(request['cli'], request['transcript']) if request.get('transcript') else ''
     prompt = request['prompt']
     if len(prompt) > PROMPT_START + PROMPT_END:
         prompt = f'{prompt[:PROMPT_START]}\n[...]\n{prompt[-PROMPT_END:]}'
-    tag = ask(settings, SESSIONS.load(session).get('tag'), said[-REPLY_END:], prompt)
-    state = SESSIONS.load(session)  # read again: a newer prompt may have been tagged while the model thought
-    if tag and state.get('seq', 0) <= request['seq']:
-        SESSIONS.save(session, {**state, 'tag': tag, 'seq': request['seq']})
-        report(request['pane'], tag, request['seq'], settings, request['cli'])
+    kind = ask(settings, SESSIONS.load(session).get('type'), said[-REPLY_END:], prompt)
+    if not kind:
+        return
+    with locked():
+        state = SESSIONS.load(session)
+        if state.get('typed') != request['trigger'] or state.get('ended'):
+            return
+        state['type'] = kind
+        SESSIONS.save(session, state)
+    report(session, settings)
 
 
 def cmd_classify(_args):
-    with contextlib.suppress(Exception):  # nobody is listening: a failure leaves the tag as it is
+    with contextlib.suppress(Exception):  # nobody is listening: a failure leaves the labels as they are
         classify(json.loads(sys.stdin.read()))
     return 0
 
 
+def clear(where, cli):
+    herdr('pane', 'report-metadata', where, '--source', SOURCE, '--agent', cli, '--clear-state-labels',
+          '--seq', str(time.time_ns()))
+
+
 def on_end(event):
-    """The session is over: its tag comes off the pane, and its state file goes. A subagent's
-    or teammate's end is not the pane's."""
-    if event.subagent:
+    """The session is over: its labels come off the pane. Its state stays (pruned after a week), so a
+    resumed session finds its type. A subagent's end is not the pane's, Pi's reload keeps the
+    session, and a session the pane no longer belongs to (Codex ends an old chat late) changes nothing."""
+    if event.subagent or (event.cli == 'pi' and event.reason == 'reload'):
         return
-    herdr('pane', 'report-metadata', pane(), '--source', SOURCE, '--clear-state-labels', '--seq', str(time.time_ns()))
-    if event.session:
-        SESSIONS.file(event.session).unlink(missing_ok=True)
+    where = pane()
+    with locked():
+        mine = owner(where)
+        if mine and mine != event.session:
+            return
+        state = SESSIONS.load(event.session)
+        if state:
+            if state.get('mode') == 'pending':
+                state['mode'] = 'unknown'
+            state.update(event=state.get('event', 0) + 1, ended=True)
+            SESSIONS.save(event.session, state)
+        PANES.file(where).unlink(missing_ok=True)
+    clear(where, event.cli)
+
+
+HANDLERS = {'prompt': on_prompt, 'end': on_end}
 
 
 def cmd_hook(args):
-    if not pane():
-        return 0
-    if args.kind == 'end':
-        return agent_hooks.serve(args.cli, 'end', lambda data: on_end(agent_hooks.read(args.cli, 'end', data)))
-    return agent_hooks.serve(args.cli, args.kind,
-                             lambda data: agent_hooks.call(args.cli, args.kind, data, on_prompt, SESSIONS))
+    """Every call goes through serve, so each CLI gets the reply it expects even outside Herdr."""
+    def answer(data):
+        if pane() and not outsider(args.cli):
+            event = agent_hooks.read(args.cli, args.kind, data)
+            if event.session:
+                if args.kind == 'prompt':
+                    SESSIONS.prune(time.time())
+                    PANES.prune(time.time())
+                HANDLERS[args.kind](event)
+        return agent_hooks.render(args.cli, args.kind, None)
+    return agent_hooks.serve(args.cli, args.kind, answer)
 
 
 def parser():

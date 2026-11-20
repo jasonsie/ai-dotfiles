@@ -67,6 +67,15 @@ class Sandbox(unittest.TestCase):
                 return found
             time.sleep(0.05)
 
+    def state(self, session='s1'):
+        return json.loads((self.home / 'state' / f'{session}.json').read_text())
+
+    def seed(self, session='s1', where='w1:p1', **state):
+        """A session that owns `where`, in the state given."""
+        (self.home / 'state' / 'panes').mkdir(parents=True, exist_ok=True)
+        (self.home / 'state' / f'{session}.json').write_text(json.dumps({'pane': where, 'cli': 'claude', **state}))
+        (self.home / 'state' / 'panes' / f'{where.replace(":", "_")}.json').write_text(json.dumps({'session': session}))
+
     @staticmethod
     def labels(call):
         argv = call['argv']
@@ -90,7 +99,9 @@ class CertainTest(Sandbox):
 
     def test_a_sentence_that_only_contains_a_command_word_is_not_one(self):
         self.hook('prompt', prompt='all approve and do them all for me')
-        self.assertEqual(self.calls('herdr'), [])
+        (call,) = self.calls('herdr')
+        self.assertEqual(self.labels(call)['working'], 'run')  # reported at once, before the model names a type
+        self.assertEqual(len(self.calls('claude', wait=1)), 1)
 
     def test_a_plugins_skill_and_a_dollar_skill_count_and_the_first_one_wins(self):
         prompts = ('take /zkfy:zk-note on each page', '$tutor based on this session',
@@ -105,7 +116,7 @@ class CertainTest(Sandbox):
                                           'see https://example.com/plan and ~/onboard/notes',
                                           '/model then /clear', 'costs $5 and $HOME/tdd.txt')):
             self.hook('prompt', session=f's{session}', prompt=prompt)
-        self.assertEqual(self.calls('herdr'), [])
+        self.assertEqual([self.labels(call)['working'] for call in self.calls('herdr')], ['run'] * 4)
 
     def test_a_prompt_the_user_did_not_type_keeps_the_tag(self):
         for prompt in ('Another Claude session sent a message:\n<agent-message from="a1">/grilling done</agent-message>',
@@ -125,22 +136,35 @@ class CertainTest(Sandbox):
         time.sleep(0.5)  # long enough for a model's turn that must not have started
         self.assertEqual([self.labels(call) for call in self.calls('herdr')], [GRILL])
         self.assertEqual(self.calls('claude'), [])
-        self.assertEqual(json.loads((self.home / 'state' / 's1.json').read_text())['tag'], 'grill')
+        self.assertEqual(self.state()['type'], 'grill')
 
 
 class EndTest(Sandbox):
-    def test_session_end_takes_the_tag_off_and_forgets_the_session(self):
+    def test_session_end_takes_the_labels_off_and_keeps_the_type_for_a_resume(self):
         self.hook('prompt', prompt='/grilling')
-        kept = self.home / 'state' / 's1.json'
-        self.assertEqual(json.loads(kept.read_text())['tag'], 'grill')
         done = self.hook('end')
         self.assertEqual((done.returncode, done.stdout), (0, ''))
         tagged, cleared = (call['argv'] for call in self.calls('herdr'))
-        self.assertEqual(cleared[:6], ['pane', 'report-metadata', 'w1:p1', '--source', 'user:ai-dotfiles-title',
-                                       '--clear-state-labels'])
+        self.assertEqual(cleared[:8], ['pane', 'report-metadata', 'w1:p1', '--source', 'user:ai-dotfiles-title',
+                                       '--agent', 'claude', '--clear-state-labels'])
         # Herdr drops a report whose --seq is not above the source's last one.
         self.assertGreater(int(cleared[cleared.index('--seq') + 1]), int(tagged[tagged.index('--seq') + 1]))
-        self.assertFalse(kept.exists())
+        self.assertEqual((self.state()['type'], self.state()['ended']), ('grill', True))
+        self.assertFalse((self.home / 'state' / 'panes' / 'w1_p1.json').exists())
+
+    def test_the_end_of_a_session_the_pane_no_longer_belongs_to_changes_nothing(self):
+        self.hook('prompt', session='old', prompt='/grilling')
+        self.hook('prompt', session='new', prompt='/tdd')  # typed into the same pane: it is the new session's now
+        self.hook('end', session='old', cli='claude')
+        self.assertEqual(len(self.calls('herdr')), 2)  # no clear
+        self.assertFalse(self.state('old')['ended'])
+
+    def test_pis_reload_keeps_the_session_and_its_labels(self):
+        self.hook('prompt', cli='pi', prompt='/grilling')
+        self.hook('end', cli='pi', reason='reload')
+        self.assertEqual(len(self.calls('herdr')), 1)
+        self.hook('end', cli='pi', reason='quit')
+        self.assertIn('--clear-state-labels', self.calls('herdr')[-1]['argv'])
 
 
 class ModelTest(Sandbox):
@@ -159,8 +183,9 @@ class ModelTest(Sandbox):
         self.hook('prompt', prompt='/grilling')
         path = self.transcript('That is every decision. Confirm and I will build it.')
         self.hook('prompt', prompt='y', transcript_path=path, env={'FAKE_CLAUDE_SAYS': 'EXECUTE'})
-        tagged = self.calls('herdr', wait=2)
-        self.assertEqual(self.labels(tagged[1]), {'working': 'execute › run', 'blocked': 'execute › wait',
+        tagged = self.calls('herdr', wait=3)  # /grilling, y at once with the type it has, the model's answer
+        self.assertEqual(self.labels(tagged[1])['working'], 'grill › run')
+        self.assertEqual(self.labels(tagged[2]), {'working': 'execute › run', 'blocked': 'execute › wait',
                                                   'done': 'execute › wait › done', 'idle': 'idle', 'unknown': 'idle'})
         (asked,) = self.calls('claude')
         flag, question, *options = asked['argv']
@@ -178,19 +203,19 @@ class ModelTest(Sandbox):
         # The model's CLI must not know the pane: its own hooks would report to it.
         self.assertEqual(asked['herdr_env'], [])
         self.assertTrue(asked['cwd'].startswith(os.path.realpath(self.home / 'state')), asked['cwd'])
-        self.assertEqual(json.loads((self.home / 'state' / 's1.json').read_text())['tag'], 'execute')
+        self.assertEqual(self.state()['type'], 'execute')
 
     def test_the_hook_returns_before_the_model_answers(self):
         started = time.time()
         self.hook('prompt', prompt='how does this work', env={'FAKE_CLAUDE_SAYS': 'EXPLAIN', 'FAKE_CLAUDE_SLEEP': '1.5'})
         self.assertLess(time.time() - started, 1.0)
-        self.assertEqual(self.calls('herdr'), [])
-        (call,) = self.calls('herdr', wait=1)
-        self.assertEqual(self.labels(call)['working'], 'explain › run')
+        (first,) = self.calls('herdr')
+        self.assertEqual(self.labels(first)['working'], 'run')  # no type yet
+        self.assertEqual(self.labels(self.calls('herdr', wait=2)[1])['working'], 'explain › run')
 
     def classify(self, says='EXECUTE', code=0, **request):
         """The model's turn by itself, as the hook starts it, with the model saying `says`."""
-        asked = {'cli': 'claude', 'session': 's1', 'pane': 'w1:p1', 'prompt': 'y', 'transcript': '', 'seq': 5, **request}
+        asked = {'job': 'type', 'cli': 'claude', 'session': 's1', 'prompt': 'y', 'transcript': '', 'trigger': 5, **request}
         return self.run_script('classify', data=asked, FAKE_CLAUDE_SAYS=says, FAKE_CLAUDE_EXIT=str(code))
 
     def test_keep_a_word_that_is_no_tag_or_a_failed_call_leaves_the_tag(self):
@@ -203,10 +228,10 @@ class ModelTest(Sandbox):
         self.assertEqual(self.calls('herdr'), [])
 
     def test_an_answer_that_comes_after_a_newer_tag_is_dropped(self):
-        self.hook('prompt', prompt='/grilling')  # tagged now; the answer below is for a prompt before it
-        self.classify('EXECUTE', seq=5)
+        self.hook('prompt', prompt='/grilling')  # typed now; the answer below is for a prompt before it
+        self.classify('EXECUTE', trigger=0)
         self.assertEqual([self.labels(call)['working'] for call in self.calls('herdr')], ['grill › run'])
-        self.assertEqual(json.loads((self.home / 'state' / 's1.json').read_text())['tag'], 'grill')
+        self.assertEqual(self.state()['type'], 'grill')
 
     def test_a_long_reply_is_cut_to_its_end_and_a_long_prompt_to_its_start_and_end(self):
         path = self.transcript('Opening words. ' + 'r' * 3000 + ' Shall I build it?')
@@ -220,9 +245,71 @@ class ModelTest(Sandbox):
 
     def test_the_answer_may_come_in_lower_case_or_inside_a_sentence(self):
         for session, says in enumerate(('execute\n', 'The label is DEBUG.', '**Review**', 'I would keep it: KEEP, not PLAN')):
+            self.seed(f's{session}', where=f'w1:p{session}', typed=5)
             self.classify(says, session=f's{session}')
         self.assertEqual([self.labels(call)['working'] for call in self.calls('herdr')],
                          ['execute › run', 'debug › run', 'review › run'])
+
+
+class OwnerTest(Sandbox):
+    """A pane's labels belong to the session the user last typed into there."""
+
+    def test_a_teammate_in_claudes_tmux_server_or_a_headless_run_changes_nothing(self):
+        for env in ({'TMUX': '/private/tmp/tmux-501/claude-swarm-4242,77,0'}, {'CLAUDE_CODE_ENTRYPOINT': 'sdk-cli'}):
+            self.hook('prompt', prompt='/grilling', env=env)
+            self.hook('end', env=env)
+        self.assertEqual(self.calls('herdr'), [])
+        self.assertFalse((self.home / 'state' / 's1.json').exists())
+
+    def test_the_users_own_tmux_and_an_interactive_run_still_count(self):
+        self.hook('prompt', prompt='/grilling', env={'TMUX': '/private/tmp/tmux-501/default,1,0',
+                                                     'CLAUDE_CODE_ENTRYPOINT': 'cli'})
+        self.assertEqual(len(self.calls('herdr')), 1)
+
+    def test_a_prompt_the_user_did_not_type_relabels_only_the_panes_own_session(self):
+        self.hook('prompt', prompt='/grilling')
+        report = '<task-notification>a background agent finished</task-notification>'
+        self.hook('prompt', prompt=report)  # the pane's own session: the turn it starts keeps the type
+        self.hook('prompt', session='other', prompt=report)  # a session with nothing here
+        self.assertEqual([self.labels(call)['working'] for call in self.calls('herdr')], ['grill › run'] * 2)
+
+    def test_a_pi_prompt_an_extension_sent_is_not_typed(self):
+        self.hook('prompt', cli='pi', prompt='/tdd', source='extension')
+        self.assertEqual(self.calls('herdr'), [])
+        self.hook('prompt', cli='pi', prompt='/tdd', source='interactive')
+        self.assertEqual(self.labels(self.calls('herdr')[0])['working'], 'execute › run')
+
+
+class LabelTest(unittest.TestCase):
+    """The matrix: the label each mode shows under each state Herdr detects."""
+
+    def setUp(self):
+        self.module = load('../skills/herdr-title/scripts/herdr_title.py')
+        self.settings = self.module.config()
+
+    def labels(self, **state):
+        return self.module.labels(state, self.settings)
+
+    def test_each_mode_under_each_herdr_state(self):
+        rows = {mode: self.labels(type='execute', mode=mode) for mode in self.module.AFTER}
+        self.assertEqual({mode: (row['done'], row['idle']) for mode, row in rows.items()}, {
+            'normal': ('execute › wait › done', 'idle'), 'open': ('execute › wait', 'execute › wait'),
+            'pending': ('execute › run', 'execute › run'), 'ask': ('execute › wait › ask', 'execute › wait › ask'),
+            'wait': ('execute › run', 'execute › run'), 'fail': ('execute › wait › fail', 'execute › wait › fail'),
+            'unknown': ('execute › wait', 'execute › wait')})
+        self.assertEqual({row['working'] for mode, row in rows.items() if mode != 'ask'}, {'execute › run'})
+        self.assertEqual(rows['ask']['working'], 'execute › wait › ask')  # its background agents keep Herdr working
+        self.assertTrue(all(row['unknown'] == row['idle'] for row in rows.values()))
+
+    def test_a_dialog_says_what_it_waits_for_when_a_hook_knows(self):
+        self.assertEqual(self.labels(type='git')['blocked'], 'git › wait')
+        self.assertEqual(self.labels(type='git', blocked='allow')['blocked'], 'git › wait › allow')
+        self.assertEqual(self.labels(type='git', blocked='ask')['blocked'], 'git › wait › ask')
+
+    def test_without_a_type_the_type_layer_is_left_out(self):
+        self.assertEqual(self.labels(mode='ask'), {'working': 'wait › ask', 'blocked': 'wait', 'done': 'wait › ask',
+                                                    'idle': 'wait › ask', 'unknown': 'wait › ask'})
+        self.assertEqual(self.labels()['working'], 'run')
 
 
 class QuietTest(Sandbox):
