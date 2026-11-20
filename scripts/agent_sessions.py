@@ -9,6 +9,7 @@ context, sessions in scratch folders). Everything that differs between the store
   sessions(start, end, home)      every Session with a turn in [start, end), oldest first
   read(cli, path, start, end)     one transcript's Session, or None
   last_reply(cli, path)           the agent's last message in one transcript, from the file's tail
+  note_since_prompt(cli, path, p) whether the harness left a note starting with p after the last prompt
   is_temp(cwd)                    a scratch folder; sessions() drops the sessions that ran in one
 
 A Session's turns and files hold only what falls inside the window; its title and cwd belong to
@@ -122,18 +123,46 @@ def last_reply(cli: str, path, tail: int = 256 * 1024) -> str:
     handle = READERS.get(cli)
     if handle is None:
         return ''
-    try:
-        with open(path, 'rb') as file:
-            start = max(0, file.seek(0, os.SEEK_END) - tail)
-            file.seek(start)
-            lines = file.read().decode('utf-8', errors='replace').splitlines()
-    except (OSError, ValueError):
-        return ''
     reader = _Reader(cli, Path(path), *ALWAYS)
-    for line in lines[1 if start else 0:]:  # a tail that starts inside the file starts inside a line
+    for line in _tail(path, tail):
         _feed(handle, reader, line)
     replies = sorted((turn for turn in reader.turns if turn.role == 'assistant'), key=lambda turn: turn.at)
     return replies[-1].text if replies else ''
+
+
+def note_since_prompt(cli: str, path, prefix: str, tail: int = 256 * 1024) -> bool:
+    """Whether Claude Code's harness left a note starting with `prefix` (one of its meta rows, such
+    as the usage-limit note) after the last prompt of one transcript, in the file's last `tail`
+    bytes. False for the other stores, and for a file that cannot be read."""
+    if cli != 'claude':
+        return False
+    found = False
+    for line in _tail(path, tail):
+        try:
+            row = _obj(json.loads(line))
+        except ValueError:
+            continue
+        if row.get('type') != 'user' or row.get('isSidechain'):
+            continue
+        content = _obj(row.get('message')).get('content')
+        if row.get('isMeta'):
+            texts = [content] if isinstance(content, str) else [b.get('text') for b in map(_obj, _items(content))]
+            found = found or any(_text(text).startswith(prefix) for text in texts)
+        elif isinstance(content, str) and content.strip():  # a new prompt: notes before it no longer count
+            found = False
+    return found
+
+
+def _tail(path, size):
+    """The whole lines in a file's last `size` bytes, or none when it cannot be read."""
+    try:
+        with open(path, 'rb') as file:
+            start = max(0, file.seek(0, os.SEEK_END) - size)
+            file.seek(start)
+            lines = file.read().decode('utf-8', errors='replace').splitlines()
+    except (OSError, ValueError):
+        return []
+    return lines[1 if start else 0:]  # a tail that starts inside the file starts inside a line
 
 
 def _feed(handle, reader, line):

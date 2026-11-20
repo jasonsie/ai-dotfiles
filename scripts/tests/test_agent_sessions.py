@@ -638,5 +638,29 @@ class LastReplyTest(StoreTest):
         self.assertEqual(agent_sessions.last_reply('agy', prompts), '')
 
 
+class NoteTest(StoreTest):
+    """A harness note (Claude Code's meta rows) since the last prompt: the usage-limit note, say."""
+    NOTE = '[Usage limit reached'
+
+    def test_a_note_after_the_prompt_counts_and_a_newer_prompt_clears_it(self):
+        note = claude_user(stamp(9, 1), '[Usage limit reached; a short grace allowance remains.]', isMeta=True)
+        reply = claude_assistant(stamp(9, 2), 'Stopping here.')
+        noted = self.claude('a', [claude_user(stamp(9), 'build it'), note, reply])
+        self.assertTrue(agent_sessions.note_since_prompt('claude', noted, self.NOTE))
+        later = self.claude('b', [claude_user(stamp(9), 'build it'), note, reply, claude_user(stamp(9, 3), 'go on')])
+        self.assertFalse(agent_sessions.note_since_prompt('claude', later, self.NOTE))
+
+    def test_another_note_a_typed_look_alike_a_subagent_and_other_stores_do_not_count(self):
+        rows = [claude_user(stamp(9), 'build it'),
+                claude_user(stamp(9, 1), '<system-reminder>Usage limit reached</system-reminder>', isMeta=True),
+                claude_user(stamp(9, 2), '[Usage limit reached', isSidechain=True, isMeta=True)]
+        path = self.claude('c', rows)
+        self.assertFalse(agent_sessions.note_since_prompt('claude', path, self.NOTE))
+        typed = self.claude('d', [claude_user(stamp(9), '[Usage limit reached? what does that mean')])
+        self.assertFalse(agent_sessions.note_since_prompt('claude', typed, self.NOTE))
+        for cli, missing in (('codex', path), ('claude', self.home / 'missing.jsonl')):
+            self.assertFalse(agent_sessions.note_since_prompt(cli, missing, self.NOTE), cli)
+
+
 if __name__ == '__main__':
     unittest.main()
