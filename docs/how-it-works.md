@@ -413,11 +413,12 @@ their meanings, and the words.
   and a question dialog closed without an answer fire no hook; Herdr then shows idle. A dialog
   no hook announces, later in the same turn, keeps the earlier dialog's word. A Stop hook that
   makes Claude Code go on after a question (`/goal` is one) leaves `wait › ask` on the row while
-  it works, until the next stop. That a skill fired on a schedule reaches the hook as its
-  scheduled prompt is not verified. Three rows per agent fit about 3 agents at the default split
-  in a 27-row window; drag the divider between spaces and agents for more. Herdr keeps no labels
-  across a restart of its server; a resumed Claude Code or Pi session reports its kept state
-  again, and a Codex pane waits for its next typed prompt.
+  it works, until the next stop. That a scheduled prompt reaches the hook as the text its stop
+  listed is read off transcripts, not seen at the hook; an autonomous `/loop` (given no prompt)
+  fires with other text than it lists, so it likely reads as typed. Three rows per agent fit
+  about 3 agents at the default split in a 27-row window; drag the divider between spaces and
+  agents for more. Herdr keeps no labels across a restart of its server; a resumed Claude Code
+  or Pi session reports its kept state again, and a Codex pane waits for its next typed prompt.
 - **Changing it.** The types, the words, the rules that decide at once and both model
   instructions are in `config/herdr-title.json`, which the hook reads on every call;
   `scripts/tests/test_herdr_title.py` checks the file. State is one small file per session under
