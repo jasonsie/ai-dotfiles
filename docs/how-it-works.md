@@ -660,8 +660,9 @@ gets its setup from the committed `.claude/settings.json`:
   where one exists, else documented; the plugin's job, not this repo's.
 - **Emitted vs verified:** writing a config is not proof that it works. Verified means the
   CLI itself reports it (`mcp list`, a session listing the skill, `codex debug prompt-input`).
-- **Flow switch:** the repo-local git config `worktree-guard.flow`, set by `ai-dotfiles worktree on`
-  and cleared by `off`; both are the person's, and the guard refuses them from an agent. A repo
+- **Flow switch:** the repo-local git config `worktree-guard.flow`, toggled by the person's
+  `/worktree-flow` once they click OK in its macOS dialog; no agent and no prompt the person did
+  not type can click it. A repo
   that is off gets nothing from the guard. Claude's `WorktreeCreate` hook still runs there, only to
   reproduce Claude's own default (a branch `worktree-<name>` from the session's HEAD).
 - **Work name:** `<type>/<slug>` (for example `fix/prune-worktrees`), what a task is called. It

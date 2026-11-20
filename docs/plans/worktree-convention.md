@@ -86,7 +86,8 @@ Spec: issue #57; tickets #58-#70 (sub-issues of #57, with blocked-by links).
   see it. Rejected: an AGENTS.md line (read by cloud sessions without our hooks); a list in
   `config/` (breaks "per-project rules belong to each project"; would publish private repo names).
 - **P1b. Only the person flips it.** The guard refuses `worktree on|off` from an agent, as it does
-  `release` and `share`.
+  `release` and `share`. Superseded: [flow-switch-skill.md](flow-switch-skill.md) S1 to S4
+  (`/worktree-flow`, a macOS dialog as the yes; `on|off` gone).
 - **P2. A repo that is off gets nothing:** plain git; no owner, no move, no warning. The guard's
   move-on-clash and its `agent/<cli>-<id8>` worktrees are retired. Accepted: R1 is not guaranteed
   there; `worktree on` is the fix.

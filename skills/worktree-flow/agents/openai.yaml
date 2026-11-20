@@ -1,0 +1,5 @@
+interface:
+  display_name: "Worktree flow"
+  short_description: "Toggle this repo's worktree flow"
+policy:
+  allow_implicit_invocation: false
