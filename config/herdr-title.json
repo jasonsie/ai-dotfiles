@@ -44,6 +44,7 @@
     "wizard": "execute",
     "setup-agent-skills": "execute",
     "setup-pre-commit": "execute",
+    "worktree-flow": "execute",
     "migrate-to-shoehorn": "execute",
     "diagnosing-bugs": "debug",
     "spec-review": "review",

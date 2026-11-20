@@ -115,6 +115,8 @@ has the reasoning and each CLI's commands.
   an edit in the main checkout or another session's worktree is refused; the skill is how
   a session names its work, and `ai-dotfiles worktree` lists, archives and removes
   those worktrees.
+- **`worktree-flow`**: the person's `/worktree-flow` toggles a repo's flow on or off, after
+  their OK in a macOS dialog; the only way to flip it.
 - **`small-commits`**: commit the way the hook accepts: under 300 changed lines, one
   concern, `type(scope): outcome` and the Why:, Scope:, Verified: trailers; the plan to
   show first, how to split, and what a block means.
