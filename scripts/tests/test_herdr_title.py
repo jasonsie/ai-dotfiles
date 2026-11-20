@@ -320,9 +320,17 @@ class StopTest(Sandbox):
         self.calls('herdr', wait=6)  # s2's prompt, its stop, the model's verdict
         self.assertEqual(self.state('s2')['mode'], 'normal')
 
-    def test_no_answer_from_the_model_reads_wait_with_no_result(self):
+    def test_a_scheduled_wake_up_makes_wait_count_and_the_turn_it_wakes_starts_normal(self):
+        self.stopped('I will check the build again in five minutes.', says='WAIT',
+                     session_crons=[{'id': 'c1', 'schedule': '*/5 * * * *', 'recurring': True, 'prompt': 'check the build'}])
+        self.assertEqual(self.after(3)[2], ('execute › run', 'execute › run'))
+        self.hook('prompt', prompt='check the build')  # it fires: not typed, and its stop says what comes next
+        self.assertEqual(self.state()['mode'], 'normal')
+
+    def test_no_answer_from_the_model_reads_wait_with_no_result_and_needs_the_user(self):
         self.stopped('Here is where things stand.', says='banana')
         self.assertEqual(self.after(3)[2], ('execute › wait', 'execute › wait'))
+        self.assertIn('need=1', self.calls('herdr')[2]['argv'])  # a look costs less than a missed ask
 
     def test_an_api_error_or_claudes_usage_limit_note_is_fail_at_once(self):
         self.hook('prompt', prompt='/tdd')
@@ -418,11 +426,15 @@ class DialogTest(Sandbox):
         self.assertEqual(self.hook('permission', cli='codex', session='c1', tool_name='Bash').stdout, '')
         self.assertEqual(self.blocked(4), 'execute › wait › allow')
 
-    def test_the_next_turn_end_forgets_the_dialog(self):
+    def test_the_next_turn_end_or_prompt_forgets_the_dialog(self):
         self.hook('prompt', prompt='/tdd')
         self.hook('permission', tool_name='Bash')
         self.hook('stop', last_assistant_message='Which one?')
         self.assertEqual(self.blocked(3), 'execute › wait')
+        for number, prompt in enumerate(('/tdd', '<task-notification>a reviewer finished</task-notification>'), start=4):
+            self.hook('permission', tool_name='Bash')
+            self.hook('prompt', prompt=prompt)  # typed, then not
+            self.assertEqual(self.blocked(2 * number - 3), 'execute › wait', prompt)
 
 
 class StartTest(Sandbox):
@@ -435,6 +447,15 @@ class StartTest(Sandbox):
         self.assertEqual(self.hook('start', source='resume').stdout, '')  # SessionStart's stdout would be context
         back = self.labels(self.calls('herdr', wait=4)[3])
         self.assertEqual((back['done'], back['idle']), ('execute › wait › ask', 'execute › wait › ask'))
+
+    def test_a_verdict_that_died_with_its_process_reads_a_bare_wait_at_a_resume_or_an_end(self):
+        self.seed(type='execute', mode='pending', event=3)
+        self.hook('start', source='resume')
+        self.assertEqual(self.state()['mode'], 'unknown')
+        self.assertEqual(self.labels(self.calls('herdr', wait=1)[0])['done'], 'execute › wait')
+        self.seed(type='execute', mode='pending', event=5)
+        self.hook('end')
+        self.assertEqual(self.state()['mode'], 'unknown')  # what a resume will show
 
     def test_a_new_or_cleared_session_and_a_pane_another_session_owns_change_nothing(self):
         self.hook('prompt', prompt='/tdd')
@@ -485,6 +506,12 @@ class ViewTest(Sandbox):
         request = self.requests[0]
         self.assertEqual((request['method'], request['params']['source']), ('agent.view.set', 'user:ai-dotfiles-title'))
         self.assertEqual(request['params']['sort'][0], {'field': {'token': 'need'}, 'order': 'desc'})
+
+    def test_a_resume_sets_the_view_again(self):
+        self.hook('prompt', prompt='/tdd')
+        self.hook('end')
+        self.hook('start', source='resume')  # after a restart of Herdr's server, which drops the view
+        self.assertEqual(len(self.requests), 2)
 
     def test_the_need_token_follows_the_mode(self):
         self.hook('prompt', prompt='/tdd')
