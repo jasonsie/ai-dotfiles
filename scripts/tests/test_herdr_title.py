@@ -232,6 +232,7 @@ class ModelTest(Sandbox):
         return self.run_script('classify', data=asked, FAKE_CLAUDE_SAYS=says, FAKE_CLAUDE_EXIT=str(code))
 
     def test_keep_a_word_that_is_no_tag_or_a_failed_call_leaves_the_tag(self):
+        self.seed(type='grill', typed=5)  # each answer below is for this session's latest prompt
         for says, code in (('KEEP', 0), ('banana', 0), ('', 0), ('EXECUTE', 1)):
             done = self.classify(says, code)
             self.assertEqual((done.returncode, done.stdout, done.stderr), (0, '', ''), says)
@@ -239,6 +240,17 @@ class ModelTest(Sandbox):
         (self.bin / 'claude').unlink()  # no claude on this machine
         self.assertEqual(self.classify().returncode, 0)
         self.assertEqual(self.calls('herdr'), [])
+        self.assertEqual(self.state()['type'], 'grill')
+
+    def test_a_late_answer_for_a_session_that_lost_the_pane_reports_nothing(self):
+        self.hook('prompt', prompt='how does it work', env={'FAKE_CLAUDE_SAYS': 'EXPLAIN', 'FAKE_CLAUDE_SLEEP': '1'})
+        self.hook('prompt', session='s2', prompt='/tdd')  # typed into the same pane while the model thinks
+        deadline = time.time() + 10
+        while self.state().get('type') != 'explain' and time.time() < deadline:
+            time.sleep(0.05)
+        self.assertEqual(self.state()['type'], 'explain')  # s1's answer still lands in s1's state
+        time.sleep(0.5)  # its report would follow at once
+        self.assertEqual([self.labels(call)['working'] for call in self.calls('herdr')], ['run', 'execute › run'])
 
     def test_an_answer_that_comes_after_a_newer_tag_is_dropped(self):
         self.hook('prompt', prompt='/grilling')  # typed now; the answer below is for a prompt before it
@@ -380,9 +392,13 @@ class StopTest(Sandbox):
             self.assertLess(time.time() - started, 3.0, kind)
 
     def test_the_stop_of_a_session_the_pane_does_not_belong_to_changes_nothing(self):
-        self.hook('prompt', prompt='/tdd')
-        self.hook('stop', session='teammate', last_assistant_message='Which file?')
-        self.assertEqual(len(self.calls('herdr')), 1)
+        self.hook('prompt', session='before', prompt='/grilling')
+        self.hook('prompt', prompt='/tdd')  # s1 takes the pane over
+        kept = self.state('before')
+        for last in ('Which file?', 'All done.'):
+            self.hook('stop', session='before', last_assistant_message=last)
+        self.assertEqual(self.state('before'), kept)
+        self.assertEqual(len(self.calls('herdr')), 2)
 
 
 class DialogTest(Sandbox):
@@ -547,11 +563,15 @@ class OwnerTest(Sandbox):
         self.assertEqual(len(self.calls('herdr')), 1)
 
     def test_a_prompt_the_user_did_not_type_relabels_only_the_panes_own_session(self):
-        self.hook('prompt', prompt='/grilling')
+        self.hook('prompt', session='before', prompt='/grilling')
+        self.hook('prompt', prompt='/tdd')  # s1 takes the pane over
+        kept = self.state('before')
         report = '<task-notification>a background agent finished</task-notification>'
+        self.hook('prompt', session='before', prompt=report)  # no longer the pane's session
+        self.assertEqual(self.state('before'), kept)
         self.hook('prompt', prompt=report)  # the pane's own session: the turn it starts keeps the type
-        self.hook('prompt', session='other', prompt=report)  # a session with nothing here
-        self.assertEqual([self.labels(call)['working'] for call in self.calls('herdr')], ['grill › run'] * 2)
+        self.assertEqual([self.labels(call)['working'] for call in self.calls('herdr')],
+                         ['grill › run', 'execute › run', 'execute › run'])
 
     def test_a_pi_prompt_an_extension_sent_is_not_typed(self):
         self.hook('prompt', cli='pi', prompt='/tdd', source='extension')
