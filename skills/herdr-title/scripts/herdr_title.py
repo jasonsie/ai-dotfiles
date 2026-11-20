@@ -436,8 +436,9 @@ def on_dialog(event, word):
 
 
 def on_start(event):
-    """A session resumed (claude --resume, /resume, Pi's resume, every pane after Herdr's server
-    restarts): its kept state labels the pane again, unless the pane belongs to another session."""
+    """A session resumed (Claude Code's --resume, --continue and /resume; Pi on a kept session, at
+    launch or by /resume, Herdr's restore included): its kept state labels the pane again, unless
+    the pane belongs to another session. Codex has no such hook: its pane waits for a typed prompt."""
     if event.subagent or event.source != 'resume':
         return
     where = pane()

@@ -115,7 +115,9 @@ export default function (pi: any) {
   });
 
   pi.on("session_start", (event: any, ctx: any) => {
-    if (event.reason !== "resume") return;
+    // Pi starts every launch with reason startup, a resumed session's too (pi -c, pi --session,
+    // Herdr's restore); an in-app /resume says resume. A session with no kept state changes nothing.
+    if (event.reason !== "resume" && event.reason !== "startup") return;
     for (const feature of features) if (feature.start) tell(feature.script, "start", { ...session(ctx), source: "resume" });
   });
 

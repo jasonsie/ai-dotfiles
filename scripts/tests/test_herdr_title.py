@@ -408,7 +408,7 @@ class DialogTest(Sandbox):
 
 
 class StartTest(Sandbox):
-    """A resumed session, or every pane after Herdr's server restarts: the kept state comes back."""
+    """A resumed Claude Code session (Pi's start is in PiExtensionTest): the kept state comes back."""
 
     def test_a_resumed_session_labels_its_pane_again_with_its_kept_state(self):
         self.hook('prompt', prompt='/tdd')
@@ -493,27 +493,33 @@ await pause(800);
 on.session_shutdown({ reason: "reload" }, ctx);
 on.input({ text: "an extension's prompt", source: "extension" }, ctx);
 await pause(800);
+on.session_shutdown({ reason: "quit" }, ctx);
+on.session_start({ reason: "startup" }, ctx);
+await pause(800);
 """
 
 
 @unittest.skipUnless(shutil.which('node'), 'Node runs Pi\'s extension here')
 class PiExtensionTest(Sandbox):
-    """scripts/agent_hooks.ts as Pi loads it: input, a settled run and a reload, against a fake pi."""
+    """scripts/agent_hooks.ts as Pi loads it: input, a settled run, a reload, a quit and a start."""
 
-    def test_pis_input_and_settled_run_label_the_pane_and_a_reload_keeps_it(self):
+    def test_pis_input_and_settled_run_label_the_pane_a_reload_keeps_it_and_a_restart_brings_it_back(self):
         driver = self.home / 'driver.mjs'
         driver.write_text(DRIVER % json.dumps(str(ROOT / 'scripts/agent_hooks.ts')))
         done = subprocess.run(['node', '--experimental-strip-types', '--no-warnings', str(driver)],
                               capture_output=True, text=True, env={**self.env, 'PATH': f'{self.bin}:{os.environ["PATH"]}'},
                               timeout=60)
         self.assertEqual(done.returncode, 0, done.stderr)
-        calls = self.calls('herdr', wait=3)
+        calls = self.calls('herdr', wait=5)
         # Typed input, the settled run that asked, then the extension's prompt: not typed, so the ask stays.
-        self.assertEqual([self.labels(call)['working'] for call in calls],
+        self.assertEqual([self.labels(call)['working'] for call in calls[:3]],
                          ['execute › run', 'execute › wait › ask', 'execute › wait › ask'])
         self.assertEqual(self.labels(calls[1])['done'], 'execute › wait › ask')
         self.assertEqual(calls[1]['argv'][5:7], ['--agent', 'pi'])
-        self.assertFalse(any('--clear-state-labels' in call['argv'] for call in calls))  # the reload kept them
+        self.assertFalse(any('--clear-state-labels' in call['argv'] for call in calls[:3]))  # the reload kept them
+        # Pi starts every launch with reason startup, `pi -c` and Herdr's restore too: the kept state is back.
+        self.assertIn('--clear-state-labels', calls[3]['argv'])
+        self.assertEqual(self.labels(calls[4])['done'], 'execute › wait › ask')
 
 
 class OwnerTest(Sandbox):
