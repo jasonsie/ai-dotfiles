@@ -48,7 +48,8 @@ source for every answer below.
    typed into there (a teammate in Claude Code's agent-team tmux server and a headless
    `claude -p` started from the pane never own it).
 
-The labels come off when the session ends; its state stays, pruned after a week.
+The labels and the `need` token come off when the session ends; its state stays, pruned after
+a week.
 
 ## A label is wrong or stale
 

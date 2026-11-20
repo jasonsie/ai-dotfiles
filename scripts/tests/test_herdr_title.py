@@ -155,6 +155,14 @@ class EndTest(Sandbox):
         self.assertEqual((self.state()['type'], self.state()['ended']), ('grill', True))
         self.assertFalse((self.home / 'state' / 'panes' / 'w1_p1.json').exists())
 
+    def test_a_session_that_ends_waiting_for_the_user_takes_its_need_token_off_too(self):
+        self.hook('prompt', prompt='/tdd')
+        self.hook('stop', last_assistant_message='Which one, A or B?')
+        self.hook('end')  # /clear or Pi's /new: the CLI runs on in the pane, and Herdr keeps a token until cleared
+        asked, cleared = (call['argv'] for call in self.calls('herdr')[1:])
+        self.assertIn('need=1', asked)
+        self.assertEqual(cleared[cleared.index('--clear-token') + 1], 'need')
+
     def test_the_end_of_a_session_the_pane_no_longer_belongs_to_changes_nothing(self):
         self.hook('prompt', session='old', prompt='/grilling')
         self.hook('prompt', session='new', prompt='/tdd')  # typed into the same pane: it is the new session's now

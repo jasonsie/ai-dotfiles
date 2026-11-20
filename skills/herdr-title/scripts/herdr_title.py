@@ -28,9 +28,9 @@ Who picks the type:
 - A prompt the user did not type (a subagent's report, another session's message) leaves the
   type as it is. So does a model that says keep, fails, or answers after a newer prompt, and so
   does every hook call from inside a subagent or teammate, which shares the pane.
-When the session ends the labels come off. The types, the words, the command words, the skills
-and the model's instruction are config/herdr-title.json's. The CLIs' hook formats live in the
-repo's scripts/agent_hooks.py, their transcripts in scripts/agent_sessions.py.
+When the session ends the labels and the need token come off. The types, the words, the command
+words, the skills and the model's instruction are config/herdr-title.json's. The CLIs' hook
+formats live in the repo's scripts/agent_hooks.py, their transcripts in scripts/agent_sessions.py.
 
 Outside a Herdr pane (HERDR_ENV is not 1) nothing runs. A failure never blocks a prompt and
 prints nothing: a prompt hook's stdout would reach the model.
@@ -444,9 +444,10 @@ def cmd_classify(_args):
     return 0
 
 
-def clear(where, cli):
+def clear(where, cli, seq):
+    """Take the labels and the need token off the pane: Herdr keeps a token until it is cleared."""
     herdr('pane', 'report-metadata', where, '--source', SOURCE, '--agent', cli, '--clear-state-labels',
-          '--seq', str(time.time_ns()))
+          '--clear-token', NEED, '--seq', str(seq))
 
 
 def on_end(event):
@@ -460,6 +461,7 @@ def on_end(event):
         mine = owner(where)
         if mine and mine != event.session:
             return
+        seq = time.time_ns()  # under the lock: a session that claims the pane after this reports above it
         state = SESSIONS.load(event.session)
         if state:
             if state.get('mode') == 'pending':
@@ -467,7 +469,7 @@ def on_end(event):
             state.update(event=state.get('event', 0) + 1, ended=True)
             SESSIONS.save(event.session, state)
         PANES.file(where).unlink(missing_ok=True)
-    clear(where, event.cli)
+    clear(where, event.cli, seq)
 
 
 HANDLERS = {'prompt': on_prompt, 'stop': on_stop, 'error': lambda event: settle(event, 'fail'),
