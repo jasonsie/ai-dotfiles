@@ -343,6 +343,18 @@ class StopTest(Sandbox):
         time.sleep(0.3)
         self.assertEqual(self.calls('claude'), [])
 
+    def test_a_scheduled_prompt_firing_is_not_typed_and_keeps_an_open_ask(self):
+        long = 'Summarize the night. ' + 'x' * 1100
+        self.stopped('Which name do you want, A or B?', session_crons=[
+            {'id': 'c1', 'schedule': '*/5 * * * *', 'recurring': True, 'prompt': 'check the build'},
+            {'id': 'c2', 'schedule': '0 9 * * *', 'recurring': True, 'prompt': long[:1000] + '… [+121 chars]'}])
+        for prompt in ('check the build', long):  # a /loop tick, a cron, a wake-up: no mark of its own
+            self.hook('prompt', prompt=prompt)
+            self.assertEqual({key: self.state()[key] for key in ('mode', 'typed_turn', 'typed', 'type')},
+                             {'mode': 'ask', 'typed_turn': False, 'typed': 1, 'type': 'execute'}, prompt[:20])
+        self.hook('prompt', prompt='check the build twice')  # typed: no scheduled prompt says exactly this
+        self.assertEqual((self.state()['mode'], self.state()['typed']), ('normal', 5))  # the fifth event
+
     def test_a_late_verdict_after_a_newer_prompt_is_dropped(self):
         self.hook('prompt', prompt='/tdd')
         self.hook('stop', last_assistant_message='That is everything.',

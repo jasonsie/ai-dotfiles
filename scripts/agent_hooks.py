@@ -92,7 +92,7 @@ class Event:
     subagent: bool = False       # the hook fired inside a subagent or an in-process teammate (Claude Code)
     last_message: str = ''       # the agent's final message of the turn (a 'stop' event)
     tasks: tuple = ()            # the types of the background tasks still in flight at a stop (Claude Code)
-    crons: int = 0               # the session's scheduled wake-ups at a stop (Claude Code)
+    crons: tuple = ()            # the prompts of the session's scheduled wake-ups at a stop (Claude Code)
     error: str = ''              # the API error that ended the turn (an 'error' event)
     source: str = ''             # where a prompt came from (Pi), or why a session started ('start')
     reason: str = ''             # why the session ends (an 'end' event)
@@ -171,7 +171,8 @@ def read(cli, kind, data):
                  last_message=text(data.get('last_assistant_message')),
                  tasks=tuple(text(task.get('type')) for task in tasks if isinstance(task, dict))
                  if isinstance(tasks, list) else (),
-                 crons=len(crons) if isinstance(crons, list) else 0, error=text(data.get('error')),
+                 crons=tuple(text(cron.get('prompt')) for cron in crons if isinstance(cron, dict))
+                 if isinstance(crons, list) else (), error=text(data.get('error')),
                  source=text(data.get('source')), reason=text(data.get('reason')), outcome=text(data.get('outcome')))
 
 

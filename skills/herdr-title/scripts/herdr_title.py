@@ -86,6 +86,7 @@ SOCKET_TIMEOUT = 0.5  # a Herdr that does not answer at once is left alone
 # A skill named in a prompt: /name, $name or /plugin:name, not a piece of a path.
 NAMED = re.compile(r'(?<![\w/.:~-])[/$]((?:[a-z][a-z0-9-]*:)?[a-z][a-z0-9-]*)(?![\w/-]|\.\w)')
 NUMBERED = re.compile(r'\s+#?\d+$')  # the PR number after a command word
+CUT = re.compile(r'…\s*\[\+\d+ chars\]')  # where Claude Code cuts a scheduled prompt in a Stop's input
 KEEP = 'keep'  # the model's word for "this prompt changes nothing"
 # What the model reads: the end of the agent's last message, where its question is; a long
 # prompt's start and end, since a pasted log sits between the request and the question about it.
@@ -204,13 +205,27 @@ def set_view():
             conn.recv(4096)  # Herdr's answer; nothing in it changes what the hook does
 
 
-def typed(event, settings):
+def typed(event, settings, crons=()):
     """Whether the user wrote this prompt: not empty, and not a report from a subagent, another
-    session or the harness, which arrive as prompts too and say nothing about the user's purpose
-    (Pi says so itself: an extension's prompt)."""
+    session or the harness, nor one of the session's scheduled prompts firing (`crons`), which
+    arrive as prompts too and say nothing about the user's purpose (Pi says so itself: an
+    extension's prompt)."""
     prompt = event.prompt
     return (bool(prompt.strip()) and not prompt.lstrip().startswith(tuple(settings['machine']))
-            and event.source != 'extension')
+            and event.source != 'extension' and not scheduled(prompt, crons))
+
+
+def scheduled(prompt, crons):
+    """Whether a prompt is one of the session's scheduled prompts (a /loop tick, a cron, a wake-up),
+    as the last stop listed them: the prompt itself, or its first 1000 characters when Claude Code
+    cut it there. A typed prompt that says exactly the same counts as one too."""
+    said = prompt.strip()
+    for cron in crons:
+        cut = CUT.search(cron)
+        start = cron[:cut.start()].strip() if cut else ''
+        if said == cron.strip() or (start and said.startswith(start)):
+            return True
+    return False
 
 
 def ask_later(request):
@@ -230,7 +245,7 @@ def on_prompt(event):
     settings, where = config(), pane()
     if event.subagent:  # a subagent or in-process teammate shares the pane; its prompts are not the user's
         return
-    if not typed(event, settings):
+    if not typed(event, settings, SESSIONS.load(event.session).get('crons', ())):
         with locked():
             state = SESSIONS.load(event.session)
             if not state or owner(where) != event.session:
@@ -384,12 +399,13 @@ def on_stop(event):
         mode = at_once(event, text, settings)
         if mode != 'fail' and state.get('mode') == 'ask' and not state.get('typed_turn'):
             mode = 'ask'
-        state.update(event=number, mode=mode or 'pending', blocked=None)
+        # The scheduled prompts as of this stop: the next prompt that is one of them is not typed.
+        state.update(event=number, mode=mode or 'pending', blocked=None, crons=list(event.crons))
         SESSIONS.save(event.session, state)
     report(event.session, settings)
     set_view()
     if mode is None:
-        background = any(task in settings['background'] for task in event.tasks) or event.crons > 0
+        background = any(task in settings['background'] for task in event.tasks) or bool(event.crons)
         ask_later({'job': 'stop', 'cli': event.cli, 'session': event.session, 'trigger': number,
                    'text': text[-REPLY_END:], 'background': background})
 

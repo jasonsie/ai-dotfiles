@@ -56,10 +56,11 @@ class ReadTest(unittest.TestCase):
     def test_a_stop_event_carries_the_last_message_and_the_work_still_in_flight(self):
         event = agent_hooks.read('claude', 'stop', raw('claude', last_assistant_message='Shall I?',
                                                        background_tasks=[{'type': 'subagent'}, {'type': 'shell'}, 'x'],
-                                                       session_crons=[{'id': 'c1'}]))
-        self.assertEqual((event.last_message, event.tasks, event.crons), ('Shall I?', ('subagent', 'shell'), 1))
+                                                       session_crons=[{'id': 'c1', 'prompt': 'check the build'}, 'x']))
+        self.assertEqual((event.last_message, event.tasks, event.crons),
+                         ('Shall I?', ('subagent', 'shell'), ('check the build',)))
         bare = agent_hooks.read('codex', 'stop', raw('codex', last_assistant_message=None, background_tasks={}))
-        self.assertEqual((bare.last_message, bare.tasks, bare.crons), ('', (), 0))
+        self.assertEqual((bare.last_message, bare.tasks, bare.crons), ('', (), ()))
         pi = agent_hooks.read('pi', 'stop', raw('pi', last_assistant_message='Done.', outcome='aborted'))
         self.assertEqual((pi.last_message, pi.outcome), ('Done.', 'aborted'))
 
