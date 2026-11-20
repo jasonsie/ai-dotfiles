@@ -5,14 +5,18 @@ worktree-guard (skills/worktree-guard/scripts/worktree_guard.py) runs before edi
 commands (PreToolUse; Antigravity also before reads) and when a session ends (SessionEnd); for
 Claude Code it also makes and removes the worktrees Claude asks for (WorktreeCreate, WorktreeRemove).
 small-commits (skills/small-commits/scripts/small_commits.py) runs before shell commands, for
-`git commit`. herdr-title (skills/herdr-title/scripts/herdr_title.py) tags the agent's row in
-Herdr: it runs when the user submits a prompt (UserPromptSubmit) and when a session ends
-(SessionEnd), and outside a Herdr pane it does nothing. Antigravity has no prompt event, so
-it gets no herdr-title entry. Each feature's hooks are merged into the CLI's own hook file as
-one entry per event; every other hook stays as it is:
-  Claude Code   ~/.claude/settings.json      "hooks": PreToolUse, SessionEnd, UserPromptSubmit,
+`git commit`. herdr-title (skills/herdr-title/scripts/herdr_title.py) labels the agent's row in
+Herdr: it runs when the user submits a prompt (UserPromptSubmit), when a turn ends (Stop; Claude
+Code's StopFailure too), when a dialog opens (PermissionRequest; Claude Code's PreToolUse for its
+question and plan tools and Elicitation), when Claude Code resumes a session (SessionStart), when
+the user stops a Codex turn (Interrupt) and when a session ends (SessionEnd); outside a Herdr pane
+it does nothing. Antigravity has no prompt event, so it gets no herdr-title entry. Each feature's
+hooks are merged into the CLI's own hook file as one entry per event; every other hook stays:
+  Claude Code   ~/.claude/settings.json      "hooks": PreToolUse, SessionEnd, UserPromptSubmit, Stop,
+                                             StopFailure, PermissionRequest, Elicitation, SessionStart,
                                              WorktreeCreate, WorktreeRemove
-  Codex         ~/.codex/hooks.json          PreToolUse, SessionEnd, UserPromptSubmit (approve once in /hooks)
+  Codex         ~/.codex/hooks.json          PreToolUse, SessionEnd, UserPromptSubmit, Stop, PermissionRequest,
+                                             Interrupt (approve once in /hooks)
   Antigravity   ~/.gemini/config/hooks.json  a named entry per feature and event (PreToolUse alone)
 Pi has no hooks: skills.py links scripts/agent_hooks.ts as its extension, which plays all
 three features. The native events and matchers come from scripts/agent_hooks.py.
@@ -51,8 +55,14 @@ COMMITS_MARK = 'skills/small-commits/scripts/small_commits.py'
 COMMITS_WANTS = {cli: (('pre', ('shell',)),) for cli in agent_hooks.HOOK_FILE_CLIS}  # before `git commit`
 COMMITS_TIMEOUT = 30  # a diff of a big repository
 TITLE_MARK = 'skills/herdr-title/scripts/herdr_title.py'
-TITLE_WANTS = {cli: (('prompt', None), ('end', None)) for cli in agent_hooks.HOOK_FILE_CLIS}  # none for agy
+TITLE_WANTS = {  # each prompt, turn end, dialog and session end; none for agy, which has no prompt event
+    'claude': (('prompt', None), ('stop', None), ('error', None), ('pre', ('ask',)), ('permission', None),
+               ('form', None), ('start', None), ('end', None)),
+    'codex': (('prompt', None), ('stop', None), ('permission', None), ('interrupt', None), ('end', None)),
+    'agy': (),
+}
 TITLE_TIMEOUT = 10  # it answers at once and does its slow work detached
+TITLE_TIMEOUTS = {'interrupt': 3}  # Codex allows its Interrupt hooks 1 to 3 s
 # Retired: the daily-log Stop nudge (PostToolUse + Stop in every CLI), replaced by the daily
 # pass in November 2026. Its entries, Antigravity names and state folder go on the next run.
 RETIRED_MARKS = ('skills/daily-log/scripts/daily_log.py',)
@@ -61,11 +71,16 @@ RETIRED_STATE = ('.local/state/ai-dotfiles/daily-log',)
 
 
 class Feature:
-    """One skill's hooks: its script, its native events per CLI, its handlers' timeout."""
+    """One skill's hooks: its script, its native events per CLI, its handlers' timeout (`timeouts`
+    sets another for a kind)."""
 
-    def __init__(self, name, script, mark, events, timeout):
+    def __init__(self, name, script, mark, events, timeout, timeouts=None):
         self.name, self.script, self.mark, self.events, self.timeout = name, Path(script), mark, events, timeout
+        self.timeouts = timeouts or {}
         self.agy_names = {mode: f'ai-dotfiles-{name}-{mode}' for _, mode, _ in events.get('agy', ())}
+
+    def timeout_for(self, mode):
+        return self.timeouts.get(mode, self.timeout)
 
 
 def worktree_guard(repo=WORKSPACE):
@@ -80,7 +95,7 @@ def small_commits(repo=WORKSPACE):
 
 def herdr_title(repo=WORKSPACE):
     events = {cli: agent_hooks.native_events(cli, wants) for cli, wants in TITLE_WANTS.items()}
-    return Feature('herdr-title', Path(repo) / TITLE_MARK, TITLE_MARK, events, TITLE_TIMEOUT)
+    return Feature('herdr-title', Path(repo) / TITLE_MARK, TITLE_MARK, events, TITLE_TIMEOUT, TITLE_TIMEOUTS)
 
 
 def features(repo=WORKSPACE, cloud=False):
@@ -145,7 +160,7 @@ def merge_events(data, cli, feature):
         if not isinstance(groups, list):
             raise ValueError(f'"hooks.{event}" is not a list')
         kept, at = strip_ours(groups, feature.mark)
-        wanted = handler(cli, mode, feature.script, feature.timeout)
+        wanted = handler(cli, mode, feature.script, feature.timeout_for(mode))
         kept.insert(len(kept) if at is None else at, group([wanted], matcher))
         hooks[event] = kept
 
@@ -175,7 +190,7 @@ def merge_agy(data, feature):
     for event, mode, matcher in feature.events['agy']:
         name = feature.agy_names[mode]
         check_agy_entry(data, name, feature.mark)
-        wanted = handler('agy', mode, feature.script, feature.timeout)
+        wanted = handler('agy', mode, feature.script, feature.timeout_for(mode))
         kept = {key: value for key, value in (data.get(name) or {}).items() if not isinstance(value, list)}
         data[name] = {**kept, event: [group([wanted], matcher)] if event in TOOL_EVENTS else [wanted]}
 

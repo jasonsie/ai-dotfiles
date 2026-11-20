@@ -16,7 +16,7 @@ config/              the sources the installers apply
   plugins.json         the plugin list: each plugin's GitHub source, pin and target CLIs
   upstream-docs.json   the documentation sources mirrored into docs/upstream/
   cloud.json           the skills cloud sessions leave out, each with the reason
-  herdr-title.json     the tags an agent's row in Herdr carries, and what decides one
+  herdr-title.json     the label an agent's row in Herdr carries, and what decides it
 skills/              shared skills; skills.lock pins adapted ones; daily-log/ holds the
                      daily-log command and the day pass; worktree-guard/, small-commits/ and
                      herdr-title/ their hooks; git/ a bundle: the git step skills and approve
@@ -53,7 +53,7 @@ skills/daily-log/scripts/     ─►  skills.py (link); launchd.py (plist)     �
 skills/worktree-guard/scripts/ ─► hooks.py (merge)                         ─►  each CLI's hook file
 skills/small-commits/scripts/ ─►  hooks.py (merge)                         ─►  each CLI's hook file
 skills/herdr-title/scripts/   ─►  hooks.py (merge)                         ─►  Claude Code's and Codex's hook files
-config/herdr-title.json       ─►  herdr_title.py (read on every prompt)    ─►  the tag on the agent's row in Herdr
+config/herdr-title.json       ─►  herdr_title.py (read on every call)      ─►  the label on the agent's row in Herdr
 scripts/agent_hooks.ts        ─►  skills.py (link)                         ─►  Pi's extension folder
                                   installer.py: reads ai-clis.json; the safe writes every step shares
                                   scripts/healthcheck.sh checks the live state
@@ -303,7 +303,7 @@ session as JSON on stdin and shows what it prints.
 Herdr (`brew install herdr`) is a terminal multiplexer for coding agents: a background server
 owns the panes and knows which agent runs in each, and its CLI lets one agent split a pane,
 start another agent there, prompt it, wait on it and read its output. This repo carries the
-`herdr` skill and the `herdr-title` hook, which tags each agent's row in Herdr's sidebar.
+`herdr` skill and the `herdr-title` hook, which labels each agent's row in Herdr's sidebar.
 Herdr itself, its integrations and `~/.config/herdr/config.toml` are set up by hand on each
 Mac: Herdr owns those files, and not every Mac runs it.
 
@@ -330,57 +330,101 @@ Mac: Herdr owns those files, and not every Mac runs it.
 ### Titles in the sidebar
 
 ```text
-◐ [GRILLING] · herdr-title-hooks      the tag, then the tab's name
-  AI-Config · claude                  the space, then the CLI
+◐ herdr-title-hooks               the tab's name
+  execute › wait › ask            the label: type › status › result
+  AI-Config · claude              the space, then the CLI
 ```
 
-A **tag** says what the session's current prompt is for. `[GRILLING]` means the agent is working
-on an interview. `[GRILLED]` means it stopped and the move is yours. `[BLOCKED]` means a
-permission dialog is open. There are ten tags (GRILL, PLAN, RESEARCH, EXECUTE, DEBUG, REVIEW,
-EXPLAIN, NOTE, LAND, CLEAN); `config/herdr-title.json` lists them with their meanings.
+Each agent's row carries a **label** in three layers. The **type** says what your prompt is
+for, one of ten: grill, plan, study, execute, debug, review, explain, note, git, clean. The
+**status** says whose move it is: `run` is the agent's, `wait` is yours, `idle` is nobody's.
+The **result**, only under `wait`, says what the move is: `ask` (answer it), `allow` (a
+permission dialog), `fail` (an error or a usage limit), `done` (finished, not looked at yet).
+A bare `wait` means the hook cannot tell why. `config/herdr-title.json` lists the types with
+their meanings, and the words.
 
-- **How a tag gets there.** `skills/herdr-title/scripts/herdr_title.py` runs each time you submit
-  a prompt in Claude Code, Codex or Pi. Inside a Herdr pane it reports the tag as the pane's state
-  labels: `herdr pane report-metadata <pane> --source user:ai-dotfiles-title --state-label
-  working=[GRILLING] --state-label idle=[GRILLED] ...`. Herdr shows the label of the state it
-  detects, so the tag changes form with no further hook. The name after the tag is the tab's own
-  name in Herdr. The tag comes off when the session ends. Outside Herdr the hook does nothing.
-- **Who picks the tag.** A prompt that is a command word (`approve`, `approve 57`) or names a
-  skill with a tag (`/grilling`, `$tutor`, `/zkfy:zk-note`) is tagged at once. Every other prompt
-  goes to Haiku, and the tag lands about three seconds later. Half the prompts are short answers
-  such as `1` or `y`. Their purpose is in the question they answer, so the model also reads the
-  end of the agent's last message and the session's current tag. A prompt you did not type (a
-  subagent's report, another session's message) keeps the tag. So does a model call that fails,
-  and so does anything inside a subagent or teammate, which shares the lead's pane.
+- **How a label gets there.** `skills/herdr-title/scripts/herdr_title.py` runs at each prompt,
+  turn end and session end in Claude Code, Codex and Pi, and at what only some of them hand
+  over: dialogs (Claude Code; Codex's permission dialog), API errors (Claude Code), resumes
+  (Claude Code, Pi) and interrupts (Codex). It keeps a mode per session and reports one label
+  for each state Herdr detects: `herdr pane report-metadata <pane>
+  --source user:ai-dotfiles-title --agent claude --state-label 'working=execute › run'
+  --state-label 'done=execute › wait › done' ...`. Herdr shows the label of the state it sees,
+  so a label changes with no further hook. The labels name the agent, so Herdr drops them when
+  it exits. Outside Herdr the hook does nothing.
+- **Who sets the type.** A command word (`approve`, `approve 57`) or a named skill (`/grilling`,
+  `$tutor`, `/zkfy:zk-note`) sets it at once. Any other prompt goes to Haiku, and the type lands
+  about 3 s later; the row keeps the type it had until then. Half the prompts are short answers
+  such as `1` or `y`, so the model also reads the end of the agent's last message.
+- **Who sets the result at a turn end.** A reply whose last line ends with a question mark, or a
+  Codex plan block, reads `ask` at once. An API error, Pi's error or Claude Code's usage-limit
+  note reads `fail` at once. Any other reply keeps `run` while Haiku reads its last 800
+  characters and answers ask, wait or done. Wait counts only while Claude Code lists work of a
+  `background` type (agents, workflows, teammates, cloud sessions, MCP tasks, monitors) or a
+  scheduled prompt; a background command may be a server that never ends, so it does not count.
+  On 191 real turn endings it was right 91% of the time, and its mistakes lean to calling a
+  finished job an ask.
+- **Dialogs.** A permission dialog reads `allow`. A question dialog, a plan to approve and an
+  MCP form read `ask`. A subagent's permission dialog opens in your pane, so it counts.
+- **What leaves a label as it is.** A prompt you did not type (a report, another session's
+  message, a scheduled prompt firing: a `/loop` tick, a cron, a wake-up) keeps the type; an open
+  ask stays through the turn that prompt starts, while a failure gives way to it. Each stop keeps
+  the session's scheduled prompts, which is how the hook knows one when it fires; a prompt you
+  type that says exactly the same counts as one. Only the session you last typed into labels its
+  pane: a teammate in Claude Code's agent-team tmux server and a headless `claude -p` started
+  from the pane change nothing.
+- **Rows that need you go on top.** A row that waits for your answer, failed, or got no verdict
+  from the model (a bare wait) carries a pane token, `need`, until a report or the session's end
+  clears it. Codex's bare wait from a prompt to its stop hook carries none: it starts while Codex
+  works. At each typed prompt, stop and resume the hook sets Herdr's agent view, "needs you",
+  through Herdr's socket: those rows first, then Herdr's own attention order. Herdr 0.9.5 has no
+  command for agent views. A view ends when the server exits, and the next typed prompt sets it
+  again.
 - **The model call** is `claude -p --model haiku` with no tools, no saved session, no user
   settings (so no hooks, plugins or MCP servers) and no `HERDR_*` variables. The hook starts it
   in a process of its own and does not wait, so a prompt is never delayed. One call takes about
-  3 s and 700 input tokens, on the Claude login. Codex and Pi sessions use the same call, so they
-  need `claude` installed, as the daily pass does.
-- **The sidebar rows, once per Mac, by hand.** Herdr's default rows show no state label. Add these
-  lines to `~/.config/herdr/config.toml`, then run `herdr server reload-config`:
+  3 s and 700 input tokens, on the Claude login; about three of every four turn ends need one.
+  Codex and Pi sessions use the same call, so they need `claude` installed, as the daily pass
+  does.
+- **The sidebar, once per Mac, by hand.** Herdr's default rows show no label. In
+  `~/.config/herdr/config.toml`, set `status_indicators` in the `[ui]` table and replace the
+  `rows` key in `[ui.sidebar.agents]`; add a table only if the file lacks it, since TOML refuses
+  one declared twice. Then run `herdr server reload-config`:
 
   ```toml
+  [ui]
+  status_indicators = "symbols"
+
   [ui.sidebar.agents]
   rows = [
-    ["state_icon", "state_text", "tab"],
+    ["state_icon", { token = "tab", fg = "#abb2bf", bold = true }],
+    [{ token = "state_text", rules = [{ contains = "› ask", fg = "#e06c75", bold = true }, { contains = "› allow", fg = "#e06c75", bold = true }, { contains = "› fail", fg = "#d19a66", bold = true }, { contains = "› done", fg = "#56b6c2" }, { contains = "wait", fg = "#e06c75", bold = true }, { contains = "run", fg = "#e5c07b" }] }],
     ["machine", "workspace", "agent"],
   ]
   ```
 
-  Without them the tags are reported and not drawn. A row nothing has tagged shows Herdr's own
-  word, `idle` or `working`.
+  Row 1 is the icon and the tab's name, row 2 the label, row 3 the space and the CLI. The rules
+  color the label by its meaning: red for your move, peach for a failure, teal for done, yellow
+  for running. The colors are the one-dark theme's. The rules repeat the label's words, so a
+  renamed word changes both places. Without these lines the labels are reported and not drawn;
+  a row nothing has labeled shows Herdr's own word, `idle` or `working`.
 - **Limits.** Antigravity has no hook for a submitted prompt, so its rows keep Herdr's own word.
-  Codex runs the hook only after approval in `/hooks`; whether Codex lets a hook reach the network
-  for the model call is not checked yet. Herdr joins the tag and the tab's name with ` · `, and
-  its sidebar is 26 columns wide by default (`ui.sidebar_width`), so a long tab name is cut. Herdr
-  does not promise to keep the labels across a restart of its server; the next prompt sets them
-  again. A session that ends within three seconds of its last prompt leaves its state file
-  behind, pruned after a week.
-- **Changing it.** The tags, the command words, the skills and the model's instruction are all in
-  `config/herdr-title.json`, which the hook reads on every prompt;
+  Codex runs the new hooks only after approval in `/hooks`; until then a Codex stop reads a bare
+  `wait`. Codex has no error event, so a failed Codex turn reads as done. In Claude Code, Esc
+  and a question dialog closed without an answer fire no hook; Herdr then shows idle. A dialog
+  no hook announces, later in the same turn, keeps the earlier dialog's word. A Stop hook that
+  makes Claude Code go on after a question (`/goal` is one) leaves `wait › ask` on the row while
+  it works, until the next stop. That a scheduled prompt reaches the hook as the text its stop
+  listed is read off transcripts, not seen at the hook; an autonomous `/loop` (given no prompt)
+  fires with other text than it lists, so it likely reads as typed. Three rows per agent fit
+  about 3 agents at the default split in a 27-row window; drag the divider between spaces and
+  agents for more. Herdr keeps no labels across a restart of its server; a resumed Claude Code
+  or Pi session reports its kept state again, and a Codex pane waits for its next typed prompt.
+- **Changing it.** The types, the words, the rules that decide at once and both model
+  instructions are in `config/herdr-title.json`, which the hook reads on every call;
   `scripts/tests/test_herdr_title.py` checks the file. State is one small file per session under
-  `~/.local/state/ai-dotfiles/herdr-title/` (`$HERDR_TITLE_STATE` moves it).
+  `~/.local/state/ai-dotfiles/herdr-title/` (`$HERDR_TITLE_STATE` moves it); `panes/` there
+  holds the session each pane belongs to.
 
 ## Small commits
 
@@ -630,9 +674,9 @@ gets its setup from the committed `.claude/settings.json`:
 - **Leftover:** a linked worktree whose owner is gone. One with nothing to lose is deleted when a
   worktree is made or a session ends; one holding uncommitted files or unpushed commits stays,
   listed as LEFT BEHIND, until a session takes it over or `worktree rm` drops it.
-- **Tag:** the word in brackets on an agent's row in Herdr's sidebar, one of ten, for the purpose
-  of the session's current prompt: `[GRILLING]` while the agent works, `[GRILLED]` when the move
-  is the person's. The `herdr-title` hook sets it; see Herdr.
+- **Label:** the line on an agent's row in Herdr's sidebar, type › status › result: what the
+  prompt is for, whose move it is, and what the move is when it is the person's
+  (`execute › wait › ask`). The `herdr-title` hook sets it; see Herdr.
 - **Cloud environment:** the claude.ai settings a cloud session runs in: network level, variables and
   setup script. `scripts/cloud/environment.sh` is this repo's setup script.
 - **Cloud session:** Claude Code on a VM Anthropic runs (claude.ai/code, the phone's Code tab,
