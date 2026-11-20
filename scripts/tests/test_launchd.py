@@ -43,7 +43,8 @@ class LaunchdTest(unittest.TestCase):
         self.statuses = {}  # launchctl verb -> the exit status to fake
         self.output = ''
         for patcher in (patch.object(launchd.shutil, 'which', self.which),
-                        patch.object(launchd.subprocess, 'run', self.launchctl)):
+                        patch.object(launchd.subprocess, 'run', self.launchctl),
+                        patch.object(launchd.sys, 'platform', 'darwin')):  # CI is Linux
             patcher.start()
             self.addCleanup(patcher.stop)
 
