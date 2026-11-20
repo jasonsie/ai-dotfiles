@@ -885,6 +885,28 @@ class FlowTest(Repo):
         self.assertIn('flow: on', self.cli('list', '--repo', str(self.linked('side')))[1])
         self.assertIn('flow: off', self.cli('list', '--repo', str(self.second_repo()))[1])
 
+    def test_an_agent_cannot_write_the_flow_switch_through_git_config(self):
+        key = 'worktree-guard.flow'
+        refused = (f'git config --local --unset {key}', f'git config {key} false', f'git config --local {key} true',
+                   f'git config --unset-all {key}', f'git -C /x config --unset {key}', f'git config unset {key}',
+                   f'git config set {key} false', f'git config --replace-all {key} false',
+                   f'git config --remove-section worktree-guard', f'git config remove-section worktree-guard',
+                   'git config Worktree-Guard.Flow false', f'cd /x && git config --unset {key}',
+                   f'bash -c "git config --unset {key}"', f'sudo git config {key} false', f'(git config --unset {key})')
+        allowed = (f'git config --get {key}', f'git config --local --bool --get {key}', f'git config get {key}',
+                   'git config -l', 'git config --list --show-origin', f'git config --get-regexp {key}',
+                   f'echo "git config --unset {key}"', f"grep -n '{key}' notes.txt", 'git config user.name T',
+                   f"cat <<'EOF'\ngit config --unset {key}\nEOF", f'git log --grep {key}',
+                   f'git -c {key}=false status')
+        for cli in CLIS:
+            for command in refused:
+                reply = self.shell_in(cli, command)
+                self.assertTrue(self.denied(cli, reply), (cli, command))
+            for command in allowed:
+                self.assertFalse(self.denied(cli, self.shell_in(cli, command)), (cli, command))
+        reply = self.shell_in('claude', f'git config --unset {key}')
+        self.assertIn('/worktree-flow', reply['hookSpecificOutput']['permissionDecisionReason'])
+
     def test_an_agent_cannot_release_or_share_in_any_cli(self):
         for cli in CLIS:
             for word in ('release', 'share'):

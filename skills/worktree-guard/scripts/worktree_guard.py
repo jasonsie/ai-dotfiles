@@ -102,6 +102,9 @@ SEPARATORS = frozenset(';&|()\n')
 COMMAND_PREFIXES = frozenset(('sudo', 'env', 'command', 'exec', 'time', 'nohup', 'nice', 'timeout', 'gtimeout'))
 SHELLS = frozenset(('sh', 'bash', 'zsh', 'dash', 'ksh'))
 GUARD_NAMES = frozenset(('worktree-guard', 'worktree_guard', 'worktree-guard.py', 'worktree_guard.py'))
+GIT_VALUED = frozenset(('-C', '-c', '--git-dir', '--work-tree', '--namespace', '--config-env'))  # git options with a value
+CONFIG_READS = frozenset(('--get', '--get-all', '--get-regexp', '--get-urlmatch', '--get-color', '--get-colorbool',
+                          '-l', '--list', 'get', 'list'))  # a `git config` that only reads
 PATH_KEYS = {  # tool-input fields that name a file or folder
     'claude': ('file_path', 'notebook_path'),
     'pi': ('path',),
@@ -307,9 +310,8 @@ def git_changes(command):
     return found
 
 
-def guard_calls(command):
-    """[(verb, arguments)] for each worktree command (`ai-dotfiles worktree <verb> ...`, or the
-    guard script with a verb) a shell command line runs as a command: first on the line or after
+def commands(command):
+    """[(name, arguments)] for each command a shell command line runs: first on the line or after
     `&&`, `;`, `|`, a newline or a parenthesis, behind `VAR=x`, `sudo`, `env`..., or inside
     `sh -c '...'`. The same words in a quote, a heredoc, a comment or an argument do not count.
     The arguments run to the end of the line, separators included."""
@@ -330,17 +332,47 @@ def guard_calls(command):
         if '=' in token.split('/')[0] or name in COMMAND_PREFIXES or name.startswith('python'):
             continue  # VAR=x, sudo, env ...: the command is the next word
         start = False
+        if name in SHELLS:
+            flag = next((n for n, t in enumerate(rest) if re.fullmatch(r'-\w*c', t)), None)
+            if flag is not None and flag + 1 < len(rest):
+                found += commands(rest[flag + 1])
+        else:
+            found.append((name, rest))
+    return found
+
+
+def guard_calls(command):
+    """[(verb, arguments)] for each worktree command (`ai-dotfiles worktree <verb> ...`, or the
+    guard script with a verb) a shell command line runs, read as `commands` reads it."""
+    found = []
+    for name, rest in commands(command):
         if name == 'ai-dotfiles':
             if rest[:1] == ['worktree'] and rest[1:2]:
                 found.append((rest[1], rest[2:]))
-        elif name in GUARD_NAMES:
-            if rest[:1]:
-                found.append((rest[0], rest[1:]))
-        elif name in SHELLS:
-            flag = next((n for n, t in enumerate(rest) if re.fullmatch(r'-\w*c', t)), None)
-            if flag is not None and flag + 1 < len(rest):
-                found += guard_calls(rest[flag + 1])
+        elif name in GUARD_NAMES and rest[:1]:
+            found.append((rest[0], rest[1:]))
     return found
+
+
+def flow_writes(command):
+    """Whether a shell command line runs a `git config` that sets or unsets the flow switch
+    (`worktree-guard.flow`, or its whole section). Reads, and `git -c` for one command, pass."""
+    section, key = FLOW_KEY.split('.')[0], FLOW_KEY.lower()
+    for name, rest in commands(command):
+        if name != 'git':
+            continue
+        end = next((n for n, t in enumerate(rest) if set(t) <= SEPARATORS), len(rest))
+        words, at = rest[:end], 0
+        while at < len(words) and words[at].startswith('-'):
+            at += 2 if words[at] in GIT_VALUED else 1
+        if words[at:at + 1] != ['config']:
+            continue
+        args = [word.lower() for word in words[at + 1:]]
+        if CONFIG_READS & set(args):
+            continue
+        if key in args or (section in args and any('section' in arg for arg in args)):
+            return True
+    return False
 
 
 def person_only(command):
@@ -678,8 +710,10 @@ def route(event, state, table=None):
     if event.kind != 'pre':
         return None
     if event.action == 'shell' and person_only(command_of(event)):
-        return Deny('worktree-guard: release, share, on and off are for a person, run from a terminal; '
+        return Deny('worktree-guard: release and share are for a person, run from a terminal; '
                     'ask the user to run it.')
+    if event.action == 'shell' and flow_writes(command_of(event)):
+        return Deny('worktree-guard: the worktree flow switch is the person\'s; ask them to run /worktree-flow.')
     moved, steered = state.get('moved'), None
     if moved and event.cli != 'claude':
         steered = steer(event, moved)

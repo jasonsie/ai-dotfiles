@@ -29,8 +29,8 @@ deleted the guard tells Codex in one line. Not an error: the notice is how Codex
 ## Flow switch
 
 The local git config `worktree-guard.flow true` turns a repo on; unset, it is off. The person
-flips it with `/worktree-flow` (the `worktree-flow` skill), never an agent on its own; `list`
-shows `flow: on|off`. In a repo that is on, an edit of a file in the
+flips it with `/worktree-flow` (the `worktree-flow` skill), never an agent on its own: the guard
+refuses an agent's `git config` write of the key. `list` shows `flow: on|off`. In a repo that is on, an edit of a file in the
 main checkout (or a git command that changes it) is stopped with "name this work". Reads pass.
 The edited file's repo decides, wherever the session started; a file outside git is never
 gated. A repo that is off gets nothing: no owner, no move, no message.
