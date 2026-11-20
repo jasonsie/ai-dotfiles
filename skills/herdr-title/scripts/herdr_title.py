@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
 """herdr-title: an agent's row in Herdr's sidebar says what its prompt is for and whose move it is.
 
-  herdr-title hook prompt --cli (claude|codex|pi)   JSON in; nothing out
-  herdr-title hook end --cli (claude|codex|pi)      JSON in; nothing out
-  herdr-title classify                              the model's turn for one prompt; the hook starts it
+  herdr-title hook KIND --cli (claude|codex|pi)   one CLI hook call, JSON in; KIND is prompt, stop,
+                                                  error, interrupt or end; nothing out (Codex's stop: {})
+  herdr-title classify                            a model's turn for one prompt or stop; the hook starts it
 
 The label has three layers, type › status › result: `grill › run` while the agent works,
-`grill › wait` at a dialog, `grill › wait › done` once it finished and nobody has looked, and
-plain `idle` after a look. Each time the user submits a prompt, the hook picks the type and
-reports one label per state Herdr detects (working, blocked, done, idle, unknown); Herdr shows
-the one for the state it sees and draws it in the sidebar.
+`grill › wait › ask` when it waits for the user's answer, `› fail` after an error, `› done` once
+it finished and nobody has looked, and plain `idle` after a look. The hook keeps a mode per
+session and reports one label per state Herdr detects (working, blocked, done, idle, unknown);
+Herdr shows the one for the state it sees and draws it in the sidebar.
+
+When a turn ends (stop), the label says ask at once if the reply's last line ends with a
+question mark (or a Codex plan block), fail at once after an error or Claude Code's usage-limit
+note, and otherwise keeps `run` while a small model reads the end of the reply and answers ask,
+wait (its own background work runs on) or done, about three seconds later.
 
 Who picks the type:
 - A prompt that is a command word (`approve`, `approve 57`) or names a skill (`/grilling`,
@@ -226,26 +231,32 @@ def on_prompt(event):
                    'transcript': event.transcript, 'trigger': number})
 
 
-def ask(settings, current, said, prompt):
-    """The type a small model gives the prompt, or None when it names none. It gets the session's
-    current type, the end of the agent's last message and the prompt, through a headless
-    `claude -p` that loads no user settings (so no hooks, plugins or MCP servers), saves no
-    session, has no tools and cannot see the pane."""
+def model(settings, system, question):
+    """A small model's answer, or '' when there is none: a headless `claude -p` that loads no user
+    settings (so no hooks, plugins or MCP servers), saves no session, has no tools and cannot see
+    the pane."""
     claude = shutil.which('claude')
     if not claude:
-        return None
-    model = settings['model']
+        return ''
+    chosen = settings['model']
+    folder = SESSIONS.folder / 'model'  # a folder without project settings of its own
+    folder.mkdir(parents=True, exist_ok=True)
+    run = subprocess.run([claude, '-p', question, '--model', chosen['name'], '--tools', '',
+                          '--no-session-persistence', '--setting-sources', 'project', '--strict-mcp-config',
+                          '--system-prompt', system],
+                         stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=chosen['timeout'], cwd=folder,
+                         env={key: value for key, value in os.environ.items() if not key.startswith('HERDR_')})
+    return run.stdout if run.returncode == 0 else ''
+
+
+def ask(settings, current, said, prompt):
+    """The type a small model gives the prompt, or None when it names none. It gets the session's
+    current type, the end of the agent's last message and the prompt."""
     listed = '\n'.join(f'{kind}: {means}' for kind, means in settings['types'].items())
     question = (f"Current label: {current or 'none'}\n\nThe agent's last message ended:\n{said or '(none)'}\n\n"
                 f"The user's new prompt:\n{prompt}")
-    folder = SESSIONS.folder / 'model'  # a folder without project settings of its own
-    folder.mkdir(parents=True, exist_ok=True)
-    run = subprocess.run([claude, '-p', question, '--model', model['name'], '--tools', '',
-                          '--no-session-persistence', '--setting-sources', 'project', '--strict-mcp-config',
-                          '--system-prompt', '\n'.join(model['type']).replace('{types}', listed)],
-                         stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=model['timeout'], cwd=folder,
-                         env={key: value for key, value in os.environ.items() if not key.startswith('HERDR_')})
-    word = pick(run.stdout if run.returncode == 0 else '', {*settings['types'], KEEP})
+    word = pick(model(settings, '\n'.join(settings['model']['type']).replace('{types}', listed), question),
+                {*settings['types'], KEEP})
     return None if word == KEEP else word
 
 
@@ -262,8 +273,13 @@ def pick(said, allowed):
 
 
 def classify(request):
-    """The model's turn for one prompt: ask for the type, then relabel the pane with it, unless a
-    newer prompt came while the model thought. The mode stays as the session has it by then."""
+    """The model's turn for one prompt (job type) or one stop (job stop)."""
+    (judge if request.get('job') == 'stop' else classify_type)(request)
+
+
+def classify_type(request):
+    """Ask for the prompt's type, then relabel the pane with it, unless a newer prompt came while
+    the model thought. The mode stays as the session has it by then."""
     import agent_sessions  # the CLIs' transcripts; not needed by the hook itself
     settings, session = config(), request['session']
     said = agent_sessions.last_reply(request['cli'], request['transcript']) if request.get('transcript') else ''
@@ -280,6 +296,87 @@ def classify(request):
         state['type'] = kind
         SESSIONS.save(session, state)
     report(session, settings)
+
+
+def judge(request):
+    """Ask what a stopped agent waits for, then set the session's mode by it, unless anything newer
+    happened in the session meanwhile. ASK is ask; WAIT is wait only while the CLI listed background
+    work that reports back, else done; DONE is done; no answer is wait with no result, since an
+    ask the model failed to see costs the user more than a look."""
+    settings, session = config(), request['session']
+    word = pick(model(settings, '\n'.join(settings['model']['stop']),
+                      f"The agent's last message ended:\n{request['text']}"), {'ask', 'wait', 'done'})
+    mode = {'ask': 'ask', 'wait': 'wait' if request.get('background') else 'normal', 'done': 'normal'}.get(word, 'unknown')
+    with locked():
+        state = SESSIONS.load(session)
+        if state.get('event') != request['trigger'] or state.get('ended'):
+            return
+        state['mode'] = mode
+        SESSIONS.save(session, state)
+    report(session, settings)
+
+
+def asks(text, settings):
+    """Whether a reply ends by asking, without a model: its last line ends with a question mark
+    (quotes, brackets and markup after it aside), or the reply ends with a plan block (Codex)."""
+    rules = settings['ask_at_once']
+    body = text.rstrip()
+    if body.endswith(tuple(rules['endings'])):
+        return True
+    lines = [line for line in body.splitlines() if line.strip()]
+    return bool(lines) and lines[-1].rstrip(' \t"\'*_`)]').endswith(tuple(rules['marks']))
+
+
+def at_once(event, text, settings):
+    """The mode a stop gets without a model, or None: Pi's error or abort, Claude Code's usage-limit
+    note since the prompt, or a reply that ends by asking."""
+    import agent_sessions  # the CLIs' transcripts
+    if event.outcome == 'error':
+        return 'fail'
+    if event.outcome == 'aborted':
+        return 'normal'
+    if event.transcript and agent_sessions.note_since_prompt(event.cli, event.transcript, settings['usage_limit_note']):
+        return 'fail'
+    return 'ask' if asks(text, settings) else None
+
+
+def on_stop(event):
+    """A turn ended. The label says ask, fail or the like at once when it can; otherwise it keeps
+    run while a small model judges the reply (about 3 s). A turn the user did not start leaves an
+    open ask open: only an error replaces it."""
+    import agent_sessions  # the CLIs' transcripts
+    settings = config()
+    if event.subagent:
+        return
+    text = event.last_message or (agent_sessions.last_reply(event.cli, event.transcript) if event.transcript else '')
+    with locked():
+        state = SESSIONS.load(event.session)
+        if not state or owner(pane()) != event.session:
+            return
+        number = state.get('event', 0) + 1
+        mode = at_once(event, text, settings)
+        if mode != 'fail' and state.get('mode') == 'ask' and not state.get('typed_turn'):
+            mode = 'ask'
+        state.update(event=number, mode=mode or 'pending', blocked=None)
+        SESSIONS.save(event.session, state)
+    report(event.session, settings)
+    if mode is None:
+        background = any(task in settings['background'] for task in event.tasks) or event.crons > 0
+        ask_later({'job': 'stop', 'cli': event.cli, 'session': event.session, 'trigger': number,
+                   'text': text[-REPLY_END:], 'background': background})
+
+
+def settle(event, mode):
+    """End the turn in `mode` at once: an API error (fail), Codex's interrupt (normal)."""
+    if event.subagent:
+        return
+    with locked():
+        state = SESSIONS.load(event.session)
+        if not state or owner(pane()) != event.session:
+            return
+        state.update(event=state.get('event', 0) + 1, mode=mode, blocked=None)
+        SESSIONS.save(event.session, state)
+    report(event.session, config())
 
 
 def cmd_classify(_args):
@@ -314,7 +411,8 @@ def on_end(event):
     clear(where, event.cli)
 
 
-HANDLERS = {'prompt': on_prompt, 'end': on_end}
+HANDLERS = {'prompt': on_prompt, 'stop': on_stop, 'error': lambda event: settle(event, 'fail'),
+            'interrupt': lambda event: settle(event, 'normal'), 'end': on_end}
 
 
 def cmd_hook(args):
@@ -336,7 +434,7 @@ def parser():
                                   formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = top.add_subparsers(dest='command', required=True)
     hook = sub.add_parser('hook', help='the CLI hook: JSON on stdin')
-    hook.add_argument('kind', choices=('prompt', 'end'))
+    hook.add_argument('kind', choices=tuple(HANDLERS))
     hook.add_argument('--cli', choices=CLIS, required=True)
     hook.set_defaults(run=cmd_hook)
     sub.add_parser('classify', help="the model's turn: a request as JSON on stdin (the hook starts it)"

@@ -86,8 +86,16 @@
     "<cross-session-message",
     "<local-command-",
     "<bash-",
-    "<system-reminder>"
+    "<system-reminder>",
+    "Your claude.ai usage limit has reset",
+    "Your claude.ai usage is available again"
   ],
+  "ask_at_once": {
+    "marks": ["?", "？"],
+    "endings": ["</proposed_plan>"]
+  },
+  "usage_limit_note": "[Usage limit reached",
+  "background": ["subagent", "workflow", "teammate", "cloud session", "MCP task"],
   "model": {
     "name": "haiku",
     "timeout": 45,
@@ -99,6 +107,14 @@
       "Label the work the prompt sets off, not its wording.",
       "A short answer to a question the agent asked (a number, a letter, a yes or a no, a choice) is keep: the same work goes on. The exception is an answer that starts other work: a yes, a go-ahead or a confirmation of the agent's plan, summary of decisions or offer to build, change or fix something is execute; an approval to push or merge finished work is git.",
       "Feedback or a correction on what the agent delivered, asking for changes, is execute. A question that wants an explanation and no change is explain; a report that something is broken, or a question why it fails, is debug."
+    ],
+    "stop": [
+      "You read the end of a coding agent's last message to its user and say what the agent is waiting for.",
+      "Reply with exactly one word:",
+      "ASK: the agent waits for the user's answer before it can go on. It asks the user to choose, to supply something it is missing, or to confirm or approve before it starts or continues the work. A plan, proposal or summary that waits for a go-ahead (\"Confirm and I will build it.\") is ASK, with or without a question mark.",
+      "WAIT: the agent waits for its own background work to finish (subagents, background tasks, a monitor, a scheduled wake-up) and will continue or report by itself. It asks the user nothing.",
+      "DONE: the agent delivered its work or its answer and waits for nothing. An offer of optional extra work after a finished job (\"Done, tests pass. Want me to also add docs?\") is DONE. So is naming what the user can do next with finished work (review it, approve or merge a pull request, run a command).",
+      "If the message both asks the user something it needs answered and mentions background work, it is ASK."
     ]
   }
 }

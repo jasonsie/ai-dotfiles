@@ -251,6 +251,108 @@ class ModelTest(Sandbox):
                          ['execute › run', 'debug › run', 'review › run'])
 
 
+class StopTest(Sandbox):
+    """A turn ends: the label says what the agent waits for, at once when it can, else after a model's turn."""
+
+    def stopped(self, last, cli='claude', says='', session='s1', **fields):
+        """A prompt typed as /tdd, then a stop whose reply ends with `last`; the model says `says`."""
+        self.hook('prompt', cli=cli, session=session, prompt='/tdd')
+        return self.hook('stop', cli=cli, session=session, last_assistant_message=last, env={'FAKE_CLAUDE_SAYS': says},
+                         **fields)
+
+    def after(self, wait):
+        """The done and idle labels of the reports so far, once there are `wait` of them."""
+        return [(self.labels(call)['done'], self.labels(call)['idle']) for call in self.calls('herdr', wait=wait)]
+
+    def test_a_reply_that_ends_by_asking_is_ask_at_once(self):
+        done = self.stopped('Built both.\n\nWhich name do you want, A or B?**')
+        self.assertEqual((done.returncode, done.stdout), (0, ''))
+        self.assertEqual(self.after(2)[1], ('execute › wait › ask', 'execute › wait › ask'))
+        time.sleep(0.3)
+        self.assertEqual(self.calls('claude'), [])  # no model needed
+
+    def test_a_codex_reply_that_ends_with_its_plan_is_ask_at_once(self):
+        done = self.stopped('<proposed_plan>\n1. Add the reader.\n</proposed_plan>\n', cli='codex')
+        self.assertEqual(done.stdout, '{}\n')  # Codex wants JSON from a Stop hook
+        self.assertEqual(self.after(2)[1][0], 'execute › wait › ask')
+
+    def test_any_other_reply_keeps_run_until_the_model_says_what_it_waits_for(self):
+        self.stopped('All tests pass and the reader is in.', says='DONE')
+        rows = self.after(3)
+        self.assertEqual(rows[1], ('execute › run', 'execute › run'))  # at once: still the agent's move
+        self.assertEqual(rows[2], ('execute › wait › done', 'idle'))
+        (asked,) = self.calls('claude')
+        self.assertEqual(asked['argv'][1], "The agent's last message ended:\nAll tests pass and the reader is in.")
+        system = asked['argv'][asked['argv'].index('--system-prompt') + 1]
+        self.assertIn('ASK:', system)
+        self.assertEqual(asked['herdr_env'], [])
+        self.assertEqual(self.state()['mode'], 'normal')
+
+    def test_wait_counts_only_while_claude_lists_background_work_that_reports_back(self):
+        self.stopped('Three reviewers are running; I will report when they finish.', says='WAIT',
+                     background_tasks=[{'type': 'subagent', 'id': 'a1'}])
+        self.assertEqual(self.after(3)[2], ('execute › run', 'execute › run'))
+        self.stopped('I will report when the dev server is up.', says='WAIT', session='s2',
+                     background_tasks=[{'type': 'shell', 'id': 'b1'}])  # a shell alone never reports back
+        self.calls('herdr', wait=6)  # s2's prompt, its stop, the model's verdict
+        self.assertEqual(self.state('s2')['mode'], 'normal')
+
+    def test_no_answer_from_the_model_reads_wait_with_no_result(self):
+        self.stopped('Here is where things stand.', says='banana')
+        self.assertEqual(self.after(3)[2], ('execute › wait', 'execute › wait'))
+
+    def test_an_api_error_or_claudes_usage_limit_note_is_fail_at_once(self):
+        self.hook('prompt', prompt='/tdd')
+        self.hook('error', error='rate_limit')
+        self.assertEqual(self.after(2)[1], ('execute › wait › fail', 'execute › wait › fail'))
+        rows = [{'type': 'user', 'timestamp': '2026-11-19T04:00:00Z', 'message': {'content': 'build it'}},
+                {'type': 'user', 'isMeta': True, 'timestamp': '2026-11-19T04:00:05Z',
+                 'message': {'content': '[Usage limit reached; a short grace allowance remains.]'}}]
+        path = self.home / 'limit.jsonl'
+        path.write_text(''.join(json.dumps(row) + '\n' for row in rows))
+        self.stopped('Stopping here until the limit resets.', session='s2', transcript_path=str(path))
+        self.assertEqual(self.state('s2')['mode'], 'fail')
+        time.sleep(0.3)
+        self.assertEqual(self.calls('claude'), [])
+
+    def test_pis_error_and_abort_are_known_at_once(self):
+        self.stopped('Request failed.', cli='pi', outcome='error')
+        self.assertEqual(self.state()['mode'], 'fail')
+        self.stopped('Partial answer', cli='pi', outcome='aborted', session='s2')
+        self.assertEqual(self.state('s2')['mode'], 'normal')
+        time.sleep(0.3)
+        self.assertEqual(self.calls('claude'), [])
+
+    def test_an_open_ask_stays_through_a_turn_the_user_did_not_start(self):
+        self.stopped('Shall I build it?')
+        self.hook('prompt', prompt='<task-notification>a reviewer finished</task-notification>')
+        self.assertEqual(self.labels(self.calls('herdr', wait=3)[2])['working'], 'execute › wait › ask')
+        self.hook('stop', last_assistant_message='One of three reviewers is back.')
+        self.assertEqual(self.state()['mode'], 'ask')
+        time.sleep(0.3)
+        self.assertEqual(self.calls('claude'), [])
+
+    def test_a_late_verdict_after_a_newer_prompt_is_dropped(self):
+        self.hook('prompt', prompt='/tdd')
+        self.hook('stop', last_assistant_message='That is everything.',
+                  env={'FAKE_CLAUDE_SAYS': 'ASK', 'FAKE_CLAUDE_SLEEP': '1'})
+        self.hook('prompt', prompt='/grilling')  # the user moved on before the model answered
+        time.sleep(1.8)
+        self.assertEqual((self.state()['type'], self.state()['mode']), ('grill', 'normal'))
+        self.assertEqual(self.labels(self.calls('herdr')[-1])['working'], 'grill › run')
+
+    def test_a_codex_interrupt_ends_the_turn_in_normal_mode(self):
+        self.hook('prompt', cli='codex', prompt='/tdd')
+        self.assertEqual(self.after(1)[0], ('execute › wait', 'execute › wait'))  # until its stop hook answers
+        self.hook('interrupt', cli='codex')
+        self.assertEqual(self.after(2)[1], ('execute › wait › done', 'idle'))
+
+    def test_the_stop_of_a_session_the_pane_does_not_belong_to_changes_nothing(self):
+        self.hook('prompt', prompt='/tdd')
+        self.hook('stop', session='teammate', last_assistant_message='Which file?')
+        self.assertEqual(len(self.calls('herdr')), 1)
+
+
 class OwnerTest(Sandbox):
     """A pane's labels belong to the session the user last typed into there."""
 
@@ -323,6 +425,14 @@ class QuietTest(Sandbox):
         self.assertFalse(self.log.exists())
         self.assertFalse((self.home / 'state').exists())
 
+    def test_codex_still_gets_json_from_its_stop_hook_outside_herdr(self):
+        env = {key: value for key, value in self.env.items() if key != 'HERDR_ENV'}
+        for cli, said in (('codex', '{}\n'), ('claude', ''), ('pi', '')):
+            done = subprocess.run([sys.executable, str(SCRIPT), 'hook', 'stop', '--cli', cli], text=True,
+                                  input=json.dumps({'session_id': 's1'}), capture_output=True, env=env, timeout=30)
+            self.assertEqual((done.returncode, done.stdout, done.stderr), (0, said, ''), cli)
+        self.assertFalse(self.log.exists())
+
     def test_input_it_cannot_read_is_met_with_silence(self):
         for args, text in ((('hook', 'prompt', '--cli', 'claude'), 'not json'),
                            (('hook', 'prompt', '--cli', 'agy'), '{}'), (('hook', 'nonsense'), '{}')):
@@ -352,6 +462,17 @@ class ConfigTest(unittest.TestCase):
         words = {key: value for key, value in self.config['words'].items() if key != 'separator'}
         self.assertEqual(len(set(words.values())), len(words))
         self.assertEqual(set(words.values()) & set(self.config['types']), set())
+
+    def test_a_prompt_from_claudes_usage_limit_resume_is_not_typed(self):
+        machine = tuple(self.config['machine'])
+        for prompt in ('Your claude.ai usage limit has reset. Continue the task you were working on.',
+                       'Your claude.ai usage is available again. Continue the task.'):
+            self.assertTrue(prompt.startswith(machine), prompt)
+
+    def test_the_stop_instruction_names_the_three_answers(self):
+        system = '\n'.join(self.config['model']['stop'])
+        for word in ('ASK:', 'WAIT:', 'DONE:'):
+            self.assertIn(word, system)
 
     def test_every_skill_and_command_leads_to_a_type(self):
         for table in ('skills', 'outside', 'commands'):
