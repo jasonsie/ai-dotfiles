@@ -398,16 +398,18 @@ their meanings, and the words.
   [ui.sidebar.agents]
   rows = [
     ["state_icon", { token = "tab", fg = "#abb2bf", bold = true }],
-    [{ token = "state_text", rules = [{ contains = "› ask", fg = "#e06c75", bold = true }, { contains = "› allow", fg = "#e06c75", bold = true }, { contains = "› fail", fg = "#d19a66", bold = true }, { contains = "› done", fg = "#56b6c2" }, { contains = "wait", fg = "#e06c75", bold = true }, { contains = "run", fg = "#e5c07b" }] }],
+    [{ token = "state_text", rules = [{ contains = "› done", fg = "#98c379" }, { contains = "idle", fg = "#98c379" }, { contains = "wait", fg = "#e06c75", bold = true }, { contains = "run", fg = "#e5c07b" }, { contains = "working", fg = "#e5c07b" }] }],
     ["machine", "workspace", "agent"],
   ]
   ```
 
   Row 1 is the icon and the tab's name, row 2 the label, row 3 the space and the CLI. The rules
-  color the label by its meaning: red for your move, peach for a failure, teal for done, yellow
-  for running. The colors are the one-dark theme's. The rules repeat the label's words, so a
-  renamed word changes both places. Without these lines the labels are reported and not drawn;
-  a row nothing has labeled shows Herdr's own word, `idle` or `working`.
+  color the label by whose move it is, in three colors: red for yours (`ask`, `allow`, `fail`, a
+  bare `wait`), yellow for the agent's (`run`), green for nobody's (`done`, `idle`). The `› done`
+  rule stands before `wait`, since a done label holds both words. The colors are the one-dark
+  theme's. The rules repeat the label's words, so a renamed word changes both places. Without
+  these lines the labels are reported and not drawn; a row nothing has labeled shows Herdr's own
+  word, `idle` or `working`, in the same green and yellow.
 - **Limits.** Antigravity has no hook for a submitted prompt, so its rows keep Herdr's own word.
   Codex runs the new hooks only after approval in `/hooks`; until then a Codex stop reads a bare
   `wait`. Codex has no error event, so a failed Codex turn reads as done. In Claude Code, Esc
