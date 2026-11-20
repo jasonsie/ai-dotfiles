@@ -46,8 +46,8 @@ source for every answer below.
    session, Herdr's restore included, or its `/resume`): the state kept at the session's end
    comes back. Codex has no hook for it: a resumed Codex pane waits for a typed prompt.
 5. **Left as it was**: by a prompt the user did not type (`machine`, or a scheduled prompt the
-   last stop listed: a `/loop` tick, a cron, a wake-up), which keeps the type, an open ask
-   through the turn it starts, and a failure until that turn ends; by a subagent's calls,
+   last stop listed: a `/loop` tick, a cron, a wake-up), which keeps the type and an open
+   ask through the turn it starts, while a failure gives way to that turn; by a subagent's calls,
    except its permission dialogs; by every call from another session, since a pane belongs to
    the session the user last typed into there (a teammate in Claude Code's agent-team tmux
    server and a headless `claude -p` started from the pane never own it).

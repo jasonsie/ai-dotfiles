@@ -367,7 +367,7 @@ their meanings, and the words.
   MCP form read `ask`. A subagent's permission dialog opens in your pane, so it counts.
 - **What leaves a label as it is.** A prompt you did not type (a report, another session's
   message, a scheduled prompt firing: a `/loop` tick, a cron, a wake-up) keeps the type; an open
-  ask stays through the turn that prompt starts, a failure until that turn ends. Each stop keeps
+  ask stays through the turn that prompt starts, while a failure gives way to it. Each stop keeps
   the session's scheduled prompts, which is how the hook knows one when it fires; a prompt you
   type that says exactly the same counts as one. Only the session you last typed into labels its
   pane: a teammate in Claude Code's agent-team tmux server and a headless `claude -p` started

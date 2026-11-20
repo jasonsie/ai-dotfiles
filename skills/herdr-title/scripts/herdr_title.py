@@ -252,7 +252,9 @@ def on_prompt(event):
             state = SESSIONS.load(event.session)
             if not state or owner(where) != event.session:
                 return
-            if state.get('mode') not in ('ask', 'fail', 'open'):  # an open ask or a failure waits for the user
+            # An open ask waits for the user (and Codex's open mode for its stop hook); anything else,
+            # a failure too, gives way to the turn this prompt starts, whose end says what comes next.
+            if state.get('mode') not in ('ask', 'open'):
                 state['mode'] = 'normal'
             state.update(event=state.get('event', 0) + 1, typed_turn=False, blocked=None)
             SESSIONS.save(event.session, state)

@@ -344,6 +344,13 @@ class StopTest(Sandbox):
         self.stopped('Stopping here until the limit resets.', session='s2', transcript_path=str(path))
         self.assertEqual(self.state('s2')['mode'], 'fail')
 
+    def test_a_report_after_a_failure_starts_its_turn_in_normal_mode(self):
+        self.hook('prompt', prompt='/tdd')
+        self.hook('error', error='overloaded')
+        self.hook('prompt', prompt='<task-notification>a reviewer finished</task-notification>')
+        self.assertEqual(self.state()['mode'], 'normal')  # that turn's end says what comes next
+        self.assertIn('--clear-token', self.calls('herdr', wait=3)[2]['argv'])  # a working row sorts as no one's move
+
     def test_pis_error_and_abort_are_known_at_once(self):
         self.stopped('Request failed.', cli='pi', outcome='error')
         self.assertEqual(self.state()['mode'], 'fail')
