@@ -25,9 +25,10 @@ Who picks the type:
   agent's last message and the prompt, and answers with one type or keep. The type lands about
   three seconds later. Half the prompts are short answers ("1", "y") whose purpose is in the
   question they answer, which is why the model sees the agent's last message.
-- A prompt the user did not type (a subagent's report, another session's message) leaves the
-  type as it is. So does a model that says keep, fails, or answers after a newer prompt, and so
-  does every hook call from inside a subagent or teammate, which shares the pane.
+- A prompt the user did not type (a subagent's report, another session's message, a scheduled
+  prompt firing) leaves the type as it is. So does a model that says keep, fails, or answers
+  after a newer prompt, and so does every hook call from inside a subagent or teammate, which
+  shares the pane.
 When the session ends the labels and the need token come off. The types, the words, the command
 words, the skills and the model's instruction are config/herdr-title.json's. The CLIs' hook
 formats live in the repo's scripts/agent_hooks.py, their transcripts in scripts/agent_sessions.py.
@@ -77,8 +78,8 @@ AFTER = {'normal': ('done', 'idle'), 'open': ('wait', 'wait'), 'pending': ('run'
 SOURCE = 'user:ai-dotfiles-title'  # who reports, to Herdr; beside Herdr's own integration
 HERDR_TIMEOUT = 5.0
 QUICK = 1.5  # Codex stops an Interrupt or SessionEnd hook at 3 s: those reports give up sooner
-NEED = 'need'  # the pane token on rows that wait for the user: ask, fail, or a wait with no result
-NEEDING = ('ask', 'fail', 'unknown')
+NEED = 'need'  # the pane token on rows that wait for the user: ask, fail, or a verdict that never came
+NEEDING = ('ask', 'fail', 'unknown')  # not open: Codex's bare wait starts while Codex works
 # Herdr's agent list with the rows that need the user first, then Herdr's own attention order.
 VIEW = {'source': SOURCE, 'label': 'needs you', 'sort': [
     {'field': {'token': NEED}, 'order': 'desc'}, {'field': 'attention', 'order': 'desc'},
@@ -193,7 +194,7 @@ def report(session, settings, timeout=HERDR_TIMEOUT):
 def set_view():
     """Sort Herdr's agent list with the rows that need the user first (VIEW), through Herdr's socket:
     Herdr 0.9.5 has no command for it. The view lasts until Herdr's server exits, so the hook sets
-    it again at each prompt and stop; a socket that is missing or slow changes nothing."""
+    it again at each typed prompt, stop and resume; a socket that is missing or slow changes nothing."""
     path = os.environ.get('HERDR_SOCKET_PATH')
     if not path:
         return
@@ -343,9 +344,10 @@ def classify_type(request):
 
 def judge(request):
     """Ask what a stopped agent waits for, then set the session's mode by it, unless anything newer
-    happened in the session meanwhile. ASK is ask; WAIT is wait only while the CLI listed background
-    work that reports back, else done; DONE is done; no answer is wait with no result, since an
-    ask the model failed to see costs the user more than a look."""
+    happened in the session meanwhile. ASK is ask; WAIT is wait only while Claude Code listed work
+    of a `background` type or a scheduled prompt, else done (a background command or a monitor may
+    never end); DONE is done; no answer is wait with no result, since an ask the model failed to
+    see costs the user more than a look."""
     settings, session = config(), request['session']
     word = pick(model(settings, '\n'.join(settings['model']['stop']),
                       f"The agent's last message ended:\n{request['text']}"), {'ask', 'wait', 'done'})

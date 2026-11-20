@@ -344,8 +344,10 @@ A bare `wait` means the hook cannot tell why. `config/herdr-title.json` lists th
 their meanings, and the words.
 
 - **How a label gets there.** `skills/herdr-title/scripts/herdr_title.py` runs at each prompt,
-  turn end, dialog, resume and session end in Claude Code, Codex and Pi. It keeps a mode per
-  session and reports one label for each state Herdr detects: `herdr pane report-metadata <pane>
+  turn end and session end in Claude Code, Codex and Pi, and at what only some of them hand
+  over: dialogs (Claude Code; Codex's permission dialog), API errors (Claude Code), resumes
+  (Claude Code, Pi) and interrupts (Codex). It keeps a mode per session and reports one label
+  for each state Herdr detects: `herdr pane report-metadata <pane>
   --source user:ai-dotfiles-title --agent claude --state-label 'working=execute › run'
   --state-label 'done=execute › wait › done' ...`. Herdr shows the label of the state it sees,
   so a label changes with no further hook. The labels name the agent, so Herdr drops them when
@@ -357,28 +359,36 @@ their meanings, and the words.
 - **Who sets the result at a turn end.** A reply whose last line ends with a question mark, or a
   Codex plan block, reads `ask` at once. An API error, Pi's error or Claude Code's usage-limit
   note reads `fail` at once. Any other reply keeps `run` while Haiku reads its last 800
-  characters and answers ask, wait or done; wait counts only while Claude Code lists background
-  work that reports back. On 191 real turn endings it was right 91% of the time, and its
-  mistakes lean to calling a finished job an ask.
+  characters and answers ask, wait or done. Wait counts only while Claude Code lists work of a
+  `background` type (agents, workflows, teammates, cloud sessions, MCP tasks) or a scheduled
+  prompt; a background command or a monitor may never end, so neither counts. On 191 real turn
+  endings it was right 91% of the time, and its mistakes lean to calling a finished job an ask.
 - **Dialogs.** A permission dialog reads `allow`. A question dialog, a plan to approve and an
   MCP form read `ask`. A subagent's permission dialog opens in your pane, so it counts.
-- **What leaves a label as it is.** A prompt you did not type keeps the type, and an open ask or
-  failure stays through the turn that prompt starts. Only the session you last typed into
-  labels its pane: a teammate in Claude Code's agent-team tmux server and a headless `claude -p`
-  started from the pane change nothing.
-- **Rows that need you go on top.** A row that waits for your answer, failed, or waits for a
-  reason the hook cannot tell carries a pane token, `need`. At each prompt, stop and resume the
-  hook sets Herdr's agent view, "needs you", through Herdr's socket: those rows first, then
-  Herdr's own attention order. Herdr 0.9.5 has no command for agent views. A view ends when the
-  server exits, and the next prompt sets it again.
+- **What leaves a label as it is.** A prompt you did not type (a report, another session's
+  message, a scheduled prompt firing: a `/loop` tick, a cron, a wake-up) keeps the type; an open
+  ask stays through the turn that prompt starts, a failure until that turn ends. Each stop keeps
+  the session's scheduled prompts, which is how the hook knows one when it fires; a prompt you
+  type that says exactly the same counts as one. Only the session you last typed into labels its
+  pane: a teammate in Claude Code's agent-team tmux server and a headless `claude -p` started
+  from the pane change nothing.
+- **Rows that need you go on top.** A row that waits for your answer, failed, or got no verdict
+  from the model (a bare wait) carries a pane token, `need`, until a report or the session's end
+  clears it. Codex's bare wait from a prompt to its stop hook carries none: it starts while Codex
+  works. At each typed prompt, stop and resume the hook sets Herdr's agent view, "needs you",
+  through Herdr's socket: those rows first, then Herdr's own attention order. Herdr 0.9.5 has no
+  command for agent views. A view ends when the server exits, and the next typed prompt sets it
+  again.
 - **The model call** is `claude -p --model haiku` with no tools, no saved session, no user
   settings (so no hooks, plugins or MCP servers) and no `HERDR_*` variables. The hook starts it
   in a process of its own and does not wait, so a prompt is never delayed. One call takes about
   3 s and 700 input tokens, on the Claude login; about three of every four turn ends need one.
   Codex and Pi sessions use the same call, so they need `claude` installed, as the daily pass
   does.
-- **The sidebar, once per Mac, by hand.** Herdr's default rows show no label. Put these lines in
-  `~/.config/herdr/config.toml`, then run `herdr server reload-config`:
+- **The sidebar, once per Mac, by hand.** Herdr's default rows show no label. In
+  `~/.config/herdr/config.toml`, set `status_indicators` in the `[ui]` table and replace the
+  `rows` key in `[ui.sidebar.agents]`; add a table only if the file lacks it, since TOML refuses
+  one declared twice. Then run `herdr server reload-config`:
 
   ```toml
   [ui]
@@ -401,10 +411,13 @@ their meanings, and the words.
   Codex runs the new hooks only after approval in `/hooks`; until then a Codex stop reads a bare
   `wait`. Codex has no error event, so a failed Codex turn reads as done. In Claude Code, Esc
   and a question dialog closed without an answer fire no hook; Herdr then shows idle. A dialog
-  no hook announces, later in the same turn, keeps the earlier dialog's word. Three rows per
-  agent fit about 3 agents at the default split in a 27-row window; drag the divider between
-  spaces and agents for more. Herdr keeps no labels across a restart of its server; a resumed
-  session reports its kept state again.
+  no hook announces, later in the same turn, keeps the earlier dialog's word. A Stop hook that
+  makes Claude Code go on after a question (`/goal` is one) leaves `wait › ask` on the row while
+  it works, until the next stop. That a skill fired on a schedule reaches the hook as its
+  scheduled prompt is not verified. Three rows per agent fit about 3 agents at the default split
+  in a 27-row window; drag the divider between spaces and agents for more. Herdr keeps no labels
+  across a restart of its server; a resumed Claude Code or Pi session reports its kept state
+  again, and a Codex pane waits for its next typed prompt.
 - **Changing it.** The types, the words, the rules that decide at once and both model
   instructions are in `config/herdr-title.json`, which the hook reads on every call;
   `scripts/tests/test_herdr_title.py` checks the file. State is one small file per session under

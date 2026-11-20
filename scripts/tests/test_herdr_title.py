@@ -316,7 +316,7 @@ class StopTest(Sandbox):
                      background_tasks=[{'type': 'subagent', 'id': 'a1'}])
         self.assertEqual(self.after(3)[2], ('execute › run', 'execute › run'))
         self.stopped('I will report when the dev server is up.', says='WAIT', session='s2',
-                     background_tasks=[{'type': 'shell', 'id': 'b1'}])  # a shell alone never reports back
+                     background_tasks=[{'type': 'shell', 'id': 'b1'}])  # it may be a server that never ends
         self.calls('herdr', wait=6)  # s2's prompt, its stop, the model's verdict
         self.assertEqual(self.state('s2')['mode'], 'normal')
 

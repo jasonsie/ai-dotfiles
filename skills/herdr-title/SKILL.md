@@ -24,29 +24,33 @@ source for every answer below.
   permission dialog), `fail` (an error or a usage limit), `done` (finished, not looked at yet).
   No result: the hook cannot tell why it waits.
 - The icon in front is Herdr's own status, not the label's: an asking row the user has looked
-  at shows Herdr's idle icon. Rows whose mode is ask, fail or a bare wait carry the pane token
-  `need`, and the hook's agent view ("needs you") sorts them to the top.
+  at shows Herdr's idle icon. Rows that wait on an ask, a failure or a verdict that never came
+  carry the pane token `need`, and the hook's agent view ("needs you") sorts them to the top.
+  Codex's bare wait from a prompt to its stop hook carries none: it starts while Codex works.
 
 ## Who set it
 
-1. **A typed prompt**: normal mode at once, reported with the type the session already has.
+1. **A typed prompt**: normal mode at once (in Codex a bare `› wait` until its stop hook
+   answers), reported with the type the session already has.
    A command word or a named skill (`commands`, `skills`, `outside`) sets the type at once;
    otherwise Haiku names it about 3 s later (`model.type`).
 2. **A turn end**: `› wait › ask` at once when the reply's last line ends with a question mark
    or the reply ends with a Codex plan block (`ask_at_once`); `› wait › fail` at once after an
    API error, Pi's error, or Claude Code's usage-limit note (`usage_limit_note`). Otherwise
    `› run` while Haiku reads the reply's last 800 characters (`model.stop`): ASK, WAIT (kept
-   only while Claude Code lists background work of a `background` type, else done), DONE, or
-   no answer, which reads a bare `› wait`.
+   only while Claude Code lists work of a `background` type or a scheduled prompt, else
+   done), DONE, or no answer, which reads a bare `› wait`.
 3. **A dialog**: a permission dialog reads `› wait › allow`; a question or plan dialog and an
    MCP form read `› wait › ask`, until the next prompt or turn end.
-4. **A resume** (`claude --resume`, Pi's resume, every pane after Herdr's server restarts): the
-   state kept at the session's end comes back.
-5. **Left as it was**: a prompt the user did not type (`machine`) keeps the type, and an open
-   ask or failure stays through the turn it starts; a subagent's calls, except its permission
-   dialogs; every call from another session, since a pane belongs to the session the user last
-   typed into there (a teammate in Claude Code's agent-team tmux server and a headless
-   `claude -p` started from the pane never own it).
+4. **A resume** (Claude Code's `--resume`, `--continue` or `/resume`; Pi started on a kept
+   session, Herdr's restore included, or its `/resume`): the state kept at the session's end
+   comes back. Codex has no hook for it: a resumed Codex pane waits for a typed prompt.
+5. **Left as it was**: by a prompt the user did not type (`machine`, or a scheduled prompt the
+   last stop listed: a `/loop` tick, a cron, a wake-up), which keeps the type, an open ask
+   through the turn it starts, and a failure until that turn ends; by a subagent's calls,
+   except its permission dialogs; by every call from another session, since a pane belongs to
+   the session the user last typed into there (a teammate in Claude Code's agent-team tmux
+   server and a headless `claude -p` started from the pane never own it).
 
 The labels and the `need` token come off when the session ends; its state stays, pruned after
 a week.
@@ -58,7 +62,8 @@ Name which case above produced it, then fix that case's source: the wording of `
 `skills`, `outside` or `machine`; the `ask_at_once` marks; the `background` types. Some events
 fire no hook and leave the label as it was: Esc in Claude Code, a question dialog closed
 without an answer (both end the turn, Herdr shows idle), and a dialog no hook announces later
-in the same turn, which keeps the earlier dialog's word. A session's state is
+in the same turn, which keeps the earlier dialog's word. A Stop hook that keeps Claude Code going
+after a question (`/goal`) leaves `wait › ask` while it works. A session's state is
 `~/.local/state/ai-dotfiles/herdr-title/<session>.json` (type, mode, blocked); `panes/` holds
 each pane's owner.
 
