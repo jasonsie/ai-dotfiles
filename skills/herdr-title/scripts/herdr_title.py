@@ -2,7 +2,8 @@
 """herdr-title: an agent's row in Herdr's sidebar says what its prompt is for and whose move it is.
 
   herdr-title hook KIND --cli (claude|codex|pi)   one CLI hook call, JSON in; KIND is prompt, stop,
-                                                  error, interrupt or end; nothing out (Codex's stop: {})
+                                                  error, interrupt, permission, pre, form, start or
+                                                  end; nothing out (Codex's stop: {})
   herdr-title classify                            a model's turn for one prompt or stop; the hook starts it
 
 The label has three layers, type › status › result: `grill › run` while the agent works,
@@ -379,6 +380,36 @@ def settle(event, mode):
     report(event.session, config())
 
 
+def on_dialog(event, word):
+    """A dialog is about to open: the blocked label says what it waits for, ask or allow, until the
+    next prompt or turn end. A subagent's dialog opens in the lead's pane, so it counts too."""
+    with locked():
+        state = SESSIONS.load(event.session)
+        if not state or owner(pane()) != event.session:
+            return
+        state['blocked'] = word
+        SESSIONS.save(event.session, state)
+    report(event.session, config())
+
+
+def on_start(event):
+    """A session resumed (claude --resume, /resume, Pi's resume, every pane after Herdr's server
+    restarts): its kept state labels the pane again, unless the pane belongs to another session."""
+    if event.subagent or event.source != 'resume':
+        return
+    where = pane()
+    with locked():
+        state, mine = SESSIONS.load(event.session), owner(where)
+        if not state or (mine and mine != event.session):
+            return
+        if state.get('mode') == 'pending':  # its verdict died with the old process
+            state['mode'] = 'unknown'
+        state.update(event=state.get('event', 0) + 1, ended=False, pane=where, cli=event.cli, blocked=None)
+        SESSIONS.save(event.session, state)
+        PANES.save(where, {'session': event.session, 'cli': event.cli})
+    report(event.session, config())
+
+
 def cmd_classify(_args):
     with contextlib.suppress(Exception):  # nobody is listening: a failure leaves the labels as they are
         classify(json.loads(sys.stdin.read()))
@@ -412,7 +443,11 @@ def on_end(event):
 
 
 HANDLERS = {'prompt': on_prompt, 'stop': on_stop, 'error': lambda event: settle(event, 'fail'),
-            'interrupt': lambda event: settle(event, 'normal'), 'end': on_end}
+            'interrupt': lambda event: settle(event, 'normal'),
+            'permission': lambda event: on_dialog(event, 'ask' if event.action == 'ask' else 'allow'),
+            'pre': lambda event: on_dialog(event, 'ask'),  # Claude Code's question and plan tools only
+            'form': lambda event: on_dialog(event, 'ask'),  # an MCP server asks for input
+            'start': on_start, 'end': on_end}
 
 
 def cmd_hook(args):

@@ -353,6 +353,58 @@ class StopTest(Sandbox):
         self.assertEqual(len(self.calls('herdr')), 1)
 
 
+class DialogTest(Sandbox):
+    """A dialog says what it waits for: allow for a permission, ask for a question, a plan or a form."""
+
+    def blocked(self, wait):
+        return self.labels(self.calls('herdr', wait=wait)[wait - 1])['blocked']
+
+    def test_each_dialog_reads_allow_or_ask_and_prints_nothing(self):
+        self.hook('prompt', prompt='/tdd')
+        for number, (kind, tool, said) in enumerate((('permission', 'Bash', 'execute › wait › allow'),
+                                                     ('permission', 'AskUserQuestion', 'execute › wait › ask'),
+                                                     ('pre', 'ExitPlanMode', 'execute › wait › ask'),
+                                                     ('form', '', 'execute › wait › ask')), start=2):
+            done = self.hook(kind, tool_name=tool)
+            self.assertEqual((done.returncode, done.stdout), (0, ''), kind)  # a reply here would decide the dialog
+            self.assertEqual(self.blocked(number), said, (kind, tool))
+
+    def test_a_subagents_permission_dialog_and_codexs_count_too(self):
+        self.hook('prompt', prompt='/tdd')
+        self.hook('permission', tool_name='Bash', agent_id='agent-1')
+        self.assertEqual(self.blocked(2), 'execute › wait › allow')
+        self.hook('prompt', cli='codex', session='c1', prompt='/tdd')
+        self.assertEqual(self.hook('permission', cli='codex', session='c1', tool_name='Bash').stdout, '')
+        self.assertEqual(self.blocked(4), 'execute › wait › allow')
+
+    def test_the_next_turn_end_forgets_the_dialog(self):
+        self.hook('prompt', prompt='/tdd')
+        self.hook('permission', tool_name='Bash')
+        self.hook('stop', last_assistant_message='Which one?')
+        self.assertEqual(self.blocked(3), 'execute › wait')
+
+
+class StartTest(Sandbox):
+    """A resumed session, or every pane after Herdr's server restarts: the kept state comes back."""
+
+    def test_a_resumed_session_labels_its_pane_again_with_its_kept_state(self):
+        self.hook('prompt', prompt='/tdd')
+        self.hook('stop', last_assistant_message='Which one, A or B?')
+        self.hook('end')
+        self.assertEqual(self.hook('start', source='resume').stdout, '')  # SessionStart's stdout would be context
+        back = self.labels(self.calls('herdr', wait=4)[3])
+        self.assertEqual((back['done'], back['idle']), ('execute › wait › ask', 'execute › wait › ask'))
+
+    def test_a_new_or_cleared_session_and_a_pane_another_session_owns_change_nothing(self):
+        self.hook('prompt', prompt='/tdd')
+        self.hook('end')
+        for source in ('startup', 'clear', 'compact'):
+            self.hook('start', source=source)
+        self.hook('prompt', session='other', prompt='/grilling')
+        self.hook('start', source='resume')  # s1 comes back where the other session now works
+        self.assertEqual(len(self.calls('herdr')), 3)
+
+
 class OwnerTest(Sandbox):
     """A pane's labels belong to the session the user last typed into there."""
 
