@@ -30,10 +30,10 @@ class EntrypointsTest(unittest.TestCase):
         return result.stdout
 
     def working_copy(self):
-        """scripts/, config/ and skills/ copied outside git, so an install there links the copy itself
+        """scripts/, lib/, config/ and skills/ copied outside git, so an install there links the copy itself
         (in a worktree, an install from ROOT links the main checkout, which runs other code)."""
         checkout = Path(self.temp.name).resolve() / 'checkout'
-        for folder in ('scripts', 'config', 'skills'):
+        for folder in ('scripts', 'lib', 'config', 'skills'):
             shutil.copytree(ROOT / folder, checkout / folder, ignore=shutil.ignore_patterns('__pycache__'))
         return checkout
 
@@ -149,7 +149,7 @@ class EntrypointsTest(unittest.TestCase):
         subprocess.run(['git', 'clone', '-q', str(ROOT), str(upstream)], check=True)
         git(upstream, 'switch', '-q', '-C', 'main')
         shutil.rmtree(upstream / 'tools', ignore_errors=True)  # config/ before it had that name
-        for folder in ('scripts', 'config'):
+        for folder in ('scripts', 'lib', 'config'):
             shutil.rmtree(upstream / folder, ignore_errors=True)
             shutil.copytree(ROOT / folder, upstream / folder, ignore=shutil.ignore_patterns('__pycache__'))
         git(upstream, 'add', '-A')
@@ -172,7 +172,7 @@ class EntrypointsTest(unittest.TestCase):
         git = lambda repo, *a: subprocess.run(['git', '-C', str(repo), *a], check=True, capture_output=True)  # noqa: E731
         main = Path(self.temp.name).resolve() / 'main'
         subprocess.run(['git', 'clone', '-q', str(ROOT), str(main)], check=True)
-        for folder in ('scripts', 'config', 'skills'):  # the working copy, committed so the worktree has it
+        for folder in ('scripts', 'lib', 'config', 'skills'):  # the working copy, committed so the worktree has it
             shutil.rmtree(main / folder, ignore_errors=True)
             shutil.copytree(ROOT / folder, main / folder, ignore=shutil.ignore_patterns('__pycache__'))
         git(main, 'add', '-A')
