@@ -9,6 +9,7 @@ Run `ai-dotfiles git push` (`--dry-run` first when unsure) on the branch, with e
 committed. It is skipped when origin already has this commit or the branch has nothing ahead of
 the base.
 
-- **"origin/<branch> is at <sha>, not behind HEAD"**: someone pushed elsewhere. Show the user
+- **"origin/<branch> is at <sha>, not behind HEAD"**: someone pushed elsewhere; origin itself was
+  asked, so the local `origin/<branch>` may be older. Run `git fetch origin <branch>`, show the user
   `git log HEAD..origin/<branch>` and let them choose: rebase onto it, or overwrite. Never
   force-push on your own.

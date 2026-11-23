@@ -52,7 +52,7 @@ class RunTest(unittest.TestCase):
     def test_skips_what_is_done_already(self):
         merged = dict(PR, state='MERGED')
         code, output, _, fake = run(**{
-            'git rev-parse --verify -q refs/remotes/origin/feat/x': TIP,
+            'git ls-remote --heads origin refs/heads/feat/x': TIP + '\trefs/heads/feat/x',
             'gh pr list': json.dumps([merged]),
             'git rev-list -n 1 archive/x': TIP,
             'git ls-remote --exit-code --tags origin archive/x': OK,
@@ -62,7 +62,7 @@ class RunTest(unittest.TestCase):
         })
         self.assertEqual(code, 1, output)  # on main: preflight refuses
         code, output, _, fake = run(**{
-            'git rev-parse --verify -q refs/remotes/origin/feat/x': TIP,
+            'git ls-remote --heads origin refs/heads/feat/x': TIP + '\trefs/heads/feat/x',
             'gh pr list': json.dumps([merged]),
             'git rev-list -n 1 archive/x': TIP,
             'git ls-remote --exit-code --tags origin archive/x': OK,

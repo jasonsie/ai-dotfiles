@@ -17,12 +17,13 @@ from git_run import Stop  # noqa: E402
 
 
 def push(repo, dry):
-    code, remote, _ = git_run.sh(['git', 'rev-parse', '--verify', '-q', f'refs/remotes/origin/{repo.branch}'])
-    if code == 0 and remote == repo.tip:
+    remote = git_run.on_origin(repo.branch)
+    if remote == repo.tip:
         return 'already pushed'
     if not repo.ahead:
         return f'nothing ahead of origin/{repo.base}; not pushed'
-    if code == 0 and git_run.sh(['git', 'merge-base', '--is-ancestor', remote, repo.tip])[0] != 0:
+    # A commit this clone has not fetched is no ancestor of HEAD either: git answers non-zero.
+    if remote and git_run.sh(['git', 'merge-base', '--is-ancestor', remote, repo.tip])[0] != 0:
         raise Stop(f'push: origin/{repo.branch} is at {remote[:7]}, not behind HEAD; reconcile first')
     git_run.act(['git', 'push', '-q', '-u', 'origin', repo.branch], dry)
     return 'pushed'

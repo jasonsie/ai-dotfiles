@@ -97,6 +97,14 @@ def preflight(work=None):
     return Repo(base, branch, out(['git', 'rev-parse', 'HEAD']), slug, author, ahead)
 
 
+def on_origin(branch):
+    """The commit origin has for `branch`, asked of origin itself (a remote-tracking ref is only as
+    new as the last fetch); '' when it has none."""
+    listing = out(['git', 'ls-remote', '--heads', 'origin', f'refs/heads/{branch}'], what='git ls-remote')
+    found = [line.split() for line in listing.splitlines()]
+    return next((sha for sha, ref in found if ref == f'refs/heads/{branch}'), '')
+
+
 def step(name, result):
     print(f'{name:<10} {result}')
 

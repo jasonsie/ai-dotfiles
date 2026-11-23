@@ -89,16 +89,9 @@ def checks(top, dry, skip=False):
     return f'{len(commands)} passed' if not dry else f'{len(commands)} to run'
 
 
-def on_origin(branch):
-    """The commit origin has for `branch`, or '' when it has none."""
-    listing = git_run.out(['git', 'ls-remote', '--heads', 'origin', f'refs/heads/{branch}'], what='git ls-remote')
-    found = [line.split() for line in listing.splitlines()]
-    return next((sha for sha, ref in found if ref == f'refs/heads/{branch}'), '')
-
-
 def push(repo, dry):
     """HEAD as the new branch; a rerun after a stop finds it at the same commit and moves on."""
-    remote = on_origin(repo.branch)
+    remote = git_run.on_origin(repo.branch)
     if remote == repo.tip:
         return 'already pushed'
     if remote:
@@ -111,7 +104,7 @@ def push(repo, dry):
 def update(repo, dry):
     """HEAD onto the PR's own branch (a worktree `worktree pr` made): the one case a branch already
     on origin may be pushed to, and only fast-forward: a branch that moved on stops the run."""
-    remote = on_origin(repo.branch)
+    remote = git_run.on_origin(repo.branch)
     if remote == repo.tip:
         return 'already pushed'
     if not remote:
