@@ -1,6 +1,6 @@
 # Skill mechanics
 
-The skill-specific branch of [`writing-for-agents`](SKILL.md): what changes when the document is a skill (frontmatter, the invocation choice, router skills, packaging limits, and testing). Everything else about writing it is the universal reference in `SKILL.md`.
+The skill-specific branch of [`writing-for-agents`](SKILL.md): what changes when the document is a skill (the invocation choice, router skills, frontmatter and packaging limits, instruction patterns, scripts, and testing). Everything else about writing it is the universal reference in `SKILL.md`.
 
 ## Invocation
 
@@ -21,11 +21,43 @@ The invocation cut of splitting (the sequence cut lives in `SKILL.md`): split of
 
 When user-invoked skills multiply past what you can remember, that piled-up cognitive load is cured by a **router skill**: one user-invoked skill that names the others and when to reach for each, so the human has one skill to remember instead of many. It can only hint, never fire them: user-invoked skills have no description, so nothing but the human can reach them.
 
+## Frontmatter limits
+
+- **`name`:** at most 64 characters of lowercase letters, digits and hyphens, with neither `anthropic` nor `claude` in it. It names the activity (`processing-pdfs`, `pdf-processing`), in one pattern across the collection.
+- **`description`:** at most 1,024 characters of plain text. A placeholder is an example value or a capitalised word (`approve 57`, `archive/NAME`): angle brackets read as XML tags, and Claude Code lists them escaped. A model-facing description says what the skill does, then when to use it, in the third person ("Extracts text from PDFs", where "I can…" and "You can…" shift the point of view of the system prompt it is injected into and hurt discovery).
+
 ## Packaging and hygiene
 
-- **Size cap:** keep each `SKILL.md` under 20,000 bytes. Push heavy reference into sibling Markdown files behind a context pointer.
+- **Size cap:** keep each `SKILL.md` body under 500 lines and the file under 20,000 bytes. Push heavy reference into sibling Markdown files behind a context pointer.
+- **One level deep:** `SKILL.md` itself points at every reference file. A file reached only through another reference file gets a partial read (`head -100`) or none.
+- **Contents first:** a reference file over 100 lines opens with a `## Contents` list, so a partial read still shows its whole scope.
+- **Names and paths:** a file name says what is inside (`form-validation-rules.md`, where `doc2.md` says nothing); paths use forward slashes.
 - **Folder hygiene:** keep scratch and test files (`test-*.md`, `CREATION-LOG.md`) out of `skills/`, and verify every relative Markdown link resolves.
 
-## Testing a skill (optional)
+## Instruction patterns
+
+- **Degrees of freedom:** specify a step as tightly as it is fragile. A fragile or ordered operation gets the exact command and the words "run exactly this"; a preferred pattern gets a template with parameters; work that turns on context gets heuristics in prose.
+- **One default:** name one tool or approach, then the case that needs another ("pdfplumber; for scanned pages, OCR"). A menu of equals makes each run choose differently.
+- **One term per concept**, the same word from the description to the last line.
+- **Feedback loop:** on quality-critical work, write the loop as steps: run the validator, fix what it reports, run it again, go on only when it passes. Before a batch or destructive change, the agent writes the plan to a file and a script validates that file first.
+- **Shape by example:** where output quality turns on style, give input/output pairs; where the format is fixed, give the template and say it is exact.
+- **Dated facts:** the main text states the current way; what stopped holding sits under an "Old patterns" heading with its date.
+
+## Scripts
+
+- **Script the deterministic:** an operation with one right result is a script in the skill's `scripts/`. Only its output costs context, and every run does the same thing.
+- **Run or read:** say which a script is for: "Run `scripts/analyze.py`" or "See `scripts/analyze.py` for the algorithm".
+- **Solve, don't defer:** the script handles its own failures and prints what was wrong and what is valid ("Field `signature_date` not found. Available: …"), so the agent fixes the input in one step.
+- **Reasoned constants:** each timeout, retry count or threshold carries its reason in a comment.
+- **Named dependencies:** state the command or package a step needs where the skill first uses it.
+- **MCP tools** are written fully qualified: `Server:tool_name`.
+
+## Testing a skill
+
+Start from failures, before writing much: run the task without the skill and note where the agent goes wrong. Turn those gaps into three scenarios (the prompt, its files, the expected behaviour) and keep them as the measure: write only what closes a gap, re-run, compare with the baseline. Run them on each model tier that will load the skill: a small model shows missing guidance, a large one over-explaining.
+
+Then watch real use. A bundled file never read is unneeded or badly pointed at; one read on every run belongs in `SKILL.md`; a skill that does not fire needs a sharper description.
+
+### Pressure test (optional)
 
 For discipline-enforcing or behavior-shaping skills, run a lightweight RED→GREEN pressure test before shipping: give a fresh subagent (where the CLI has none, a fresh session) a realistic, tempting scenario **without** the skill to observe the baseline failure and exact rationalizations (RED), write minimal guidance matched to that failure mode (see `Match the form to the failure` in `SKILL.md`), then re-run **with** the skill (GREEN) and close any remaining loopholes. Skip for pure reference skills.
