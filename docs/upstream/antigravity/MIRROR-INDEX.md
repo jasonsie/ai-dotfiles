@@ -5,16 +5,18 @@ Antigravity CLI and IDE docs: agent settings, rules, skills, MCP, artifacts, bro
 
 Consult through the `upstream-docs` skill (`find`, `outline`, `show`): read a section, not a file.
 
-Pages: 91
+Pages: 102
 
 - [agent-settings.md](agent-settings.md): Learn about Agent settings.
 - [artifact-review.md](artifact-review.md): Learn about Artifact review.
 - [artifacts.md](artifacts.md): Learn about Artifacts.
 - [at-mentions.md](at-mentions.md): Learn about Mentions and quoting.
 - [boost.md](boost.md): Learn about Boost deep reasoning (/boost).
+- [browser.md](browser.md): Learn about Browser use.
 - [build-plugins.md](build-plugins.md): Learn about Build plugins.
 - [build-with-google.md](build-with-google.md): Learn about Build with Google.
 - [changelog.md](changelog.md): Learn about Changelog.
+- [cli/acp.md](cli/acp.md): Learn about Agent Client Protocol (ACP).
 - [cli/artifacts.md](cli/artifacts.md): Learn about Reviewing artifacts.
 - [cli/best-practices.md](cli/best-practices.md): Learn about CLI best practices.
 - [cli/commands/agents.md](cli/commands/agents.md): Learn about Agents command (/agents).
@@ -30,7 +32,7 @@ Pages: 91
 - [cli/commands/statusline.md](cli/commands/statusline.md): Learn about Status line command (/statusline).
 - [cli/commands/title.md](cli/commands/title.md): Learn about Window title command (/title).
 - [cli/commands/usage.md](cli/commands/usage.md): Learn about Model quotas (/usage).
-- [cli/commands/voice.md](cli/commands/voice.md): Learn about Voice dictation (/voice).
+- [cli/commands/voice.md](cli/commands/voice.md): Learn about Voice mode and dictation (/voice).
 - [cli/conversations.md](cli/conversations.md): Learn about Managing conversations.
 - [cli/credits.md](cli/credits.md): Learn about CLI AI credits.
 - [cli/gcli-migration.md](cli/gcli-migration.md): Learn about Migration.
@@ -43,6 +45,9 @@ Pages: 91
 - [cli/troubleshooting.md](cli/troubleshooting.md): Learn about CLI troubleshooting.
 - [cli/using.md](cli/using.md): Learn about CLI settings and tips.
 - [cli/vim-editor-mode.md](cli/vim-editor-mode.md): Learn about Vim editor mode.
+- [commands/agy-customizations.md](commands/agy-customizations.md): Learn about Customizations command (/agy-customizations).
+- [commands/antigravity-guide.md](commands/antigravity-guide.md): Learn about Antigravity guide command (/antigravity-guide).
+- [commands/automation.md](commands/automation.md): Learn about Automation command (/automation).
 - [commands/browser.md](commands/browser.md): Learn about Browser command (/browser).
 - [commands/generative-ui.md](commands/generative-ui.md): Learn about Generative UI command (/generative_ui).
 - [commands/goal.md](commands/goal.md): Learn about Goal command (/goal).
@@ -50,6 +55,7 @@ Pages: 91
 - [commands/learn.md](commands/learn.md): Learn about Learn command (/learn).
 - [commands/schedule.md](commands/schedule.md): Learn about Schedule command (/schedule).
 - [customization-discovery.md](customization-discovery.md): Learn about Customization discovery.
+- [dynamic-workflows.md](dynamic-workflows.md): Learn about Dynamic Workflows (/run-workflow).
 - [enterprise.md](enterprise.md): Learn about Enterprise.
 - [faq.md](faq.md): Learn about FAQ.
 - [features.md](features.md): Learn about Feature overview.
@@ -62,11 +68,12 @@ Pages: 91
 - [ide/browser.md](ide/browser.md): Learn about Overview.
 - [ide/extensions.md](ide/extensions.md): Official IDE extensions bringing Antigravity agents natively into VS Code, JetBrains, Visual Studio, Zed, and Xcode.
 - [ide/review-changes-editor.md](ide/review-changes-editor.md): Learn about Review changes in the editor.
-- [ide/separate-chrome-profile.md](ide/separate-chrome-profile.md): Learn about Separate Chrome profile.
+- [ide/separate-chrome-profile.md](ide/separate-chrome-profile.md): Learn about Chrome profile.
 - [ide/tab.md](ide/tab.md): Learn about Tab.
 - [ide/workflows.md](ide/workflows.md): Learn about Workflows.
 - [implementation-plan.md](implementation-plan.md): Learn about Plan.
 - [install.md](install.md): Learn about Authenticate.
+- [jupyter-notebooks.md](jupyter-notebooks.md): Learn about Jupyter notebooks.
 - [marketplace.md](marketplace.md): Learn about Marketplace.
 - [mcp.md](mcp.md): Learn about MCP.
 - [models.md](models.md): Learn about Choose a model.
@@ -76,6 +83,7 @@ Pages: 91
 - [plans.md](plans.md): Learn about Plans.
 - [plugins.md](plugins.md): Learn about Plugins.
 - [projects.md](projects.md): Learn about Projects.
+- [remote-agents.md](remote-agents.md): Learn about Remote Agents.
 - [remote-control.md](remote-control.md): Learn about Remote Control.
 - [review-changes.md](review-changes.md): Learn about Review changes.
 - [rules.md](rules.md): Learn about Rules.
@@ -92,9 +100,12 @@ Pages: 91
 - [sdk/tools.md](sdk/tools.md): Learn about Tools and skills.
 - [search.md](search.md): Learn about Search and command palette.
 - [settings.md](settings.md): Learn about Settings.
+- [side-panel.md](side-panel.md): Learn about Side panel and Overview panel.
 - [sidecars.md](sidecars.md): Learn about Sidecars.
 - [skills.md](skills.md): Learn about Agent skills.
 - [slash-commands.md](slash-commands.md): Learn about Slash commands overview.
 - [subagents.md](subagents.md): Learn about Custom subagents.
+- [swarm.md](swarm.md): Learn about Swarm (/swarm).
 - [teamwork.md](teamwork.md): Learn about Teamwork agent teams (/teamwork).
+- [voice-mode.md](voice-mode.md): Learn about Voice mode.
 - [walkthrough.md](walkthrough.md): Learn about Walkthrough.

@@ -11,7 +11,7 @@
 
 > [!WARNING]
 >
-> Agent teams are experimental and disabled by default. Enable them by setting `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in your [settings.json](https://code.claude.com/docs/en/settings.md) or environment. Without that variable, no team is set up at session start, no team directories are written, and Claude does not spawn or propose teammates. Agent teams have [known limitations](#limitations) around session resumption, task coordination, and shutdown behavior.
+> Agent teams are experimental and disabled by default. Enable them by setting `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in your [settings.json](https://code.claude.com/docs/en/settings.md) or environment. Agent teams have [known limitations](#limitations) around session resumption, task coordination, and shutdown behavior.
 
 Agent teams let you coordinate multiple Claude Code instances working together. One session acts as the team lead, coordinating work, assigning tasks, and synthesizing results. Teammates work independently, each in its own context window, and communicate directly with each other. You can also talk to any teammate directly without going through the lead.
 
@@ -105,17 +105,39 @@ Agent teams support two display modes:
 >
 > `tmux` has known limitations on certain operating systems and traditionally works best on macOS. Using `tmux -CC` in iTerm2 is the suggested entrypoint into `tmux`.
 
-The default is `"in-process"`. Set `"auto"` to enable split panes when you're already running inside a tmux session, or when your terminal is iTerm2 with the `it2` CLI installed, falling back to in-process otherwise. The `"tmux"` setting enables split-pane mode and auto-detects whether to use tmux or iTerm2 based on your terminal.
+With agent teams [enabled](#enable-agent-teams), follow these steps to give each teammate its own pane:
 
-Set `"iterm2"` to use iTerm2 native split panes explicitly. This mode requires the [`it2` CLI](https://github.com/mkusaka/it2) and shows an error with the install command if `it2` is missing. The setup prompt that offers to install `it2` or switch to tmux appears under `"auto"` or `"tmux"` when your terminal is iTerm2 and tmux is available as a fallback.
+**1. Install tmux or set up iTerm2**
 
-To override the default, set [`teammateMode`](https://code.claude.com/docs/en/settings-reference#teammatemode) in `~/.claude/settings.json`:
+Split-pane mode requires either [tmux](https://github.com/tmux/tmux/wiki) or iTerm2 with the [`it2` CLI](https://github.com/mkusaka/it2). Set up the one you'll run Claude Code in:
+
+* **tmux**: install through your system's package manager. See the [tmux wiki](https://github.com/tmux/tmux/wiki/Installing) for platform-specific instructions.
+* **iTerm2**: install the [`it2` CLI](https://github.com/mkusaka/it2), then enable the Python API in **iTerm2 > Settings > General > Magic > Enable Python API**.
+
+**2. Turn on split panes**
+
+Teammates run in-process until you change the [`teammateMode`](https://code.claude.com/docs/en/settings-reference#teammatemode) setting.
+
+Set it to `"auto"` in `~/.claude/settings.json`:
 
 ```json theme={null}
 {
   "teammateMode": "auto"
 }
 ```
+
+With `"auto"`, teammates open in split panes when you run Claude Code inside tmux or iTerm2, and run in-process in other terminals.
+
+**3. Start Claude Code and spawn teammates**
+
+Run `claude` inside tmux or in iTerm2, then ask Claude to spawn teammates.
+
+If a setup prompt for `it2` appears in iTerm2, select **Install it2 now** to open the panes in your iTerm2 window.
+
+If you run Claude Code outside tmux and iTerm2, or the panes don't open in your iTerm2 window, change `teammateMode` again:
+
+* **Outside tmux and iTerm2**: with tmux installed, set `teammateMode` to `"tmux"`. The panes open in a separate tmux session. To watch them, copy the command from the `View teammates` line at the Claude Code prompt and run that command in a second terminal.
+* **Panes don't open in your iTerm2 window**: set `teammateMode` to `"iterm2"` to use iTerm2's own panes. Teammates then start only when you run Claude Code in iTerm2 with `it2` set up.
 
 To set the mode for a single session, pass it as a flag:
 
@@ -124,11 +146,6 @@ claude --teammate-mode auto
 ```
 
 The `--teammate-mode` flag is experimental and doesn't appear in `claude --help`.
-
-Split-pane mode requires either [tmux](https://github.com/tmux/tmux/wiki) or iTerm2 with the [`it2` CLI](https://github.com/mkusaka/it2). To install manually:
-
-* **tmux**: install through your system's package manager. See the [tmux wiki](https://github.com/tmux/tmux/wiki/Installing) for platform-specific instructions.
-* **iTerm2**: install the [`it2` CLI](https://github.com/mkusaka/it2), then enable the Python API in **iTerm2 → Settings → General → Magic → Enable Python API**.
 
 ### Specify teammates and models
 
@@ -161,17 +178,17 @@ Claude Code checks the model it selects for a teammate against your organization
 * **Family alias such as `opus`**: On the Anthropic API and Claude Platform on AWS, Claude Code runs the teammate on the newest version of that family the allowlist permits. On providers with provider-specific model IDs, where the [substitution doesn't operate](https://code.claude.com/docs/en/model-config.md#restrict-model-selection), a blocked alias falls back like any other blocked value per the next bullet
 * **Any other blocked value, including a family alias on providers where the substitution doesn't operate, or one whose family has no permitted version**: Claude Code runs the teammate on the lead's model instead. If you set `CLAUDE_CODE_SUBAGENT_MODEL`, Claude Code tries that model first, under these same rules
 
-By default, teammates inherit the lead's [effort level](https://code.claude.com/docs/en/model-config.md#adjust-effort-level). In split-pane mode this applies from v2.1.186; earlier versions did not pass the lead's session effort to split-pane teammates.
+By default, a teammate on the lead's model inherits the lead's [effort level](https://code.claude.com/docs/en/model-config.md#adjust-effort-level). In split-pane mode this applies from v2.1.186; earlier versions did not pass the lead's session effort to split-pane teammates. For a teammate on another model, see [Effort level of subagents and teammates](https://code.claude.com/docs/en/model-config.md#effort-level-of-subagents-and-teammates).
 
 ### Have teammates plan before implementing
 
-For complex or risky tasks, you can have teammates plan before implementing. A teammate that Claude spawns while the lead is in [plan mode](https://code.claude.com/docs/en/permission-modes.md#analyze-before-you-edit-with-plan-mode) works in read-only plan mode until its plan is ready. Switch the lead into plan mode first, then ask for the teammate:
+For complex or risky tasks, you can have teammates plan before implementing. A teammate that Claude spawns while the lead is in [plan mode](https://code.claude.com/docs/en/permission-modes.md#analyze-before-you-edit-with-plan-mode) also works in plan mode until its plan is ready. Switch the lead into plan mode first, then ask for the teammate:
 
 ```text wrap theme={null}
 Spawn an architect teammate to refactor the authentication module.
 ```
 
-When that teammate finishes planning, it sends a plan approval request to the lead. If you haven't changed that teammate's permission mode since it was spawned, Claude Code approves the plan as soon as the request arrives, without the lead reviewing it. The teammate's edits and commands still go through the permission prompts described in [Permissions](#permissions). Once approved, the teammate exits plan mode and begins implementation.
+When that teammate finishes planning, it sends a plan approval request to the lead. If you haven't changed that teammate's permission mode since it was spawned, Claude Code approves the plan as soon as the request arrives, without the lead reviewing it. Once approved, the teammate exits plan mode and begins implementation. Claude Code passes it the lead's current [permission mode](#permissions), or Manual if that's plan mode.
 
 If you put a running in-process teammate in plan mode by pressing [`Shift+Tab`](https://code.claude.com/docs/en/permission-modes#switch-permission-modes) while viewing its session, the lead reviews that run's plan instead of Claude Code approving it. You aren't asked to approve it; the lead approves it or sends it back for revision.
 
@@ -291,7 +308,15 @@ For a teammate it brings back, Claude Code re-applies a definition that came fro
 
 ### Permissions
 
-Teammates start with the lead's permission mode, except [`dontAsk` mode](https://code.claude.com/docs/en/permission-modes#allow-only-pre-approved-tools-with-dontask-mode), which they don't inherit. If the lead runs with `--dangerously-skip-permissions`, all teammates do too. After spawning, you can change an individual teammate's permission mode, but you can't set per-teammate permission modes at spawn time.
+To cycle a running teammate's permission mode, press [`Shift+Tab`](https://code.claude.com/docs/en/permission-modes#switch-permission-modes), though an in-process teammate can run in the lead's mode instead. For a split-pane teammate, press it in its pane. For an [in-process](#choose-a-display-mode) teammate, press it while [viewing its session](#talk-to-teammates-directly), and the teammate checks its mode when it starts its next turn.
+
+> [!NOTE]
+>
+> An in-process teammate that isn't in [plan mode](#have-teammates-plan-before-implementing) runs in the lead's mode while the lead is in [`acceptEdits`](https://code.claude.com/docs/en/permission-modes#auto-approve-file-edits-with-acceptedits-mode), [`auto`](https://code.claude.com/docs/en/permission-modes#eliminate-prompts-with-auto-mode), or [`bypassPermissions`](https://code.claude.com/docs/en/permission-modes#skip-all-checks-with-bypasspermissions-mode) mode. Switching the teammate to Manual doesn't change that, even if its status bar shows Manual.
+>
+> To have it ask before it edits, press Enter on the `main` row in the agent panel and switch the lead to Manual mode too. The lead then asks too, as does any other teammate in Manual mode.
+
+You can't set per-teammate permission modes at spawn time. A new teammate starts with the lead's mode, including `bypassPermissions` mode, which `--dangerously-skip-permissions` turns on. If the lead is in [`dontAsk` mode](https://code.claude.com/docs/en/permission-modes#allow-only-pre-approved-tools-with-dontask-mode), the teammate starts in [Manual mode](https://code.claude.com/docs/en/permission-modes.md#available-modes) instead. For a split-pane teammate of a lead in Manual or `dontAsk` mode, this requires Claude Code v2.1.317 or later.
 
 An [in-process](#choose-a-display-mode) teammate runs under the lead's live allow and deny rules, so [`--disallowedTools`](https://code.claude.com/docs/en/cli-reference#cli-flags), `--tools`, and `--allowedTools` all apply to it. For a split-pane teammate, check each flag:
 
@@ -491,8 +516,8 @@ Agent teams are experimental. Current limitations to be aware of:
 * **No nested teams**: teammates cannot spawn their own teammates. Only the lead can manage the team.
 * **No background subagents from in-process teammates**: an in-process teammate's own subagents run in the foreground, because a teammate's background work can't outlive the lead's process. Claude Code returns an error when a teammate spawns a subagent whose definition sets `background: true`. A teammate's `run_in_background: true` request also fails, either with an error or by running silently in the foreground. Subagents launched from the main conversation follow the [background default](https://code.claude.com/docs/en/sub-agents.md#run-subagents-in-foreground-or-background).
 * **Lead is fixed**: the main session is the lead for its lifetime. You can't promote a teammate to lead or transfer leadership.
-* **Permissions set at spawn**: teammates start with the permission mode described under [Permissions](#permissions). You can change an individual teammate's permission mode after spawning, but you can't set per-teammate permission modes at spawn time.
-* **Split panes require tmux or iTerm2**: the default in-process mode works in any terminal. Split-pane mode isn't supported in VS Code's integrated terminal, Windows Terminal, or Ghostty.
+* **No per-teammate permission modes at spawn**: teammates start with the permission mode described under [Permissions](#permissions).
+* **Split panes require tmux or iTerm2**: the default in-process mode works in any terminal.
 
 ## Next steps
 

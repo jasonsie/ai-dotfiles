@@ -13,10 +13,6 @@ The SDK uses ECMAScript modules (ESM) and runs server-side with Node.js 24 or 26
 or Node.js 22 starting with 22.13.0. Scanning also requires Python 3.10 or later.
 Python 3.10 also requires the `tomli` package.
 
-To read or resume compressed Codex sessions (`.jsonl.zst`), use Node.js
-22.15.0 or later within 22.x, or Node.js 24 or 26. Plain `.jsonl` sessions work
-on all supported Node.js versions.
-
 For general coding agents, see the [Codex SDK guide](https://learn.chatgpt.com/docs/codex-sdk). For
   terminal and CI workflows, see the [Codex Security CLI
   quickstart](https://learn.chatgpt.com/docs/security/cli).
@@ -141,13 +137,17 @@ differ because `run` generates its own unique destination. Capture the actual
 archive path with `onOutputArchived`:
 
 ```typescript
-await security.run(repository, {
-  outputDir: outputDir,
-  archiveExisting: true,
-  onOutputArchived(archiveDir) {
-    console.log("Archived results:", archiveDir);
-  },
-});
+try {
+  await security.run(repository, {
+    outputDir: outputDir,
+    archiveExisting: true,
+    onOutputArchived(archiveDir) {
+      console.log("Archived results:", archiveDir);
+    },
+  });
+} finally {
+  await security.close();
+}
 ```
 
 
@@ -164,9 +164,13 @@ The default target is the complete repository.
 Pass an array of paths inside the repository:
 
 ```typescript
-const result = await security.run(repository, {
-  target: ["services/billing", "packages/auth"],
-});
+try {
+  const result = await security.run(repository, {
+    target: ["services/billing", "packages/auth"],
+  });
+} finally {
+  await security.close();
+}
 ```
 
 
@@ -186,7 +190,11 @@ const target = DiffTarget.refs({
   head: "HEAD",
 });
 
-const result = await security.run(repository, { target });
+try {
+  const result = await security.run(repository, { target });
+} finally {
+  await security.close();
+}
 ```
 
 
@@ -201,7 +209,11 @@ revision:
 ```typescript
 import { DiffTarget } from "@openai/codex-security";
 const target = DiffTarget.workingTree({ base: "HEAD" });
-const result = await security.run(repository, { target });
+try {
+  const result = await security.run(repository, { target });
+} finally {
+  await security.close();
+}
 ```
 
 
@@ -213,15 +225,19 @@ diff or working-tree scan.
 Set `mode: "deep"` for a repository or path scan that needs broader review:
 
 ```typescript
-const result = await security.run(repository, {
-  target: ["services/billing"],
-  mode: "deep",
-  workers: 2,
-  subagents: 0,
-  stopAfterNoNew: 3,
-  maxDiscoveryRuns: 10,
-  maxTimeMinutes: 90,
-});
+try {
+  const result = await security.run(repository, {
+    target: ["services/billing"],
+    mode: "deep",
+    workers: 2,
+    subagents: 0,
+    stopAfterNoNew: 3,
+    maxDiscoveryRuns: 10,
+    maxTimeMinutes: 90,
+  });
+} finally {
+  await security.close();
+}
 ```
 
 
@@ -247,9 +263,13 @@ import { join } from "node:path";
 
 const knowledgeBase = join(repository, "security.md");
 
-const result = await security.run(repository, {
-  knowledgeBasePaths: [knowledgeBase],
-});
+try {
+  const result = await security.run(repository, {
+    knowledgeBasePaths: [knowledgeBase],
+  });
+} finally {
+  await security.close();
+}
 ```
 
 
@@ -268,10 +288,14 @@ change or are deleted. Canonical reports don't embed the document text.
 Use `scanPrompt` to focus the scan and `postScanPrompt` to request a follow-up:
 
 ```typescript
-const result = await security.run(repository, {
-  scanPrompt: "Focus on tenant isolation and authorization checks.",
-  postScanPrompt: "Write confirmed findings to post-scan-summary.md.",
-});
+try {
+  const result = await security.run(repository, {
+    scanPrompt: "Focus on tenant isolation and authorization checks.",
+    postScanPrompt: "Write confirmed findings to post-scan-summary.md.",
+  });
+} finally {
+  await security.close();
+}
 ```
 
 
@@ -307,31 +331,37 @@ working-tree scans. To use the same procedure for each standard component
 scan, pass `scanOptions.validationPrompt` to `runComponentScans`. Deep scans
 reject custom validation.
 
+### Apply a severity policy
+
+Pass `rubricPath` to grade findings with a Markdown policy, or pass a
+`severityRubric` snapshot with `markdown`, a positive integer `revision`, and the `sha256`
+digest of the exact UTF-8 Markdown. A snapshot takes precedence over a file. Standard and deep scans save the
+selected rubric for retries, resumes, and reruns.
+
 ### Set a scan budget
 
 Set `maxCostUsd` to stop a scan when its estimated model cost exceeds a limit.
 Use `onCost` to track cost as the scan runs and report `estimatedUsdRange`:
 
 ```typescript
-const result = await security.run(repository, {
-  maxCostUsd: 5,
-  onCost(cost) {
-    console.log(cost.estimatedUsdRange);
-  },
-});
+try {
+  const result = await security.run(repository, {
+    maxCostUsd: 5,
+    onCost(cost) {
+      console.log(cost.estimatedUsdRange);
+    },
+  });
 
-console.log(result.cost?.estimatedUsdRange);
+  console.log(result.cost?.estimatedUsdRange);
+} finally {
+  await security.close();
+}
 ```
 
 
 The limit uses `estimatedUsd`, the short-context baseline. Requests already
 in progress can put this estimate above the limit. Long-context pricing can
 raise `estimatedUsdRange` above it. This limit is not a billing cap.
-
-If a deep scan reaches the limit after
-Codex Security aggregates completed worker results, `run` can return a result
-with `manifest.scan.status` set to `"completed"` and report the budget warning
-through `onWarning`.
 
 If the scan can't produce a valid completed result, `run` throws
 `ScanCostLimitExceededError` and preserves any available output.
@@ -357,6 +387,9 @@ const result = await runComponentScans({
 });
 
 console.log(result.reportPath);
+if (result.failed > 0) {
+  throw new Error(`${result.failed} component scans failed.`);
+}
 ```
 
 
@@ -478,13 +511,19 @@ await exportArtifact({
 To select a saved scan by ID, use `source: { scanId: "SCAN_ID" }` instead. Set
 `output` to a destination path to save the artifact to a file.
 
-Use `artifact: "threat-model"` to export Markdown; the export returns an error
-if no threat model was saved. For findings, use `artifact: "findings"` and choose
-`format: "csv"`, `"json"`, or `"sarif"` (the default).
+Threat models export as Markdown. The export returns an error if the scan has
+no saved threat model. For findings, set `artifact: "findings"` and choose
+`format: "sarif"` (the default), `"json"`, `"csv"`, or `"servicenow-avit"`.
 
 The result includes the output `path` and, for a threat-model file export,
 `provenance` from the same saved results. Both fields are `null` when
 `output: "-"` writes to stdout. Export requires Python 3.10 or later.
+
+For ServiceNow Manual AVIT Ingestion, set `artifact: "findings"` and
+`format: "servicenow-avit"`. [Prepare the application template](https://learn.chatgpt.com/docs/security/cli/reference#export-findings-for-servicenow)
+and pass its path as `avitTemplate`. Set `output` to a private destination CSV path
+outside the repository. Use `source.directory` to select the existing scan
+results directory.
 
 ## Validate an existing finding
 
@@ -519,29 +558,33 @@ Pass `ScanOptions` callbacks to report scan startup, worker progress, and
 connection retries:
 
 ```typescript
-const result = await security.run(repository, {
-  outputDir: outputDir,
-  onScanStarted() {
-    console.log("Scan started");
-  },
-  onProgress(progress) {
-    console.log(progress.phase, progress.filesCompleted, progress.filesTotal);
-  },
-  onWorkerStatus(status) {
-    console.log(status.kind, status);
-  },
-  onSessionEvent(session) {
-    console.log(session.threadId, session.worker, session.event["type"]);
-  },
-  onReconnect(attempt, maxAttempts) {
-    console.log(`Reconnect attempt ${attempt} of ${maxAttempts}`);
-  },
-  onObserverError(observer, error) {
-    console.error(`${observer} failed`, error);
-  },
-});
+try {
+  const result = await security.run(repository, {
+    outputDir: outputDir,
+    onScanStarted() {
+      console.log("Scan started");
+    },
+    onProgress(progress) {
+      console.log(progress.phase, progress.filesCompleted, progress.filesTotal);
+    },
+    onWorkerStatus(status) {
+      console.log(status.kind, status);
+    },
+    onSessionEvent(session) {
+      console.log(session.threadId, session.worker, session.event["type"]);
+    },
+    onReconnect(attempt, maxAttempts) {
+      console.log(`Reconnect attempt ${attempt} of ${maxAttempts}`);
+    },
+    onObserverError(observer, error) {
+      console.error(`${observer} failed`, error);
+    },
+  });
 
-console.log(result.reportPath);
+  console.log(result.reportPath);
+} finally {
+  await security.close();
+}
 ```
 
 
@@ -563,6 +606,8 @@ try {
   } else {
     throw error;
   }
+} finally {
+  await security.close();
 }
 ```
 
@@ -583,6 +628,7 @@ lifecycle callbacks:
 | `onReconnect(attempt, maxAttempts)` | The SDK retries a disconnected scan stream.          |
 | `onActivity(activity)`              | A command, tool, reasoning step, or message updates. |
 | `onProgress(progress)`              | The scan phase or reviewed file count changes.       |
+| `onDeepProgress(progress)`          | Counts of active or completed deep reviews change.   |
 | `onWorkerStatus(status)`            | Best-effort counts of workers planned and started.   |
 | `onSessionEvent(session)`           | A scan or worker session emits an event.             |
 | `onCost(cost)`                      | An updated estimated scan cost is available.         |

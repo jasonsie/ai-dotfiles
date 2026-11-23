@@ -20,7 +20,7 @@
     "enforce": {
       "approval_policy": "on-request",
       "sandbox_mode": "workspace-write",
-      "tui.status_line": ["current-dir", "git-branch", "model-with-reasoning", "codex-version", "context-remaining"]
+      "tui.status_line": ["current-dir", "git-branch", "model-with-reasoning", "codex-version", "context-remaining", "five-hour-limit", "weekly-limit"]
     },
     "default": {
       "model": "gpt-6-astra",

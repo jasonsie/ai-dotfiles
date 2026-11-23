@@ -15,7 +15,7 @@ A schedule runs as a background task in the current conversation:
 
 *   **Non-blocking**: the agent ends its turn after creating the schedule rather than idling in a shell `sleep`, so you can keep chatting or let it work on other steps.
 *   **Wake-up prompt**: when the timer fires or the cron triggers, the agent receives your instruction as a high-priority notification and acts on it.
-*   **Conversation-scoped**: timers and schedules belong to the conversation that created them. For standing jobs that outlive a session, use a persistent [sidecar or Automation](/docs/sidecars) instead.
+*   **Conversation-scoped**: timers and schedules belong to the conversation that created them. For standing jobs that outlive a session, use a persistent [sidecar](/docs/sidecars) or [automation](/docs/commands/automation) instead.
 
 ## Create a schedule
 
@@ -25,7 +25,7 @@ Type `/schedule` followed by when the agent should wake up and what it should do
 
 Type the command in the composer:
 
-```text
+```prompt
 /schedule in 10 minutes, check whether the deploy to staging finished and summarize any errors
 ```
 
@@ -35,7 +35,7 @@ The schedule appears in the conversation as a **Timed** or **Scheduled** step wh
 
 Type the command in the interactive prompt:
 
-```bash
+```prompt
 /schedule every weekday at 9am, run git fetch, list stale local branches, and summarize open PR reviews
 ```
 
@@ -74,7 +74,7 @@ A cron schedule fires repeatedly on a standard five-field cron expression:
 
 Set `IsDaemon` only for an independent standing job. Non-daemon schedules are tied to the task that created them. When `MaxIterations` is reached, the agent is notified that the schedule completed.
 
-```text
+```prompt
 /schedule every 2 minutes for the next 30 minutes, poll the CI status for PR #482 and tell me when it goes green
 ```
 
@@ -87,22 +87,14 @@ You can inspect and cancel schedules from either surface:
 
 ## `/schedule` compared with Automations
 
-`/schedule` and Automations both run work on a schedule, but at different scopes:
-
-|  | `/schedule` | Automations and sidecars |
-| :-- | :-- | :-- |
-| **Lifetime** | Current conversation | Persists across sessions and restarts |
-| **Context** | Wakes the existing agent with its full conversation history | Starts a fresh agent conversation on each run |
-| **Definition** | A tool call the agent makes for you | A `sidecar.json` manifest with a `"builtin": "schedule"` entry |
-| **Best for** | Timers, CI polling, check-ins during a task | Daily reports, nightly maintenance, triage jobs |
-
-Use `/schedule` for anything the agent should do while you’re still working in the conversation. For unattended, recurring jobs that should keep running when no conversation is open, create a scheduled sidecar as described in the [Sidecars and scheduled tasks guide](/docs/sidecars).
+`/schedule` runs work while you’re still working in the current conversation. For unattended, recurring jobs that should keep running when no conversation is open, use [`/automation`](/docs/commands/automation) to have the agent set up a background automation. For a side-by-side comparison, refer to [`/automation` compared with `/schedule`](/docs/commands/automation#automation-compared-with-schedule).
 
 ## Next steps
 
 Explore related documentation:
 
-*   [Sidecars and scheduled tasks](/docs/sidecars): Define persistent scheduled jobs with the `schedule` sidecar builtin.
+*   [Automation command (`/automation`)](/docs/commands/automation): Set up a persistent background automation with the agent’s help.
+*   [Sidecars](/docs/sidecars): Learn how automations and other sidecars are configured.
 *   [Goal command (`/goal`)](/docs/commands/goal): Combine timers with long-running autonomous goals.
 *   [Subagents](/docs/subagents): Learn about the background work that a `TimerCondition` can wait on.
 *   [Slash commands overview](/docs/slash-commands): Browse every available slash command.

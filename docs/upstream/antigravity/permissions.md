@@ -30,20 +30,20 @@ The **permission preset** controls how agent actions are approved. Your configur
 | Preset | [Terminal sandbox](/docs/sandbox) | Terminal Commands | File Access | MCP & Web |
 | :-- | :-- | :-- | :-- | :-- |
 | **Request Review** | Disabled | Always ask | Workspace only | Ask |
-| **Default** | Enabled | Allowed in sandbox; ask outside | Workspace + temp dirs | Ask |
-| **Auto (Preview)** | Enabled | Allowed in sandbox; checked automatically outside | Workspace + temp dirs | Ask |
+| **Default** _(default)_ | Enabled | Allowed in sandbox; ask outside | Workspace + temp dirs | Ask |
+| **Auto** | Enabled | Allowed in sandbox; checked automatically outside | Workspace + temp dirs | Ask |
 | **Turbo** | Disabled | Allowed (unrestricted) | Full filesystem | Allowed |
 
 The two presets that use the sandbox work as follows:
 
-*   **Default** (_“Ask before sensitive operations.”_): Terminal commands run inside the isolated **[Terminal sandbox](/docs/sandbox)** with access restricted to your workspace and temp directories and **no network access**. When a command needs network connectivity or host resources, the agent requests to run it outside the sandbox—prompting for your approval unless covered by a `command(...)` allow rule.
-*   **Auto (Preview)** (_“Automatically decide if commands run.”_): Commands also run inside the terminal sandbox by default. When a command needs to run outside the sandbox, Antigravity automatically evaluates it so safe, reversible commands run without prompting, while risky or irreversible commands still ask for your approval.
+*   **Default** (_“Ask before sensitive operations.”_; default): Terminal commands run inside the isolated **[Terminal sandbox](/docs/sandbox)** with access restricted to your workspace and temp directories and **no network access**. When a command needs network connectivity or host resources, the agent requests to run it outside the sandbox—prompting for your approval unless covered by a `command(...)` allow rule.
+*   **Auto** (_“Automatically decide if commands run.”_): Commands also run inside the terminal sandbox by default. When a command needs to run outside the sandbox, Antigravity automatically evaluates it so safe, reversible commands run without prompting, while risky or irreversible commands still ask for your approval.
 
 Refer to **[Agent settings](/docs/agent-settings)** for more detail on each preset.
 
 Note
 
-**Auto (Preview)** is available in `v2.23.0+`. It isn’t currently available for business or enterprise accounts, including [Antigravity in Gemini Enterprise](/docs/enterprise).
+**Default** is selected by default (**Request Review** if the [Terminal sandbox](/docs/sandbox) isn’t available). **Auto** (shown as **Auto (Preview)** in version 2.29.0 and earlier) is available in `v2.23.0+` on macOS and Linux and `v2.26.0+` on Windows when the sandbox is available. It isn’t currently available for business or enterprise accounts, including [Antigravity in Gemini Enterprise](/docs/enterprise).
 
 #### Change your permission preset
 
@@ -51,9 +51,9 @@ You can set a preset for all projects, override it for a single project, or swit
 
 ##### For all projects
 
-To change the preset for all projects, open **Settings** > **General** > **Global Permissions** > **Permission Preset**:
+To change the preset for all projects, open **Settings** > **General** > **Global Permissions** > **Permission Preset** (**Permissions** > **This Computer** if remote agents are available to you):
 
-![Permission Preset selector in Global Permissions settings](/assets/image/docs/permissions-preset-settings.png)
+![The Permission Preset list open under Global Permissions in Settings > General, with Default checked and the options Request Review, Default, Auto, and Turbo](/assets/image/docs/permissions-preset-settings.png)
 
 The checkmark marks your current global preset.
 
@@ -65,7 +65,7 @@ To override the global preset for a single project, change the project’s prese
 
 In `v2.23.0+`, you can also choose a preset from the permissions picker in the message box:
 
-![Permissions preset picker in the message box composer](/assets/image/docs/permissions-composer-picker.png)
+![The permissions picker open above the message box, with Default checked and the options Request Review, Default, Auto, and Turbo](/assets/image/docs/permissions-composer-picker.png)
 
 The picker changes your global preset, or the project’s preset if the project overrides it. To remove a project override, choose **Use Global Settings**.
 
@@ -79,6 +79,7 @@ The following table lists the supported permission actions, their target formats
 | `write_file` | `write_file(/path)` or `write_file(*)` | **Ask** (Allowed in workspace) |
 | `read_url` | `read_url(domain)` or `read_url(*)` | **Ask** |
 | `execute_url` | `execute_url(domain)` or `execute_url(*)` | **Ask** |
+| `download_url` | `download_url(domain)` or `download_url(*)` | **Ask** |
 | `command` | `command(prefix)`, `command(regex:pattern)`, or `command(*)` | **Ask** (Allowed in sandbox under the Default and Auto presets) |
 | `mcp` | `mcp(server/tool)`, `mcp(server/*)`, or `mcp(*)` | **Ask** |
 
@@ -87,7 +88,8 @@ Each action matches its target as follows:
 *   **`read_file`**: Matches absolute paths or paths relative to project workspace roots. Grants recursive read access to all contained files and folders. Using `read_file(*)` matches all files on the system.
 *   **`write_file`**: Same as `read_file`. Implicitly grants `read_file` for the exact same target path.
 *   **`read_url`**: Matches hostnames and subdomains (for example, `google.com` covers `mail.google.com`). Ignores URL path segments. Using `read_url(*)` matches any domain.
-*   **`execute_url`**: Covers actuating on web elements (clicking, typing) or driving interactive browser workflows on a domain.
+*   **`execute_url`**: Covers the [browser subagent](/docs/browser) opening or redirecting to a page on a domain. Matches hostnames and regular subdomains and ignores URL path segments, while isolating `localhost` by `:port` (for example, `localhost:3000` is separate from `localhost:8080`) and requiring explicit rules for sensitive Google subdomains (such as `mail.google.com`, `docs.google.com`, `drive.google.com`, and `console.cloud.google.com`). A `read_url` grant doesn’t cover it.
+*   **`download_url`**: Covers the built-in browser agent in the Antigravity App downloading files from a domain (configurable under **Browser Actuation Rules** in `v2.30.0+`, with interactive download prompts in `v2.31.0+`). Uses the same domain, `localhost:port`, and sensitive Google subdomain matching rules as `execute_url` (`data:` and `blob:` downloads always ask once, and executable or active-markup file types are blocked). Refer to [Browser use permissions and safety guardrails](/docs/browser#permissions-and-safety-guardrails).
 *   **`command`**: Matches by exact word or token prefix literally by default. To match by regular expression, start the target with the `regex:` prefix (each whitespace-separated token is evaluated as an anchored regular expression `^(?:pattern)$`, for example, `command(regex:npm run (build.*))`). Covers execution both inside and outside the sandbox.
 *   **`mcp`**: Matches exact MCP tools or all tools on a specified server (applies equally to local and remote MCP servers). Using `mcp(*)` matches any tool.
 
@@ -103,10 +105,10 @@ Standard shell composition still prefix-matches normally: pipelines, `&&`/`||`/`
 
 ##### Understanding read\_url and execute\_url across the platform
 
-The `read_url` permission governs outbound web connectivity across three distinct areas of Antigravity:
+Antigravity checks `read_url` and `execute_url` in three areas:
 
 1.  **Web page reading**: When the agent fetches web page Markdown for research, it checks your `read_url` grants.
-2.  **Browser subagent and tool**: When driving Chrome sessions, `read_url` authorizes loading and viewing the target domain. However, interactive UI actuation (clicking buttons, typing text) is governed independently by `execute_url`.
+2.  **Browser subagent**: When the browser subagent opens a page or triggers a file download, it checks your `execute_url` and `download_url` grants for that domain, not `read_url` (and every file upload requires one-time approval, even in **Turbo**). For details, refer to [Browser use](/docs/browser#permissions-and-safety-guardrails) and [Allowlist and denylist](/docs/ide/allowlist-denylist).
 3.  **Terminal sandboxing**: Any domain granted under `read_url` is compiled directly into the sandbox’s outbound network allowlist, permitting commands like `curl` or `npm` to connect to authorized hosts.
 
 ##### Cross-platform command and path matching
@@ -126,7 +128,7 @@ When the agent encounters an operation requiring approval (**Ask** mode), an int
 
 #### Terminal commands and the sandbox
 
-Under the **Default** and **Auto (Preview)** presets, the agent runs terminal commands inside an isolated [Terminal sandbox](/docs/sandbox), which by default has access only to your workspace and system temp directories, and no network access. Commands can run without manual approval in the sandbox, and your permission grants can further shape what the sandbox can reach:
+Under the **Auto** and **Default** presets, the agent runs terminal commands inside an isolated [Terminal sandbox](/docs/sandbox), which by default has access only to your workspace and system temp directories, and no network access. Commands can run without manual approval in the sandbox, and your permission grants can further shape what the sandbox can reach:
 
 *   Paths granted under `read_file` dynamically populate the sandbox’s read-only filesystem allowlist.
 *   Paths granted under `write_file` dynamically populate the sandbox’s read-write filesystem allowlist.
@@ -134,16 +136,16 @@ Under the **Default** and **Auto (Preview)** presets, the agent runs terminal co
 
 Because some commands cannot run in the sandbox—for example, those requiring network access—the agent can still choose to run commands outside the sandbox:
 
-*   **Default**: Such commands prompt for your approval unless already allowed or denied by a `command` rule.
-*   **Auto (Preview)** (`v2.23.0+`): Antigravity automatically evaluates commands that need to run outside the sandbox so safe, reversible commands proceed without prompting, while risky or irreversible commands still require approval.
+*   **Default** _(default)_: Commands outside the sandbox prompt for your approval unless already allowed or denied by a `command` rule.
+*   **Auto**: Antigravity automatically evaluates commands that need to run outside the sandbox so safe, reversible commands proceed without prompting, while risky or irreversible commands still require approval.
 
 #### Default system behaviors and guardrails
 
 When an action isn’t explicitly listed in your Allow, Deny, or Ask lists, Antigravity falls back to secure system defaults:
 
-1.  **Commands**: Under the **Default** preset, commands run without prompting inside the sandbox and require approval to run outside it. Under **Auto (Preview)**, safe commands outside the sandbox run without prompting, while sensitive or irreversible commands pause for approval.
+1.  **Commands**: Under the **Default** preset, commands run without prompting inside the sandbox and require approval to run outside it. Under **Auto**, safe commands outside the sandbox run without prompting, while sensitive or irreversible commands pause for approval.
 2.  **Workspace files**: Reading and writing files inside your active project directory is allowed without prompting, while non-workspace files require approval.
-3.  **Web browsing defaults to Ask**: Actions for `read_url` and `execute_url` default to **Ask**. Before the agent navigates to or actuates on any web page, it pauses and prompts for your explicit approval unless an allow rule is configured.
+3.  **Web browsing defaults to Ask**: Actions for `read_url` and `execute_url` default to **Ask**. Before the agent reads or opens a web page, it pauses and prompts for your explicit approval unless an allow rule is configured.
 4.  **MCP tools default to Ask**: Unconfigured MCP tool calls prompt for approval.
 
 Note
@@ -178,7 +180,7 @@ The following examples show rules for the **Ask list**, which defines actions th
 
 ```text
 command(*)                         # Prompt all commands
-execute_url(aws.amazon.com)        # Prompt AWS console actuation
+execute_url(aws.amazon.com)        # Prompt before opening AWS pages
 mcp(sql/execute_mutation)          # Prompt modifying SQL queries
 ```
 
@@ -210,6 +212,7 @@ The following table lists the supported permission actions in the previous permi
 | `write_file` | `write_file(/path)` or `write_file(*)` | **Ask** (Allowed in workspace) |
 | `read_url` | `read_url(domain)` or `read_url(*)` | **Ask** |
 | `execute_url` | `execute_url(domain)` or `execute_url(*)` | **Ask** |
+| `download_url` | `download_url(domain)` or `download_url(*)` | **Ask** |
 | `command` | `command(prefix)`, `command(regex:pattern)`, or `command(*)` | **Ask** |
 | `unsandboxed` | `unsandboxed(prefix)`, `unsandboxed(regex:pattern)`, or `unsandboxed(*)` | **Ask** |
 | `mcp` | `mcp(server/tool)`, `mcp(server/*)`, or `mcp(*)` | **Ask** |
@@ -219,7 +222,8 @@ Each action matches its target as follows:
 *   **`read_file`**: Matches absolute paths or paths relative to project workspace roots. Grants recursive read access to all contained files and folders. Using `read_file(*)` matches all files on the system.
 *   **`write_file`**: Same as `read_file`. Implicitly grants `read_file` for the exact same target path.
 *   **`read_url`**: Matches hostnames and subdomains (for example, `google.com` covers `mail.google.com`). Ignores URL path segments. Using `read_url(*)` matches any domain.
-*   **`execute_url`**: Covers actuating on web elements (clicking, typing) or driving interactive browser workflows on a domain.
+*   **`execute_url`**: Covers the [browser subagent](/docs/browser) opening or redirecting to a page on a domain. Matches hostnames and regular subdomains and ignores URL path segments, while isolating `localhost` by `:port` (for example, `localhost:3000` is separate from `localhost:8080`) and requiring explicit rules for sensitive Google subdomains (such as `mail.google.com`, `docs.google.com`, `drive.google.com`, and `console.cloud.google.com`). A `read_url` grant doesn’t cover it.
+*   **`download_url`**: Covers the built-in browser agent in the Antigravity App downloading files from a domain (configurable under **Browser Actuation Rules** in `v2.30.0+`, with interactive download prompts in `v2.31.0+`). Uses the same domain, `localhost:port`, and sensitive Google subdomain matching rules as `execute_url` (`data:` and `blob:` downloads always ask once, and executable or active-markup file types are blocked). Refer to [Browser use permissions and safety guardrails](/docs/browser#permissions-and-safety-guardrails).
 *   **`command`**: Matches by exact word or token prefix literally by default. To match by regular expression, start the target with the `regex:` prefix (each whitespace-separated token is evaluated as an anchored regular expression `^(?:pattern)$`, for example, `command(regex:npm run (build.*))`).
 *   **`unsandboxed`**: Matches command prefixes word-by-word literally by default (or with `regex:`). Commands matching this grant execute outside container isolation when terminal sandboxing is enabled.
 *   **`mcp`**: Matches exact MCP tools or all tools on a specified server (applies equally to local and remote MCP servers). Using `mcp(*)` matches any tool.
@@ -236,10 +240,10 @@ Standard shell composition still prefix-matches normally: pipelines, `&&`/`||`/`
 
 ##### Understanding read\_url and execute\_url across the platform
 
-The `read_url` permission governs outbound web connectivity across three distinct areas of Antigravity:
+Antigravity checks `read_url` and `execute_url` in three areas:
 
 1.  **Web page reading**: When the agent fetches web page Markdown for research, it checks your `read_url` grants.
-2.  **Browser subagent and tool**: When driving Chrome sessions, `read_url` authorizes loading and viewing the target domain. However, interactive UI actuation (clicking buttons, typing text) is governed independently by `execute_url`.
+2.  **Browser subagent**: When the browser subagent opens a page or triggers a file download, it checks your `execute_url` and `download_url` grants for that domain, not `read_url` (and every file upload requires one-time approval, even in **Turbo**). For details, refer to [Browser use](/docs/browser#permissions-and-safety-guardrails) and [Allowlist and denylist](/docs/ide/allowlist-denylist).
 3.  **Terminal sandboxing**: In sandbox mode, any domain granted under `read_url` is compiled directly into the container’s outbound network allowlist (`AllowedDomains`), permitting commands like `curl` or `npm` to connect to authorized hosts.
 
 ##### Cross-platform command and path matching
@@ -275,7 +279,7 @@ When an action isn’t explicitly listed in your Allow, Deny, or Ask lists, Anti
 
 1.  **Commands default to Ask**: Unconfigured terminal commands (`command` and `unsandboxed`) require manual approval unless configured to run without prompting in your settings.
 2.  **Workspace files**: Reading and writing files inside your active project directory is allowed without prompting, while non-workspace files require approval.
-3.  **Web browsing defaults to Ask**: Actions for `read_url` and `execute_url` default to **Ask**. Before the agent navigates to or actuates on any web page, it pauses and prompts for your explicit approval unless an allow rule is configured.
+3.  **Web browsing defaults to Ask**: Actions for `read_url` and `execute_url` default to **Ask**. Before the agent reads or opens a web page, it pauses and prompts for your explicit approval unless an allow rule is configured.
 4.  **MCP tools default to Ask**: Unconfigured MCP tool calls prompt for approval.
 
 Note
@@ -310,7 +314,7 @@ The following examples show rules for the **Ask list**, which defines actions th
 
 ```text
 command(*)                         # Prompt all commands
-execute_url(aws.amazon.com)        # Prompt AWS console actuation
+execute_url(aws.amazon.com)        # Prompt before opening AWS pages
 mcp(sql/execute_mutation)          # Prompt modifying SQL queries
 ```
 
@@ -355,7 +359,7 @@ The matching algorithm for each action is as follows:
 *   **`read_file`**: Matches absolute paths or paths relative to workspace roots. Grants recursive read access to all contained files and folders. `read_file(*)` matches all files on the system.
 *   **`write_file`**: Same as `read_file`. Implicitly grants `read_file` for the exact same target path.
 *   **`read_url`**: Matches hostnames and subdomains (for example, `google.com` covers `mail.google.com`). Ignores URL path segments. `read_url(*)` matches any domain.
-*   **`execute_url`**: Covers actuating on web elements (clicking, typing) or driving interactive browser workflows on a domain.
+*   **`execute_url`**: Covers the browser subagent opening a page on a domain, for example when it navigates to a URL or opens a new page. Matches hostnames and subdomains and ignores URL path segments. A `read_url` grant doesn’t cover it.
 *   **`command`**: Matches command prefixes word-by-word literally by default. If you want to use a regular expression, add the `regex:` prefix (for example, `command(regex:npm run (build|lint|test))`). Covers the command whether it runs inside or outside the terminal sandbox.
 *   **`unsandboxed`**: Business and enterprise accounts only. Other accounts ignore `unsandboxed` rules and show a warning; use `command` instead. Matches command prefixes word-by-word literally by default (or with `regex:`). Commands matching this grant execute outside container isolation when terminal sandboxing is enabled.
 *   **`mcp`**: Matches exact MCP tools or all tools on a specified server (applies to local and remote MCP servers). `mcp(*)` matches any tool.
@@ -385,23 +389,25 @@ On Windows shells like PowerShell or Command Prompt, commands that can’t be cl
 
 When an action isn’t explicitly listed in your `allow`, `deny`, or `ask` lists, the system falls back to secure system defaults:
 
-1.  **Workspaces are auto-allowed**: In standard operation, reading and writing files inside your active project directory is automatically allowed.
-2.  **Web browsing defaults to Ask**: Actions for `read_url` and `execute_url` default to **Ask**. Before the agent navigates to or actuates on any web page, it pauses and prompts for your approval unless an allow rule is configured.
-3.  **Unconfigured actions default to Ask**: All other unconfigured actions (`command`, `mcp`, `execute_url`, and non-workspace files) default to **Ask**, subject to your active execution mode and `toolPermission` setting.
+1.  **Workspaces are auto-allowed**: In standard operation, reading and writing files inside your active project directory is automatically allowed (and approved without interactive diff prompts in `auto` and `accept-edits` modes).
+2.  **Commands run in the sandbox in `auto` mode**: When `auto` mode is active, commands run inside the [Terminal sandbox](/docs/sandbox) without prompting, and commands that need to run outside the sandbox are evaluated automatically so only risky or irreversible actions pause for approval.
+3.  **Web browsing defaults to Ask**: Actions for `read_url` and `execute_url` default to **Ask**. Before the agent reads or opens a web page, it pauses and prompts for your approval unless an allow rule is configured.
+4.  **Other unconfigured actions default to Ask**: Unconfigured `mcp` tools, non-workspace file access, and commands outside `auto` mode default to **Ask**, subject to your active execution mode and `toolPermission` setting.
 
 ### Execution modes and the terminal sandbox
 
 Your fine-grained `allow`, `ask`, and `deny` rules always take precedence (`Deny > Ask > Allow`). For operations not covered by an explicit rule, Antigravity CLI evaluates your active [execution mode](/docs/cli/modes) (`--mode` or `agentMode` in `settings.json`) and `toolPermission` policy:
 
-*   **`auto` mode (`--mode=auto` or `"agentMode": "auto"`, Preview)**: Automatically approves workspace file edits and runs terminal commands inside the [Terminal sandbox](/docs/sandbox) by default. When a command needs to run outside the sandbox, Antigravity CLI automatically evaluates it so safe, reversible commands run without prompting, while risky or irreversible commands still pause for your approval. When active, the bottom-right status bar displays `auto` and the prompt placeholder reads `Auto mode: edits & safe commands auto-approved (shift+tab to cycle)`.
+*   **`auto` mode (`--mode=auto` or `"agentMode": "auto"`)**: Automatically approves workspace file edits and runs terminal commands inside the [Terminal sandbox](/docs/sandbox) by default. When a command needs to run outside the sandbox, Antigravity CLI automatically evaluates it so safe, reversible commands run without prompting, while risky or irreversible commands still pause for your approval. When active, the bottom-right status bar displays `auto` and the prompt placeholder reads `Auto mode: edits & safe commands auto-approved (shift+tab to cycle)`.
 *   **`accept-edits` mode (`--mode=accept-edits`)**: Automatically approves workspace file edits and creations while continuing to evaluate shell commands against your `toolPermission` policy and fine-grained rules.
+*   **`default` mode (default; select `default` in `/config`)**: Prompts for interactive diff review before modifying or creating files, and evaluates shell commands against your `toolPermission` policy (`request-review` by default).
 *   **`toolPermission` overrides**: `strict` and `always-proceed` (`--dangerously-skip-permissions`) take precedence over `auto` mode. Outside `auto` mode, `proceed-in-sandbox` runs sandboxed commands without prompting and asks before commands outside the sandbox. Starting in `v1.4.4`, if the sandbox isn’t available on your machine, `proceed-in-sandbox` behaves like `request-review` (refer to [Terminal sandbox](/docs/sandbox)).
 
 Refer to **[Choose an execution mode](/docs/cli/modes)** for details on switching modes with Shift + Tab, `--mode`, or `/config`.
 
 Note
 
-`auto` mode is available in `v1.3.5+` on **macOS and Linux** and `v1.4.4+` on **Windows**, wherever the terminal sandbox is available.
+The CLI starts in `default` mode (`request-review`) unless you choose another mode. `auto` mode is available in `v1.3.5+` on **macOS and Linux** and `v1.4.4+` on **Windows** when the terminal sandbox is available. It isn’t available for business or enterprise accounts.
 
 * * *
 

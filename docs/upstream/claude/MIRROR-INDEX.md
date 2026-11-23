@@ -5,7 +5,7 @@ Official Claude Code docs: setup, settings, permissions, hooks, MCP, skills, sub
 
 Consult through the `upstream-docs` skill (`find`, `outline`, `show`): read a section, not a file.
 
-Pages: 227
+Pages: 204
 
 - [accessibility.md](accessibility.md): Set up Claude Code for screen readers such as VoiceOver and NVDA, plus settings for screen magnifiers, reduced motion, and colorblind-friendly themes.
 - [admin-setup.md](admin-setup.md): A decision map for administrators deploying Claude Code, covering API providers, managed settings, policy enforcement, usage monitoring, and data handling.
@@ -38,7 +38,7 @@ Pages: 227
 - [agent-sdk/subagents.md](agent-sdk/subagents.md): Define and invoke subagents to isolate context, run tasks in parallel, and apply specialized instructions in your Claude Agent SDK applications.
 - [agent-sdk/todo-tracking.md](agent-sdk/todo-tracking.md): Track todos in Agent SDK sessions and render Claude's progress in your application from structured tool calls
 - [agent-sdk/tool-search.md](agent-sdk/tool-search.md): Scale your agent to thousands of tools by discovering and loading only what's needed, on demand.
-- [agent-sdk/troubleshooting.md](agent-sdk/troubleshooting.md): Fix Agent SDK errors when the Claude Code CLI fails to start, the CLI process exits, or a successful result arrives without structured output.
+- [agent-sdk/troubleshooting.md](agent-sdk/troubleshooting.md): Fix Agent SDK errors: the Claude Code CLI fails to start or exits, a tool message is too large, or a result arrives without structured output.
 - [agent-sdk/typescript-v2-preview.md](agent-sdk/typescript-v2-preview.md): Reference for the removed V2 TypeScript Agent SDK session API, with session-based send/stream patterns for multi-turn conversations.
 - [agent-sdk/typescript.md](agent-sdk/typescript.md): Complete API reference for the TypeScript Agent SDK, including all functions, types, and interfaces.
 - [agent-sdk/user-input.md](agent-sdk/user-input.md): Surface Claude's approval requests and clarifying questions to users, then return their decisions to the SDK.
@@ -66,11 +66,13 @@ Pages: 227
 - [claude-apps-gateway.md](claude-apps-gateway.md): Run Claude Code through Amazon Bedrock, Claude Platform on AWS, Google Cloud, or Microsoft Foundry behind a self-hosted gateway with SSO sign-in, per-group model access, and OTLP telemetry.
 - [claude-code-on-the-web.md](claude-code-on-the-web.md): Run Claude Code sessions in the cloud from your browser, phone, Desktop app, or terminal, move them with `--cloud` and `--teleport`, and auto-fix pull requests.
 - [claude-directory.md](claude-directory.md): Where Claude Code reads CLAUDE.md, settings.json, hooks, skills, commands, subagents, workflows, rules, and auto memory. Explore the .claude directory in your project and ~/.claude in your home directory.
+- [claude-models-on-google-cloud-anthropic-managed.md](claude-models-on-google-cloud-anthropic-managed.md): Configure Claude Code to use the Claude API that Anthropic runs through your Google Cloud project, with Google Cloud credentials, IAM, and Marketplace billing.
 - [claude-platform-on-aws.md](claude-platform-on-aws.md): Configure Claude Code to use the Anthropic-operated Claude API with AWS authentication, IAM access control, and AWS Marketplace billing.
 - [claude-projects.md](claude-projects.md): Hand Claude a stream of related tasks in one conversation and let it run them as parallel cloud sessions that share repositories, instructions, and memory.
 - [claude-security.md](claude-security.md): Install the Claude Security plugin to scan your codebase for vulnerabilities in a Claude Code session and turn findings into patches you review and apply.
 - [cli-reference.md](cli-reference.md): Complete reference for Claude Code command-line interface, including commands and flags.
 - [cloud-environments.md](cloud-environments.md): Configure cloud environments for Claude Code cloud sessions: network access levels, environment variables, setup scripts, and environment caching.
+- [code-mode.md](code-mode.md): Try Code Mode, an experimental feature in which Claude writes JavaScript that makes several tool calls in one step.
 - [code-review-costs.md](code-review-costs.md): Estimate and cap what your organization spends on Claude Code Review: how reviews are billed through usage credits, what drives cost, and where to track usage.
 - [code-review-customize.md](code-review-customize.md): Tune what Code Review flags on your pull requests with REVIEW.md and CLAUDE.md: recalibrate severity, skip paths, add checks, and see which copy applies.
 - [code-review-local.md](code-review-local.md): Run `/code-review` in a Claude Code session to find bugs in your branch's changes, point the review at a pull request or path, and have Claude apply the fixes.
@@ -89,7 +91,7 @@ Pages: 227
 - [data-usage.md](data-usage.md): Learn about Anthropic's data usage policies for Claude
 - [debug-your-config.md](debug-your-config.md): Diagnose why CLAUDE.md, settings, hooks, MCP servers, or skills aren't taking effect. Use /context, /doctor, /hooks, and /mcp to see what actually loaded.
 - [deep-links.md](deep-links.md): Open a Claude Code terminal session from a URL. Embed `claude-cli://` links in runbooks, alerts, and dashboards so a click opens Claude Code in the right repo with the right prompt.
-- [desktop-ios-simulator.md](desktop-ios-simulator.md): Claude Code Desktop opens your app in the iOS Simulator pane when Claude builds, runs, or checks it, with a separate simulator for each session.
+- [desktop-ios-simulator.md](desktop-ios-simulator.md): Claude Code Desktop opens your app in the iOS Simulator pane when Claude builds, runs, or checks it.
 - [desktop-linux.md](desktop-linux.md): Install and update the Claude desktop app on Ubuntu and Debian
 - [desktop-quickstart.md](desktop-quickstart.md): Install the Claude desktop app, open the Code tab, and start your first Claude Code session on a project folder on your computer.
 - [desktop-scheduled-tasks.md](desktop-scheduled-tasks.md): Set up scheduled tasks in Claude Code Desktop to run Claude automatically on a recurring basis for daily code reviews, dependency audits, or morning briefings.
@@ -98,8 +100,8 @@ Pages: 227
 - [devcontainer.md](devcontainer.md): Run Claude Code inside a dev container for consistent, isolated environments across your team.
 - [env-vars.md](env-vars.md): Reference for environment variables that control Claude Code behavior.
 - [errors.md](errors.md): Look up Claude Code runtime error messages with what each one means and how to fix it.
-- [fast-mode.md](fast-mode.md): Get faster Opus responses in Claude Code by toggling fast mode.
-- [feature-availability.md](feature-availability.md): Compare which Claude Code features are available across Anthropic subscription plans, the Anthropic Console, Amazon Bedrock, Claude Platform on AWS, Google Cloud's Agent Platform, and Microsoft Foundry.
+- [fast-mode.md](fast-mode.md): Get faster Opus and Fable responses in Claude Code by toggling fast mode with `/fast`.
+- [feature-availability.md](feature-availability.md): Compare which Claude Code features work on each Anthropic subscription plan, the Anthropic Console, and cloud providers such as Amazon Bedrock and Google Cloud.
 - [features-overview.md](features-overview.md): Understand when to use CLAUDE.md, Skills, subagents, hooks, MCP, and plugins.
 - [fullscreen.md](fullscreen.md): Enable a smoother, flicker-free rendering mode with mouse support and stable memory usage in long conversations.
 - [gateways.md](gateways.md): Route Claude Code through a self-hosted gateway for centralized credentials, usage tracking, and cost controls. Covers the architecture, Anthropic's Claude apps gateway, and using other gateway products.
@@ -144,14 +146,14 @@ Pages: 227
 - [plugins/cli-hints.md](plugins/cli-hints.md): Prompt Claude Code users to install your official-marketplace plugin by emitting a claude-code-hint tag from your CLI or SDK.
 - [plugins/cli-reference.md](plugins/cli-reference.md): Reference for the claude plugin shell commands, /plugin and /reload-plugins in a session, and the flags that load a plugin for one session.
 - [plugins/code-intelligence.md](plugins/code-intelligence.md): Install a language server plugin so Claude sees type errors after edits and navigates code by symbol, and answer the LSP plugin recommendation dialog.
-- [plugins/components.md](plugins/components.md): Add skills, hooks, MCP servers, and every other component type to a Claude Code plugin, with an example that validates for each.
+- [plugins/components.md](plugins/components.md): Add skills, hooks, MCP servers, and other component types to a Claude Code plugin, with an example that validates for each.
 - [plugins/create-marketplace.md](plugins/create-marketplace.md): Build a plugin marketplace from a marketplace.json file and test it locally before you host it.
 - [plugins/create.md](plugins/create.md): Build your first Claude Code plugin from an empty directory, test it without a marketplace, and convert an existing .claude/ setup.
 - [plugins/dependencies.md](plugins/dependencies.md): Declare the plugins your plugin depends on, with version ranges such as ^1.2, and see how Claude Code installs, resolves, and prunes them.
 - [plugins/host-marketplace.md](plugins/host-marketplace.md): Publish a plugin marketplace where users can reach it, grant access to a private one, and release updates and renames without breaking installs.
 - [plugins/install.md](plugins/install.md): Install Claude Code plugins from a marketplace on any surface you use, choose an install scope, and update or remove them later.
 - [plugins/loading.md](plugins/loading.md): Trace where Claude Code loads each plugin from, which settings file decides whether it loads, and why an update changed nothing.
-- [plugins/manifest-reference.md](plugins/manifest-reference.md): Complete reference for plugin.json: every field with its type and default, accepted path forms, and the userConfig and environment variable schemas.
+- [plugins/manifest-reference.md](plugins/manifest-reference.md): Complete reference for plugin.json: fields with types and defaults, accepted path forms, and the userConfig and environment variable schemas.
 - [plugins/marketplace-reference.md](plugins/marketplace-reference.md): Complete reference for marketplace.json fields, plugin entries, and the plugin and marketplace source objects, with where each is valid.
 - [plugins/measure.md](plugins/measure.md): Measure a Claude Code plugin's token cost, find out whether people still use it, and pick the telemetry events for organization-wide plugin questions.
 - [plugins/mods/admin.md](plugins/mods/admin.md): Control Claude Code mods with managed settings: stop user-installed mods, allow only your own, review what a mod can do, and enforce policy with your own mod.
@@ -206,31 +208,6 @@ Pages: 227
 - [voice-dictation.md](voice-dictation.md): Speak your prompts in the Claude Code CLI with hold-to-record or tap-to-record voice dictation.
 - [vs-code.md](vs-code.md): Install and configure the Claude Code extension for VS Code. Get AI coding assistance with inline diffs, @-mentions, plan review, and keyboard shortcuts.
 - [web-quickstart.md](web-quickstart.md): Run Claude Code in the cloud from your browser or phone. Connect a GitHub repository, submit a task, and review the PR without local setup.
-- [whats-new/2026-w13.md](whats-new/2026-w13.md): Auto mode for hands-off permissions, computer use built in, PR auto-fix in the cloud, transcript search, and a PowerShell tool for Windows.
-- [whats-new/2026-w14.md](whats-new/2026-w14.md): Computer use in the CLI, interactive in-product lessons, flicker-free rendering, per-tool MCP result-size overrides, and plugin executables on PATH.
-- [whats-new/2026-w15.md](whats-new/2026-w15.md): Ultraplan cloud planning, the Monitor tool with self-pacing /loop, /team-onboarding for packaging your setup, and /autofix-pr from your terminal.
-- [whats-new/2026-w16.md](whats-new/2026-w16.md): Claude Opus 4.7 with the new xhigh effort level, Routines on Claude Code on the web, mobile push notifications that ping your phone when Claude needs you, a /usage breakdown that shows what's driving your limits, and native binaries replacing the bundled JavaScript.
-- [whats-new/2026-w17.md](whats-new/2026-w17.md): /ultrareview opens as a research preview, automatic session recaps when you return to a terminal, custom color themes you can build and ship in plugins, and a redesigned Claude Code on the web.
-- [whats-new/2026-w18.md](whats-new/2026-w18.md): Claude Code on Windows runs without Git Bash, claude auth login accepts a pasted OAuth code when the browser callback can't reach localhost, claude project purge cleans up local state per project, and pasting a PR URL into /resume finds the session that created it.
-- [whats-new/2026-w19.md](whats-new/2026-w19.md): Load plugins from .zip archives and URLs, search command history across every project with Ctrl+R, branch new worktrees from local HEAD or the remote default, and block actions unconditionally with auto mode hard deny rules.
-- [whats-new/2026-w20.md](whats-new/2026-w20.md): Manage every Claude Code session from one screen with agent view, keep Claude working toward a goal until a condition holds, and run fast mode on Opus 4.7 by default.
-- [whats-new/2026-w21.md](whats-new/2026-w21.md): Use auto mode on the Pro plan and with Sonnet 4.6, see which skills, subagents, and MCP servers drive your plan limits in /usage, and review diffs with the new /code-review command.
-- [whats-new/2026-w22.md](whats-new/2026-w22.md): Run Claude Code on Claude Opus 4.8, orchestrate large tasks with dynamic workflows, catch security issues with the security-guidance plugin, and use fast mode on Opus 4.8 at a lower price.
-- [whats-new/2026-w23.md](whats-new/2026-w23.md): Run auto mode on Amazon Bedrock, Google Cloud's Agent Platform, and Microsoft Foundry, prompt before writing files that can run code in acceptEdits mode, list installed plugins with /plugin list, and require an approved version range for managed deployments.
-- [whats-new/2026-w24.md](whats-new/2026-w24.md): Move a session to a new directory with /cd, let subagents spawn their own subagents, and troubleshoot a broken configuration with safe mode.
-- [whats-new/2026-w25.md](whats-new/2026-w25.md): Publish a live, shareable page from your session with Artifacts, match tool parameters in deny and ask rules, and set any setting from the prompt with /config.
-- [whats-new/2026-w26.md](whats-new/2026-w26.md): Authenticate MCP servers from your shell with claude mcp login, get a response to shell mode command output with the ! prefix, and resume a conversation from before /clear with /rewind.
-- [whats-new/2026-w27.md](whats-new/2026-w27.md): Claude Sonnet 5 becomes the default model, Claude in Chrome reaches general availability, subagents run in the background by default, Claude Desktop arrives on Linux in beta, and /radio tunes into Claude FM.
-- [whats-new/2026-w28.md](whats-new/2026-w28.md): Browse external sites from the Desktop app's built-in browser, run a full setup checkup with /doctor, and pick up auto mode transcript protections and agent view upgrades.
-- [whats-new/2026-w29.md](whats-new/2026-w29.md): Pull live data into published artifacts through MCP connectors, and use Claude Code with a screen reader in the new screen reader mode.
-- [whats-new/2026-w30.md](whats-new/2026-w30.md): Opus 5 becomes the default Opus model, Claude Code Desktop adds an iOS Simulator pane, and the Claude Security plugin scans your code for vulnerabilities.
-- [whats-new/2026-w32.md](whats-new/2026-w32.md): Claude Code sessions message each other, self-hosted environments run cloud sessions on your infrastructure, and auto mode becomes the default permission mode.
-- [whats-new/2026-w33.md](whats-new/2026-w33.md): Claude Code Desktop auto-continues after a usage limit resets, fork mode turns on by default, and GitLab merge requests and marketplaces join GitHub.
-- [whats-new/2026-w34.md](whats-new/2026-w34.md): Draft editable UI artboards with the /design skill, set the Concise output style, and start a Claude Code session on your machine from your phone.
-- [whats-new/2026-w35.md](whats-new/2026-w35.md): Resume terminal sessions in the Claude Code Desktop app, review feedback reports that Claude drafts for you, and start a session in restricted mode.
-- [whats-new/2026-w36.md](whats-new/2026-w36.md): Switch to Claude Fable 5.1, let computer use run in the background on Desktop, and watch Claude's edits in a live /diff panel.
-- [whats-new/2026-w37.md](whats-new/2026-w37.md): Test your plugins with claude plugin eval and pop Claude Code Desktop panes out into their own windows.
-- [whats-new/index.md](whats-new/index.md): A weekly digest of notable Claude Code features, with code snippets, demos, and context on why they matter.
 - [workflows.md](workflows.md): Dynamic workflows orchestrate many subagents from a script Claude writes and you can rerun. Use them for codebase audits, large migrations, and cross-checked research.
 - [worktrees.md](worktrees.md): Isolate parallel Claude Code sessions in separate git worktrees so changes don't collide. Covers the `--worktree` flag, subagent isolation, `.worktreeinclude`, cleanup, and non-git VCS hooks.
 - [zero-data-retention.md](zero-data-retention.md): Learn about Zero Data Retention (ZDR) for Claude Code, available to qualified accounts on Claude for Enterprise, including scope, disabled features, and how to request enablement.

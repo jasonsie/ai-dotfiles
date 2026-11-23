@@ -21,8 +21,17 @@ are those of the session's last API response: the CLI re-runs the script on ever
 session and at each reset time, not on a clock, so a figure can lag what another session has
 spent since. The two CLIs name fields differently (Claude: effort.level, cost.total_cost_usd,
 rate_limits with resets_at; Antigravity: model.effort, cost.total_usd, quota with reset_time);
-each lookup tries both. The script never fails: on bad input it prints what it can and exits 0,
-so a broken payload cannot blank the line. Runs on any python3 (3.9+).
+each lookup tries both.
+
+Behind a gateway (Magpie) Claude Code is signed in with ANTHROPIC_AUTH_TOKEN, and it sends
+rate_limits only for a claude.ai sign-in. When the payload has neither rate_limits nor quota and
+ANTHROPIC_BASE_URL is on this machine (127.0.0.1, localhost, ::1), the windows are asked of the
+gateway's quotas route, with no key: the account of the provider the model names (`codex/…`),
+Claude's for a model with no provider, the one that answered last for a group (`group/…`). Its
+"5 hours" and "7 days" show with no label, as Claude's own do; other windows keep its names. A
+gateway elsewhere is never asked. The script never fails: on bad input, or a gateway that does
+not answer, it prints what it can and exits 0, so a broken payload cannot blank the line. Runs
+on any python3 (3.9+).
 """
 from datetime import datetime
 import json
@@ -32,6 +41,8 @@ import re
 import subprocess
 import sys
 import time
+from urllib.parse import urlsplit
+import urllib.request
 
 COLORS = {
     'dir': 117, 'git': 150, 'model': 147, 'detail': 245, 'version': 249,
@@ -42,6 +53,11 @@ WINDOWS = (('five_hour', ''), ('seven_day', ''), ('spend_limit', 'spend'))  # Cl
 GUARD_STATE = 'WORKTREE_GUARD_STATE'  # the worktree guard's state folder: this variable, else the default
 GUARD_DEFAULT = '~/.local/state/ai-dotfiles/worktree-guard'
 GIT_FACTS = ['rev-parse', '--abbrev-ref', 'HEAD', '--git-dir', '--git-common-dir', '--show-toplevel']
+GATEWAY_ENV = 'ANTHROPIC_BASE_URL'  # the gateway Claude Code is sent through
+GATEWAY_HOSTS = ('127.0.0.1', 'localhost', '::1')  # the only ones asked: this machine's
+GATEWAY_QUOTAS = '/v1/magpie/quotas'  # Magpie's (`magpie quota --help`): each account's windows
+GATEWAY_TIMEOUT = 0.3
+PLAIN_WINDOWS = ('5 hours', '7 days')  # the gateway's names for Claude's 5-hour and 7-day windows: no label
 
 
 def paint(color, text):
@@ -195,11 +211,55 @@ def clock(at, now, tz=None):
     return when.strftime('%H:%M' if when.date() == today else '%a %H:%M')
 
 
-def limits(data, now=None):
+def gateway_entries(env=None, opener=None):
+    """The accounts a gateway on this machine reports (its quotas route), or [] when there is none, it
+    is on another machine, or it does not answer in time. No key is sent, nor the URL's user part."""
+    env = os.environ if env is None else env
+    try:
+        url = urlsplit(env.get(GATEWAY_ENV) or '')
+        if url.scheme not in ('http', 'https') or url.hostname not in GATEWAY_HOSTS:
+            return []
+        host = f'[{url.hostname}]' if ':' in url.hostname else url.hostname
+        port = f':{url.port}' if url.port else ''
+        opener = opener or urllib.request.build_opener(urllib.request.ProxyHandler({}))  # never via a proxy
+        with opener.open(f'{url.scheme}://{host}{port}{GATEWAY_QUOTAS}', timeout=GATEWAY_TIMEOUT) as reply:
+            found = json.loads(reply.read(1_000_000))
+    except Exception:  # refused, timed out, not JSON: no figures, never a broken line
+        return []
+    entries = found.get('data') if isinstance(found, dict) else None
+    return [entry for entry in entries if isinstance(entry, dict)] if isinstance(entries, list) else []
+
+
+def gateway_account(entries, model):
+    """The session's account: the provider `model` names (`codex/gpt-6`), Claude's for a model with no
+    provider, else the one marked last (a group's); of several, the last to answer. None when none fits."""
+    prefix, slash, _ = model.partition('/')
+    mine = [entry for entry in entries if entry.get('provider') == (prefix if slash else 'claude')]
+    if slash and not mine:
+        mine = [entry for entry in entries if entry.get('last') is True]
+    return max(mine, key=lambda entry: (entry.get('last') is True, epoch(entry.get('lastServedAt')) or 0), default=None)
+
+
+def gateway_windows(entry):
+    """(label, percent used, reset epoch or None) per window of a gateway's account."""
+    windows = get(entry or {}, 'windows', default=[])
+    found = []
+    for window in windows if isinstance(windows, list) else []:
+        name, used = get(window, 'name'), get(window, 'used')
+        if isinstance(name, str) and isinstance(used, (int, float)) and not isinstance(used, bool):
+            found.append(('' if name in PLAIN_WINDOWS else name, used, epoch(get(window, 'resetsAt'))))
+    return found
+
+
+def limits(data, now=None, ask=gateway_entries):
     """(label, percent used, reset epoch or None) per window still running: Claude's rate-limit windows,
-    then Antigravity's quota buckets (the share used, from the fraction left)."""
+    then Antigravity's quota buckets (the share used, from the fraction left); with neither, those of
+    a gateway on this machine (`ask`)."""
     now = time.time() if now is None else now
     found = []
+    if get(data, 'rate_limits') is None and get(data, 'quota') is None:
+        model = get(data, 'model', 'id')
+        found = gateway_windows(gateway_account(ask(), model if isinstance(model, str) else ''))
     for key, label in WINDOWS:
         used = get(data, 'rate_limits', key, 'used_percentage')
         if used is not None:
@@ -215,11 +275,11 @@ def limits(data, now=None):
     return [(label, used, reset) for label, used, reset in found if reset is None or reset > now]
 
 
-def usage_line(data, now=None, tz=None):
+def usage_line(data, now=None, tz=None, ask=gateway_entries):
     now = time.time() if now is None else now
     parts = []
     windows = [paint('limits', f'{label} {round(used)}%'.lstrip()) + (paint('detail', f' → {clock(reset, now, tz)}') if reset else '')
-               for label, used, reset in limits(data, now)]
+               for label, used, reset in limits(data, now, ask)]
     if windows:
         parts.append('⏳ ' + '  '.join(windows))
     cost = get(data, 'cost', 'total_cost_usd')
@@ -245,14 +305,15 @@ def folder_of(data):
     return get(data, 'workspace', 'current_dir') or get(data, 'cwd') or os.getcwd()
 
 
-def render(data, facts=None, now=None, tz=None):
+def render(data, facts=None, now=None, tz=None, ask=gateway_entries):
     """The lines for one payload; `facts` is (branch, worktree), looked up in git when not given;
-    a session's worktree shows by its work name instead (the guard's record of it); `now` and `tz` fix the clock and zone the reset times are shown in (the system's when not given)."""
+    a session's worktree shows by its work name instead (the guard's record of it); `now` and `tz` fix the clock and zone the reset times are shown in (the system's when not given);
+    `ask` gives a gateway's accounts (this machine's, when not given)."""
     folder = folder_of(data)
     facts = git_facts(folder) if facts is None else facts
     work = work_name(data, folder)
     lines = [first_line(data, folder, (work, '') if work else facts), context_line(data)]
-    usage = usage_line(data, now, tz)
+    usage = usage_line(data, now, tz, ask)
     return lines + [usage] if usage else lines
 
 

@@ -416,15 +416,24 @@ agy models
 ```
 
 ```plaintext
-gemini-4-argon-high       Gemini 4 Argon (High)
-gemini-4-argon-medium     Gemini 4 Argon (Medium)
-gemini-3.8-flash-high     Gemini 3.8 Flash (High)
-gemini-3.8-flash-medium   Gemini 3.8 Flash (Medium)
-gemini-3.7-flash-high     Gemini 3.7 Flash (High)
-gemini-3.7-flash-medium   Gemini 3.7 Flash (Medium)
-gemini-3.6-flash-high     Gemini 3.6 Flash (High)
-gemini-3.6-flash-medium   Gemini 3.6 Flash (Medium)
-gemini-3.1-pro-high       Gemini 3.1 Pro (High)
+gemini-4-carbon-high           Gemini 4 Carbon (High)
+gemini-4-carbon-medium         Gemini 4 Carbon (Medium)
+gemini-4-carbon-low            Gemini 4 Carbon (Low)
+gemini-4-argon-high            Gemini 4 Argon (High)
+gemini-4-argon-medium          Gemini 4 Argon (Medium)
+gemini-4-hydrogen-xhigh        Gemini 4 Hydrogen (XHigh)
+gemini-4-hydrogen-high         Gemini 4 Hydrogen (High)
+gemini-4-hydrogen-medium       Gemini 4 Hydrogen (Medium)
+gemini-4-hydrogen-low          Gemini 4 Hydrogen (Low)
+gemini-pro-orchestrator        Orchestrator (Carbon)
+gemini-pro-orchestrator-argon  Orchestrator (Argon)
+gemini-3.8-flash-high          Gemini 3.8 Flash (High)
+gemini-3.8-flash-medium        Gemini 3.8 Flash (Medium)
+gemini-3.7-flash-high          Gemini 3.7 Flash (High)
+gemini-3.7-flash-medium        Gemini 3.7 Flash (Medium)
+gemini-3.6-flash-high          Gemini 3.6 Flash (High)
+gemini-3.6-flash-medium        Gemini 3.6 Flash (Medium)
+gemini-3.1-pro-high            Gemini 3.1 Pro (High)
 ...
 ```
 
@@ -432,7 +441,7 @@ gemini-3.1-pro-high       Gemini 3.1 Pro (High)
 # Pin a model by slug.
 agy -p "Reverse the string antigravity." --model gemini-3.8-flash-medium
 
-# Set reasoning effort (low, medium, or high).
+# Set reasoning effort (low, medium, high, xhigh, or max, depending on the model).
 agy -p "Outline a plan to add caching to this service." --effort high
 
 # Select an agent (list them with `agy agents`).
@@ -445,7 +454,7 @@ Unlike the interactive UI, headless mode doesn’t silently fall back when `--mo
 
 There is no interactive prompt in headless mode, so tools that would normally ask for confirmation are handled by policy.
 
-By default, the CLI respects the permission mode in your settings. A tool that requires approval it can’t obtain is soft-denied: the run continues, exits `0`, and prints a notice to `stderr` naming the tool and how to allow it. Reading and writing files inside your active workspace is auto-allowed; actions such as shell commands default to **Ask** and are soft-denied in headless mode unless you grant them.
+By default, the CLI respects the execution and permission modes in your settings. In `default` mode, actions such as shell commands default to **Ask**; in `auto` mode, workspace file edits and sandboxed or safe, reversible commands run automatically, while risky or irreversible actions still require approval. Any tool action that requires approval it can’t obtain in headless mode is soft-denied: the run continues, exits `0`, and prints a notice to `stderr` naming the tool and how to allow it.
 
 Grant a tool ahead of time by adding an `action(target)` rule under `permissions.allow` in `~/.gemini/antigravity-cli/settings.json`:
 
@@ -499,7 +508,7 @@ The `status` field reports the terminal state of the run:
 | `WAITING` | The run ended while waiting on input |
 | `RUNNING` | The run did not reach a terminal state |
 
-By default, a run waits up to five minutes for a response. Adjust the ceiling with `--print-timeout`:
+By default, a run has no time limit and waits until the turn completes. Set a limit with `--print-timeout`:
 
 ```bash
 agy -p "Summarize the design tradeoffs of optimistic locking." --print-timeout 15m
@@ -514,12 +523,12 @@ agy -p "Summarize the design tradeoffs of optimistic locking." --print-timeout 1
 | `--input-format` | `text` | Input format: `text` or `stream-json`; reads prompts on stdin |
 | `--json-schema` | — | Schema string or file path to enforce structured output |
 | `--model` | — | Model slug for this run (refer to `agy models`) |
-| `--effort` | — | Reasoning effort: `low`, `medium`, or `high` |
+| `--effort` | — | [Reasoning effort](/docs/cli/commands/effort): `low`, `medium`, `high`, `xhigh`, or `max` (depending on the model) |
 | `--agent` | — | Agent for this run (refer to `agy agents`) |
 | `--continue`, `-c` | `false` | Continue the most recent conversation |
 | `--conversation` | — | Resume a conversation by ID |
 | `--dangerously-skip-permissions` | `false` | Auto-approve all tool permission requests |
-| `--print-timeout` | `5m` | Maximum time to wait for a response |
+| `--print-timeout` | `0s` | Maximum time to wait for a response (`0s` means no limit) |
 | `--sandbox` | `false` | Run with terminal sandbox restrictions enabled |
 
 ## Example: run the agent in CI

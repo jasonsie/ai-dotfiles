@@ -5,7 +5,7 @@
 
 Available on: Antigravity App, Antigravity CLI, Antigravity IDE
 
-You can package [skills](/docs/skills), [Model Context Protocol (MCP) servers](/docs/mcp), [custom agents and subagents](/docs/subagents), [rules](/docs/rules), and [lifecycle hooks](/docs/hooks) into a single versioned plugin directory. Once validated locally with `agy plugin validate --strict`, you can share your plugin across workspaces, distribute it from a GitHub repository, or submit it to the [Antigravity Marketplace](/docs/marketplace).
+You can package [skills](/docs/skills), [Model Context Protocol (MCP) servers](/docs/mcp), [custom agents and subagents](/docs/subagents), [rules](/docs/rules), and [lifecycle hooks](/docs/hooks) into a single versioned plugin directory. Once validated locally with `agy plugin validate`, you can share your plugin across workspaces, distribute it from a GitHub repository, or submit it to the [Antigravity Marketplace](/docs/marketplace).
 
 Tip
 
@@ -102,7 +102,7 @@ plugins/<plugin-name>/
     
 *   **Pre-install documentation (`README.md`)**: Include a `README.md` at `<plugin-root>/README.md` (or `.antigravity-plugin/README.md`) to document setup prerequisites, included tools, and example workflows in the Marketplace detail view before installation:
     
-    ![Plugin details view showing suggestedPrompts chips, component tabs, and rendered README.md](/assets/image/docs/plugins/plugin-card.png)
+    ![A plugin detail view in the Antigravity App showing the suggestedPrompts as starter prompts, the Overview, Skills, MCP, Agents, and Rules tabs, and the rendered README.md](/assets/image/docs/plugins/plugin-card.png)
     
 
 ### Manifest file (`plugin.json`)
@@ -164,6 +164,8 @@ You can also validate your manifest and all bundled components from your termina
 ```bash
 agy plugin validate --strict ./my-plugin
 ```
+
+If your repository also ships configuration files for other tools, see [Warnings in multi-tool repositories](#warnings-in-multi-tool-repositories) for guidance on expected warnings and CI checks.
 
 #### Full JSON schema
 
@@ -366,7 +368,7 @@ When a plugin declares MCP `variables`, installing it via `agy plugin install` l
 
 Bundled MCP servers appear in the **MCP** tab on the plugin detail page:
 
-![Plugin detail view showing the MCP tab for a bundled MCP server](/assets/image/docs/plugins/plugin-mcp-tab.png)
+![The MCP tab of the Dart and Flutter plugin detail view in the Antigravity App, listing the bundled dart-mcp-server](/assets/image/docs/plugins/plugin-mcp-tab.png)
 
 ### Subagents
 
@@ -386,7 +388,6 @@ tools:
   - view_file
   - grep_search
   - find_by_name
-  - code_search
   - send_message
 inheritMcp: true
 ---
@@ -414,7 +415,7 @@ Once a plugin is installed, you can list its bundled agents from your terminal w
 
 Bundled custom agents and subagents appear in the **Agents** tab on the plugin detail page:
 
-![Plugin detail view showing the Agents tab for a bundled custom agent](/assets/image/docs/plugins/plugin-agents-tab.png)
+![The Agents tab of the Dart and Flutter plugin detail view in the Antigravity App, listing the bundled flutter\_a11y\_agent custom agent](/assets/image/docs/plugins/plugin-agents-tab.png)
 
 ### Rules
 
@@ -444,13 +445,13 @@ description: Terraform and infrastructure naming conventions
 
 Bundled rules appear in the **Rules** tab on the plugin detail page:
 
-![Plugin detail view showing the Rules tab for a bundled rule](/assets/image/docs/plugins/plugin-rules-tab.png)
+![The Rules tab of the Dart and Flutter plugin detail view in the Antigravity App, listing the bundled flutter-hot-reload.md rule](/assets/image/docs/plugins/plugin-rules-tab.png)
 
 ### Lifecycle hooks
 
 Define synchronous [lifecycle hooks](/docs/hooks) in `<plugin-root>/hooks.json`. Each top-level key in `hooks.json` is a named hook group mapping to lifecycle event arrays (`PreToolUse` and `PostToolUse` wrap handlers in `{ "matcher": "...", "hooks": [...] }`, whereas `SessionStart`, `PreInvocation`, `PostInvocation`, and `Stop` take a flat array of hook handler objects).
 
-Command hooks run with their working directory (`cwd`) set to `<plugin-root>`, receive event context as JSON on `stdin`, and must exit with code **`0`** and write a JSON response object to `stdout` (for example, `{"decision": "deny", "reason": "..."}` in `PreToolUse` or `{"decision": "block", "reason": "..."}` in `Stop`). Any non-zero exit code is logged as a hook execution error and ignored (failing open):
+Command hooks run with their working directory (`cwd`) set to `<plugin-root>`, receive event context as JSON on `stdin`, and must exit with code **`0`** and write a JSON response object to `stdout` (for example, `{"decision": "deny", "reason": "..."}` in `PreToolUse` or `{"decision": "continue", "reason": "..."}` in `Stop`). Any non-zero exit code is logged as a hook execution error and ignored (failing open):
 
 ```json
 {
@@ -484,9 +485,9 @@ Command hooks run with their working directory (`cwd`) set to `<plugin-root>`, r
 | `SessionStart` | A new conversation is initialized | _(none — flat handler array)_ | Return `{"injectSteps": [{"userMessage": "..."}]}` to inject startup context. |
 | `PreInvocation` | Before the model processes a user turn | _(none — flat handler array)_ | Return `{"injectSteps": [...]}` to attach dynamic context before model generation. |
 | `PostInvocation` | After the model finishes its response turn | _(none — flat handler array)_ | Return `{"injectSteps": [...], "terminationBehavior": "force_continue"}` for post-turn checks. |
-| `PreToolUse` | Before a tool executes | Tool name regex (`"run_command"`, `"mcp:.*"`) | Return `{"decision": "deny", "reason": "..."}` to block, `"ask"` / `"force_ask"` to prompt, or `"overwrite": {...}` to rewrite arguments. |
-| `PostToolUse` | After a tool completes | Tool name regex | Return `{"overwriteResult": "..."}` to redact or transform tool output (`"command"` hooks only). |
-| `Stop` | Before the agent loop finishes | _(none — flat handler array)_ | Return `{"decision": "block", "reason": "..."}` to prevent completion until checks pass, or `"continue"`. |
+| `PreToolUse` | Before a tool executes | Tool name regex (`"run_command"`, `"mcp_.*"`) | Return `{"decision": "deny", "reason": "..."}` to block, `"ask"` / `"force_ask"` to prompt, or `"overwrite": {...}` to rewrite arguments. |
+| `PostToolUse` | After a tool completes | Tool name regex | Receives the tool call and any error (not the tool output). Use it to log or audit tool calls, and return `{}`. |
+| `Stop` | Before the agent loop finishes | _(none — flat handler array)_ | Return `{"decision": "continue", "reason": "..."}` to prevent completion and keep the agent running until checks pass, or `{}` to allow the stop. |
 
 * * *
 
@@ -494,11 +495,21 @@ Command hooks run with their working directory (`cwd`) set to `<plugin-root>`, r
 
 ### Validate and test locally (`agy plugin validate`)
 
-Before distributing a plugin or submitting it to the Marketplace, run strict validation and test installation locally:
+Before distributing a plugin or submitting it to the Marketplace, validate the plugin directory and test installing it locally. `agy plugin validate` reads your plugin with the same loader Antigravity uses and groups findings by severity:
+
+*   **Error**: The loader skips the file or plugin, or the component cannot start or apply. Always exits non-zero.
+*   **Warning**: The plugin loads, but a file or field is ignored, falls back to a default, or prevents Marketplace publishing (such as a non-kebab-case `name`, missing `version`, or invalid `logo` path). Exits `0` by default; pass `--strict` to fail on warnings as well.
+*   **Note**: Informational details about how the plugin loads (such as MCP `variables` leaving the plugin disabled until configured, or a missing `logo` showing a generic icon). Never fails validation.
 
 ```bash
-# Run strict schema and component validation (treats warnings as errors)
+# Validate plugin.json, MCP servers, hooks, and component discovery
+agy plugin validate ./my-plugin
+
+# Fail on warnings as well as errors (recommended for standalone plugins)
 agy plugin validate --strict ./my-plugin
+
+# Print the validation report as machine-readable JSON
+agy plugin validate --json ./my-plugin
 
 # Install the local plugin folder into your profile
 agy plugin install ./my-plugin
@@ -507,13 +518,56 @@ agy plugin install ./my-plugin
 agy plugin list --json
 ```
 
+### Warnings in multi-tool repositories
+
+#### Why these warnings appear
+
+`agy plugin validate` emits warnings whenever a file in the plugin directory is ignored or shadowed by the Antigravity loader. In a single-tool repository, this helps catch accidental misconfigurations (for example, naming an MCP configuration `.mcp.json` instead of `mcp_config.json`, or placing a plugin rule at `AGENTS.md` instead of `rules/AGENTS.md`).
+
+In a multi-tool repository that supports other AI coding tools or contributor documentation alongside Antigravity, having Antigravity ignore files meant for other tools is the intended behavior:
+
+| File | Behavior in Antigravity |
+| :-- | :-- |
+| `.mcp.json` and `mcp.json` | Safely ignored by Antigravity because MCP servers load from `mcp_config.json`. `.mcp.json` is also automatically excluded when packaging the Marketplace bundle. |
+| `plugin.json` (repository root) | Safely shadowed when `.antigravity-plugin/plugin.json` is present. `.antigravity-plugin/plugin.json` takes precedence at runtime and is promoted to the root `plugin.json` when the Marketplace bundle is built. |
+| `AGENTS.md` (repository root) | Safely ignored at the repository root because Antigravity loads plugin rules only from `rules/` (such as `rules/AGENTS.md`). This keeps contributor documentation from being injected into end-user sessions as an active rule. |
+
+Other tool-specific files that Antigravity does not load from a native plugin (such as a root `GEMINI.md`, `hooks/hooks.json`, or `commands/`) emit similar warnings and can remain in the repository when their Antigravity equivalents (`rules/`, `hooks.json`, and `skills/`) are configured at the plugin root.
+
+#### Recommendations for CI
+
+Neither `agy plugin install` nor the Antigravity Marketplace packaging pipeline blocks on `--strict` warnings for shadowed or other-tool files. For CI checks in a multi-tool repository, use one of the following options:
+
+*   **Run `agy plugin validate` without `--strict`**: Fails (exits non-zero) on any validation error while permitting multi-tool warnings:
+    
+    ```bash
+    agy plugin validate ./my-plugin
+    ```
+    
+*   **Filter known multi-tool files with `--json`**: Keeps strict checks on all other warnings (such as a non-kebab-case `name`, missing `version`, or invalid `logo` path) while ignoring warnings on known multi-tool files (`.mcp.json`, `mcp.json`, `AGENTS.md`, and a shadowed root `plugin.json` when `.antigravity-plugin/plugin.json` is active):
+    
+    ```bash
+    # Exit non-zero on any error, or any warning outside known multi-tool files
+    agy plugin validate --json ./my-plugin | jq -e '
+      .manifest as $manifest |
+      [.findings[] | select(
+        .severity == "error" or (
+          .severity == "warning" and
+          (.file != ".mcp.json" and .file != "mcp.json" and .file != "AGENTS.md") and
+          (.file != "plugin.json" or $manifest == "plugin.json")
+        )
+      )] | length == 0
+    '
+    ```
+    
+
 ### Pre-publish checklist and common pitfalls
 
 Verify the following requirements before sharing or submitting your plugin:
 
 | Check | Requirement and fix |
 | :-- | :-- |
-| **Strict CLI validation** | `agy plugin validate --strict ./my-plugin` exits with `0` errors and `0` warnings. |
+| **CLI validation** | `agy plugin validate ./my-plugin` exits with `0` errors. Pass `--strict` for standalone plugins, or filter expected other-tool warnings in [multi-tool repositories](#warnings-in-multi-tool-repositories). |
 | **Plugin naming & branding** | `name` is lowercase `kebab-case` (`^[a-z0-9]+(-[a-z0-9]+)*$`), and `name` / `displayName` represent your product or service without leading with `"Antigravity"`, `"Gemini"`, `"Claude"`, or `"Cursor"`. |
 | **Skill folder names** | Each `SKILL.md` frontmatter `name` matches its parent directory name (`skills/<name>/SKILL.md`). |
 | **Rule `globs` format** | `globs` in `rules/<rule>.md` is a comma-separated string (`"**/*.tf, **/*.yaml"`), not a YAML array. |
@@ -523,7 +577,7 @@ Verify the following requirements before sharing or submitting your plugin:
 
 ### Publish to the Antigravity Marketplace
 
-Once your plugin passes `agy plugin validate --strict` and includes a complete `plugin.json` (`name`, `displayName`, `description`, `version`, `logo`, `suggestedPrompts`, and `author`), `README.md`, and bundled logo asset, submit it through the [Antigravity Marketplace partner intake form](https://forms.gle/2EX5RFYPoJe1UgxR9).
+Once your plugin passes `agy plugin validate` (with zero errors and no unresolved warnings on Antigravity files) and includes a complete `plugin.json` (`name`, `displayName`, `description`, `version`, `logo`, `suggestedPrompts`, and `author`), `README.md`, and bundled logo asset, submit it through the [Antigravity Marketplace partner intake form](https://forms.gle/2EX5RFYPoJe1UgxR9).
 
 * * *
 

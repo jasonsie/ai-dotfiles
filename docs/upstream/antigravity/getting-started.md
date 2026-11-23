@@ -13,21 +13,21 @@ Welcome to Google Antigravity! Follow the instructions in this guide to get star
 
 1.  Download the Google Antigravity installer for your operating system (or view all builds at [antigravity.google/download](/download)):
     
-    macOSmacOS 12 (Monterey) or later (Apple Silicon or 64-bit Intel)
+    macOSmacOS 13 (Ventura) or later (Apple Silicon or 64-bit Intel)
     
-    [Download for Apple Silicon](https://storage.googleapis.com/antigravity-public/antigravity-hub/2.28.2-5937220255875072/darwin-arm/Antigravity.dmg)[Download for Intel](https://storage.googleapis.com/antigravity-public/antigravity-hub/2.28.2-5937220255875072/darwin-x64/Antigravity.dmg)
+    [Download for Apple Silicon](https://storage.googleapis.com/antigravity-public/antigravity-hub/2.32.0-6141816156848128/darwin-arm/Antigravity.dmg)[Download for Intel](https://storage.googleapis.com/antigravity-public/antigravity-hub/2.32.0-6141816156848128/darwin-x64/Antigravity.dmg)
     
     Open the downloaded `Antigravity.dmg` disk image and drag **Antigravity** into your **Applications** folder. If you are upgrading an existing installation, select **Replace** when prompted instead of **Keep Both**.
     
     WindowsWindows 10 (64-bit) or Windows 11
     
-    [Download for x64](https://storage.googleapis.com/antigravity-public/antigravity-hub/2.28.2-5937220255875072/windows-x64/Antigravity-x64.exe)[Download for ARM64](https://storage.googleapis.com/antigravity-public/antigravity-hub/2.28.2-5937220255875072/windows-arm/Antigravity-arm64.exe)
+    [Download for x64](https://storage.googleapis.com/antigravity-public/antigravity-hub/2.32.0-6141816156848128/windows-x64/Antigravity-x64.exe)[Download for ARM64](https://storage.googleapis.com/antigravity-public/antigravity-hub/2.32.0-6141816156848128/windows-arm/Antigravity-arm64.exe)
     
     Run the downloaded `.exe` installer and follow the guided setup wizard.
     
     Linuxglibc >= 2.28, glibcxx >= 3.4.25 (Ubuntu 20+, Debian 10+, Fedora 36+, RHEL 8+)
     
-    [Download for x64](https://storage.googleapis.com/antigravity-public/antigravity-hub/2.28.2-5937220255875072/linux-x64/Antigravity.tar.gz)[Download for ARM64](https://storage.googleapis.com/antigravity-public/antigravity-hub/2.28.2-5937220255875072/linux-arm/Antigravity.tar.gz)
+    [Download for x64](https://storage.googleapis.com/antigravity-public/antigravity-hub/2.32.0-6141816156848128/linux-x64/Antigravity.tar.gz)[Download for ARM64](https://storage.googleapis.com/antigravity-public/antigravity-hub/2.32.0-6141816156848128/linux-arm/Antigravity.tar.gz)
     
     Extract the archive with `tar -xzf Antigravity.tar.gz` and launch `./Antigravity`.
     
@@ -38,6 +38,20 @@ Welcome to Google Antigravity! Follow the instructions in this guide to get star
     Google Antigravity comes pre-installed on Googlebooks. Open Google Play to install updates or reinstall the application.
     
 2.  Launch Google Antigravity from your applications launcher or menu.
+    
+3.  Sign in and choose how you want to set up your workspace:
+    
+    *   **Personal Google Accounts** (`v2.30.0+`): After signing in through your browser, Antigravity asks what best describes your work—**Software Engineering**, **Knowledge Work**, **Data & Analytics**, **Science**, **Design**, or **Other** (click **Skip** to start with the default **Software Engineering** setup):
+        
+        ![First-launch role selection screen in Antigravity App asking What best describes your work? with Knowledge Work selected and a Continue button](/assets/image/docs/onboarding-role-selection.png)
+        
+        Your selection sets the initial [interface layout](/docs/settings#interface-layout) (**Knowledge Work** for _Knowledge Work_, _Science_, _Design_, and _Other_; **Software Engineering** for _Software Engineering_ and _Data & Analytics_) and surfaces up to three dismissible starter prompts above the Home message box after you confirm the **Terms & Data Use** notice:
+        
+        ![Home message box in Antigravity App with three starter prompts for Google Calendar, Google Drive, and Google Slides](/assets/image/docs/onboarding-starter-suggestions.png)
+        
+        No plugins are installed when you pick a role—clicking a starter prompt installs its paired [Marketplace](/docs/marketplace) plugin in the background if needed, prefills `@<Plugin>` and the prompt without sending it, and selects the first `<...>` placeholder so you can edit it first (connected services such as Google Calendar, Drive, Slides, or Figma prompt you to sign in when you run the prompt). Selecting **Software Engineering** also includes **Bring over my setup from other Agentic Developer Tools** to import MCP servers, skills, rules, and instructions from Claude Code, Codex, Cursor, and Gemini CLI. You can dismiss any suggestion or switch layouts anytime in **Settings** > **General** > **[Interface Layout](/docs/settings#interface-layout)**.
+        
+    *   **Gemini Enterprise & Google Cloud accounts**: Choose **Business account** during [sign-in](/docs/install) and select your assigned license and Google Cloud project.
 
 ### Antigravity CLI
 
@@ -93,7 +107,7 @@ For authentication options or enterprise configurations, consult the **[Authenti
     
     **Requirements:** Visual Studio Code 1.90 or later on macOS, Linux, or Windows.
     
-    Open the Extensions sidebar (Cmd+Shift+X on macOS or Ctrl+Shift+X on Windows/Linux), search for **Google Antigravity**, and click **Install**. See the [VS Code extension guide](/docs/ide/extensions/vscode).
+    Open the Extensions sidebar (Cmd + Shift + X on macOS or Ctrl + Shift + X on Windows/Linux), search for **Google Antigravity**, and click **Install**. See the [VS Code extension guide](/docs/ide/extensions/vscode).
     
     **JetBrains:**
     
@@ -113,13 +127,13 @@ For authentication options or enterprise configurations, consult the **[Authenti
     
     **Requirements:** Zed version 0.140.0 or later on macOS or Linux.
     
-    Open the Command Palette (Cmd+Shift+P / Ctrl+Shift+P), run `agent: open settings`, and navigate to **External Agents** > **Add** > **Install from Registry** to install **Antigravity**. See the [Zed guide](/docs/ide/extensions/zed).
+    Open the Command Palette (Cmd + Shift + P / Ctrl + Shift + P), run `agent: open settings`, and navigate to **External Agents** > **Add** > **Install from Registry** to install **Antigravity**. See the [Zed guide](/docs/ide/extensions/zed).
     
     **Xcode:**
     
     **Requirements:** Xcode 27 beta 6 or later on macOS.
     
-    Open **Xcode** > **Settings** (Cmd+,), select the **Intelligence** panel, and click **Get** next to **Antigravity**. See the [Xcode guide](/docs/ide/extensions/xcode).
+    Open **Xcode** > **Settings** (Cmd + ,), select the **Intelligence** panel, and click **Get** next to **Antigravity**. See the [Xcode guide](/docs/ide/extensions/xcode).
     
     **Eclipse:**
     
@@ -135,17 +149,13 @@ For authentication options or enterprise configurations, consult the **[Authenti
     
     **Requirements:** macOS 12 (Monterey)+, Windows 10 (64-bit)+, or Linux / Googlebook (glibc >= 2.28, glibcxx >= 3.4.25).
     
-    Download the standalone **Antigravity IDE** installer for your platform from [antigravity.google/download](/download). When a new version is available, Antigravity IDE downloads it in the background and prompts you to click **Restart to Update**:
+    Download the standalone **Antigravity IDE** installer for your platform from [antigravity.google/download](/download). When a new version is available on macOS or Windows, Antigravity IDE downloads it in the background and prompts you to click **Restart to Update** (a system-wide Windows installation shows **Install Update** instead). On Linux, an **Update Available** button appears in the title bar and a badge appears on your account icon. Click **Update Available** for instructions: if you installed Antigravity IDE with a package manager such as apt, update it through your system’s update process; if you installed it from the tarball, download the new tarball yourself:
     
-    ![Restart to update notification in Antigravity IDE](/assets/image/docs/restart-to-update.png)
+    ![The Antigravity IDE title bar on Linux, with a 1 badge on the account icon and an Update Available button next to it](/assets/image/docs/ide-update-badge-linux.png)
     
-    **Basic navigation (Editor & Agent Manager):** Open the Agent Manager from the editor using the button on the top bar or Cmd+E (Ctrl+E on Windows/Linux):
+    **Basic navigation (Editor & Agent panel):** The agent runs in the **Agent** side panel on the right side of the editor. Press Cmd + L (Ctrl + L on Windows/Linux) to move to the panel. From the editor, this also adds the selected lines (or the current line) to your prompt as context. Press Cmd + Shift + L (Ctrl + Shift + L) to start a new conversation. To show or hide the panel, click **Toggle Agent** in the title bar:
     
-    ![Open the Agent Manager from the Antigravity IDE editor](/assets/image/docs/editor-open-agent-manager.png)
-    
-    From the Agent Manager, open the editor from any workspace using **Focus Editor** in the workspace dropdown menu, the **Open Editor** buttons, or Cmd+E (Ctrl+E on Windows/Linux):
-    
-    ![Open the editor from the Agent Manager in Antigravity IDE](/assets/image/docs/agent-manager-open-editor.png)
+    ![The Antigravity IDE editor with the Agent side panel open on the right, showing a new conversation with Gemini 4 Argon Medium selected in the model picker](/assets/image/docs/editor-open-agent-manager.png)
     
 2.  Sign in with your personal Google Account or **Gemini Enterprise** credentials (Enterprise support is available in IDE extensions—GA in VS Code and Visual Studio, and in **Preview** for JetBrains, Zed, Xcode, and Eclipse) when prompted in the Antigravity panel or settings.
 
@@ -193,12 +203,19 @@ For authentication options or enterprise configurations, consult the **[Authenti
 Agents operate within **Projects**, which define the repository boundaries, file scopes, and security permissions for your workspaces.
 
 1.  Click the **New Project** icon (folder with a plus sign) in the left sidebar.
+    
 2.  Click **Add Folder** to select one or more local Git repositories or working directories.
+    
 3.  Click **Create**.
+    
 4.  Type your instruction in the prompt input (for example: `Add unit tests for the authentication handlers`) and press Enter.
-5.  Choose a **Mode** in the setup modal to boot up your agent:
+    
+5.  Choose a **Mode** in the setup modal to boot up your agent (in the **Software Engineering** [interface layout](/docs/settings#interface-layout)):
+    
     *   **Local mode**: The agent operates directly in your active folders.
     *   **New worktree mode**: The agent operates in an isolated Git worktree.
+    
+    In the **Knowledge Work** [interface layout](/docs/settings#interface-layout), conversations run directly in your project’s folders without prompting for a Git worktree—or you can start chatting directly from **Home** without creating a project first.
 
 ### Antigravity CLI
 
@@ -213,31 +230,28 @@ Navigate to any codebase directory in your terminal and start a session:
     
 2.  Enter your first task prompt and press Enter:
     
-    ```text
+    ```prompt
     Write a simple python script to fetch web page text
     ```
     
-    The agent indexes the workspace, develops an implementation plan, and displays proposed changes for your review.
+    The agent indexes the workspace and creates `main.py` in your workspace. Press Y when prompted to approve the file creation (in `auto` mode, workspace edits and sandboxed commands run automatically).
     
-3.  Open the **Artifact Review** screen to inspect the proposed code:
+3.  Inspect diffs or review artifacts at any time:
     
-    Press Ctrl + R when notified to review generated artifacts:
-    
-    *   Navigate to the newly created `main.py` using ↑/↓, or press Tab from the main prompt to inspect inline diffs.
-    *   Press Y to approve the creation of `main.py`.
-    *   Press Esc to close the review panel and return to the primary prompt.
+    *   Run `/diff` to open the interactive diff viewer and inspect the changes made in each turn, or press Ctrl + R when notified to review generated artifacts such as implementation plans (press Esc to return to the prompt).
+    *   Press Shift + Tab inside the prompt box if you want to switch between `auto`, `plan`, `default`, and `accept-edits` [execution modes](/docs/cli/modes).
 4.  Execute a test command with the agent to verify the output:
     
     ```text
     Run the python script and show me the output
     ```
     
-    Press Y to confirm and execute `python3 main.py`. Once finished, press Ctrl + D (or type `/exit`) to close the TUI session.
+    Press Y to confirm and run `python3 main.py` (in `auto` mode, the agent runs it inside the terminal sandbox automatically). Once finished, press Ctrl + D (or type `/exit`) to close the TUI session.
 
 ### For IDEs
 
 1.  Open your workspace folder, repository, or solution in your preferred editor.
-2.  Open the Antigravity panel or agent view in your IDE (for example, click the Antigravity icon in the VS Code Activity Bar, press Ctrl+, Ctrl+A in Visual Studio, select **Antigravity** > **Toggle Chat** in Eclipse, or select Antigravity in JetBrains AI, Zed External Agents, or Xcode Intelligence).
+2.  Open the Antigravity panel or agent view in your IDE (for example, click the Antigravity icon in the VS Code Activity Bar, press Ctrl + \\, Ctrl + Alt + L in Visual Studio, select **Antigravity** > **Toggle Chat** in Eclipse, or select Antigravity in JetBrains AI, Zed External Agents, or Xcode Intelligence).
 3.  Enter a task prompt in the conversation panel to start an agent session that shares context and [customizations](/docs/skills) with the rest of the Antigravity ecosystem.
 4.  Inspect interactive implementation plans, review granular inline diffs, and execute multi-step engineering tasks directly inside your editor.
 
@@ -290,13 +304,13 @@ Navigate to any codebase directory in your terminal and start a session:
 
 | Action | macOS | Windows / Linux | Description |
 | :-- | :-- | :-- | :-- |
-| **Conversation picker** | ⌘K | Ctrl + K | Search past conversations by title or full text and switch to one |
-| **File search** | ⌘P | Ctrl + P | Search files in the current project by name and open one |
-| **Commands** | ⌘⇧P | Ctrl + Shift + P | Search and run app commands |
-| **Find** | ⌘F | Ctrl + F | Find text in the current conversation or open file |
-| **Focus input** | ⌘L | Ctrl + L | Jump cursor focus directly into the message box |
-| **New conversation** | ⌘N | Ctrl + N | Start a fresh autonomous agent session |
-| **Previous or next conversation** | ⌥ Up / Down | Alt + Up / Down | Move to the previous or next conversation in the sidebar |
+| **Conversation picker** | Cmd + K | Ctrl + K | Search past conversations by title or full text and switch to one |
+| **File search** | Cmd + P | Ctrl + P | Search files in the current project by name and open one |
+| **Commands** | Cmd + Shift + P | Ctrl + Shift + P | Search and run app commands |
+| **Find** | Cmd + F | Ctrl + F | Find text in the current conversation or open file |
+| **Focus input** | Cmd + L | Ctrl + L | Jump cursor focus directly into the message box |
+| **New conversation** | Cmd + N | Ctrl + N | Start a fresh autonomous agent session |
+| **Previous or next conversation** | Option + ↑ / ↓ | Alt + ↑ / ↓ | Move to the previous or next conversation in the sidebar |
 
 For more about searching conversations, files, and commands, see [Search and command palette](/docs/search).
 
@@ -307,7 +321,7 @@ For more about searching conversations, files, and commands, see [Search and com
 | [`/goal`](/docs/commands/goal) | Runs the task autonomously until completion without pausing for intermediate input. |
 | [`/grill-me`](/docs/commands/grill-me) | Prompts the agent to interview you about requirements before beginning implementation. |
 | [`/schedule`](/docs/commands/schedule) | Runs an instruction as a one-time delayed task or recurring cron schedule. |
-| [`/browser`](/docs/commands/browser) | Initiates browser debugging and research actions in Google Chrome. |
+| [`/browser`](/docs/commands/browser) | Delegates live UI testing, screenshots, and web inspection to the [browser subagent](/docs/browser) (built-in browser on personal accounts `v2.30.0+`, or Google Chrome). |
 | [`/plugin`](/docs/plugins) | Manages installed [Marketplace](/docs/marketplace) plugins or creates and configures custom plugin bundles. |
 
 ### Antigravity CLI
@@ -317,7 +331,8 @@ For more about searching conversations, files, and commands, see [Search and com
 | Command | Description |
 | :-- | :-- |
 | `agy` | Launches the interactive TUI in the current directory. |
-| `agy "prompt"` | Launches a session with an initial prompt. |
+| `agy -i "prompt"` | Launches an interactive session with an initial prompt. |
+| `agy -p "prompt"` | Runs a single prompt non-interactively and prints the response. |
 | `/agents` | Switches between active background subagents. |
 | `/statusline` | Toggles or configures the terminal status line display. |
 | `/usage` | Displays current model credit consumption and quota limits. |
@@ -340,12 +355,12 @@ For more about searching conversations, files, and commands, see [Search and com
 
 | IDE | Shortcut / Command | Action |
 | :-- | :-- | :-- |
-| **VS Code** | ⌘⇧X / Ctrl + Shift + X | Open Extensions sidebar to install or manage **Google Antigravity** |
-| **Visual Studio** | Ctrl+, Ctrl+A | Open the Antigravity tool window |
-| **Zed** | ⌘⇧P / Ctrl + Shift + P → `agent: open settings` | Open Agent settings to configure **External Agents** |
+| **VS Code** | Cmd + Shift + X / Ctrl + Shift + X | Open Extensions sidebar to install or manage **Google Antigravity** |
+| **Visual Studio** | Ctrl + \\, Ctrl + Alt + L | Open the Antigravity tool window |
+| **Zed** | Cmd + Shift + P / Ctrl + Shift + P → `agent: open settings` | Open Agent settings to configure **External Agents** |
 | **JetBrains** | **JetBrains AI** > **Settings** > **Agents** | Install or configure the **Antigravity** agent |
-| **Xcode** | ⌘, → **Intelligence** | Manage and authenticate **Antigravity** in Xcode Settings |
-| **Eclipse** | ⌘⌥E / Ctrl + Alt + K | Toggle the **Antigravity** chat view |
+| **Xcode** | Cmd + , → **Intelligence** | Manage and authenticate **Antigravity** in Xcode Settings |
+| **Eclipse** | Cmd + Option + E / Ctrl + Alt + K | Toggle the **Antigravity** chat view |
 
 #### Authentication configuration
 

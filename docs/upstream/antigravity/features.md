@@ -36,16 +36,22 @@ By default, agents ask before sensitive actions and limit their file access to y
 
 ### Antigravity App
 
-*   **Interactive approvals**: By default, agents request your explicit permission before running terminal commands outside the isolated [Terminal sandbox](/docs/sandbox). With the [previous permission settings](/docs/agent-settings#previous-permission-settings), agents ask before running any terminal command.
+*   **Interactive approvals**: By default, commands run inside the isolated [Terminal sandbox](/docs/sandbox) without prompting, and agents request your explicit permission before running terminal commands outside it. Under the **Auto** preset, commands outside the sandbox are evaluated automatically so safe, reversible commands proceed while risky or irreversible actions ask for your approval. With the [previous permission settings](/docs/agent-settings#previous-permission-settings), agents ask before running any terminal command.
 *   **Bounded access**: By default, your agent can only read and write within the provided folders of a project. If you broaden your permission settings (for example, by choosing the **Turbo** preset), the agent has read and write access over your full machine.
 
 ### Antigravity CLI
 
-*   **Interactive approvals**: The default `request-review` permission asks before the agent writes files, runs shell commands, or uses web tools, unless one of your allow rules matches.
+*   **Interactive approvals**: The default `request-review` permission asks before the agent writes files, runs shell commands, or uses web tools, unless one of your allow rules matches. In [`auto` mode](/docs/cli/modes), the CLI approves workspace file edits, runs shell commands inside the [terminal sandbox](/docs/sandbox), and evaluates commands outside the sandbox so only risky or irreversible actions ask for your approval.
 *   **Terminal sandbox**: The [terminal sandbox](/docs/sandbox) is off by default. Turn it on with `enableTerminalSandbox` in `settings.json` or the `--sandbox` flag. `auto` mode turns it on automatically.
 *   **Files outside your workspace**: The agent asks before it reads or edits files outside your workspace folders. To treat those files like workspace files, turn on `allowNonWorkspaceAccess`.
 
 [Learn more about permissions](/docs/permissions) and [the terminal sandbox](/docs/sandbox).
+
+### Orchestrator
+
+Select **Orchestrator (Carbon)** or **Orchestrator (Argon)** in the model selector (or with `/model` in the CLI) to get the quality of a larger planner model with faster turnaround and fewer tokens used. The planner (Gemini 4 Carbon or Gemini 4 Argon) explores the codebase, plans the work, and reviews progress, while Gemini 4 Hydrogen carries out the edits, builds, and test runs, handing control back to the planner whenever the plan needs repair. Google AI Ultra includes both options, and Google AI Pro (paid plans, or trials with eligible premium devices) includes **Orchestrator (Argon)**.
+
+[Learn more about Orchestrator](/docs/models#orchestrator).
 
 ### Subagents
 
@@ -58,22 +64,37 @@ In the side panel’s **Overview**, open **Subagents** and select a subagent to 
 ### Antigravity CLI
 
 *   **Monitor and approve**: Open the `/agents` panel to monitor subagents and approve their requests.
-*   **Jump to approvals**: Press Alt+J to jump to the next subagent that’s waiting for approval.
-*   **Approve in place**: Press Ctrl+K to approve a pending request without leaving the main conversation.
+*   **Jump to approvals**: Press Alt + J to jump to the next subagent that’s waiting for approval.
+*   **Approve in place**: Press Ctrl + K to approve a pending request without leaving the main conversation.
 
 [Learn more about subagents](/docs/subagents).
 
+### Dynamic Workflows
+
+Run `/run-workflow <task>` to have the agent write a short Python script that orchestrates many agents, such as one reviewer per changed file or a test-then-fix pipeline. You approve the script, follow its phases and agents live, and can save the script to run it again later. Available on Google AI Pro and Google AI Ultra plans.
+
+[Learn more about Dynamic Workflows](/docs/dynamic-workflows).
+
 ### Browser subagent
 
-The browser subagent drives Google Chrome to test and debug web pages:
+Let the `browser` subagent open pages, click through flows, inspect console and network errors, take screenshots, and verify visual fixes before completing a task:
 
-*   **On-demand**: Invoke the browser subagent through the [`/browser` command](/docs/commands/browser).
-*   **Chrome DevTools integration**: Integrate natively with Chrome DevTools MCP.
-*   **Video recording**: Record browser sessions as WebM videos.
+### Antigravity App
+
+*   **Built-in browser automation** (`v2.30.0+`, personal Google Accounts): Ask in plain language or run [`/browser`](/docs/commands/browser) to launch browser subagents directly inside the built-in browser—no Chrome install or setup required.
+*   **Parallel tabs and live handoff**: Run multiple `browser` subagents simultaneously in isolated tabs with an animated live cursor, zero focus theft, a one-click **Stop** takeover button, and pause-and-resume sign-in handoff.
+*   **Chrome DevTools on business and enterprise accounts**: Run [`/browser`](/docs/commands/browser) to drive your local Google Chrome (`v144+`) through Chrome DevTools MCP.
+
+### Antigravity CLI
+
+*   **On-demand via `/browser`**: Run [`/browser`](/docs/commands/browser) to drive local Google Chrome (`v144+`) through Chrome DevTools MCP in an isolated subagent context.
+*   **DevTools profiling and recordings**: Capture screenshots, console and network logs, performance traces, Lighthouse audits, and optional WebM session recordings.
+
+[Learn more about browser use](/docs/browser).
 
 ### Slash commands
 
-Type `/` in the App’s message box or the CLI’s prompt box to run commands such as [`/plan`](/docs/plan), [`/grill-me`](/docs/commands/grill-me), [`/goal`](/docs/commands/goal), [`/boost`](/docs/boost), [`/schedule`](/docs/commands/schedule), and [`/teamwork`](/docs/teamwork). Some commands are available on only one surface, and `/boost` and `/teamwork` require a paid plan.
+Type `/` in the App’s message box or the CLI’s prompt box to run commands such as [`/plan`](/docs/plan), [`/grill-me`](/docs/commands/grill-me), [`/goal`](/docs/commands/goal), [`/boost`](/docs/boost), [`/schedule`](/docs/commands/schedule), [`/swarm`](/docs/swarm), and [`/teamwork`](/docs/teamwork). Some commands are available on only one surface, and `/boost`, `/swarm`, and `/teamwork` require a paid plan.
 
 [Browse all slash commands](/docs/slash-commands).
 
@@ -97,14 +118,16 @@ Antigravity features built-in live voice transcription, allowing you to prompt a
 
 ### Antigravity App
 
-*   **Start or stop**: Click the microphone button next to the message box to start recording, and click it again to stop. You can also press Ctrl+M to start recording, and press it again to stop.
+*   **Start or stop**: Click the microphone button next to the message box to start recording, and click it again to stop. You can also press Ctrl + M to start recording, and press it again to stop.
 *   **Live view**: As you speak, your words are transcribed in real time directly into the message box.
 *   **Conversational awareness**: Antigravity gives the speech recognizer your recent conversation and the text around your cursor, so project-specific terms are more likely to come through correctly.
 *   **Where it works**: Use voice in the message box to start conversations and send prompt updates, and in artifact comments to leave precise, inline feedback on plans, code diffs, and deliverables.
+*   **Talk with the agent**: To have a spoken, two-way conversation with the agent instead of dictating, use [voice mode](/docs/voice-mode).
 
 ### Antigravity CLI
 
-*   **Start dictation**: Run `/voice` (alias `/record`) or press F5. Your words appear in the prompt box, where you can edit them before you send.
+*   **Talk with the agent**: Run `/voice live` or press F6 to start [voice mode](/docs/voice-mode), a spoken, two-way conversation with the agent.
+*   **Start dictation**: Run `/voice dictate` or `/record`, or press F5. Your words appear in the prompt box, where you can edit them before you send.
 *   **Dictate over SSH**: When the CLI runs on a remote machine, run `agy mic-serve` on your local machine to stream your microphone to it.
 *   **Availability**: Voice dictation in the CLI isn’t currently available for business or enterprise accounts.
 
@@ -131,6 +154,26 @@ In **Settings**, open **Application** and turn on **Enable Remote Control**. You
 *   **Always-on machine**: Run `agy remote-control start` to keep a headless CLI instance available in the background.
 
 [Learn more about Remote Control](/docs/remote-control).
+
+### Remote Agents
+
+Remote Agents run your agent sessions and tools in an isolated, Google-managed remote environment so tasks continue executing even when your local machine is asleep or offline:
+
+*   **Remote workspaces and resources**: Create remote projects connected to GitHub repositories, Google Drive files, and uploaded files.
+*   **Access from anywhere**: Start and monitor remote conversations from the Antigravity App, the Antigravity CLI, or any desktop or mobile browser at [antigravity.google.com](https://antigravity.google.com).
+*   **Availability**: Available to **Google AI Pro** and **Google AI Ultra** subscribers signed in with a personal Google Account.
+
+To start a remote conversation:
+
+### Antigravity App
+
+In the left sidebar, click **+** next to **Projects** and select **New Remote Project**, or open [antigravity.google.com](https://antigravity.google.com) in any browser.
+
+### Antigravity CLI
+
+Start the CLI with the `--remote-agent` flag. Add `--project` to open a specific remote project, and run `/projects` to create remote projects and attach resources.
+
+[Learn more about Remote Agents](/docs/remote-agents).
 
 ### Skills, rules, and MCP servers
 
@@ -165,15 +208,37 @@ In the left sidebar, click **Customizations**, and then open the **Marketplace**
 
 These features are specific to the Antigravity App.
 
+### Knowledge Work and interface layouts
+
+With a personal Google Account, switch between the **Knowledge Work** layout (focused on conversation, documents, artifacts, and folder outputs) and the **Software Engineering** layout (with Git worktrees, change review, terminals, and subagent cards) in **Settings** > **General** > **Interface Layout** (`v2.30.0+`). Both interface layouts share the same agent, models, permissions, skills, MCP servers, and plugins.
+
+[Learn more about Knowledge Work and interface layouts](/docs/settings#interface-layout).
+
 ### Conversations outside of projects
 
 Start quick, one-off conversations outside of any project. These sessions run in a local scratch folder. They have their own settings and permissions in addition to inheriting from global permissions.
 
 ### Search and command palette
 
-Press Cmd+K (macOS) or Ctrl+K (Windows and Linux) to search past conversations by title, project, and full text, including your prompts and the agent’s responses. The same command palette also finds files in your project, runs app commands, and starts a conversation in another project.
+Press Cmd + K (macOS) or Ctrl + K (Windows and Linux) to search past conversations by title, project, and full text, including your prompts and the agent’s responses. The same command palette also finds files in your project, runs app commands, and starts a conversation in another project.
 
 [Learn more about search and the command palette](/docs/search).
+
+### Side panel and Overview panel
+
+Open artifacts, files, diffs, terminals, subagent conversations, and web pages as tabs in the side panel, next to your conversation. The **Overview** panel at the top right of each conversation lists the changes, artifacts, subagents, and links that the conversation produced, so you can open any of them in one click. To work in two conversations at once, split the window.
+
+[Learn more about the side panel and the Overview panel](/docs/side-panel).
+
+### Voice mode
+
+Talk with the agent out loud, and hear it answer in real time. With voice mode in Antigravity, enabled by **Gemini Live**, click **Start Voice mode** in an empty message box to start a spoken conversation in which you can do the following:
+
+*   **Give and steer tasks**: Ask for work, add details or corrections while the agent works, or tell it to stop.
+*   **Answer by voice**: Allow or deny permission prompts and answer the agent’s questions without clicking. Destructive actions still need a click on screen.
+*   **Hear progress when you want it**: The agent works quietly by default. Ask it to keep you posted, and how often.
+
+[Learn more about voice mode](/docs/voice-mode).
 
 ### Automations
 
@@ -190,18 +255,16 @@ For a timer or recurring check inside a single conversation, in either the App o
 
 Use the built-in browser to check your running app or read documentation in the side panel, next to your conversation, and to point the agent to exactly what you see on a page.
 
-![The Antigravity App with a conversation on the left, where the agent answers with a localhost link to a Bookmarks web app, and the built-in browser in the side panel on the right showing that app](/assets/image/docs/browser/built-in-browser.png)
+![The Antigravity App with a conversation on the left, where the agent summarizes the Gemini 4 Argon announcement and links to it, and the built-in browser in the side panel on the right showing that blog post on antigravity.google with its hero image](/assets/image/docs/browser/built-in-browser.png)
 
-*   **Open a page**: Click a web link in an agent response. To open a new browser tab, press Cmd+T (macOS) or Ctrl+T (Windows and Linux), or click **+** in the side panel, and then choose **Browser**. To open a link in your default browser instead, hold Cmd (macOS) or Ctrl (Windows and Linux) while you click it.
+*   **Open a page**: Click a web link in an agent response to open it in the built-in browser (`v2.30.0+`: hold Cmd on macOS or Ctrl on Windows and Linux—or middle-click—to open in a background tab, Cmd + Shift or Ctrl + Shift for a new foreground tab, or Shift to open in your default external browser). To open a blank browser tab, press Cmd + T (macOS) or Ctrl + T (Windows and Linux), or click **+** in the side panel, and then choose **Browser**.
 *   **Go to a URL or search**: Type in the address bar. For local servers that don’t use HTTPS, include `http://`, for example `http://localhost:3000`.
-*   **Navigate**: Use **Back**, **Forward**, and **Reload** in the toolbar, or click **Open in external browser** to open the current page in your default browser. Right-click a link to open it in a new tab or in your external browser.
-*   **Keep sign-ins separate**: The built-in browser keeps its own cookies and sign-ins, separate from your Chrome profile.
+*   **Navigate and capture**: Use **Back**, **Forward**, **Reload**, **Downloads**, **Add screenshot to conversation**, or **Open in external browser** in the toolbar. Click the connection security icon in the address bar to check certificate details or delete cookies and site data for that site (`v2.30.0+`).
+*   **Keep sign-ins separate**: The built-in browser keeps its own cookies and sign-ins per Antigravity account, separate from your Chrome profile. Configure link behavior, download folder, browsing history, and actuation rules in **Settings** > **Browser** (`v2.30.0+`).
 
-To point the agent to part of a page, select text and click **Comment** (C) to leave feedback, or **Quote** (Cmd+L on macOS, Ctrl+L on Windows and Linux) to add the text to your message. The agent receives the page URL and the selected text with your next message.
+To point the agent to part of a page (`v2.30.0+`), select text and right-click to choose **Comment** (or press C) to leave anchored feedback, or **Quote** (or press Cmd + L on macOS, Ctrl + L on Windows and Linux) to insert the selected passage and page URL into your message box.
 
-![Text selected on a web page in the built-in browser, with a popup that offers Comment (C) and Quote (Ctrl+L)](/assets/image/docs/browser/built-in-browser-comment.png)
-
-To have the agent browse and test pages for you, use the [`/browser` command](/docs/commands/browser), which runs the browser subagent in Google Chrome.
+On personal Google Accounts (`v2.30.0+`), the agent can also drive the built-in browser directly across single or parallel tabs—ask in plain language or run [`/browser`](/docs/commands/browser). On business and enterprise accounts, `/browser` connects to Google Chrome. [Learn more about browser use](/docs/browser).
 
 ### PDF viewer
 
@@ -210,11 +273,17 @@ PDF files open in the side panel, so you can read a spec or paper next to your c
 ![A Bookmarks API guide PDF open in the side panel of the Antigravity App, with a toolbar at the bottom for page thumbnails, page navigation, zoom, and fit mode](/assets/image/docs/pdf/pdf-viewer.png)
 
 *   **Navigate**: Use the toolbar at the bottom of the PDF to show page thumbnails, change pages, zoom, and fit the page or the width. To search the PDF, download it, or copy its path, use the **More actions** menu at the top.
-*   **Comment or quote**: Select text and click **Comment** (C) or **Quote** (Cmd+L on macOS, Ctrl+L on Windows and Linux), the same as on a web page.
+*   **Comment or quote**: Select text and click **Comment** (C) or **Quote** (Cmd + L on macOS, Ctrl + L on Windows and Linux), the same as on a web page.
+
+### Jupyter notebooks
+
+Open `.ipynb` files in the side panel to view rendered Markdown cells, syntax-highlighted code cells with execution counts, and inline text, image, and error outputs. Use the **Preview** / **Raw** toggle in the header to inspect the underlying JSON, or add inline comments on cells to send feedback to the agent.
+
+[Learn more about Jupyter notebooks](/docs/jupyter-notebooks).
 
 ### Integrated terminal
 
-Open a terminal in the side panel: click **+** and choose **Terminal**. To show or hide the terminal at any time, press Cmd+J (macOS) or Ctrl+J (Windows and Linux).
+Open a terminal in the side panel: click **+** and choose **Terminal**. To show or hide the terminal at any time, press Cmd + J (macOS) or Ctrl + J (Windows and Linux).
 
 ### Version control system (VCS) panel
 

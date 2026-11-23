@@ -62,11 +62,11 @@ Shall I run the checkout test suite to verify?
 
 Ask anything, @ to mention, / for actions
 
-Gemini 3.8 FlashMedium
+Gemini 4 HydrogenHigh
 
 Model
 
-Gemini 4 Argon _High_Gemini 3.8 Flash _Medium_Claude Sonnet 5.5 _Thinking_Claude Opus 5.5 _Thinking_GPT-OSS 120B _Medium_
+Gemini 4 Carbon _High_Gemini 4 Argon _High_Gemini 4 Hydrogen _High_Orchestrator _Carbon_Orchestrator _Argon_Gemini 3.8 Flash _Medium_Claude Sonnet 5.5 _Thinking_Claude Opus 5.5 _Thinking_GPT-OSS 120B _Medium_
 
 TerminalsProject
 
@@ -124,7 +124,7 @@ Antigravity CLI 1.2.14
 
 developer@example.com (Google AI Pro)
 
-Gemini 3.8 Flash (High)
+Gemini 4 Hydrogen (High)
 
 ~/projects/checkout-service
 
@@ -144,7 +144,7 @@ Edit(src/pricing/discounts.ts)(ctrl+o to expand)
 
 \>
 
-? for shortcutsGemini 3.8 Flash · high
+? for shortcutsGemini 4 Hydrogen · high
 
 A keyboard-first terminal client that runs Antigravity workflows in local shells, remote cloud environments, and SSH sessions.
 
@@ -171,11 +171,11 @@ Project ReviewComprehensive review report for Spring PetClinic application detai
 
 Ask anything, @ to mention, / for actions
 
-Gemini 3.8 Flash Medium
+Gemini 4 Hydrogen High
 
 Model
 
-Gemini 4 Argon HighGemini 3.8 Flash MediumClaude Sonnet 5.5 (Thinking)Claude Opus 5.5 (Thinking)GPT-OSS 120B (Medium)
+Gemini 4 Carbon HighGemini 4 Argon HighGemini 4 Hydrogen HighOrchestrator (Carbon)Orchestrator (Argon)Gemini 3.8 Flash MediumClaude Sonnet 5.5 (Thinking)Claude Opus 5.5 (Thinking)GPT-OSS 120B (Medium)
 
 Preview README.mdproject\_review.md
 
@@ -255,7 +255,7 @@ Frontier Gemini models
 
 Gemini 4 & 3.8
 
-Co-trained with Google DeepMind. Powering all local agents with frontier speed, configurable reasoning levels, and large context capacity across Gemini 4 Argon, Gemini 3.8 Flash, and Gemini 3.1 Pro.
+Co-trained with Google DeepMind. Powering all local agents with frontier speed, configurable reasoning levels, and large context capacity across Gemini 4 Carbon, Gemini 4 Argon, Gemini 4 Hydrogen, Gemini 3.8 Flash, and Gemini 3.1 Pro.
 
 [Model specifications](/docs/models/)
 
@@ -293,7 +293,7 @@ Curated bundles of skills, MCP servers, and extensions engineered with product t
 
 ## Frontier models and dynamic reasoning
 
-Antigravity leverages Google DeepMind’s frontier Gemini models with dynamic reasoning controls. Adjust reasoning effort per conversation turn or delegate long-running tasks to autonomous agent swarms:
+Antigravity leverages Google DeepMind’s frontier Gemini models with dynamic reasoning controls. Adjust reasoning effort per conversation turn or delegate long-running tasks to autonomous [agent swarms](/docs/swarm):
 
 ### Interactive model and thinking level selector
 
@@ -337,7 +337,7 @@ SDK
 | [Multi-agent swarms (/teamwork)](/docs/teamwork/) |  |  |  |  |
 | [Deep reasoning mode (/boost)](/docs/boost/) |  |  |  |  |
 | [Interactive visual artifacts & diffs](/docs/artifacts/) |  |  |  |  |
-| [Sandboxed Chromium browser automation](/docs/ide/browser/) |  |  |  |  |
+| [Sandboxed Chromium browser automation](/docs/browser/) |  |  |  |  |
 | [Custom skills (SKILL.md) & rule files](/docs/skills/) |  |  |  |  |
 | [Model Context Protocol (MCP) clients](/docs/mcp/) |  |  |  |  |
 | [Scheduled tasks & cron sidecars](/docs/sidecars/) |  |  |  |  |

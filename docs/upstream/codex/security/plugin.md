@@ -11,8 +11,8 @@ report with evidence and remediation guidance.
 
 This page covers the Codex Security plugin in the desktop app or Codex CLI. To
   scan a connected GitHub repository in Codex cloud, install the separate
-  **Codex Security Cloud** plugin from the plugin marketplace. See [Cloud
-  setup](https://learn.chatgpt.com/docs/security/setup).
+  **Daybreak Defense Factory (Preview)** plugin from the plugin marketplace. See
+  [Cloud setup](https://learn.chatgpt.com/docs/security/setup).
 
 ## Install the plugin
 
@@ -23,15 +23,7 @@ This page covers the Codex Security plugin in the desktop app or Codex CLI. To
 
    
 
-     <ButtonLink
-       href="codex://plugins/install/codex-security?marketplace=openai-curated"
-       color="primary"
-       variant="solid"
-       size="lg"
-       pill
-     >
-       Install the Codex Security plugin
-     </ButtonLink>
+     [Install the Codex Security plugin](codex://plugins/install/codex-security?marketplace=openai-curated)
    
 
 
@@ -47,9 +39,10 @@ For a personal account, see [plugin and app troubleshooting](https://help.openai
 
 1. In your terminal, go to the repository you want to assess and start Codex:
 
-```bash
+   ```bash
    codex
-```
+   ```
+
 
 2. Enter `/plugins`, search for **Codex Security**, and select **Install
    plugin**.
@@ -78,6 +71,7 @@ the host version and installed plugin versions with:
 codex --version
 codex plugin list --json
 ```
+
 
 Find Codex Security in the `installed` list. Record both versions when you
 start a scan so you can include them when reporting a failure.
@@ -176,9 +170,10 @@ with `xhigh` reasoning effort.
 
    Send this prompt in the new chat:
 
-```text
+   ```text
    Run a Codex Security scan on this repository.
-```
+   ```
+
 
 2. Let the scan finish
 
