@@ -65,6 +65,17 @@ import push_branch  # noqa: E402
 NO_REVIEWER = approve_pr.NO_REVIEWER
 
 
+def at(name, work, *args, **kwargs):
+    """work(...), with a command that failed inside it reported under the step's name: a Stop from
+    the runner starts with the command (`git push: ...`), which three steps share."""
+    try:
+        return work(*args, **kwargs)
+    except Stop as stop:
+        if ' ' not in str(stop).split(':', 1)[0]:   # one word: a step named it already
+            raise
+        raise Stop(f'{name}: {stop}', stop.code) from None
+
+
 def tag(repo, pr, dry, ref=None):
     if dry and ref and git_run.sh(['git', 'rev-parse', '--verify', '-q', f'{ref}^{{commit}}'])[0] != 0:
         return f'would tag {archive_tag.stem(repo.branch)} at {ref[:7]} and push it (the head is not fetched in a dry run)'
@@ -93,15 +104,15 @@ def run_number(args):
         raise Stop('approve: --title and --body-file belong to the one-run form (no PR number)')
     dry = args.dry_run
     step = git_run.step
-    repo, pr = pull_request(args.pr, dry)
+    repo, pr = at('pr', pull_request, args.pr, dry)
     step('pr', f'#{pr["number"]} {pr["state"].lower()}: {repo.branch} -> {repo.base} in {repo.slug}, by {repo.author}')
-    login, token = approve_pr.reviewer(repo, args.reviewer, dry)
+    login, token = at('reviewer', approve_pr.reviewer, repo, args.reviewer, dry)
     step('reviewer', login)
-    step('review', approve_pr.review(pr, login, token, dry))
-    step('tag', tag(repo, pr, dry, ref=repo.tip))
-    step('merge', merge_pr.merge(pr, dry))
-    step('branch', 'deleted on origin' if prune_branch.delete_remote(repo.branch, dry) else 'gone already')
-    back = prune_branch.finish(repo, dry, number=pr['number'])
+    step('review', at('review', approve_pr.review, pr, login, token, dry))
+    step('tag', at('tag', tag, repo, pr, dry, ref=repo.tip))
+    step('merge', at('merge', merge_pr.merge, pr, dry))
+    step('branch', 'deleted on origin' if at('branch', prune_branch.delete_remote, repo.branch, dry) else 'gone already')
+    back = at('prune', prune_branch.finish, repo, dry, number=pr['number'])
     print(('would land ' if dry else 'landed ') + pr['url'])
     if back:
         print(back)
@@ -112,17 +123,17 @@ def run(args):
         return run_number(args)
     dry = args.dry_run
     step = git_run.step
-    repo = git_run.preflight()
+    repo = at('preflight', git_run.preflight)
     step('preflight', f'{repo.branch} -> {repo.base} in {repo.slug}, as {repo.author}')
-    login, token = approve_pr.reviewer(repo, args.reviewer, dry)
+    login, token = at('reviewer', approve_pr.reviewer, repo, args.reviewer, dry)
     step('reviewer', login)
-    step('push', push_branch.push(repo, dry))
-    pr, said = open_pr.pull_request(repo, args.title, args.body_file, dry)
+    step('push', at('push', push_branch.push, repo, dry))
+    pr, said = at('pr', open_pr.pull_request, repo, args.title, args.body_file, dry)
     step('pr', said)
-    step('review', approve_pr.review(pr, login, token, dry))
-    step('tag', tag(repo, pr, dry))
-    step('merge', merge_pr.merge(pr, dry))
-    back = prune_branch.finish(repo, dry)
+    step('review', at('review', approve_pr.review, pr, login, token, dry))
+    step('tag', at('tag', tag, repo, pr, dry))
+    step('merge', at('merge', merge_pr.merge, pr, dry))
+    back = at('prune', prune_branch.finish, repo, dry)
     print(('would land ' if dry else 'landed ') + pr['url'])
     if back:
         print(back)
