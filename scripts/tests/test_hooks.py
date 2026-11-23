@@ -59,8 +59,10 @@ class InstallHooksTest(unittest.TestCase):
         self.output = out.getvalue()
         return count
 
-    def path(self, cli):
-        return installer.path(self.home, cli, 'hooks')
+    def path(self, cli) -> Path:
+        found = installer.path(self.home, cli, 'hooks')
+        assert found is not None
+        return found
 
     def read(self, cli):
         return json.loads(self.path(cli).read_text())
@@ -130,7 +132,7 @@ class InstallHooksTest(unittest.TestCase):
         self.assertEqual(hooks.entries('pi', self.chosen), ())  # no hook file: its extension asks the door
 
     def test_pi_has_no_hook_file(self):
-        self.assertIsNone(self.path('pi'))
+        self.assertIsNone(installer.path(self.home, 'pi', 'hooks'))
         self.assertEqual(self.install(('pi',), apply=True), 0)
 
     def test_a_hook_file_without_a_format_is_refused(self):

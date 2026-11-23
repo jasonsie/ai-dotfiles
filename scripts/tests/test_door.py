@@ -71,7 +71,7 @@ class Fixture(unittest.TestCase):
         self.root = Path(temp.name)
         self.log = self.root / 'seen.jsonl'
 
-    def feature(self, name, order, wants=None, budget=None, cloud=False, **behavior):
+    def feature(self, name, order, wants=None, budget=None, cloud=False, fail=None, **behavior):
         folder = self.root / 'features' / name
         folder.mkdir(parents=True)
         wants = wants or EVERY_TOOL
@@ -80,6 +80,8 @@ class Fixture(unittest.TestCase):
             'module': 'hook.py', 'order': order, 'wants': wants,
             'budget': {kind: (budget or 10) for kind in kinds}}}))
         (folder / 'hook.py').write_text(HOOK)
+        if fail is not None:
+            behavior['raise'] = fail
         (folder / 'behavior.json').write_text(json.dumps({'log': str(self.log), **behavior}))
 
     def call(self, cli='claude', kind='pre', command='git status', tool='Bash', **data):
@@ -154,7 +156,7 @@ class ChainTest(Fixture):
 
 class SkipTest(Fixture):
     def test_a_feature_that_fails_is_skipped_and_before_a_tool_call_says_so(self):
-        self.feature('a', 1, **{'raise': 'boom'})
+        self.feature('a', 1, fail='boom')
         self.feature('b', 2, note='b answered')
         out, status = self.call()
         self.assertEqual(status, 0)
@@ -211,7 +213,7 @@ class CommandTest(Fixture):
         self.assertEqual(json.loads(out)['hookSpecificOutput']['additionalContext'], 'mac only\ncloud too')
 
     def test_a_worktree_is_answered_with_its_path_and_a_failure_with_its_reason(self):
-        self.feature('refuses', 1, wants={'claude': {'create': True, 'remove': True}}, **{'raise': 'taken'})
+        self.feature('refuses', 1, wants={'claude': {'create': True, 'remove': True}}, fail='taken')
         self.feature('makes', 2, wants={'claude': {'create': True}}, path='/w/.claude/worktrees/x')
         self.assertEqual(self.main('create', '--cli', 'claude', data={'name': 'x'}),
                          (0, '/w/.claude/worktrees/x\n', 'refuses: taken\n'))

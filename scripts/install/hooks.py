@@ -36,6 +36,8 @@ replaced by the daily pass, with its state folder. Files are never written throu
 backed up before writing, and are restored on failure. --uninstall removes only these entries,
 leaving every other hook as it is.
 """
+from __future__ import annotations
+
 import copy
 import json
 from pathlib import Path
@@ -259,7 +261,7 @@ def plan_python(home, uninstall=False):
     return path, before, after
 
 
-def install(home, add, remove=(), apply=False, chosen=None, python=True):
+def install(home, add, remove=(), apply=False, chosen=None, python: bool | None = True):
     """Merge the door's entries for the chosen features into the hook files of the CLIs in `add`;
     take ours out for `remove`; retire what is no longer installed. One edit per file. `python`:
     link the door's Python (True), remove the link (False), or leave it as it is (None)."""

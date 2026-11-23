@@ -38,6 +38,7 @@ class FindTest(Fixture):
         found = features.find()
         self.assertEqual([f.name for f in found], ['worktree-guard', 'small-commits', 'herdr-title'])
         for feature in found:
+            assert feature.module is not None
             self.assertTrue(feature.module.is_file(), feature.name)
         self.assertEqual([f.name for f in found if f.cloud], ['small-commits'])
 
@@ -56,6 +57,7 @@ class FindTest(Fixture):
 
     def test_what_a_feature_wants(self):
         feature = features.load(self.declare('a', GOOD))
+        assert feature.module is not None
         self.assertEqual((feature.order, feature.budget, feature.module.name), (5, {'pre': 2, 'end': 1}, 'hook.py'))
         self.assertTrue(feature.wanted('claude', 'pre', 'edit'))
         self.assertFalse(feature.wanted('claude', 'pre', 'read'))

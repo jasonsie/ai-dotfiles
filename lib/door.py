@@ -116,7 +116,7 @@ def run(feature, event, seconds):
 def failure(feature, kind, error):
     """What is said in a failed feature's place: before a tool call, its failed(error); else nothing."""
     module = LOADED.get(str(feature.module))
-    if kind != 'pre' or not hasattr(module, 'failed'):
+    if kind != 'pre' or module is None or not hasattr(module, 'failed'):
         return None
     try:
         return module.failed(error)

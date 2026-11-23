@@ -38,6 +38,7 @@ from pathlib import Path
 import re
 import tempfile
 import time
+from typing import Any
 
 CLIS = ('claude', 'codex', 'agy', 'pi')
 HOOK_FILE_CLIS = ('claude', 'codex', 'agy')  # Pi loads an extension instead
@@ -168,7 +169,8 @@ def read(cli, kind, data):
     data = data if isinstance(data, dict) else {}
     if cli == 'agy':
         paths = data.get('workspacePaths') or []
-        call = data.get('toolCall') if isinstance(data.get('toolCall'), dict) else {}
+        raw_call = data.get('toolCall')
+        call = raw_call if isinstance(raw_call, dict) else {}
         session, folder = data.get('conversationId'), (paths[0] if paths else None)
         tool, tool_input = str(call.get('name') or ''), call.get('args')
         model_stopped = data.get('terminationReason', 'model_stop') == 'model_stop'
@@ -203,14 +205,14 @@ def render_pre(cli, reply):
     """A 'pre' reply: Claude Code and Codex share hookSpecificOutput; Antigravity always wants
     a decision; Pi's extension applies block, input, note and status itself."""
     if isinstance(reply, Shown):
-        out = render_pre(cli, reply.reply)
+        inner = render_pre(cli, reply.reply)
         if cli in ('claude', 'codex'):  # only systemMessage: PreToolUse rejects continue, stopReason, suppressOutput
-            return {**(out or {}), 'systemMessage': reply.text}
-        return {**(out or {}), 'status': reply.status} if cli == 'pi' else out
+            return {**(inner or {}), 'systemMessage': reply.text}
+        return {**(inner or {}), 'status': reply.status} if cli == 'pi' else inner
     if cli in ('claude', 'codex'):
         if reply is None:
             return None
-        out = {'hookEventName': 'PreToolUse'}
+        out: dict[str, object] = {'hookEventName': 'PreToolUse'}
         if isinstance(reply, Deny):
             out.update(permissionDecision='deny', permissionDecisionReason=reply.reason)
         elif isinstance(reply, Rewrite):
@@ -236,7 +238,7 @@ def render_pre(cli, reply):
     return None
 
 
-def render(cli, kind, reply):
+def render(cli, kind, reply) -> Any:
     """The JSON a CLI expects for `reply`, or None to print nothing; for a RAW kind, the text."""
     if kind == 'pre':
         return render_pre(cli, reply)
