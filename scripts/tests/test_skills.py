@@ -106,14 +106,27 @@ def _tokenize(text):
     return [tok for tok in re.split(r'[^a-z0-9]+', text.lower()) if len(tok) > 2 and tok not in STOPWORDS]
 
 
+def model_invoked_descriptions(skills_root):
+    """{name: description} for the skills an agent can fire itself (no disable-model-invocation: true)."""
+    found = {}
+    for name, folder in sorted(skills.skills(skills_root).items()):
+        fields, _ = parse_frontmatter((folder / 'SKILL.md').read_text())
+        if fields.get('disable-model-invocation', '').lower() != 'true':
+            found[name] = fields['description']
+    return found
+
+
 def description_collisions(items, threshold=COLLISION_THRESHOLD):
-    """Return [(cosine, name_a, name_b)] for pairs at or above threshold under stdlib TF-IDF."""
+    """Return [(cosine, name_a, name_b)] for pairs at or above threshold under stdlib TF-IDF.
+
+    Only the descriptions are scored; names are labels. Counting name tokens as well would let one
+    description under two different names score below the threshold.
+    """
     docs = {}
     df = {}
     for name, description in items.items():
-        tokens = _tokenize(name) * 2 + _tokenize(description)
         tf = {}
-        for tok in tokens:
+        for tok in _tokenize(description):
             tf[tok] = tf.get(tok, 0) + 1
         docs[name] = tf
         for tok in tf:
@@ -441,12 +454,7 @@ class SkillQualityTest(unittest.TestCase):
                 self.assertEqual(broken, [], f'{md.relative_to(skills_root)} has broken links: {broken}')
 
     def test_model_invoked_descriptions_do_not_collide(self):
-        names = skills.skills(skills.WORKSPACE / 'skills')
-        model_invoked = {}
-        for name, folder in sorted(names.items()):
-            fields, _ = parse_frontmatter((folder / 'SKILL.md').read_text())
-            if fields.get('disable-model-invocation', '').lower() != 'true':
-                model_invoked[name] = fields['description']
+        model_invoked = model_invoked_descriptions(skills.WORKSPACE / 'skills')
         self.assertGreater(len(model_invoked), 0)
         self.assertNotIn('implement-spec', model_invoked)  # disable-model-invocation: true excluded
         collisions = description_collisions(model_invoked, threshold=COLLISION_THRESHOLD)
@@ -455,6 +463,13 @@ class SkillQualityTest(unittest.TestCase):
             [],
             f'model-invoked skill description collisions >= {COLLISION_THRESHOLD}: {collisions}',
         )
+
+    def test_collision_check_flags_a_copy_of_any_real_description(self):
+        model_invoked = model_invoked_descriptions(skills.WORKSPACE / 'skills')
+        for name, description in model_invoked.items():
+            with self.subTest(skill=name):
+                hits = description_collisions({**model_invoked, 'zz-copy': description})
+                self.assertIn((name, 'zz-copy'), [(a, b) for _, a, b in hits])  # 'zz-' sorts last
 
     def test_parse_frontmatter_checks_closing_fence_duplicates_and_blocks(self):
         with self.assertRaisesRegex(ValueError, 'missing closing ---'):
@@ -478,16 +493,16 @@ class SkillQualityTest(unittest.TestCase):
             )
             self.assertEqual(broken_relative_links(md), [(2, 'MISSING.md')])
 
-    def test_description_collisions_flags_near_duplicates(self):
+    def test_description_collisions_flag_one_description_under_two_names(self):
+        same = 'Review pull request diffs against coding standards and spec requirements.'
         items = {
-            'review-code': 'Review pull request diffs against coding standards and spec requirements.',
-            'code-review': 'Review pull request diffs against coding standards and spec requirements.',
+            'spec-audit': same,
+            'diff-check': same,
             'daily-log': 'Record finished engineering work in the daily log journal file.',
         }
         hits = description_collisions(items, threshold=COLLISION_THRESHOLD)
-        self.assertEqual(len(hits), 1)
-        self.assertEqual((hits[0][1], hits[0][2]), ('code-review', 'review-code'))
-        self.assertGreaterEqual(hits[0][0], COLLISION_THRESHOLD)
+        self.assertEqual([(a, b) for _, a, b in hits], [('diff-check', 'spec-audit')])
+        self.assertAlmostEqual(hits[0][0], 1.0)
 
 
 if __name__ == '__main__':
