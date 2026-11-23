@@ -121,6 +121,14 @@ class InstallHooksTest(unittest.TestCase):
             self.assertIn(tool, pre['matcher'])
         self.assertEqual(pre['hooks'], [door('pre', 'agy', 60)])
 
+    def test_tools_a_cli_lacks_give_no_entry_never_one_for_every_tool(self):
+        asks = hooks.declared.Feature('asks', Path('/f'), False, Path('/f/x.py'), 1, {'pre': 1},
+                                      {cli: {'pre': frozenset({'ask'})} for cli in ('claude', 'codex', 'agy')})
+        self.assertEqual(hooks.entries('claude', [asks]), (('PreToolUse', 'pre', 'AskUserQuestion|ExitPlanMode', 60),))
+        for cli in ('codex', 'agy'):  # no dialog tools there
+            self.assertEqual(hooks.entries(cli, [asks]), (), cli)
+        self.assertEqual(hooks.entries('pi', self.chosen), ())  # no hook file: its extension asks the door
+
     def test_pi_has_no_hook_file(self):
         self.assertIsNone(self.path('pi'))
         self.assertEqual(self.install(('pi',), apply=True), 0)

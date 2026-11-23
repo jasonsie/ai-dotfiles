@@ -66,9 +66,12 @@ OURS = (MARK, *RETIRED_MARKS)
 
 def entries(cli, chosen):
     """((native event, kind, matcher, timeout), ...) for `cli`: one per kind a chosen feature wants
-    there. No entry when none of the tools wanted has a matcher in this CLI, not one for every tool."""
+    there. No entry when none of the tools wanted has a matcher in this CLI, not one for every tool;
+    none at all for a CLI without a hook file (Pi's extension asks the door itself)."""
+    if cli not in agent_hooks.HOOK_FILE_CLIS:
+        return ()
     found = []
-    for kind in agent_hooks.KINDS.get(cli, ()):
+    for kind in agent_hooks.KINDS[cli]:
         tools = [feature.tools(cli, kind) for feature in chosen if kind in feature.wants.get(cli, {})]
         if not tools:
             continue

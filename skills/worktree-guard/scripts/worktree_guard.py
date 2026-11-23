@@ -697,7 +697,7 @@ def tell(event, state, reply):
 
 
 def decide(event, state, table=None):
-    """The reply to one hook call; `state` is the session's, saved by agent_hooks.call."""
+    """The reply to one hook call; `state` is the session's, saved by agent_hooks.handle."""
     return tell(event, state, route(event, state, table))
 
 
