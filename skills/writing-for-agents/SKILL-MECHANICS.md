@@ -20,3 +20,12 @@ The invocation cut of splitting (the sequence cut lives in `SKILL.md`): split of
 ## Router skills
 
 When user-invoked skills multiply past what you can remember, that piled-up cognitive load is cured by a **router skill**: one user-invoked skill that names the others and when to reach for each, so the human has one skill to remember instead of many. It can only hint, never fire them: user-invoked skills have no description, so nothing but the human can reach them.
+
+## Packaging and hygiene
+
+- **Size cap:** keep each `SKILL.md` under 20,000 bytes. Push heavy reference into sibling Markdown files behind a context pointer.
+- **Folder hygiene:** keep scratch and test files (`test-*.md`, `CREATION-LOG.md`) out of `skills/`, and verify every relative Markdown link resolves.
+
+## Testing a skill (optional)
+
+For discipline-enforcing or behavior-shaping skills, run a lightweight RED→GREEN pressure test before shipping: give a fresh subagent a realistic, tempting scenario **without** the skill to observe the baseline failure and exact rationalizations (RED), write minimal guidance matched to that failure mode (see `Match the form to the failure` in `SKILL.md`), then re-run **with** the skill (GREEN) and close any remaining loopholes. Skip for pure reference skills.

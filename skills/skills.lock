@@ -83,7 +83,7 @@
       ],
       "commit": "abeeaf95660ba9e8b7c753eb38f441ca707a8823",
       "license": "MIT",
-      "local_edits": "Skill-tool calls reworded to load the skill on every CLI; review step uses spec-review"
+      "local_edits": "Skill-tool calls reworded to load the skill on every CLI; review step uses spec-review; verify-before-fixing and technical pushback rule on review findings (adapted from obra/superpowers@22f0b46 skills/receiving-code-review/SKILL.md, MIT)"
     },
     "implement-spec": {
       "repo": "mattpocock/skills",
@@ -93,7 +93,7 @@
       ],
       "commit": "abeeaf95660ba9e8b7c753eb38f441ca707a8823",
       "license": "MIT",
-      "local_edits": "setup pointer names setup-agent-skills; Skill-tool calls reworded; review step uses spec-review; one ticket at a time where the CLI has no sub-agents; slashes dropped from skill names in the description"
+      "local_edits": "setup pointer names setup-agent-skills; Skill-tool calls reworded; review step uses spec-review; one ticket at a time where the CLI has no sub-agents; slashes dropped from skill names in the description; step 7 adds bounded 3-round verify/fix/re-review loop with ledger and breaker (adapted from obra/superpowers@22f0b46 skills/subagent-driven-development/references/fix-loop.md and skills/receiving-code-review/SKILL.md, MIT)"
     },
     "improve-codebase-architecture": {
       "repo": "mattpocock/skills",
@@ -282,7 +282,7 @@
       ],
       "commit": "abeeaf95660ba9e8b7c753eb38f441ca707a8823",
       "license": "MIT",
-      "local_edits": "none beyond the attribution line"
+      "local_edits": "\"Match the form to the failure\" table and no-nuance/exemption rules in SKILL.md, plus 20k size cap, layout hygiene, and optional RED->GREEN pressure-testing note in SKILL-MECHANICS.md (adapted from obra/superpowers@22f0b46 skills/writing-skills/SKILL.md, MIT)"
     },
     "migrate-to-shoehorn": {
       "repo": "mattpocock/skills",

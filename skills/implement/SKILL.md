@@ -12,8 +12,8 @@ Where possible, load the `tdd` skill (the Skill tool, where the CLI has one) at 
 
 Run typechecking regularly, single test files regularly, and the full test suite once at the end.
 
-Once done, load the `spec-review` skill (the Skill tool, where the CLI has one) to review the work.
+Once done, load the `spec-review` skill (the Skill tool, where the CLI has one) to review the work. Before fixing any finding, verify it against the codebase and spec: fix confirmed issues and re-run the covering tests; push back with technical reasoning (citing code, tests, or spec) on findings that are wrong, break existing behavior, or violate YAGNI, and ask the user when a finding is ambiguous or conflicts with the spec.
 
 Commit your work to the current branch.
 
-Adapted from `implement` in mattpocock/skills (MIT License; see LICENSE here).
+Adapted from `implement` in mattpocock/skills (MIT License; see LICENSE here); review-verification guidance adapted from `receiving-code-review` in obra/superpowers (MIT License; see `THIRD-PARTY-NOTICES.md`).

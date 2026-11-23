@@ -35,10 +35,14 @@ Communication to and from subagents should be sparse. Communicate primarily thro
 
 6. If this changes the **frontier** of available tickets, kick off more **implementer subagents** to work on the new tickets. This allows for maximum concurrency.
 
-7. Once all tickets are complete, load the `spec-review` skill (the Skill tool, where the CLI has one) on the integration branch. Fix all issues raised by the code review in a single fresh **implementer subagent**.
+7. Once all tickets are complete, load the `spec-review` skill (the Skill tool, where the CLI has one) on the integration branch and run a bounded fix loop (3 rounds max):
+   - **Verify first.** Check each finding against the codebase and spec before dispatching a fix. Push back with technical reasoning on findings that contradict the spec, break existing behavior, or add unused scope (YAGNI), and record the ruling in the ledger.
+   - **Fix.** Dispatch a fresh **implementer subagent** with the confirmed open findings (where the CLI has no subagents, fix in-session). It fixes each item, runs the covering tests, and reports the command and output. Never fix findings in the controller session when subagents are available.
+   - **Re-review.** Re-run `spec-review` on the integration branch (scoped to the open findings and fix diff), then record a one-line ledger entry: `Review round <R>/3: <X> fixed, <Y> open (<one-liners>)`.
+   - **Breaker (after round 3).** Stop dispatching if findings remain. Adjudicate each remaining item yourself against the spec: park contestable or non-blocking items with a ruling (`Parked: <finding> — <reason>`), or stop and ask the user if a remaining defect is load-bearing or ambiguous. Never silently discard a finding.
 
 8. If a draft PR exists, mark it ready for review. Otherwise, resolve each ticket the way the issue tracker closes work, and report the integration branch.
 
 9. Clean up all **implementer subagent** worktrees.
 
-Adapted from `implement-spec` in mattpocock/skills (MIT License; see LICENSE here).
+Adapted from `implement-spec` in mattpocock/skills (MIT License; see LICENSE here); bounded review fix-loop adapted from `subagent-driven-development` and `receiving-code-review` in obra/superpowers (MIT License; see `THIRD-PARTY-NOTICES.md`).

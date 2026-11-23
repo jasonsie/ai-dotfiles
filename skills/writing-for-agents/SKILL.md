@@ -73,6 +73,22 @@ You win twice: fewer tokens, and a sharper hook for the agent to hang its thinki
 
 **Negation** is the failure mode beside this lever: steering by prohibition drags the forbidden behaviour into context and makes it _more_ available, not less. _Don't think of an elephant_, and the elephant is all there is; the negation is a weak modifier the strongly-activated concept overruns, so the ban half-reads as an instruction to do the thing. Prompt the **positive**: state the target behaviour ("write one-line comments") so the banned one is never spoken. A prohibition earns its place only as a hard guardrail you cannot phrase positively; even then, pair it with the positive target so attention lands on what to do.
 
+## Match the form to the failure
+
+Classify the baseline failure before choosing how to word a rule. A form that prevents one failure mode backfires on another:
+
+| Baseline failure | Right form | Wrong form |
+|---|---|---|
+| Skips or violates a rule under pressure (knows better, does it anyway) | Prohibition + explicit loophole counters (rationalization table, red flags) | Soft guidance ("prefer...", "consider...") |
+| Complies, but output has the wrong shape (bloated, buried verdict, restated spec) | Positive recipe or contract: state what the output is — its parts, in order | Prohibition list ("don't restate", "never narrate") |
+| Omits a required element from something it already produces | Structural: a required field or slot in the template it fills in | Prose reminders near the template |
+| Behavior depends on a condition | Conditional keyed to an observable predicate ("if the brief exists, cite it") | Unconditional rule + exemption clauses |
+
+Two rules apply to whichever form you pick:
+
+- **No nuance clauses.** "Don't X unless it matters" reopens negotiation and turns consistent compliance noisy. Express a real exception as its own conditional on an observable predicate.
+- **Exemption clauses don't scope.** "This limit doesn't apply to code blocks" still suppresses code blocks. Restructure so the rule cannot reach what must stay exempt.
+
 ## Pruning
 
 - Keep each meaning in a **single source of truth**: one authoritative place, so changing the behaviour is a one-place edit. **Duplication** (the same meaning in more than one place) costs maintenance and tokens, and inflates a meaning's prominence on the ladder past its real rank. (The accidental inverse of a leading word, which repeats a token on purpose, never the meaning.)
@@ -80,4 +96,4 @@ You win twice: fewer tokens, and a sharper hook for the agent to hang its thinki
 - Check every line for **relevance**: does it still bear on what the document does? A line loses relevance by never bearing on the task (mere exposition, or a branch that should be disclosed) or by going stale as the behaviour or world it describes changes. Shorter documents are easier to keep relevant. Without a pruning discipline the default fate is **sediment**: stale layers that settle because adding feels safe and removing feels risky, until you must core down through them to find what is still live.
 - Hunt **no-ops** sentence by sentence: an instruction the model already obeys by default pays load to say nothing. The test (does it change behaviour versus the default?) is model-relative, not reader-relative: two people disagreeing about a no-op disagree about the default, and settle it by running the document, not by debate. When a sentence fails, delete the whole sentence rather than trim words from it. The test also grades leading words: a word too weak to beat the default (_be thorough_ when the agent is already thorough-ish) is a no-op, and the fix is a stronger word (_relentless_), not a different technique.
 
-Adapted from `writing-for-agents` in mattpocock/skills (MIT License; see LICENSE here).
+Adapted from `writing-for-agents` in mattpocock/skills (MIT License; see LICENSE here); "Match the form to the failure" and the pressure-testing note in `SKILL-MECHANICS.md` adapted from `writing-skills` in obra/superpowers (MIT License; see `THIRD-PARTY-NOTICES.md`).

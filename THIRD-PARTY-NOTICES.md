@@ -12,6 +12,7 @@ the pinned commit and the local edits for every one of them.
 |---|---|---|---|
 | `codebase-design`, `diagnosing-bugs`, `domain-modeling`, `grill-with-docs`, `grilling`, `handoff`, `implement`, `implement-spec`, `improve-codebase-architecture`, `migrate-to-shoehorn`, `pr`, `prototype`, `research`, `retro`, `setup-agent-skills`, `setup-pre-commit`, `spec-review`, `tdd`, `teach`, `to-questionnaire`, `to-spec`, `to-tickets`, `triage`, `wait-what`, `wayfinder`, `which-skill`, `wizard`, `writing-for-agents` | [mattpocock/skills](https://github.com/mattpocock/skills) | MIT | (c) 2026 Matt Pocock |
 | `onboard` | [affaan-m/ECC](https://github.com/affaan-m/ECC) | MIT | (c) 2026 Affaan Mustafa |
+| `implement`, `implement-spec`, `writing-for-agents` (adapted sections) | [obra/superpowers](https://github.com/obra/superpowers) | MIT | (c) 2025 Jesse Vincent |
 
 `skills/pr/CREDITS.md` carries that skill's own credits.
 
