@@ -747,11 +747,23 @@ def route(event, state, table=None):
     return Note(text) if text else None
 
 
+def hook(event):
+    """The door's call (lib/door.py): before a tool call and at a session's end, decide() with the
+    session's state; Claude Code's WorktreeCreate gets the new worktree's path and WorktreeRemove
+    nothing, a failure raising with the reason Claude shows."""
+    if event.kind == 'create':
+        return native_create(event)
+    if event.kind == 'remove':
+        return native_remove(event)
+    return agent_hooks.handle(event, decide, SESSIONS)
+
+
 def answer(cli, kind):
     return lambda data: agent_hooks.call(cli, kind, data, decide, SESSIONS)
 
 
 def failed(error):
+    """What the door says in the guard's place when it fails before a tool call: never a block."""
     return Note(f'worktree-guard failed ({error}); this edit was not protected from other sessions.')
 
 

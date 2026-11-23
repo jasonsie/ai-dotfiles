@@ -12,6 +12,7 @@
 #   ai-dotfiles approve [n] [flags] land PR n from any session, or the branch checked out here
 #   ai-dotfiles git <step> [flags]  one step: push, pr, review, reviewer, tag, merge, prune
 #   ai-dotfiles statusline          the status line Claude Code and Antigravity run: session JSON in, lines out
+#   ai-dotfiles hook <kind> --cli <cli>  what every CLI hook runs: the event's JSON in, every feature's reply out
 #   Flags pass through, e.g. --dry-run, --target=claude; see each script's --help.
 
 set -euo pipefail
@@ -25,7 +26,7 @@ while [ -L "$SELF" ]; do
 done
 SCRIPTS="$(cd "$(dirname "$SELF")" && pwd)"
 
-usage() { sed -n '2,15p' "$SELF" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,16p' "$SELF" | sed 's/^# \{0,1\}//'; }
 
 COMMAND="${1:-install}"
 case "$COMMAND" in
@@ -44,6 +45,13 @@ case "$COMMAND" in
   ship) exec python3 "$SCRIPTS/../skills/git/ship/scripts/ship.py" "$@" ;;
   approve) exec python3 "$SCRIPTS/../skills/git/approve/scripts/approve.py" "$@" ;;
   statusline) exec "${PYTHON:-python3}" "$SCRIPTS/statusline.py" "$@" ;;
+  hook)
+    # The Python the hooks step linked (scripts/install/hooks.py), not the pyenv shim that python3
+    # resolves to in the session's folder: about 150 ms less per call, and one Python in every
+    # project. $PYTHON overrides it; python3 when the link is missing or broken.
+    PY="${PYTHON:-$HOME/.local/state/ai-dotfiles/python3}"
+    [ -n "${PYTHON:-}" ] || [ -x "$PY" ] || PY=python3
+    exec "$PY" "$SCRIPTS/../lib/door.py" hook "$@" ;;
   git)
     GIT="$SCRIPTS/../skills/git"
     STEP="${1:-}"

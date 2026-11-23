@@ -412,11 +412,17 @@ def decide(event, state):
     return Note(' '.join(notes)) if notes else None
 
 
+def hook(event):
+    """The door's call (lib/door.py) before a tool call: decide() with the session's state."""
+    return agent_hooks.handle(event, decide, SESSIONS)
+
+
 def answer(cli, kind):
     return lambda data: agent_hooks.call(cli, kind, data, decide, SESSIONS)
 
 
 def failed(error):
+    """What the door says in the gate's place when it fails: never a block."""
     return Note(f'small-commits failed ({error}); this commit was not checked.')
 
 

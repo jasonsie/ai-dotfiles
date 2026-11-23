@@ -502,6 +502,18 @@ HANDLERS = {'prompt': on_prompt, 'stop': on_stop, 'error': lambda event: settle(
             'start': on_start, 'end': on_end}
 
 
+def hook(event):
+    """The door's call (lib/door.py) for one event; the reply is always none, so each CLI gets its
+    quiet reply. Nothing runs outside a Herdr pane, for a session that only shares the pane's
+    environment, or without a session id."""
+    if pane() and not outsider(event.cli) and event.session:
+        if event.kind == 'prompt':
+            SESSIONS.prune(time.time())
+            PANES.prune(time.time())
+        HANDLERS[event.kind](event)
+    return None
+
+
 def cmd_hook(args):
     """Every call goes through serve, so each CLI gets the reply it expects even outside Herdr."""
     def answer(data):
