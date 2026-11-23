@@ -291,13 +291,16 @@ session as JSON on stdin and shows what it prints.
   (`7 days · Fable 45% → Thu 08:00`). A gateway on another machine is never asked, and one that
   does not answer within 0.3 s shows nothing. Each refresh asks anew.
 - **Codex** runs no script: `tui.status_line` lists its own items (`current-dir`, `git-branch`,
-  `model-with-reasoning`, `codex-version`, `context-remaining`) and cannot follow a steered
-  session, so its footer keeps showing the main checkout: **a gap, not emulated**. Instead
+  `model-with-reasoning`, `codex-version`, `context-remaining`, `five-hour-limit`,
+  `weekly-limit`) and cannot follow a steered session, so its footer keeps showing the main checkout: **a gap, not emulated**. Instead
   worktree-guard answers the session's next tool call after a worktree is made or deleted with
   a one-line notice (a `systemMessage`, Codex's own channel for a line to the person: native, not a
   shim): `fix/x works in <path>`, then `fix/x is deleted; the
   session is back in <repo>`. The notice comes with the next call, not the moment the worktree
   changes, so a deletion by `ship` is told only if the session makes another call.
+  The two limit items are the share left of the account's primary and secondary usage limit,
+  each omitted when there is none (a free plan has one 30-day window, shown by the first); they
+  fill in behind a gateway too, since Codex reads them from its own responses.
   **Pi**'s built-in footer already shows the folder, branch, model, thinking level, context and
   cost; the Pi extension (`scripts/agent_hooks.ts`) adds a footer status, `worktree`, with the
   work name, set and cleared by the same next-call answer. A resumed Pi session shows it after its
