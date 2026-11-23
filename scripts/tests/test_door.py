@@ -11,6 +11,8 @@ import io
 import json
 import os
 from pathlib import Path
+import shutil
+import subprocess
 import sys
 import tempfile
 import time
@@ -220,6 +222,47 @@ class CommandTest(Fixture):
         status, out, err = self.main('stop', '--cli', 'codex', data={'session_id': 's'})
         self.assertEqual((status, out), (0, '{}\n'))
         self.assertIn('features/a/feature.json', err)
+
+
+PI_DRIVER = """
+import extension from %s;
+const on = {};
+extension({ on: (name, handler) => { on[name] = handler; } });
+const status = [];
+const ctx = { cwd: %s, model: { id: "m" }, ui: { setStatus: (key, value) => status.push([key, value ?? null]) },
+              sessionManager: { getSessionId: () => "p1", getSessionFile: () => "" } };
+const call = (id, toolName, input) => on.tool_call({ toolName, toolCallId: id, input }, ctx) ?? null;
+const commit = call("c1", "bash", { command: "git commit -m 'add b'" });
+const read = call("c2", "read", { path: "b.txt" });
+console.log(JSON.stringify({ commit, read, status }));
+"""
+
+
+@unittest.skipUnless(shutil.which('node'), "Node runs Pi's extension here")
+class PiExtensionTest(unittest.TestCase):
+    """scripts/agent_hooks.ts as Pi loads it: a tool call asks the door, which runs the real features."""
+
+    def test_a_tool_call_asks_the_door_and_a_bad_commit_is_blocked(self):
+        temp = Path(tempfile.mkdtemp(prefix='pi door '))
+        self.addCleanup(shutil.rmtree, temp, ignore_errors=True)
+        repo = temp / 'repo'
+        for args in (['init', '-q', '-b', 'main', str(repo)], ['-C', str(repo), 'config', 'user.email', 't@t'],
+                     ['-C', str(repo), 'config', 'user.name', 't']):
+            subprocess.run(['git', *args], check=True)
+        (repo / 'b.txt').write_text('b\n')
+        subprocess.run(['git', '-C', str(repo), 'add', 'b.txt'], check=True)
+        driver = temp / 'driver.mjs'
+        driver.write_text(PI_DRIVER % (json.dumps(str(ROOT / 'scripts/agent_hooks.ts')), json.dumps(str(repo))))
+        env = {key: value for key, value in os.environ.items() if not key.startswith('HERDR_')}
+        env.update(HOME=str(temp), PYTHON=sys.executable, WORKTREE_GUARD_STATE=str(temp / 'guard'),
+                   SMALL_COMMITS_STATE=str(temp / 'commits'), GIT_CONFIG_GLOBAL=os.devnull)
+        done = subprocess.run(['node', '--experimental-strip-types', '--no-warnings', str(driver)], cwd=repo,
+                              capture_output=True, text=True, env=env, timeout=60)
+        self.assertEqual(done.returncode, 0, done.stderr)
+        seen = json.loads(done.stdout)
+        self.assertIs(seen['commit']['block'], True)
+        self.assertIn('small-commits blocked this commit', seen['commit']['reason'])
+        self.assertEqual((seen['read'], seen['status']), (None, []))  # the guard, off here, says nothing
 
 
 if __name__ == '__main__':

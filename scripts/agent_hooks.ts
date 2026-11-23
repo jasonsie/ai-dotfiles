@@ -1,36 +1,26 @@
-// Pi extension for ai-dotfiles' hooks. Pi has no hook files, so this one extension plays them
-// all, handing each event to every feature's script in the shape scripts/agent_hooks.py reads:
-// worktree-guard and small-commits before each tool call, worktree-guard and herdr-title when the
-// session shuts down (with its reason), and herdr-title each time input arrives (with its source:
-// typed or an extension's), each time a run settles (with the last reply and how the run ended)
-// and when a session resumes. herdr-title's calls are sent without waiting: they label the agent's
-// row in Herdr and must never slow a run. Linked into ~/.pi/agent/extensions/ by
-// scripts/install/skills.py; the link resolves back to scripts/, so the repo is one folder up.
-// The footer shows the work name while the session has a worktree: the guard's reply carries `status`
-// (a name, or null to clear it), on the session's next tool call after the worktree is made or deleted.
-// A failed call is ignored: the extension never blocks a session on its own.
+// Pi extension for ai-dotfiles' hooks. Pi has no hook files, so this extension hands each event to
+// the door, `ai-dotfiles hook <kind> --cli pi` (lib/door.py), in the shape scripts/agent_hooks.py
+// reads; the door runs every feature whose feature.json wants it, in order, in one process. It asks
+// before each tool call and when the session shuts down (with its reason), and waits for the reply;
+// it tells of each input (with its source: typed or an extension's), each settled run (with the last
+// reply and how the run ended) and each resumed session without waiting, so a feature that labels
+// Herdr's rows never slows a run. Linked into ~/.pi/agent/extensions/ by scripts/install/skills.py;
+// the link resolves back to scripts/, and the door it calls is the one beside it.
+// The footer shows the work name while the session has a worktree: worktree-guard's reply carries
+// `status` (a name, or null to clear it) on the session's next tool call after the worktree is made
+// or deleted. A failed call is ignored: the extension never blocks a session on its own.
 import { spawn, spawnSync } from "node:child_process";
 import { realpathSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const repo = dirname(dirname(realpathSync(fileURLToPath(import.meta.url))));
-// pre: asked before each tool call; prompt, stop, start: told of each input, each settled run and
-// each resumed session; end: asked at shutdown.
-type Feature = { script: string; pre: boolean; prompt?: boolean; stop?: boolean; start?: boolean; end: boolean; timeout: number };
-const features: Feature[] = [
-  { script: join(repo, "skills", "worktree-guard", "scripts", "worktree_guard.py"), pre: true, end: true, timeout: 60_000 },
-  { script: join(repo, "skills", "small-commits", "scripts", "small_commits.py"), pre: true, end: false, timeout: 30_000 },
-  { script: join(repo, "skills", "herdr-title", "scripts", "herdr_title.py"), pre: false, prompt: true, stop: true, start: true, end: true, timeout: 10_000 },
-];
+const door = join(dirname(realpathSync(fileURLToPath(import.meta.url))), "ai-dotfiles");
+// The door answers within its own time for each event (agent_hooks.py TIMEOUTS); this only ends one that hangs.
+const LIMIT = 65_000;
 
-function ask(script: string, kind: string, payload: Record<string, unknown>, timeout = 10_000): Record<string, any> | undefined {
+function ask(kind: string, payload: Record<string, unknown>): Record<string, any> | undefined {
   try {
-    const run = spawnSync("python3", [script, "hook", kind, "--cli", "pi"], {
-      input: JSON.stringify(payload),
-      encoding: "utf8",
-      timeout,
-    });
+    const run = spawnSync(door, ["hook", kind, "--cli", "pi"], { input: JSON.stringify(payload), encoding: "utf8", timeout: LIMIT });
     const out = run.status === 0 ? run.stdout.trim() : "";
     return out ? JSON.parse(out) : undefined;
   } catch {
@@ -38,10 +28,10 @@ function ask(script: string, kind: string, payload: Record<string, unknown>, tim
   }
 }
 
-// Hand a payload to a script and move on: detached, no output read, every failure ignored.
-function tell(script: string, kind: string, payload: Record<string, unknown>): void {
+// Hand a payload to the door and move on: detached, no output read, every failure ignored.
+function tell(kind: string, payload: Record<string, unknown>): void {
   try {
-    const child = spawn("python3", [script, "hook", kind, "--cli", "pi"], { stdio: ["pipe", "ignore", "ignore"], detached: true });
+    const child = spawn(door, ["hook", kind, "--cli", "pi"], { stdio: ["pipe", "ignore", "ignore"], detached: true });
     child.on("error", () => {});
     child.stdin?.on("error", () => {});
     child.stdin?.end(JSON.stringify(payload));
@@ -59,17 +49,12 @@ export default function (pi: any) {
   const notes = new Map<string, string>(); // the features' words to the model, shown with the tool's result
 
   pi.on("tool_call", (event: any, ctx: any) => {
-    const said: string[] = [];
-    for (const feature of features.filter((f) => f.pre)) {
-      // Each feature sees the input as the one before it left it (worktree-guard may steer it).
-      const reply = ask(feature.script, "pre", { ...session(ctx), tool_name: event.toolName ?? "", tool_input: event.input ?? {} }, feature.timeout);
-      if (!reply) continue;
-      if ("status" in reply) ctx.ui?.setStatus?.("worktree", reply.status ?? undefined);
-      if (reply.block) return { block: true, reason: reply.reason };
-      if (reply.input && event.input) Object.assign(event.input, reply.input); // Pi: mutate the input in place
-      if (reply.note) said.push(reply.note);
-    }
-    if (said.length) notes.set(event.toolCallId, said.join("\n"));
+    const reply = ask("pre", { ...session(ctx), tool_name: event.toolName ?? "", tool_input: event.input ?? {} });
+    if (!reply) return;
+    if ("status" in reply) ctx.ui?.setStatus?.("worktree", reply.status ?? undefined);
+    if (reply.block) return { block: true, reason: reply.reason };
+    if (reply.input && event.input) Object.assign(event.input, reply.input); // Pi: mutate the input in place
+    if (reply.note) notes.set(event.toolCallId, reply.note);
   });
 
   pi.on("tool_result", (event: any) => {
@@ -82,9 +67,8 @@ export default function (pi: any) {
   // The raw input, before Pi expands a skill into it, also when it arrives queued during a run.
   pi.on("input", (event: any, ctx: any) => {
     try {
-      const payload = { ...session(ctx), prompt: event.text ?? "", source: event.source ?? "",
-                        transcript_path: ctx.sessionManager?.getSessionFile?.() };
-      for (const feature of features) if (feature.prompt) tell(feature.script, "prompt", payload);
+      tell("prompt", { ...session(ctx), prompt: event.text ?? "", source: event.source ?? "",
+                       transcript_path: ctx.sessionManager?.getSessionFile?.() });
     } catch {
       // never blocks the input
     }
@@ -105,8 +89,7 @@ export default function (pi: any) {
   pi.on("agent_settled", (_event: any, ctx: any) => {
     try {
       if (ctx.isIdle && !ctx.isIdle()) return;
-      const payload = { ...session(ctx), last_assistant_message: reply, outcome, transcript_path: ctx.sessionManager?.getSessionFile?.() };
-      for (const feature of features) if (feature.stop) tell(feature.script, "stop", payload);
+      tell("stop", { ...session(ctx), last_assistant_message: reply, outcome, transcript_path: ctx.sessionManager?.getSessionFile?.() });
     } catch {
       // never blocks the session
     }
@@ -118,10 +101,10 @@ export default function (pi: any) {
     // Pi starts every launch with reason startup, a resumed session's too (pi -c, pi --session,
     // Herdr's restore); an in-app /resume says resume. A session with no kept state changes nothing.
     if (event.reason !== "resume" && event.reason !== "startup") return;
-    for (const feature of features) if (feature.start) tell(feature.script, "start", { ...session(ctx), source: "resume" });
+    tell("start", { ...session(ctx), source: "resume" });
   });
 
   pi.on("session_shutdown", (event: any, ctx: any) => {
-    for (const feature of features) if (feature.end) ask(feature.script, "end", { ...session(ctx), reason: event?.reason ?? "" });
+    ask("end", { ...session(ctx), reason: event?.reason ?? "" });
   });
 }
