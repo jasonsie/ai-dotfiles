@@ -181,6 +181,16 @@ class SkipTest(Fixture):
             self.assertLess(time.monotonic() - started, 3 - door.MARGIN / 2, kind)
         self.assertEqual([row['name'] for row in self.seen()], ['hangs', 'hangs'])  # no time was left for `after`
 
+    def test_a_door_process_ends_codexs_session_end_within_3_s_from_its_start(self):
+        """Interpreter start, imports and exit included: the call's whole life fits Codex's cap."""
+        self.feature('hangs', 1, wants={'codex': {'end': True}}, budget=60, sleep=60)
+        code = 'import sys; sys.path.insert(0, sys.argv[1]); import door; sys.exit(door.main(sys.argv[3:], root=sys.argv[2]))'
+        started = time.monotonic()
+        done = subprocess.run([sys.executable, '-c', code, str(ROOT / 'lib'), str(self.root), 'hook', 'end', '--cli', 'codex'],
+                              input='{"session_id": "s"}', capture_output=True, text=True, timeout=10)
+        self.assertLess(time.monotonic() - started, 3)
+        self.assertEqual((done.returncode, done.stdout, done.stderr), (0, '', ''))
+
     def test_a_feature_that_cannot_load_is_skipped(self):
         self.feature('broken', 1, note='x')
         (self.root / 'features/broken/hook.py').write_text('def hook(event:\n')
