@@ -6,7 +6,7 @@
       "path": "skills/productivity/grilling/SKILL.md",
       "commit": "abeeaf95660ba9e8b7c753eb38f441ca707a8823",
       "license": "MIT",
-      "local_edits": "one question per message instead of a round; numbered options that can be combined, recommendation first; simpler re-explanation when a question is unclear; each decision recorded where the task's state lives"
+      "local_edits": "one question per message instead of a round; numbered options that can be combined, recommendation first; simpler re-explanation when a question is unclear; each decision recorded where the task's state lives; description in the third person"
     },
     "onboard": {
       "repo": "affaan-m/ECC",

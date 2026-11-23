@@ -1,6 +1,6 @@
 ---
 name: ship
-description: "Finish your own work in a worktree made by `worktree new` or `worktree pr`: run the repo's checks, push it as a new branch <type>/<slug> (or onto the open PR's branch), open the PR (or update it), delete the worktree. Use when your task in such a worktree is done and committed, or when an `ai-dotfiles ship` run stopped. Not for the user's 'approve' (that is the approve skill)."
+description: "Finish the agent's own work in a worktree made by `worktree new` or `worktree pr`: run the repo's checks, push it as a new branch named type/slug (or onto the open PR's branch), open the PR (or update it), delete the worktree. Use when the task in such a worktree is done and committed, or when an `ai-dotfiles ship` run stopped. Not for the user's 'approve' (that is the approve skill)."
 ---
 
 # Ship
