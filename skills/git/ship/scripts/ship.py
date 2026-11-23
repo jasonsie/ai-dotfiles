@@ -176,8 +176,8 @@ def run(args):
     said = ' '.join(lines).replace('worktree-guard: ', '')
     print(f'shipped {pr["url"]}')
     if not done:
-        raise Stop(f'worktree: {said}; the PR is open; remove it with ai-dotfiles worktree rm {top.name} once '
-                   f'it is clean')
+        raise Stop(f'worktree: {said}; the PR is open; delete it with ai-dotfiles worktree shipped {top.name} '
+                   f'once it is clean')
     step('worktree', said or f'{top.name} deleted')
     print(f'Back in {main}. Claude Code: call ExitWorktree (action keep) or cd there; the next first '
           f'edit starts a new task.')
