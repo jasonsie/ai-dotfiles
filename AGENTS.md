@@ -36,15 +36,13 @@ Every CLI reads this file as the project's instructions; there is no `CLAUDE.md`
 | `scripts/install/plugins.py` | Each listed plugin at its release tag through each CLI's own plugin manager, read back after; each manifest checked at its tag (name, dependencies); its bin/ commands linked into `~/.local/bin` from a checkout at the tag; a receipt tells installed from taken over; every outside command through one runner | — |
 | `scripts/install/launchd.py` | The daily-log pass as a LaunchAgent, `claude` path and PATH rendered at install | — |
 | `docs/upstream/` | Machine-written docs mirrors with their indexes (`INDEX.md`, `MIRROR-INDEX.*`), and skill catalogs | `scripts/upstream/` (weekly workflow) |
-| `docs/onboarding.md` | This repo's onboarding report | `skills/onboard/` (`/onboard`) |
 | `docs/agents/` | Where the engineering skills (`to-spec`, `to-tickets`, `triage`) publish and read: issue tracker, triage labels, domain docs | `skills/setup-agent-skills/` (`/setup-agent-skills`) |
 | `scripts/tests/` | Unit tests for the scripts and the skills' helpers | — |
 | `LICENSE`, `THIRD-PARTY-NOTICES.md`, `LICENSES/` | This repo's MIT license; every other author's license (adapted skills, docs mirrors) and the license texts | — |
 
 `scripts/install.sh` runs the seven install steps, `scripts/uninstall.sh` reverses them;
 `scripts/healthcheck.sh` verifies live state. `docs/` holds `how-it-works.md`, the mirror,
-`onboarding.md`, this repo's report from `/onboard`, and `agents/`, the engineering skills'
-setup.
+and `agents/`, the engineering skills' setup.
 
 ## Rules for changes
 

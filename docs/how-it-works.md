@@ -31,7 +31,6 @@ scripts/             ai-dotfiles, install.sh, uninstall.sh, healthcheck.sh (entr
   tests/               unit tests for all of the above
 docs/
   how-it-works.md      this file
-  onboarding.md        this repo's report from /onboard
   agents/              the engineering skills' setup: issue tracker, triage labels, domain docs
   upstream/            machine-written mirrors of upstream docs, their indexes, and the skill catalogs
 .claude/settings.json  the hooks a cloud session on this repo runs; see Cloud sessions
