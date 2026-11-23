@@ -27,8 +27,8 @@ Ask **one question per message**, in plain text:
 
 Finding facts is your job, never the user's. When a question depends on
 something you can look up (files, configuration, tool output, documentation),
-look it up first, with a subagent if your CLI has one, and ask only about what
-remains a decision. When an answer or new evidence changes the tree, rework the
+look it up first, using a subagent with a fresh context window if your CLI has one,
+and ask only about what remains a decision. When an answer or new evidence changes the tree, rework the
 remaining questions instead of asking the old ones.
 
 After each answer, record the decision and its reason where the task's state
