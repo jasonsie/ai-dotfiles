@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "cloud": false,
+  "hooks": {
+    "module": "scripts/worktree_guard.py",
+    "order": 10,
+    "budget": {"pre": 60, "end": 60, "create": 60, "remove": 60},
+    "wants": {
+      "claude": {"pre": ["edit", "shell"], "end": true, "create": true, "remove": true},
+      "codex": {"pre": ["edit", "shell"], "end": true},
+      "agy": {"pre": ["edit", "shell", "read"]},
+      "pi": {"pre": true, "end": true}
+    }
+  }
+}

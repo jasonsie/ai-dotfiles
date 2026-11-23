@@ -34,6 +34,13 @@ class Fixture(unittest.TestCase):
 
 
 class FindTest(Fixture):
+    def test_this_repos_features_in_the_doors_order(self):
+        found = features.find()
+        self.assertEqual([f.name for f in found], ['worktree-guard', 'small-commits', 'herdr-title'])
+        for feature in found:
+            self.assertTrue(feature.module.is_file(), feature.name)
+        self.assertEqual([f.name for f in found if f.cloud], ['small-commits'])
+
     def test_a_folder_with_a_declaration_is_a_feature_in_features_or_skills_and_order_decides(self):
         self.declare('late', {**GOOD, 'hooks': {**GOOD['hooks'], 'order': 9}})
         self.declare('early', {**GOOD, 'hooks': {**GOOD['hooks'], 'order': 1}}, top='skills')
