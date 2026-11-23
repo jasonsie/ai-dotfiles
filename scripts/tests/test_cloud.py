@@ -187,8 +187,10 @@ class ProjectSettingsTest(Sandbox):
     def test_the_commit_gate_matches_the_user_level_hook(self):
         (matcher, handler), = hooks()['PreToolUse']
         self.assertEqual(matcher, 'Bash')
-        self.assertIn(f'"$CLAUDE_PROJECT_DIR/{hooks_step.COMMITS_MARK}" hook pre --cli claude', handler['command'])
-        self.assertEqual(handler['timeout'], hooks_step.COMMITS_TIMEOUT)
+        self.assertIn('"$CLAUDE_PROJECT_DIR/skills/small-commits/scripts/small_commits.py" hook pre --cli claude',
+                      handler['command'])
+        commits, = (f for f in hooks_step.declared.find() if f.name == 'small-commits')
+        self.assertEqual(handler['timeout'], commits.budget['pre'])
 
     def test_the_commit_gate_blocks_in_the_cloud_only(self):
         (_, handler), = hooks()['PreToolUse']

@@ -1,115 +1,81 @@
 #!/usr/bin/env python3
-"""Install the skills' hooks into each CLI: worktree-guard, small-commits, herdr-title; writes unless --dry-run.
+"""Install the door's hook entries into each CLI, one per event; writes unless --dry-run.
 
-worktree-guard (skills/worktree-guard/scripts/worktree_guard.py) runs before edits and shell
-commands (PreToolUse; Antigravity also before reads) and when a session ends (SessionEnd); for
-Claude Code it also makes and removes the worktrees Claude asks for (WorktreeCreate, WorktreeRemove).
-small-commits (skills/small-commits/scripts/small_commits.py) runs before shell commands, for
-`git commit`. herdr-title (skills/herdr-title/scripts/herdr_title.py) labels the agent's row in
-Herdr: it runs when the user submits a prompt (UserPromptSubmit), when a turn ends (Stop; Claude
-Code's StopFailure too), when a dialog opens (PermissionRequest; Claude Code's PreToolUse for its
-question and plan tools and Elicitation), when Claude Code resumes a session (SessionStart), when
-the user stops a Codex turn (Interrupt) and when a session ends (SessionEnd); outside a Herdr pane
-it does nothing. Antigravity has no prompt event, so it gets no herdr-title entry. Each feature's
-hooks are merged into the CLI's own hook file as one entry per event; every other hook stays:
-  Claude Code   ~/.claude/settings.json      "hooks": PreToolUse, SessionEnd, UserPromptSubmit, Stop,
-                                             StopFailure, PermissionRequest, Elicitation, SessionStart,
-                                             WorktreeCreate, WorktreeRemove
-  Codex         ~/.codex/hooks.json          PreToolUse, SessionEnd, UserPromptSubmit, Stop, PermissionRequest,
-                                             Interrupt (approve once in /hooks)
-  Antigravity   ~/.gemini/config/hooks.json  a named entry per feature and event (PreToolUse alone)
-Pi has no hooks: skills.py links scripts/agent_hooks.ts as its extension, which plays all
-three features. The native events and matchers come from scripts/agent_hooks.py.
+Every CLI reaches the features through one door, `ai-dotfiles hook <kind> --cli <cli>` (lib/door.py),
+which runs every feature that wants the event. Each feature says what it wants in its feature.json
+(lib/features.py); for each CLI with a hook file this step writes one entry per event any feature
+wants there:
+  matcher   the union of the features' tools for that event, or none when one wants every call
+  timeout   the door's time for that event in that CLI (scripts/agent_hooks.py TIMEOUTS), within the
+            CLI's cap, never a feature's budget: a budget changes no entry
+  command   ~/.local/bin/ai-dotfiles hook <kind> --cli <cli> || true, which names no file in the
+            repo: a feature that moves changes no entry. `|| true`: a missing command or bad
+            arguments exit 127 or 2, which the CLIs act on (the error goes to the model; at Stop it
+            keeps the turn going). All three run the command in a shell.
+Codex trusts a hook by the hash of its entry and runs no new or changed one until the person approves
+it in /hooks, so it asks again only when the events or tools the door listens to change.
+  Claude Code   ~/.claude/settings.json      "hooks": event -> [{matcher, hooks: [handler]}]
+  Codex         ~/.codex/hooks.json          the same shape
+  Antigravity   ~/.gemini/config/hooks.json  a named entry per event (ai-dotfiles-hook-pre)
+Pi has no hook file: skills.py links scripts/agent_hooks.ts as its extension, which sends each event
+to the door. With --cloud (a cloud session's VM) only the features whose declaration says cloud get
+entries; the door, which sees CLAUDE_CODE_REMOTE there, runs only those.
 
-An entry counts as a feature's when its command runs that feature's script; anything else in
-its place is refused. Hooks this script installed before and no longer does (daily-log's
-Stop nudge, replaced by the daily pass) are taken out wherever they are found, with their
-state folder. Files are never written through a symlink, are backed up before writing, and
-are restored on failure. --uninstall removes only these entries, leaving every other hook
-as it is.
+An entry counts as ours when its command runs the door; anything else in its place is refused. An
+event no feature wants any more loses its entry. Hooks this script installed before and no longer
+does are taken out wherever they are found: each feature's own entries from before the door (found
+by its script's path; the door's group takes the place of the first) and daily-log's Stop nudge,
+replaced by the daily pass, with its state folder. Files are never written through a symlink, are
+backed up before writing, and are restored on failure. --uninstall removes only these entries,
+leaving every other hook as it is.
 """
 import copy
 import json
 from pathlib import Path
-import shlex
 import shutil
 import sys
 
 import installer
 
 WORKSPACE = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(WORKSPACE / 'scripts'))
+sys.path.insert(0, str(WORKSPACE / 'lib'))
+import features as declared  # noqa: E402  (each feature's feature.json; it puts scripts/ on the path)
 import agent_hooks  # noqa: E402  (the CLIs' hook formats)
 
 TOOL_EVENTS = ('PreToolUse', 'PostToolUse')  # Antigravity: these take matcher groups, the rest bare handlers
-GUARD_MARK = 'skills/worktree-guard/scripts/worktree_guard.py'
-GUARD_WANTS = {  # before edits and shell commands, and at session end; Claude Code moves itself, so
-    # its reads are left alone; Antigravity has no SessionEnd but has read tools to steer; only
-    # Claude Code has hooks that make and remove its worktrees
-    'claude': (('pre', ('edit', 'shell')), ('end', None), ('create', None), ('remove', None)),
-    'codex': (('pre', ('edit', 'shell')), ('end', None)),
-    'agy': (('pre', ('edit', 'shell', 'read')),),
-}
-GUARD_TIMEOUT = 60  # making a linked worktree in a big repository takes a while
-COMMITS_MARK = 'skills/small-commits/scripts/small_commits.py'
-COMMITS_WANTS = {cli: (('pre', ('shell',)),) for cli in agent_hooks.HOOK_FILE_CLIS}  # before `git commit`
-COMMITS_TIMEOUT = 30  # a diff of a big repository
-TITLE_MARK = 'skills/herdr-title/scripts/herdr_title.py'
-TITLE_WANTS = {  # each prompt, turn end, dialog and session end; none for agy, which has no prompt event
-    'claude': (('prompt', None), ('stop', None), ('error', None), ('pre', ('ask',)), ('permission', None),
-               ('form', None), ('start', None), ('end', None)),
-    'codex': (('prompt', None), ('stop', None), ('permission', None), ('interrupt', None), ('end', None)),
-    'agy': (),
-}
-TITLE_TIMEOUT = 10  # it answers at once and does its slow work detached
-TITLE_TIMEOUTS = {'interrupt': 3}  # Codex allows its Interrupt hooks 1 to 3 s
-# Retired: the daily-log Stop nudge (PostToolUse + Stop in every CLI), replaced by the daily
-# pass in November 2026. Its entries, Antigravity names and state folder go on the next run.
-RETIRED_MARKS = ('skills/daily-log/scripts/daily_log.py',)
-RETIRED_AGY = ('ai-dotfiles-daily-log-tool', 'ai-dotfiles-daily-log-stop')
+DOOR = '~/.local/bin/ai-dotfiles'  # where skills.py links scripts/ai-dotfiles
+MARK = f'{DOOR} hook '  # how an entry of ours is known
+AGY_NAME = 'ai-dotfiles-hook-'  # + kind: Antigravity's named entries
+# Retired, wherever found: each feature's own entries from before the door (November 2026), and the
+# daily-log Stop nudge (PostToolUse + Stop in every CLI), replaced by the daily pass that month.
+RETIRED_MARKS = ('skills/daily-log/scripts/daily_log.py', 'skills/worktree-guard/scripts/worktree_guard.py',
+                 'skills/small-commits/scripts/small_commits.py', 'skills/herdr-title/scripts/herdr_title.py')
+RETIRED_AGY = ('ai-dotfiles-daily-log-tool', 'ai-dotfiles-daily-log-stop', 'ai-dotfiles-worktree-guard-pre',
+               'ai-dotfiles-small-commits-pre')
 RETIRED_STATE = ('.local/state/ai-dotfiles/daily-log',)
+OURS = (MARK, *RETIRED_MARKS)
 
 
-class Feature:
-    """One skill's hooks: its script, its native events per CLI, its handlers' timeout (`timeouts`
-    sets another for a kind)."""
-
-    def __init__(self, name, script, mark, events, timeout, timeouts=None):
-        self.name, self.script, self.mark, self.events, self.timeout = name, Path(script), mark, events, timeout
-        self.timeouts = timeouts or {}
-        self.agy_names = {mode: f'ai-dotfiles-{name}-{mode}' for _, mode, _ in events.get('agy', ())}
-
-    def timeout_for(self, mode):
-        return self.timeouts.get(mode, self.timeout)
-
-
-def worktree_guard(repo=WORKSPACE):
-    events = {cli: agent_hooks.native_events(cli, wants) for cli, wants in GUARD_WANTS.items()}
-    return Feature('worktree-guard', Path(repo) / GUARD_MARK, GUARD_MARK, events, GUARD_TIMEOUT)
-
-
-def small_commits(repo=WORKSPACE):
-    events = {cli: agent_hooks.native_events(cli, wants) for cli, wants in COMMITS_WANTS.items()}
-    return Feature('small-commits', Path(repo) / COMMITS_MARK, COMMITS_MARK, events, COMMITS_TIMEOUT)
+def entries(cli, chosen):
+    """((native event, kind, matcher, timeout), ...) for `cli`: one per kind a chosen feature wants
+    there. No entry when none of the tools wanted has a matcher in this CLI, not one for every tool."""
+    found = []
+    for kind in agent_hooks.KINDS.get(cli, ()):
+        tools = [feature.tools(cli, kind) for feature in chosen if kind in feature.wants.get(cli, {})]
+        if not tools:
+            continue
+        matcher = None
+        if all(tool is not None for tool in tools):
+            union = set().union(*tools)
+            matcher = '|'.join(m for action, m in agent_hooks.MATCHERS[cli].items() if action in union)
+            if not matcher:
+                continue
+        found.append((agent_hooks.NATIVE[kind], kind, matcher, agent_hooks.timeout(cli, kind)))
+    return tuple(found)
 
 
-def herdr_title(repo=WORKSPACE):
-    events = {cli: agent_hooks.native_events(cli, wants) for cli, wants in TITLE_WANTS.items()}
-    return Feature('herdr-title', Path(repo) / TITLE_MARK, TITLE_MARK, events, TITLE_TIMEOUT, TITLE_TIMEOUTS)
-
-
-def features(repo=WORKSPACE, cloud=False):
-    """The features whose hooks are installed, found in the checkout at `repo`. A cloud session's
-    VM (`cloud`) gets small-commits alone: the session already works alone on its own branch,
-    worktree-guard's records belong to a Mac, and Herdr, whose rows herdr-title tags, runs there."""
-    return [small_commits(repo)] if cloud else [worktree_guard(repo), small_commits(repo), herdr_title(repo)]
-
-
-def handler(cli, mode, script, timeout):
-    # `|| true`: a missing script or bad arguments exit 2, which the CLIs act on (the error goes to
-    # the model, and at Stop it keeps the turn going). All three run it in a shell.
-    command = shlex.join(['python3', str(script), 'hook', mode, '--cli', cli]) + ' || true'
-    return {'type': 'command', 'command': command, 'timeout': timeout}
+def handler(cli, kind, timeout):
+    return {'type': 'command', 'command': f'{MARK}{kind} --cli {cli} || true', 'timeout': timeout}
 
 
 def group(handlers, matcher):
@@ -117,26 +83,26 @@ def group(handlers, matcher):
     return {'matcher': matcher, 'hooks': handlers} if matcher else {'hooks': handlers}
 
 
-def is_ours(entry, mark):
-    return isinstance(entry, dict) and mark in str(entry.get('command', ''))
+def is_ours(entry, marks=OURS):
+    return isinstance(entry, dict) and any(mark in str(entry.get('command', '')) for mark in marks)
 
 
-def holds_ours(item, mark):
+def holds_ours(item, marks=OURS):
     inner = item.get('hooks') if isinstance(item, dict) else None
-    return isinstance(inner, list) and any(is_ours(h, mark) for h in inner)
+    return isinstance(inner, list) and any(is_ours(h, marks) for h in inner)
 
 
-def strip_ours(groups, mark):
+def strip_ours(groups, marks=OURS):
     """(groups without our handlers, where the first group that held one stood, or None).
     A foreign handler that shares a group with ours stays, in a group of its own."""
     kept, at = [], None
     for item in groups:
-        if not holds_ours(item, mark):
+        if not holds_ours(item, marks):
             kept.append(item)
             continue
         if at is None:
             at = len(kept)
-        rest = [h for h in item['hooks'] if not is_ours(h, mark)]
+        rest = [h for h in item['hooks'] if not is_ours(h, marks)]
         if rest:
             kept.append({**item, 'hooks': rest})
     return kept, at
@@ -149,19 +115,21 @@ def hook_table(data):
     return hooks
 
 
-def merge_events(data, cli, feature):
-    """Claude Code and Codex: event -> [{matcher, hooks: [handler]}]. Our group takes the place of
-    the first one that held ours, or is appended; every other group and handler stays."""
+def merge_events(data, cli, wanted):
+    """Claude Code and Codex: event -> [{matcher, hooks: [handler]}]. The door's group takes the
+    place of the first one that held ours (the door's, or a retired entry's), or is appended; every
+    other group and handler stays."""
+    if not wanted:
+        return
     hooks = hook_table(data)
-    for event, mode, matcher in feature.events[cli]:
+    for event, kind, matcher, timeout in wanted:
         groups = hooks.get(event)
         if groups is None:
             groups = []
         if not isinstance(groups, list):
             raise ValueError(f'"hooks.{event}" is not a list')
-        kept, at = strip_ours(groups, feature.mark)
-        wanted = handler(cli, mode, feature.script, feature.timeout_for(mode))
-        kept.insert(len(kept) if at is None else at, group([wanted], matcher))
+        kept, at = strip_ours(groups)
+        kept.insert(len(kept) if at is None else at, group([handler(cli, kind, timeout)], matcher))
         hooks[event] = kept
 
 
@@ -176,23 +144,23 @@ def agy_handlers(entry):
     return found
 
 
-def check_agy_entry(data, name, mark):
+def check_agy_entry(data, name, marks=(MARK,)):
     current = data.get(name)
     if current is not None:
         handlers = agy_handlers(current) if isinstance(current, dict) else []
-        if not handlers or not all(is_ours(h, mark) for h in handlers):
+        if not handlers or not all(is_ours(h, marks) for h in handlers):
             raise ValueError(f'Not created by this script; refusing to replace hook entry {name!r}')
 
 
-def merge_agy(data, feature):
+def merge_agy(data, wanted):
     """Antigravity: named top-level entries, one event each; keys that are not lists (its
     `enabled` switch) are kept."""
-    for event, mode, matcher in feature.events['agy']:
-        name = feature.agy_names[mode]
-        check_agy_entry(data, name, feature.mark)
-        wanted = handler('agy', mode, feature.script, feature.timeout_for(mode))
+    for event, kind, matcher, timeout in wanted:
+        name = AGY_NAME + kind
+        check_agy_entry(data, name)
+        door = handler('agy', kind, timeout)
         kept = {key: value for key, value in (data.get(name) or {}).items() if not isinstance(value, list)}
-        data[name] = {**kept, event: [group([wanted], matcher)] if event in TOOL_EVENTS else [wanted]}
+        data[name] = {**kept, event: [group([door], matcher)] if event in TOOL_EVENTS else [door]}
 
 
 def drop_emptied(data, hooks, changed):
@@ -200,58 +168,34 @@ def drop_emptied(data, hooks, changed):
         del data['hooks']
 
 
-def remove_events(data, cli, feature):
-    """Claude Code and Codex: drop our handlers; emptied groups, events, and "hooks" go too."""
+def retire(data, cli, wanted=()):
+    """Take out what is ours and not `wanted`, wherever it stands: in a Claude Code or Codex file,
+    retired hooks in every event and the door's in each event not wanted; in Antigravity's, the
+    door's named entries for kinds not wanted and the retired names (left alone when a hand-made
+    entry took the name)."""
+    if cli == 'agy':
+        keep = {AGY_NAME + kind for _, kind, _, _ in wanted}
+        for name in [name for name in data if name.startswith(AGY_NAME) and name not in keep]:
+            check_agy_entry(data, name)
+            del data[name]
+        for name in RETIRED_AGY:
+            entry = data.get(name)
+            handlers = agy_handlers(entry) if isinstance(entry, dict) else []
+            if handlers and all(is_ours(h, RETIRED_MARKS) for h in handlers):
+                del data[name]
+        return
     hooks = data.get('hooks')
     if hooks is None:
         return
     if not isinstance(hooks, dict):
         raise ValueError('"hooks" is not an object')
-    changed = False
-    for event, _, _ in feature.events[cli]:
-        groups = hooks.get(event)
-        if groups is None:
-            continue
-        if not isinstance(groups, list):
-            raise ValueError(f'"hooks.{event}" is not a list')
-        kept, _ = strip_ours(groups, feature.mark)
-        if kept == groups:
-            continue
-        changed = True
-        if kept:
-            hooks[event] = kept
-        else:
-            del hooks[event]
-    drop_emptied(data, hooks, changed)
-
-
-def remove_agy(data, feature):
-    for name in feature.agy_names.values():
-        check_agy_entry(data, name, feature.mark)
-        data.pop(name, None)
-
-
-def retire(data, cli):
-    """Take retired hooks out wherever they stand: every event of a Claude Code or Codex file, the
-    named entries of Antigravity (left alone when a hand-made entry took the name)."""
-    if cli == 'agy':
-        for name in RETIRED_AGY:
-            entry = data.get(name)
-            handlers = agy_handlers(entry) if isinstance(entry, dict) else []
-            if handlers and all(any(is_ours(h, mark) for mark in RETIRED_MARKS) for h in handlers):
-                del data[name]
-        return
-    hooks = data.get('hooks')
-    if not isinstance(hooks, dict):
-        return
+    keep = {event for event, _, _, _ in wanted}
     changed = False
     for event in list(hooks):
         groups = hooks[event]
         if not isinstance(groups, list):
             continue
-        kept = groups
-        for mark in RETIRED_MARKS:
-            kept, _ = strip_ours(kept, mark)
+        kept, _ = strip_ours(groups, RETIRED_MARKS if event in keep else OURS)
         if kept == groups:
             continue
         changed = True
@@ -275,32 +219,27 @@ def plan_file(home, cli, chosen, uninstall=False):
         raise ValueError(f'No hook format for {cli} yet; add it to scripts/agent_hooks.py')
     if not path.parent.is_dir():
         return None  # CLI not set up on this machine
+    wanted = () if uninstall else entries(cli, chosen)
 
     def change(old):
         original = json.loads(old) if old.strip() else {}
         if not isinstance(original, dict):
             raise ValueError(f'{path}: expected a JSON object')
         data = copy.deepcopy(original)
-        retire(data, cli)
-        for feature in chosen:
-            if cli == 'agy' and uninstall:
-                remove_agy(data, feature)
-            elif cli == 'agy':
-                merge_agy(data, feature)
-            elif uninstall:
-                remove_events(data, cli, feature)
-            else:
-                merge_events(data, cli, feature)
+        if cli == 'agy':
+            merge_agy(data, wanted)
+        else:
+            merge_events(data, cli, wanted)
+        retire(data, cli, wanted)
         return old if data == original else (json.dumps(data, indent=2, ensure_ascii=False) + '\n').encode()
 
     return installer.edit(path, change)
 
 
 def install(home, add, remove=(), apply=False, chosen=None):
-    """Merge the features' hooks into the hook files of the CLIs in `add`; take them out for
-    `remove`; retire what is no longer installed. One edit per file, whatever the number of
-    features."""
-    chosen = features() if chosen is None else chosen
+    """Merge the door's entries for the chosen features into the hook files of the CLIs in `add`;
+    take ours out for `remove`; retire what is no longer installed. One edit per file."""
+    chosen = declared.find() if chosen is None else chosen
     plans = ([plan_file(home, cli, chosen) for cli in add] +
              [plan_file(home, cli, chosen, True) for cli in remove])
     changes = [change for change in plans if change]
@@ -321,15 +260,15 @@ def run(home, target, write, uninstall, repo=WORKSPACE, cloud=False):
     """Hooks for the CLIs switched on; none for those switched off, or for any on --uninstall."""
     selected = installer.scope(target)
     on, off = ((), selected) if uninstall else installer.split(selected)
-    return install(home, on, off, write, features(repo, cloud))
+    return install(home, on, off, write, [feature for feature in declared.find(repo) if feature.cloud or not cloud])
 
 
 def main():
     options = installer.parser(__doc__)
-    options.add_argument('--cloud', action='store_true', help="a cloud session's VM: small-commits alone")
+    options.add_argument('--cloud', action='store_true', help="a cloud session's VM: the cloud features alone")
     args = options.parse_args()
     return installer.finish('hooks', lambda: run(args.home, args.target, not args.dry_run, args.uninstall,
-                                                 repo=installer.live_root(WORKSPACE), cloud=args.cloud))
+                                                 cloud=args.cloud))
 
 
 if __name__ == '__main__':

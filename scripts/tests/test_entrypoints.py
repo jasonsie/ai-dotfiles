@@ -62,9 +62,10 @@ class EntrypointsTest(unittest.TestCase):
         names = {p.name for p in (self.home / '.claude/skills').iterdir()}
         self.assertIn('grilling', names)
         self.assertEqual(names & set(local), set())
-        hooks = json.dumps(json.loads((self.home / '.claude/settings.json').read_text())['hooks'])
-        self.assertIn('small_commits.py', hooks)
-        self.assertNotIn('worktree_guard.py', hooks)
+        hooks = json.loads((self.home / '.claude/settings.json').read_text())['hooks']
+        self.assertEqual(list(hooks), ['PreToolUse'])  # the commit gate's event alone: no guard, no Herdr title
+        self.assertEqual(hooks['PreToolUse'][0]['matcher'], 'Bash')
+        self.assertIn('ai-dotfiles hook pre --cli claude', hooks['PreToolUse'][0]['hooks'][0]['command'])
         for other in ('.codex', '.pi', '.gemini', '.agents', 'Library'):
             self.assertFalse((self.home / other).exists(), other)
 
