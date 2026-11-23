@@ -1,18 +1,18 @@
 # A repo that speaks for itself: design record
 
 Working record of the `grilling` interview of 2026-11-20, held after an `/onboard` pass over
-this repo. D1 to D6 are settled with the user, except rule 2 of D3, which is open again (see
-Open). Nothing is built yet: the user asked for this record to ship first, and what follows
-waits for the user's signal (see Next). Once built, this file is deleted (D6).
+this repo. D1 to D7 are settled with the user, and nothing is open. Nothing is built yet.
+Spec: issue #94; tickets #95 to #109, its sub-issues, with blocked-by links. Once built, this
+file is deleted (D6).
 
 ## Terms
 
-A **feature** here is a program that runs inside a session or beside it: worktree-guard,
-small-commits, herdr-title, the git flow (ship, approve and the six git steps), daily-log, the
-status line and the cloud session. The code already uses the word (`Feature` in
-`scripts/install/hooks.py`, `features` in `scripts/agent_hooks.ts`); the glossary in
-`docs/how-it-works.md` does not. A **unit** is one thing this repo sets up or tunes: a CLI, a
-plugin, a skill, a feature.
+A **feature** here is a program this repo runs, in a session, beside one, on a schedule or in
+CI: worktree-guard, small-commits, herdr-title, the git flow (ship, approve and the six git
+steps), daily-log, the status line, the cloud session and, by D7, the docs mirror. The code
+already uses the word (`Feature` in `scripts/install/hooks.py`, `features` in
+`scripts/agent_hooks.ts`); the glossary in `docs/how-it-works.md` does not. A **unit** is one
+thing this repo sets up or tunes: a CLI, a plugin, a skill, a feature.
 
 ## Requirements (user)
 
@@ -121,7 +121,8 @@ feature by being named in code (`features()` in `hooks.py`; for Pi, the array in
 What a move must not break:
 
 - `skills/daily-log/scripts/daily_log.py` imports nothing from the repo, so a copy is a
-  complete writer (learning-tutor vendors one).
+  complete writer: learning-tutor vendors the file that `~/.local/bin/daily-log` resolves to.
+  Its config and a test fixture also name the writer by its path in this checkout.
 - `scripts/statusline.py` says it runs on any python3 (3.9+); it imports only the standard
   library, nothing from the repo.
 - A skill's own tool (`facts.py`, `query.py`, `survey.py`) is run by the skill's folder path.
@@ -129,9 +130,10 @@ What a move must not break:
 - A changed hook command needs one Codex `/hooks` approval, and one `ai-dotfiles install`.
 - Other work in flight at the interview: PR #91 (the flow switch as a skill, in
   `worktree_guard.py`, `scripts/ai-dotfiles` and how-it-works; landed since), PR #90
-  (herdr-title label colors, in how-it-works), PR #84 (refreshes `docs/onboarding.md`), issue
-  #70 (fold the worktree design into how-it-works). PR #76, the weekly mirror sync, changes
-  only `docs/upstream/`; outside D5.
+  (herdr-title label colors, in how-it-works), PR #84 (refreshed `docs/onboarding.md`; closed
+  2026-11-23), issue #70 (fold the worktree design into how-it-works; reworded 2026-11-23). PR
+  #76, the weekly mirror sync, changes only `docs/upstream/`; outside D5. PR #93 (the guard
+  refuses an agent's write of the flow key) opened later; see D7.
 
 ## Decisions
 
@@ -182,8 +184,8 @@ Each names who chose. A reason marked (agent) came with the agent's recommendati
   ```
 
   Rule 2 has known exceptions (Constraints): the pasted cloud setup names
-  `scripts/cloud/setup.sh`, and a skill's own tool is run by its folder path. Whether the
-  `daily-log` command, linked straight to its script today, stays a second door is left open.
+  `scripts/cloud/setup.sh`, and a skill's own tool is run by its folder path. The `daily-log`
+  command stays a second door, a link straight to the writer (D7).
   Why (agent), as the cost of a change, today then proposed: a feature with hooks, 10 files
   outside its own folder and tests (herdr-title's arrival, PR #86), then its folder, a line in
   the skill index and one in `config/cloud.json`; a hook's timeout, 2 files (3 for
@@ -198,13 +200,13 @@ Each names who chose. A reason marked (agent) came with the agent's recommendati
   Left alone: the root `config/` files, all but the one D4 moves; the skills that front no
   feature; `config/cloud.json` (no per-skill config files: that list has one home and a test);
   each CLI's native files. Also kept: no generated code committed; standard library only.
-  Turned down at the choice, open again (see Open): one hook entry per feature, which the
-  agent offered as the safer option, today's behavior, that "gives up the Codex and speed
-  gains". Corrected after the choice: the speed gain, a Bash call going from about 460 ms to
-  about 255 ms, was wrong. Both figures came from a Mac busy with other agents, and the first
-  added up two hooks that run side by side. Measured again (Facts), one process is as fast to
-  wait for as today's two, no faster; only the Codex gain is real. The user chose rule 2 with
-  the wrong figure in front of them and has not chosen again.
+  Turned down at the choice: one hook entry per feature, which the agent offered as the safer
+  option, today's behavior, that "gives up the Codex and speed gains". Corrected after the
+  choice: the speed gain, a Bash call going from about 460 ms to about 255 ms, was wrong. Both
+  figures came from a Mac busy with other agents, and the first added up two hooks that run
+  side by side. Measured again (Facts), one process is as fast to wait for as today's two, no
+  faster; only the Codex gain is real. The user chose rule 2 with the wrong figure in front of
+  them, and confirmed it on 2026-11-23 with the corrected one (D7).
   Build order, each step safe alone and called step 1 to step 5 below: (1) the door and
   `feature.json`, one install and one Codex approval; (2) `lib/`, one shell reader, features
   stop asking which CLI they are in; (3) features move into `features/`, one PR each, tests
@@ -226,18 +228,19 @@ Each names who chose. A reason marked (agent) came with the agent's recommendati
   included; then, with D6, to close #84 and land the other two. Why (agent): #91 edited the
   usage list in `scripts/ai-dotfiles`, which step 1 replaces, and `worktree_guard.py`, which
   steps 3 and 4 move and split; #90 edits how-it-works text that step 3 moves. Whichever
-  lands second is redone by hand. Rejected: starting alongside.
+  lands second is redone by hand. Rejected: starting alongside. PR #93, opened after the
+  interview, lands before step 1 too (D7).
 - **D6. Docs are deleted, not refreshed (R5).** Chosen by the user from the agent's list, with
   the cost stated: a newcomer has no single page of reasons. Nothing is carried into a new
   doc; git history keeps what goes.
   - `docs/onboarding.md`: in the PR that ships this record, with the three lines that point
-    at it (two in `AGENTS.md`, one in how-it-works). PR #84, which refreshes it, is closed at
-    the user's signal. `/onboard` stays a skill for other repos.
+    at it (two in `AGENTS.md`, one in how-it-works). PR #84, which refreshed it, was closed on
+    2026-11-23. `/onboard` stays a skill for other repos.
   - `docs/plans/worktree-convention.md`, and `docs/plans/flow-switch-skill.md`, which PR #91
     added: with issue #70, one of whose criteria is that the plan file is deleted. (The list
     the user accepted named only the first, deleted "when #91 lands", its content in "git
-    history; it is built". #91 has landed; #70 is still open, and the agent ties the deletion
-    to it. The second file is the agent's addition.)
+    history; it is built". #91 has landed; #70 is still open, and the agent tied the deletion
+    to it, which the user accepted on 2026-11-23. The second file is the agent's addition.)
   - Each feature's section of `docs/how-it-works.md`: in the PR that moves the feature, its
     reasons going to the feature's docstring in the same PR.
   - The rest of `docs/how-it-works.md`: step 5, the file removed. The sections on the install
@@ -262,51 +265,58 @@ Each names who chose. A reason marked (agent) came with the agent's recommendati
   they point at.
   Rejected: a short how-it-works of principles and glossary; folding them into `AGENTS.md`;
   keeping `docs/onboarding.md` and regenerating it.
+- **D7. The answers of 2026-11-23.** The user answered the agent's summary of the open choices
+  with "all agree, move on", then said "y" to the spec draft, which showed the agent's last
+  calls.
+  - Rule 2 stands: one hook entry per event, served in one process. The corrected figure was
+    in front of the user. Its gain is Codex's: it asks for approval again only when the events
+    or tools the door listens to change.
+  - The cloud list stays the one list of skills a cloud session leaves out, skills inside a
+    feature included; a declaration's cloud answer covers only the feature's hooks, commands
+    and schedule. Why (agent): the docs mirror ships one skill a cloud session runs
+    (`upstream-docs`) and one it cannot (`collect-docs`).
+  - The docs mirror is a feature, and its sources move beside it. Why (agent): D4's rule; the
+    list in D4 named docs sources before the mirror was a feature.
+  - A feature with one skill is that skill's folder; a feature with several holds each one
+    folder down, as `skills/git/` does today (the agent's call).
+  - PR #93 lands before step 1 too: it rewrites the guard's command reading, which the
+    shell-reader ticket replaces (the agent's reading of D5).
+  - The `daily-log` command stays a second door, a link to the writer: learning-tutor copies
+    the file that link resolves to (the agent's call, from that constraint).
+  - The worktree plans go with issue #70, as D6 says.
 
 ### Follows from D3 (chosen by the agent)
 
-Most were listed in the closing summary; the user's reply, to ship this record and wait, did
-not speak to them, and none was asked one by one. Some came after it and the user has not
-seen them: no `DESIGN.md`, #70's rewording, several tickets per PR (the summary said one), the
-last two items of the final bullet. All are the agent's choices, not yet the user's.
+None was asked one by one; the user accepted the spec that carries them (issue #94) on
+2026-11-23.
 
 - The 13 skills that front a feature move with it; the thirteenth, `worktree-flow`, came with
-  PR #91 and joins the worktree-guard folder. Of 48 skills, `skills/` keeps the other 35 (33
-  if the docs mirror becomes a feature: see Open).
+  PR #91 and joins the worktree-guard folder. `upstream-docs` and `collect-docs` move with the
+  docs mirror (D7), so of 48 skills `skills/` keeps 33.
 - One call per event behaves as Pi's extension does today (`scripts/agent_hooks.ts`): features
   run in a fixed order, each sees the tool input as the one before left it, a block ends the
   chain, notes are joined, and a feature that fails is skipped.
 - CLI ids stay the commands people type. No `DESIGN.md` per feature: the docstring is it.
-- Issue #70 says "fold the design into how-it-works"; under D3 that text goes to the guard's
-  docstring and `SKILL.md` instead, and the issue is reworded.
+- Issue #70 said "fold the design into how-it-works"; under D3 that text goes to the guard's
+  docstring and `SKILL.md` instead. The issue was reworded on 2026-11-23.
 - Tracking follows the pattern of issue #57: a spec issue with its tickets as sub-issues,
   through `to-spec` and `to-tickets`; a PR may close one ticket or several.
-- Left to each step's PR: the name of the shared folder (`lib/` here) and how features import
-  it; the name of the printing command (`ai-dotfiles status` here); which CLI-specific
-  behaviors a feature may still name, as a short list the rule-3 test allows; how a feature
-  with several skills is laid out (the git flow has eight; the tree shows one `SKILL.md`);
-  whether the door starts the interpreter itself, past the pyenv shim (Facts).
+- Left to the tickets: how features import the shared folder; which CLI-specific behaviors a
+  feature may still name, as a short list the rule-3 test allows; whether the door starts the
+  interpreter itself, past the pyenv shim (Facts). The spec settled the rest: the shared
+  folder is `lib/`, the printing command `ai-dotfiles status`, the skill layout as in D7.
 
 ## Open
 
-- **Rule 2's one process per event.** The user chose it (answer "1", "Yes, all of it") with
-  the agent's wrong speed figure in front of them, and has not chosen again. The choice is the
-  user's. The other option, one hook entry per feature as today, was offered as the safer one.
-  Step 1 writes the hook lines, so this comes first.
-- **A feature's skills and the cloud list.** `config/cloud.json` names 15 skills a cloud
-  session leaves out; 12 sit in folders that move to `features/`, where `feature.json` also
-  says "cloud or not". Whether that is one fact with two homes is not settled.
-- **Whether the docs mirror is a feature.** The agent's summary made it an eighth feature
-  folder (sync, report, tests, the `upstream-docs` and `collect-docs` skills), its source list
-  staying in `config/`. It runs in CI, not in a session, and D4 would put its list beside it.
+None: D7 answers the three questions that were here.
 
 ## Next
 
-The user's words: "let's ship 1 and wait for my signal to do the rest". Item 1 was this record
-as a docs PR that also removes `docs/onboarding.md`. The rest waits for that signal:
+The user's words on 2026-11-20: "let's ship 1 and wait for my signal to do the rest". The
+signal came on 2026-11-23 ("all agree, move on"). Done that day: PR #84 closed with its reason;
+the spec and its tickets filed (issues #94 to #109); issue #70 reworded. Left:
 
-1. PR #84 is closed with a note that says why.
-2. The user answers the open questions; rule 2's comes before the spec.
-3. A spec issue and its tickets are filed, and issue #70 is reworded.
-4. The user approves #90 (#91 landed on 2026-11-20).
-5. Step 1 of the build order (the door and `feature.json`) starts in a worktree of its own.
+1. The user approves PR #92, this record.
+2. PRs #90 and #93 land, on the user's `approve`.
+3. Ticket 1 (#95), the door, starts in a worktree of its own; the tickets after it follow
+   their blocked-by links.
