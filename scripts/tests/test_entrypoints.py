@@ -122,6 +122,11 @@ class EntrypointsTest(unittest.TestCase):
                                input='{"model": {"display_name": "Opus"}, "version": "1", "cwd": "/"}')
         self.assertEqual(shown.returncode, 0, shown.stderr)
         self.assertIn('Opus', shown.stdout)
+        bare = {k: v for k, v in self.env.items() if k not in ('HOME', 'PYTHON')}  # the door falls back to python3
+        for env in (self.env, {**bare, 'PATH': f'{Path(sys.executable).parent}:{bare["PATH"]}'}):
+            door = subprocess.run([str(command), 'hook', 'stop', '--cli', 'codex'], env=env, capture_output=True,
+                                  text=True, input='{}')  # what the hook entries run
+            self.assertEqual((door.returncode, door.stdout), (0, '{}\n'), door.stderr)
         bad = run('bogus')
         self.assertEqual(bad.returncode, 1)
         self.assertIn('Unknown command', bad.stderr)

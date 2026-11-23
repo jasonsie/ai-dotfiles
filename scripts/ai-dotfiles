@@ -49,7 +49,7 @@ case "$COMMAND" in
     # The Python the hooks step linked (scripts/install/hooks.py), not the pyenv shim that python3
     # resolves to in the session's folder: about 150 ms less per call, and one Python in every
     # project. $PYTHON overrides it; python3 when the link is missing or broken.
-    PY="${PYTHON:-$HOME/.local/state/ai-dotfiles/python3}"
+    PY="${PYTHON:-${HOME:-}/.local/state/ai-dotfiles/python3}"
     [ -n "${PYTHON:-}" ] || [ -x "$PY" ] || PY=python3
     exec "$PY" "$SCRIPTS/../lib/door.py" hook "$@" ;;
   git)
