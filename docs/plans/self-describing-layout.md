@@ -31,7 +31,8 @@ Each is the user's, said on 2026-11-20; a reading after it is the agent's.
 ## Facts, 2026-11-20
 
 Measured on `main` at a56c583, and checked again at bcea534 by two independent checkers per
-claim. Timings are medians of 21 runs on one Mac.
+claim. Timings are medians of 21 runs on one Mac. PR #91 landed later that day; the facts
+stand as measured, and the counts it moved are listed after them.
 
 - **One feature, many homes.** herdr-title sits in 9 places (12 tracked files) across four
   top-level folders and the root: code and skill text (`skills/herdr-title/`), the skill index
@@ -48,8 +49,9 @@ claim. Timings are medians of 21 runs on one Mac.
 - **Docs restate, and rot.** Seven facts (install steps, subcommands, hook events, CLI paths,
   cloud lists, state folders, skill counts) are restated in well over 100 places (one count
   said 151; it depends on what counts). At least 12 are stale (recounts found 17 to 22): "five
-  steps" (7), "37 skills" (47), "both hooked features" (3), zkfy 1.8.1 (the pin is 1.9.1), a
-  README line that has `ai-dotfiles worktree` "merge" worktrees, a verb it lacks.
+  steps" (7) and "37 skills" (47), both in the onboarding report that goes with this record;
+  "both hooked features" (3); zkfy 1.8.1 (the pin is 1.9.1); a README line that has
+  `ai-dotfiles worktree` "merge" worktrees, a verb it lacks.
 - **No visible dependency graph.** 19 `sys.path.insert` sites in Python files outside tests.
   `skills/git` and `skills/worktree-guard` import each other; `scripts/` and its `install/` too.
 - **Shell-command reading exists three times in two files, and the readers differ.**
@@ -76,6 +78,13 @@ claim. Timings are medians of 21 runs on one Mac.
 - **Pure file moves count 0 lines** at small-commits' size check (`git diff -M`).
 - **No recorded decision forbids a layout change.** "Logic two skills need lives in one skill
   (its `scripts/`)" is an `AGENTS.md` rule with no stated reason.
+
+After PR #91 (`main` at 1b39eec, re-measured 2026-11-23): 48 skills, 13 of them fronting a
+feature's code (`worktree-flow` is new); `worktree_guard.py` has 1,372 lines and nine
+`worktree` commands (`on` and `off` left for the skill); `config/cloud.json` names 15 skills,
+the map in `config/herdr-title.json` 35, and 35 have an `agents/openai.yaml`; 20
+`sys.path.insert` sites; worktree-guard is named in 36 files; `docs/plans/` holds a second
+plan, `flow-switch-skill.md`. The table below keeps the counts of 2026-11-20.
 
 ## Config units, 2026-11-20
 
@@ -118,10 +127,11 @@ What a move must not break:
 - A skill's own tool (`facts.py`, `query.py`, `survey.py`) is run by the skill's folder path.
 - `scripts/cloud/environment.sh` is pasted on claude.ai and names `scripts/cloud/setup.sh`.
 - A changed hook command needs one Codex `/hooks` approval, and one `ai-dotfiles install`.
-- Other work in flight: PR #91 (the flow switch as a skill; it edits `worktree_guard.py`,
-  `scripts/ai-dotfiles` and how-it-works), PR #90 (herdr-title label colors, in how-it-works),
-  PR #84 (refreshes `docs/onboarding.md`), issue #70 (fold the worktree design into
-  how-it-works). PR #76, the weekly mirror sync, changes only `docs/upstream/`; outside D5.
+- Other work in flight at the interview: PR #91 (the flow switch as a skill, in
+  `worktree_guard.py`, `scripts/ai-dotfiles` and how-it-works; landed since), PR #90
+  (herdr-title label colors, in how-it-works), PR #84 (refreshes `docs/onboarding.md`), issue
+  #70 (fold the worktree design into how-it-works). PR #76, the weekly mirror sync, changes
+  only `docs/upstream/`; outside D5.
 
 ## Decisions
 
@@ -210,23 +220,24 @@ Each names who chose. A reason marked (agent) came with the agent's recommendati
   "the Mac's lists live in `config/`; a feature's own live beside it". Rejected: the root
   keeps it; limits as data too (more to validate, for values that never changed).
 - **D5. PR #91 and PR #90 land first; PR #84 is closed.** PR #91 (the flow switch as a skill)
-  and PR #90 (herdr-title label colors) land on the user's `approve 91` and `approve 90`, not
-  yet given, before step 1 starts. Chosen by the user in two answers: first the agent's
-  recommendation to land all three open PRs, PR #84 (the onboarding refresh) included; then,
-  with D6, to close #84 and land the other two. Why (agent): #91 edits the usage list in
-  `scripts/ai-dotfiles`, which step 1 replaces, and `worktree_guard.py`, which steps 3 and 4
-  move and split; #90 edits how-it-works text that step 3 moves. Whichever lands second is
-  redone by hand. Rejected: starting alongside.
+  landed on 2026-11-20, after the interview. PR #90 (herdr-title label colors) lands on the
+  user's `approve 90`, not yet given, before step 1 starts. Chosen by the user in two answers:
+  first the agent's recommendation to land all three open PRs, PR #84 (the onboarding refresh)
+  included; then, with D6, to close #84 and land the other two. Why (agent): #91 edited the
+  usage list in `scripts/ai-dotfiles`, which step 1 replaces, and `worktree_guard.py`, which
+  steps 3 and 4 move and split; #90 edits how-it-works text that step 3 moves. Whichever
+  lands second is redone by hand. Rejected: starting alongside.
 - **D6. Docs are deleted, not refreshed (R5).** Chosen by the user from the agent's list, with
   the cost stated: a newcomer has no single page of reasons. Nothing is carried into a new
   doc; git history keeps what goes.
   - `docs/onboarding.md`: in the PR that ships this record, with the three lines that point
     at it (two in `AGENTS.md`, one in how-it-works). PR #84, which refreshes it, is closed at
     the user's signal. `/onboard` stays a skill for other repos.
-  - `docs/plans/worktree-convention.md`, and `docs/plans/flow-switch-skill.md` once PR #91
-    adds it: with issue #70, one of whose criteria is that the plan file is deleted. (The
-    list the user accepted named only the first, deleted "when #91 lands", its content in
-    "git history; it is built"; #70 is still open. The second file is the agent's addition.)
+  - `docs/plans/worktree-convention.md`, and `docs/plans/flow-switch-skill.md`, which PR #91
+    added: with issue #70, one of whose criteria is that the plan file is deleted. (The list
+    the user accepted named only the first, deleted "when #91 lands", its content in "git
+    history; it is built". #91 has landed; #70 is still open, and the agent ties the deletion
+    to it. The second file is the agent's addition.)
   - Each feature's section of `docs/how-it-works.md`: in the PR that moves the feature, its
     reasons going to the feature's docstring in the same PR.
   - The rest of `docs/how-it-works.md`: step 5, the file removed. The sections on the install
@@ -242,12 +253,13 @@ Each names who chose. A reason marked (agent) came with the agent's recommendati
   - Glossary: of 21 entries, 16 have one owning code file (by one reading) and get their
     definition there. Five do not (Source, Receipt, Release tag, Gap, Emitted vs verified):
     each gets a home or is dropped. `docs/agents/domain.md` then says where terms live.
-  - Memory (8 lines) has no home yet.
+  - Memory (three bullets) has no home yet.
 
   End state: `docs/` holds `agents/` and `upstream/`. Written by hand: README (what it is,
   install), `AGENTS.md` (the rules no test can check, verify), each `SKILL.md`, docstrings.
-  No test reads `docs/onboarding.md` or `docs/how-it-works.md`. 9 files point at how-it-works:
-  2 are deleted above and 7 are fixed in the PRs that remove what they point at.
+  No test reads `docs/onboarding.md` or `docs/how-it-works.md`. Besides this record, 9 files
+  point at how-it-works: the two plans above go, and 7 are fixed in the PRs that remove what
+  they point at.
   Rejected: a short how-it-works of principles and glossary; folding them into `AGENTS.md`;
   keeping `docs/onboarding.md` and regenerating it.
 
@@ -258,8 +270,9 @@ not speak to them, and none was asked one by one. Some came after it and the use
 seen them: no `DESIGN.md`, #70's rewording, several tickets per PR (the summary said one), the
 last two items of the final bullet. All are the agent's choices, not yet the user's.
 
-- The 12 skills that front a feature move with it, and `worktree-flow` joins them once PR #91
-  lands; `skills/` keeps the other 35 (33 if the docs mirror becomes a feature: see Open).
+- The 13 skills that front a feature move with it; the thirteenth, `worktree-flow`, came with
+  PR #91 and joins the worktree-guard folder. Of 48 skills, `skills/` keeps the other 35 (33
+  if the docs mirror becomes a feature: see Open).
 - One call per event behaves as Pi's extension does today (`scripts/agent_hooks.ts`): features
   run in a fixed order, each sees the tool input as the one before left it, a block ends the
   chain, notes are joined, and a feature that fails is skipped.
@@ -280,8 +293,8 @@ last two items of the final bullet. All are the agent's choices, not yet the use
   the agent's wrong speed figure in front of them, and has not chosen again. The choice is the
   user's. The other option, one hook entry per feature as today, was offered as the safer one.
   Step 1 writes the hook lines, so this comes first.
-- **A feature's skills and the cloud list.** `config/cloud.json` names 14 skills a cloud
-  session leaves out; 11 sit in folders that move to `features/`, where `feature.json` also
+- **A feature's skills and the cloud list.** `config/cloud.json` names 15 skills a cloud
+  session leaves out; 12 sit in folders that move to `features/`, where `feature.json` also
   says "cloud or not". Whether that is one fact with two homes is not settled.
 - **Whether the docs mirror is a feature.** The agent's summary made it an eighth feature
   folder (sync, report, tests, the `upstream-docs` and `collect-docs` skills), its source list
@@ -295,5 +308,5 @@ as a docs PR that also removes `docs/onboarding.md`. The rest waits for that sig
 1. PR #84 is closed with a note that says why.
 2. The user answers the open questions; rule 2's comes before the spec.
 3. A spec issue and its tickets are filed, and issue #70 is reworded.
-4. The user approves #91 and #90.
+4. The user approves #90 (#91 landed on 2026-11-20).
 5. Step 1 of the build order (the door and `feature.json`) starts in a worktree of its own.
