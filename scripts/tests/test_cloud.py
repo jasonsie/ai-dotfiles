@@ -1,5 +1,6 @@
 """A cloud session reads only the clone: this repo's .claude/settings.json gives it the global
-rules, the skills, the ai-dotfiles command and the commit gate (scripts/cloud_session.py)."""
+rules, the skills, the ai-dotfiles command (scripts/cloud_session.py) and the door, which runs the
+commit gate alone there."""
 import json
 import os
 from pathlib import Path
@@ -33,14 +34,14 @@ def hooks():
 
 class Sandbox(unittest.TestCase):
     """A temporary project folder (a clone, as a cloud session sees it) with a HOME and a git
-    config of its own; its config/, scripts/ and skills/ are links to this repo's."""
+    config of its own; its config/, lib/, scripts/ and skills/ are links to this repo's."""
 
     def setUp(self):
         self.temp = Path(tempfile.mkdtemp())
         self.addCleanup(shutil.rmtree, self.temp, ignore_errors=True)
         self.project = self.temp / 'clone'
         self.project.mkdir()
-        for name in ('config', 'scripts', 'skills'):
+        for name in ('config', 'lib', 'scripts', 'skills'):
             (self.project / name).symlink_to(ROOT / name)
 
     def env(self, remote, **extra):
@@ -184,27 +185,49 @@ class ProjectSettingsTest(Sandbox):
         self.assertEqual(set(matcher.split('|')), {'startup', 'resume', 'clear', 'compact'})
         self.assertIn('"$CLAUDE_PROJECT_DIR/scripts/cloud_session.py" start', handler['command'])
 
-    def test_the_commit_gate_matches_the_user_level_hook(self):
-        (matcher, handler), = hooks()['PreToolUse']
-        self.assertEqual(matcher, 'Bash')
-        self.assertIn('"$CLAUDE_PROJECT_DIR/skills/small-commits/scripts/small_commits.py" hook pre --cli claude',
-                      handler['command'])
-        commits, = (f for f in hooks_step.declared.find() if f.name == 'small-commits')
-        self.assertEqual(handler['timeout'], commits.budget['pre'])
+    def test_the_door_has_one_entry_per_event_the_cloud_features_want_as_the_hooks_step_writes_them(self):
+        cloud = [feature for feature in hooks_step.declared.find() if feature.cloud]
+        wanted = {event: (kind, matcher, timeout) for event, kind, matcher, timeout in hooks_step.entries('claude', cloud)}
+        door = {event: entries for event, entries in hooks().items()
+                if any('/scripts/ai-dotfiles" hook ' in handler['command'] for _, handler in entries)}
+        self.assertEqual(set(door), set(wanted))
+        for event, ((matcher, handler),) in door.items():
+            kind, wanted_matcher, timeout = wanted[event]
+            self.assertEqual((matcher, handler['timeout']), (wanted_matcher, timeout), event)
+            self.assertEqual(handler['command'],
+                             f'{GATE}"$CLAUDE_PROJECT_DIR/scripts/ai-dotfiles" hook {kind} --cli claude{TAIL}')
 
-    def test_the_commit_gate_blocks_in_the_cloud_only(self):
-        (_, handler), = hooks()['PreToolUse']
+    def repo(self, flow=False):
+        """A repo with a file staged, in which a `git commit -m probe` gets the commit gate's no."""
         repo = self.temp / 'repo'
         subprocess.run(['git', 'init', '-q', str(repo)], check=True, env=self.env(False))
         (repo / 'a.txt').write_text('a\n')
         subprocess.run(['git', '-C', str(repo), 'add', 'a.txt'], check=True, env=self.env(False))
+        if flow:  # worktree-guard would stop any change to this main checkout on a Mac
+            subprocess.run(['git', '-C', str(repo), 'config', '--local', 'worktree-guard.flow', 'true'], check=True)
+        return repo
+
+    def gate(self, repo, command, remote):
+        (_, handler), = hooks()['PreToolUse']
         event = json.dumps({'session_id': 's', 'cwd': str(repo), 'hook_event_name': 'PreToolUse',
-                            'tool_name': 'Bash', 'tool_input': {'command': 'git commit -m probe'}})
-        state = str(self.temp / 'state')
-        self.assertEqual(self.run_sh(handler['command'], False, event, SMALL_COMMITS_STATE=state), (0, ''))
-        code, out = self.run_sh(handler['command'], True, event, SMALL_COMMITS_STATE=state)
+                            'tool_name': 'Bash', 'tool_input': {'command': command}})
+        return self.run_sh(handler['command'], remote, event, SMALL_COMMITS_STATE=str(self.temp / 'state'),
+                           WORKTREE_GUARD_STATE=str(self.temp / 'guard'))
+
+    def test_the_commit_gate_blocks_in_the_cloud_only(self):
+        repo = self.repo()
+        self.assertEqual(self.gate(repo, 'git commit -m probe', False), (0, ''))
+        code, out = self.gate(repo, 'git commit -m probe', True)
         self.assertEqual(code, 0)
         self.assertEqual(json.loads(out)['hookSpecificOutput']['permissionDecision'], 'deny')
+
+    def test_in_the_cloud_the_door_runs_the_commit_gate_and_nothing_else(self):
+        repo = self.repo(flow=True)
+        _, out = self.gate(repo, 'git commit -m probe', True)
+        self.assertTrue(json.loads(out)['hookSpecificOutput']['permissionDecisionReason'].startswith('small-commits'))
+        good = "git commit -m 'feat(x): add a' -m 'Why: a test\nScope: x\nVerified: none'"
+        self.assertEqual(self.gate(repo, good, True), (0, ''))  # the guard, which would stop it on a Mac, does not run
+        self.assertFalse((self.temp / 'guard').exists())
 
 
 if __name__ == '__main__':
