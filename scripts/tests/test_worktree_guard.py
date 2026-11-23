@@ -1,9 +1,11 @@
 """worktree-guard: sessions sharing a checkout are kept out of each other's changes.
 
+Every hook call goes through the door (lib/door.py), as the CLIs' do: in this process with the
+guard alone, or as the CLI runs it, `ai-dotfiles hook`.
+
 Run: python3 -m unittest discover -s scripts/tests -p 'test_worktree_guard.py' -v
 """
 from contextlib import redirect_stderr, redirect_stdout
-import importlib.util
 import io
 import json
 import os
@@ -19,11 +21,13 @@ from unittest.mock import patch
 
 from support import ROOT
 
-SCRIPT = ROOT / 'skills/worktree-guard/scripts/worktree_guard.py'
-SPEC = importlib.util.spec_from_file_location('worktree_guard', SCRIPT)
-assert SPEC is not None and SPEC.loader is not None
-guard = importlib.util.module_from_spec(SPEC)
-SPEC.loader.exec_module(guard)
+sys.path.insert(0, str(ROOT / 'lib'))
+import door  # noqa: E402
+import features  # noqa: E402
+
+GUARD = next(feature for feature in features.find() if feature.name == 'worktree-guard')
+guard = door.module_of(GUARD)  # the module the door runs, so a patch here reaches it
+DOOR = ROOT / 'scripts/ai-dotfiles'
 
 ME, PARENT = os.getpid(), os.getppid()  # two live processes: two live sessions
 
@@ -36,6 +40,11 @@ def dead_pid():
 
 def git(cwd, *args):
     return subprocess.run(['git', '-C', str(cwd), *args], check=True, capture_output=True, text=True).stdout.strip()
+
+
+def door_env(**extra):
+    """The environment `ai-dotfiles hook` runs in here: this Python, and no Herdr pane to label."""
+    return {**{k: v for k, v in os.environ.items() if not k.startswith('HERDR_')}, 'PYTHON': sys.executable, **extra}
 
 
 def switch_on(repo):
@@ -114,7 +123,8 @@ class Repo(unittest.TestCase):
         self.addCleanup(patcher.stop)
 
     def run_hook(self, cli, data, kind='pre'):
-        return guard.answer(cli, kind)(data)
+        """The door's reply to one hook call, with the guard alone."""
+        return door.call(cli, kind, data, [GUARD])[0]
 
     def edit(self, cli, session, pid, path='a.txt'):
         """`cli`'s own hook input for an edit of `path` (relative to the repo)."""
@@ -213,15 +223,15 @@ class GuardTest(Repo):
         self.addCleanup(broken.unlink)
         data = {'session_id': 's', 'cwd': str(self.repo), 'tool_name': 'Edit',
                 'tool_input': {'file_path': str(self.linked('fix-x') / 'a.txt')}}
-        run = subprocess.run([sys.executable, str(SCRIPT), 'hook', 'pre', '--cli', 'claude'], input=json.dumps(data),
-                             capture_output=True, text=True, env={**os.environ, guard.ENV: str(broken)})
+        run = subprocess.run([str(DOOR), 'hook', 'pre', '--cli', 'claude'], input=json.dumps(data),
+                             capture_output=True, text=True, env=door_env(**{guard.ENV: str(broken)}))
         self.assertEqual((run.returncode, run.stderr), (0, ''))
         self.assertIn('this edit was not protected', json.loads(run.stdout)['hookSpecificOutput']['additionalContext'])
 
     def test_the_command_never_fails_or_speaks_outside_json(self):
         for stdin, args in (('not json', ['hook', 'pre', '--cli', 'codex']), ('[]', ['hook', 'end', '--cli', 'claude']),
                             ('{}', ['hook', 'bogus', '--cli', 'claude']), ('{}', ['hook', 'pre'])):
-            run = subprocess.run([sys.executable, str(SCRIPT), *args], input=stdin, capture_output=True, text=True)
+            run = subprocess.run([str(DOOR), *args], input=stdin, capture_output=True, text=True, env=door_env())
             self.assertEqual((run.returncode, run.stderr), (0, ''), args)
             if run.stdout.strip():
                 json.loads(run.stdout)
@@ -1006,12 +1016,9 @@ class FlowTest(Repo):
         self.on()
         data = {'session_id': 's', 'cwd': str(self.repo), 'tool_name': 'Edit',
                 'tool_input': {'file_path': str(self.repo / 'a.txt')}}
-        out, err = io.StringIO(), io.StringIO()
-        with patch.object(guard, 'flow_on', side_effect=RuntimeError('boom')), redirect_stdout(out), redirect_stderr(err):
-            status = guard.agent_hooks.serve('claude', 'pre', guard.answer('claude', 'pre'),
-                                             stdin=io.StringIO(json.dumps(data)), stdout=out,
-                                             on_error=guard.failed)
-        reply = json.loads(out.getvalue())['hookSpecificOutput']
+        with patch.object(guard, 'flow_on', side_effect=RuntimeError('boom')):
+            out, status = door.call('claude', 'pre', data, [GUARD])
+        reply = out['hookSpecificOutput']
         self.assertEqual(status, 0)
         self.assertNotEqual(reply.get('permissionDecision'), 'deny')
         self.assertIn('not protected', reply['additionalContext'])
@@ -1022,11 +1029,11 @@ class NativeTest(OriginRepo):
     is off gets what Claude would have made itself."""
 
     def hook(self, kind, data, cwd=None):
-        """(status, stdout, stderr) of `hook <kind> --cli claude` fed `data` on stdin."""
+        """(status, stdout, stderr) of `ai-dotfiles hook <kind> --cli claude` fed `data` on stdin."""
         out, err = io.StringIO(), io.StringIO()
         data = {'session_id': 's1', 'cwd': str(cwd or self.repo), 'hook_event_name': 'x', **data}
         with patch('sys.stdin', io.StringIO(json.dumps(data))), redirect_stdout(out), redirect_stderr(err):
-            status = guard.main(['hook', kind, '--cli', 'claude'])
+            status = door.main(['hook', kind, '--cli', 'claude'])
         return status, out.getvalue(), err.getvalue()
 
     def create(self, name='bold-oak-a3f2', **kwargs):
@@ -1159,10 +1166,10 @@ class NativeTest(OriginRepo):
         self.assertEqual(self.hook('remove', {})[0], 0)
 
     def test_the_script_prints_only_the_path_when_run_as_claude_runs_it(self):
-        env = {**os.environ, guard.ENV: str(self.repo.parent / 'state')}
+        env = door_env(**{guard.ENV: str(self.repo.parent / 'state')})
         data = json.dumps({'session_id': 's1', 'cwd': str(self.repo), 'hook_event_name': 'WorktreeCreate',
                            'name': 'cli-run'})
-        run = subprocess.run([sys.executable, str(SCRIPT), 'hook', 'create', '--cli', 'claude'], input=data,
+        run = subprocess.run([str(DOOR), 'hook', 'create', '--cli', 'claude'], input=data,
                              capture_output=True, text=True, env=env)
         self.assertEqual((run.returncode, run.stdout), (0, f'{self.linked("cli-run")}\n'), run.stderr)
 

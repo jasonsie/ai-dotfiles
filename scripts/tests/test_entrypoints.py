@@ -30,10 +30,10 @@ class EntrypointsTest(unittest.TestCase):
         return result.stdout
 
     def working_copy(self):
-        """scripts/, config/ and skills/ copied outside git, so an install there links the copy itself
+        """scripts/, lib/, config/ and skills/ copied outside git, so an install there links the copy itself
         (in a worktree, an install from ROOT links the main checkout, which runs other code)."""
         checkout = Path(self.temp.name).resolve() / 'checkout'
-        for folder in ('scripts', 'config', 'skills'):
+        for folder in ('scripts', 'lib', 'config', 'skills'):
             shutil.copytree(ROOT / folder, checkout / folder, ignore=shutil.ignore_patterns('__pycache__'))
         return checkout
 
@@ -62,9 +62,10 @@ class EntrypointsTest(unittest.TestCase):
         names = {p.name for p in (self.home / '.claude/skills').iterdir()}
         self.assertIn('grilling', names)
         self.assertEqual(names & set(local), set())
-        hooks = json.dumps(json.loads((self.home / '.claude/settings.json').read_text())['hooks'])
-        self.assertIn('small_commits.py', hooks)
-        self.assertNotIn('worktree_guard.py', hooks)
+        hooks = json.loads((self.home / '.claude/settings.json').read_text())['hooks']
+        self.assertEqual(list(hooks), ['PreToolUse'])  # the commit gate's event alone: no guard, no Herdr title
+        self.assertEqual(hooks['PreToolUse'][0]['matcher'], 'Bash')
+        self.assertIn('ai-dotfiles hook pre --cli claude', hooks['PreToolUse'][0]['hooks'][0]['command'])
         for other in ('.codex', '.pi', '.gemini', '.agents', 'Library'):
             self.assertFalse((self.home / other).exists(), other)
 
@@ -121,6 +122,11 @@ class EntrypointsTest(unittest.TestCase):
                                input='{"model": {"display_name": "Opus"}, "version": "1", "cwd": "/"}')
         self.assertEqual(shown.returncode, 0, shown.stderr)
         self.assertIn('Opus', shown.stdout)
+        bare = {k: v for k, v in self.env.items() if k not in ('HOME', 'PYTHON')}  # the door falls back to python3
+        for env in (self.env, {**bare, 'PATH': f'{Path(sys.executable).parent}:{bare["PATH"]}'}):
+            door = subprocess.run([str(command), 'hook', 'stop', '--cli', 'codex'], env=env, capture_output=True,
+                                  text=True, input='{}')  # what the hook entries run
+            self.assertEqual((door.returncode, door.stdout), (0, '{}\n'), door.stderr)
         bad = run('bogus')
         self.assertEqual(bad.returncode, 1)
         self.assertIn('Unknown command', bad.stderr)
@@ -149,7 +155,7 @@ class EntrypointsTest(unittest.TestCase):
         subprocess.run(['git', 'clone', '-q', str(ROOT), str(upstream)], check=True)
         git(upstream, 'switch', '-q', '-C', 'main')
         shutil.rmtree(upstream / 'tools', ignore_errors=True)  # config/ before it had that name
-        for folder in ('scripts', 'config'):
+        for folder in ('scripts', 'lib', 'config'):
             shutil.rmtree(upstream / folder, ignore_errors=True)
             shutil.copytree(ROOT / folder, upstream / folder, ignore=shutil.ignore_patterns('__pycache__'))
         git(upstream, 'add', '-A')
@@ -172,7 +178,7 @@ class EntrypointsTest(unittest.TestCase):
         git = lambda repo, *a: subprocess.run(['git', '-C', str(repo), *a], check=True, capture_output=True)  # noqa: E731
         main = Path(self.temp.name).resolve() / 'main'
         subprocess.run(['git', 'clone', '-q', str(ROOT), str(main)], check=True)
-        for folder in ('scripts', 'config', 'skills'):  # the working copy, committed so the worktree has it
+        for folder in ('scripts', 'lib', 'config', 'skills'):  # the working copy, committed so the worktree has it
             shutil.rmtree(main / folder, ignore_errors=True)
             shutil.copytree(ROOT / folder, main / folder, ignore=shutil.ignore_patterns('__pycache__'))
         git(main, 'add', '-A')

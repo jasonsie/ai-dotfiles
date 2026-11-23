@@ -7,9 +7,9 @@ one level down, is linked by name into the skill folder of each CLI that config/
 switched-off CLIs read loses its links. scripts/ai-dotfiles and the daily-log skill's
 script are linked as ~/.local/bin/ai-dotfiles and ~/.local/bin/daily-log, so both commands
 work from any folder; shell files are never edited, and a hint is printed when that folder
-is not on PATH. Pi has no hooks, so while it is on and set up it gets scripts/agent_hooks.ts
-(worktree-guard) in its extensions folder; the daily-log-only extension it used to link is
-removed.
+is not on PATH. Pi has no hooks, so while it is on and set up it gets scripts/agent_hooks.ts,
+which sends each event to the door (`ai-dotfiles hook`), in its extensions folder; the
+daily-log-only extension it used to link is removed.
 
 With --cloud (a cloud session's VM, set up by scripts/cloud/setup.sh) it leaves out the skills
 config/cloud.json keeps local, and any command named after one (daily-log).

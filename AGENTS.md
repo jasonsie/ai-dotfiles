@@ -22,17 +22,18 @@ Every CLI reads this file as the project's instructions; there is no `CLAUDE.md`
 | `skills/daily-log/` | The `daily-log` command (the daily logger's grammar and writer) and `day_pass.py`, the day pass: the evidence and, with `--write`, the session that writes from it | `scripts/install/skills.py` (links), `scripts/install/launchd.py` (the 04:00 LaunchAgent) |
 | `scripts/agent_sessions.py` | Every CLI's session store (transcripts) behind one interface, for the day pass and herdr-title | — |
 | `scripts/statusline.py` | The status line Claude Code and Antigravity run as `ai-dotfiles statusline`: folder, branch and worktree, model with effort, version, context left, rate limits (asked of a gateway on this machine when the CLI sends none) and cost. Codex lists the same items in `tui.status_line`; Pi's footer has them built in | `scripts/install/settings.py` (the `statusLine` keys) |
-| `skills/worktree-guard/` | The hook that, in a repo switched on, keeps each task in its own worktree and each worktree to one session, and the `ai-dotfiles worktree` commands | `scripts/install/hooks.py` (hook entries) |
+| `skills/worktree-guard/` | The hook that, in a repo switched on, keeps each task in its own worktree and each worktree to one session, and the `ai-dotfiles worktree` commands | its `feature.json`, read by the door and `scripts/install/hooks.py` |
 | `skills/worktree-flow/` | `/worktree-flow`, the person's toggle of a repo's flow switch, after their OK in a macOS dialog | `scripts/install/skills.py` |
-| `skills/small-commits/` | The hook that gates `git commit` on size (300 lines warn, 600 wall), subject and trailers, and the `ai-dotfiles commit check` command | `scripts/install/hooks.py` (hook entries), `scripts/ai-dotfiles` (`commit check`) |
-| `skills/herdr-title/` | The hook that, inside a Herdr pane, labels the agent's row in the sidebar type › status › result (`execute › wait › ask`) at each prompt, turn end, dialog and resume, and sorts the rows that need the person to the top: at once where a rule decides, else by Haiku through a headless `claude -p` | `scripts/install/hooks.py` (hook entries for Claude Code and Codex), `scripts/agent_hooks.ts` (Pi) |
+| `skills/small-commits/` | The hook that gates `git commit` on size (300 lines warn, 600 wall), subject and trailers, and the `ai-dotfiles commit check` command | its `feature.json`, read by the door and `scripts/install/hooks.py`; `scripts/ai-dotfiles` (`commit check`) |
+| `skills/herdr-title/` | The hook that, inside a Herdr pane, labels the agent's row in the sidebar type › status › result (`execute › wait › ask`) at each prompt, turn end, dialog and resume, and sorts the rows that need the person to the top: at once where a rule decides, else by Haiku through a headless `claude -p` | its `feature.json`, read by the door and `scripts/install/hooks.py` |
 | `config/herdr-title.json` | The ten types and their meanings, the label's words, the command words and skills that decide a type at once, how a prompt the user did not type starts, what makes a turn end ask or fail at once, and both model instructions (type, turn end) | `skills/herdr-title/scripts/herdr_title.py` (read on every call) |
 | `skills/portable-plugin/` | The rules a plugin's files follow to run in all four CLIs, the check, and the release step | `scripts/install/skills.py` |
 | `skills/git/` | A bundle: the git step skills (`push-branch`, `open-pr`, `approve-pr`, `archive-tag`, `merge-pr`, `prune-branch`), each with its own script, `approve`, which runs them in order, and `ship`, an agent's finish in its worktree (checks, push, PR, worktree deleted); `scripts/git_run.py` is the runner they share | `scripts/install/skills.py` (each linked by its own name), `scripts/ai-dotfiles` (`approve`, `ship`, `git <step>`) |
-| `scripts/agent_hooks.py` | Every CLI's hook format behind one interface, for the skills' hooks; `agent_hooks.ts` is Pi's extension for all of them | `scripts/install/skills.py` (Pi's link) |
-| `scripts/ai-dotfiles` | Global command: `install`, `update`, `uninstall`, `check`, `worktree`, `commit`, `approve`, `ship`, `git`, `statusline` | `scripts/install/skills.py` |
+| `scripts/agent_hooks.py` | Every CLI's hook format behind one interface, for the door; `agent_hooks.ts` is Pi's extension, which sends each event to the door | `scripts/install/skills.py` (Pi's link) |
+| `lib/` | What the features and the installer share: `features.py` finds each feature by the `feature.json` in its folder (its hooks per CLI, their order, budgets, the cloud answer); `door.py` is `ai-dotfiles hook`, the one call per event that runs every feature wanting it | `scripts/ai-dotfiles` (`hook`), `scripts/install/hooks.py` |
+| `scripts/ai-dotfiles` | Global command: `install`, `update`, `uninstall`, `check`, `worktree`, `commit`, `approve`, `ship`, `git`, `statusline`, `hook` | `scripts/install/skills.py` |
 | `scripts/install/installer.py` | What every step shares: reading `ai-clis.json`, safe writes | — |
-| `scripts/install/hooks.py` | One hook entry per event in each CLI's native hook file; ours are found by their command; retired ones taken out | — |
+| `scripts/install/hooks.py` | One door entry per event in each CLI's native hook file, from the features' declarations; ours are found by their command; each feature's old entries and other retired ones taken out; the door's Python linked | — |
 | `scripts/install/plugins.py` | Each listed plugin at its release tag through each CLI's own plugin manager, read back after; each manifest checked at its tag (name, dependencies); its bin/ commands linked into `~/.local/bin` from a checkout at the tag; a receipt tells installed from taken over; every outside command through one runner | — |
 | `scripts/install/launchd.py` | The daily-log pass as a LaunchAgent, `claude` path and PATH rendered at install | — |
 | `docs/upstream/` | Machine-written docs mirrors with their indexes (`INDEX.md`, `MIRROR-INDEX.*`), and skill catalogs | `scripts/upstream/` (weekly workflow) |
@@ -64,7 +65,7 @@ and `agents/`, the engineering skills' setup.
   its `local_edits` from `skills/skills.lock`, and update `which-skill` (a test checks it).
 - A skill a cloud session cannot run (it needs the Mac, or a GitHub call the cloud refuses)
   gets its reason in `config/cloud.json`.
-- Keep `config/` and `scripts/` free of machine paths (`/Users/<name>`, `/opt/homebrew`);
+- Keep `config/`, `lib/` and `scripts/` free of machine paths (`/Users/<name>`, `/opt/homebrew`);
   the healthcheck enforces this.
 - No credentials in this repo. Per-project rules belong to each project, not here.
 - A new adapted skill or docs source gets a row in `THIRD-PARTY-NOTICES.md` and, for a new

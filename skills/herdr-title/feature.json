@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "cloud": false,
+  "hooks": {
+    "module": "scripts/herdr_title.py",
+    "order": 30,
+    "budget": {"prompt": 10, "stop": 10, "error": 10, "pre": 10, "permission": 10, "form": 10, "start": 10,
+               "interrupt": 3, "end": 10},
+    "wants": {
+      "claude": {"prompt": true, "stop": true, "error": true, "pre": ["ask"], "permission": true, "form": true,
+                 "start": true, "end": true},
+      "codex": {"prompt": true, "stop": true, "permission": true, "interrupt": true, "end": true},
+      "pi": {"prompt": true, "stop": true, "start": true, "end": true}
+    }
+  }
+}

@@ -99,11 +99,11 @@ fi
 
 echo "-- portability"
 HITS="$(grep -rlIE --exclude=healthcheck.sh --exclude-dir=__pycache__ --exclude-dir=tests \
-  '/Users/[A-Za-z]|/opt/homebrew|/usr/local/Cellar' "$ROOT/config" "$ROOT/scripts" 2>/dev/null || true)"
+  '/Users/[A-Za-z]|/opt/homebrew|/usr/local/Cellar' "$ROOT/config" "$ROOT/lib" "$ROOT/scripts" 2>/dev/null || true)"
 if [ -n "$HITS" ]; then
   fail "machine-specific paths in: $(printf '%s' "$HITS" | tr '\n' ' ')"
 else
-  pass "no machine-specific paths in config/ or scripts/"
+  pass "no machine-specific paths in config/, lib/ or scripts/"
 fi
 
 echo "-- tests"

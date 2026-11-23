@@ -17,8 +17,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "[ \"$CLAUDE_CODE_REMOTE\" = true ] && python3 \"$CLAUDE_PROJECT_DIR/skills/small-commits/scripts/small_commits.py\" hook pre --cli claude || true",
-            "timeout": 30
+            "command": "[ \"$CLAUDE_CODE_REMOTE\" = true ] && \"$CLAUDE_PROJECT_DIR/scripts/ai-dotfiles\" hook pre --cli claude || true",
+            "timeout": 60
           }
         ]
       }

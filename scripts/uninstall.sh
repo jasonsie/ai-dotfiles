@@ -9,7 +9,7 @@
 # Steps, in reverse install order (each removes only what its installer created,
 # backs up before writing, and rolls back on failure):
 #   7. launchd       the daily-log pass's LaunchAgent
-#   6. hooks         worktree-guard's hook entries, and any retired ones
+#   6. hooks         the door's hook entries and its Python link, and any retired ones
 #   5. plugins       left in place, listed: plugins work without this repo
 #   4. skills        links in the receipt: skills, Pi's hooks extension, and the
 #                    ai-dotfiles and daily-log commands (those with --target=all only)

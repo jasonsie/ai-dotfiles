@@ -1,7 +1,7 @@
 """herdr-title: an agent's row in Herdr says what its current prompt is for.
 
-The script runs as the CLIs run it, with a `herdr` and a `claude` on PATH that only write down
-how they were called.
+Each hook call goes through the door as the CLIs make it (`ai-dotfiles hook`, lib/door.py), with a
+`herdr` and a `claude` on PATH that only write down how they were called.
 
 Run: python3 -m unittest discover -s scripts/tests -p 'test_herdr_title.py' -v
 """
@@ -21,7 +21,13 @@ from unittest import mock
 
 from support import ROOT, load
 
+sys.path.insert(0, str(ROOT / 'lib'))
+import door  # noqa: E402
+import features  # noqa: E402
+
 SCRIPT = ROOT / 'skills/herdr-title/scripts/herdr_title.py'
+DOOR = ROOT / 'scripts/ai-dotfiles'
+TITLE = next(feature for feature in features.find() if feature.name == 'herdr-title')
 FAKE = f'''#!{sys.executable}
 import json, os, sys, time
 name = os.path.basename(sys.argv[0])
@@ -53,7 +59,7 @@ class Sandbox(unittest.TestCase):
             (self.bin / name).write_text(FAKE)
             (self.bin / name).chmod(0o755)
         self.env = {'PATH': f'{self.bin}:/usr/bin:/bin', 'HOME': str(self.home), 'FAKE_LOG': str(self.log),
-                    'HERDR_TITLE_STATE': str(self.home / 'state'),
+                    'HERDR_TITLE_STATE': str(self.home / 'state'), 'PYTHON': sys.executable,
                     'HERDR_ENV': '1', 'HERDR_PANE_ID': 'w1:p1', 'HERDR_SOCKET_PATH': '/tmp/herdr.sock'}
 
     def run_script(self, *args, data=None, **env):
@@ -61,8 +67,10 @@ class Sandbox(unittest.TestCase):
                               capture_output=True, env={**self.env, **env}, timeout=30)
 
     def hook(self, kind, cli='claude', session='s1', env=None, **fields):
-        return self.run_script('hook', kind, '--cli', cli, data={'session_id': session, 'cwd': '/w', **fields},
-                               **(env or {}))
+        """One hook call as the CLI makes it: the door, the event on stdin."""
+        return subprocess.run([str(DOOR), 'hook', kind, '--cli', cli], text=True, capture_output=True, timeout=30,
+                              input=json.dumps({'session_id': session, 'cwd': '/w', **fields}),
+                              env={**self.env, **(env or {})})
 
     def calls(self, tool, wait=0):
         """The calls `tool` got so far; with `wait`, as soon as there are that many (5 s at most)."""
@@ -645,17 +653,17 @@ class TurnTest(Sandbox):
 
     def setUp(self):
         super().setUp()
-        self.module = load('../skills/herdr-title/scripts/herdr_title.py')
+        self.module = door.module_of(TITLE)  # the module the door runs
         self.asked = []
-        self.module.ask_later = self.asked.append
-        patcher = mock.patch.dict(os.environ, self.env, clear=True)  # no TMUX or entrypoint of the runner's
-        patcher.start()
-        self.addCleanup(patcher.stop)
+        for patcher in (mock.patch.object(self.module, 'ask_later', self.asked.append),
+                        mock.patch.dict(os.environ, self.env, clear=True)):  # no TMUX or entrypoint of the runner's
+            patcher.start()
+            self.addCleanup(patcher.stop)
 
     def call(self, kind, cli='claude', session='s1', **fields):
         data = json.dumps({'session_id': session, 'cwd': '/w', **fields})
         with mock.patch('sys.stdin', io.StringIO(data)), mock.patch('sys.stdout', io.StringIO()):
-            self.assertEqual(self.module.main(['hook', kind, '--cli', cli]), 0)
+            self.assertEqual(door.main(['hook', kind, '--cli', cli]), 0)
 
     def test_a_prompt_starts_one_only_when_typed_and_naming_no_type(self):
         self.call('prompt', prompt='/tdd')
@@ -707,7 +715,7 @@ class QuietTest(Sandbox):
     def test_outside_herdr_nothing_runs_and_nothing_is_kept(self):
         for missing in ('HERDR_ENV', 'HERDR_PANE_ID'):
             env = {key: value for key, value in self.env.items() if key != missing}
-            done = subprocess.run([sys.executable, str(SCRIPT), 'hook', 'prompt', '--cli', 'claude'], text=True,
+            done = subprocess.run([str(DOOR), 'hook', 'prompt', '--cli', 'claude'], text=True,
                                   input=json.dumps({'session_id': 's1', 'prompt': '/grilling'}),
                                   capture_output=True, env=env, timeout=30)
             self.assertEqual((done.returncode, done.stdout, done.stderr), (0, '', ''), missing)
@@ -717,7 +725,7 @@ class QuietTest(Sandbox):
     def test_codex_still_gets_json_from_its_stop_hook_outside_herdr(self):
         env = {key: value for key, value in self.env.items() if key != 'HERDR_ENV'}
         for cli, said in (('codex', '{}\n'), ('claude', ''), ('pi', '')):
-            done = subprocess.run([sys.executable, str(SCRIPT), 'hook', 'stop', '--cli', cli], text=True,
+            done = subprocess.run([str(DOOR), 'hook', 'stop', '--cli', cli], text=True,
                                   input=json.dumps({'session_id': 's1'}), capture_output=True, env=env, timeout=30)
             self.assertEqual((done.returncode, done.stdout, done.stderr), (0, said, ''), cli)
         self.assertFalse(self.log.exists())
@@ -725,7 +733,7 @@ class QuietTest(Sandbox):
     def test_input_it_cannot_read_is_met_with_silence(self):
         for args, text in ((('hook', 'prompt', '--cli', 'claude'), 'not json'),
                            (('hook', 'prompt', '--cli', 'agy'), '{}'), (('hook', 'nonsense'), '{}')):
-            done = subprocess.run([sys.executable, str(SCRIPT), *args], input=text, text=True,
+            done = subprocess.run([str(DOOR), *args], input=text, text=True,
                                   capture_output=True, env=self.env, timeout=30)
             self.assertEqual((done.returncode, done.stdout, done.stderr), (0, '', ''), args)
         self.assertEqual(self.calls('herdr'), [])
