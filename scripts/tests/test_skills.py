@@ -28,6 +28,35 @@ FENCE_RE = re.compile(r'^\s*(`{3,}|~{3,})')
 INLINE_CODE_RE = re.compile(r'``[^`]*``|`[^`]*`')
 LINK_RE = re.compile(r'!?\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)')
 
+# Anthropic's limits for a skill ("Skill authoring best practices", platform.claude.com); the
+# writing-for-agents skill states them in SKILL-MECHANICS.md.
+MAX_NAME_CHARS = 64
+MAX_DESCRIPTION_CHARS = 1024
+MAX_BODY_LINES = 500
+RESERVED_NAME_WORDS = ('anthropic', 'claude')
+CONTENTS_OVER_LINES = 100  # a longer reference file opens with a contents list
+CONTENTS_WITHIN_LINES = 30  # "opens with": room for the title and an intro paragraph above it
+NAME_RE = re.compile(r'[a-z0-9]+(?:-[a-z0-9]+)*')
+TAG_RE = re.compile(r'</?[A-Za-z][^<>]*>')
+# A quoted trigger ("grill me") is the user's words, not the description's point of view.
+QUOTED_RE = re.compile(r'"[^"]*"|(?<!\w)\'[^\']*\'(?!\w)|`[^`]*`')
+FIRST_SECOND_PERSON_RE = re.compile(r"\b(I|[Mm]e|[Mm]y|[Ww]e|[Oo]ur|[Yy]ou|[Yy]our)\b")
+CONTENTS_RE = re.compile(r'^#{1,6}\s+(?:table of )?contents\b', re.IGNORECASE)
+WINDOWS_PATH_RE = re.compile(r'\b[\w.-]+\\[\w.-]+\.(?:py|sh|md|json|ts|js)\b')
+NOTICE_FILES = ('CREDITS.md',)  # an author's notices beside LICENSE: not reference to point at
+# Reference files of skills pinned in skills.lock that miss a packaging rule. Fixing one is a local
+# edit to re-apply at every upstream refresh, so each waits here for that call; the test fails when
+# an entry stops being true.
+KNOWN_UPSTREAM_GAPS = {
+    'unpointed': {'teach/GLOSSARY-FORMAT.md'},
+    'no contents': {
+        'improve-codebase-architecture/HTML-REPORT.md',
+        'prototype/UI.md',
+        'triage/AGENT-BRIEF.md',
+        'triage/OUT-OF-SCOPE.md',
+    },
+}
+
 
 def parse_frontmatter(text):
     """Parse SKILL.md YAML frontmatter; raise ValueError on missing closing --- or duplicate keys."""
@@ -152,6 +181,57 @@ def description_collisions(items, threshold=COLLISION_THRESHOLD):
             if score >= threshold:
                 collisions.append((score, a, b))
     return sorted(collisions, reverse=True)
+
+
+def frontmatter_problems(fields):
+    """What a skill's name and description break of Anthropic's limits, one message each.
+
+    Point of view and the "when" are asked only of a description an agent reads to choose the skill.
+    """
+    name, description = fields.get('name', ''), fields.get('description', '')
+    problems = []
+    if len(name) > MAX_NAME_CHARS or not NAME_RE.fullmatch(name):
+        problems.append(f'name is not {MAX_NAME_CHARS} or fewer lowercase letters, digits and hyphens')
+    problems += [f'name holds the reserved word {word}' for word in RESERVED_NAME_WORDS if word in name]
+    if len(description) > MAX_DESCRIPTION_CHARS:
+        problems.append(f'description is {len(description)} characters (limit {MAX_DESCRIPTION_CHARS})')
+    tags = TAG_RE.findall(description)
+    if tags:
+        problems.append(f'description holds XML-like tags {tags}: write a placeholder as an example value')
+    if fields.get('disable-model-invocation', '').lower() != 'true':
+        person = sorted(set(FIRST_SECOND_PERSON_RE.findall(QUOTED_RE.sub(' ', description))))
+        if person:
+            problems.append(f'description is not in the third person: {person}')
+        if not re.search(r'\bwhen\b', description, re.IGNORECASE):
+            problems.append('description does not say when to use the skill')
+    return problems
+
+
+def reference_files(folder):
+    """The Markdown a skill discloses behind SKILL.md: every .md but SKILL.md and the notices."""
+    return sorted(path for path in folder.rglob('*.md') if path.name not in ('SKILL.md', *NOTICE_FILES))
+
+
+def unpointed_references(folder):
+    """Reference files SKILL.md never names: by path, by file name or by folder ('templates/')."""
+    text = (folder / 'SKILL.md').read_text()
+    missing = []
+    for path in reference_files(folder):
+        rel = path.relative_to(folder)
+        pointers = [rel.as_posix(), path.name, *(f'{parent.as_posix()}/' for parent in rel.parents if parent.parts)]
+        if not any(pointer in text for pointer in pointers):
+            missing.append(rel.as_posix())
+    return missing
+
+
+def missing_contents(folder):
+    """Reference files over CONTENTS_OVER_LINES lines with no Contents heading near the top."""
+    missing = []
+    for path in reference_files(folder):
+        lines = path.read_text().splitlines()
+        if len(lines) > CONTENTS_OVER_LINES and not any(map(CONTENTS_RE.match, lines[:CONTENTS_WITHIN_LINES])):
+            missing.append(path.relative_to(folder).as_posix())
+    return missing
 
 
 class InstallSkillsTest(unittest.TestCase):
@@ -452,6 +532,59 @@ class SkillQualityTest(unittest.TestCase):
             for md in sorted(folder.rglob('*.md')):
                 broken = broken_relative_links(md)
                 self.assertEqual(broken, [], f'{md.relative_to(skills_root)} has broken links: {broken}')
+
+    def test_repo_skills_keep_the_frontmatter_and_body_limits(self):
+        for name, folder in sorted(skills.skills(skills.WORKSPACE / 'skills').items()):
+            text = (folder / 'SKILL.md').read_text()
+            fields, fm_lines = parse_frontmatter(text)
+            self.assertEqual(frontmatter_problems(fields), [], name)
+            body = len(text.splitlines()) - len(fm_lines) - 2  # less the two --- lines
+            self.assertLess(body, MAX_BODY_LINES, f'{name}/SKILL.md body is {body} lines (limit {MAX_BODY_LINES})')
+
+    def test_repo_reference_files_are_pointed_at_and_open_with_contents(self):
+        skills_root = skills.WORKSPACE / 'skills'
+        found = {'unpointed': set(), 'no contents': set()}
+        for name, folder in sorted(skills.skills(skills_root).items()):
+            prefix = folder.relative_to(skills_root).as_posix()
+            found['unpointed'].update(f'{prefix}/{rel}' for rel in unpointed_references(folder))
+            found['no contents'].update(f'{prefix}/{rel}' for rel in missing_contents(folder))
+            for md in sorted(folder.rglob('*.md')):
+                self.assertNotRegex(md.read_text(), WINDOWS_PATH_RE, f'{md.relative_to(skills_root)}: use forward slashes')
+        self.assertEqual(found, KNOWN_UPSTREAM_GAPS)  # a new gap, or a known one that was fixed
+        pinned = json.loads((skills_root / 'skills.lock').read_text())['skills']
+        for gap in sorted(set().union(*KNOWN_UPSTREAM_GAPS.values())):
+            self.assertIn(gap.split('/')[0], pinned, f'{gap}: only a pinned skill may wait in KNOWN_UPSTREAM_GAPS')
+
+    def test_frontmatter_problems_name_each_broken_limit(self):
+        good = {'name': 'pdf-processing', 'description': 'Extracts text from PDFs. Use when the user says "help me".'}
+        self.assertEqual(frontmatter_problems(good), [])
+        self.assertEqual(frontmatter_problems({**good, 'description': "Lands the user's 'approve 57' when asked."}), [])
+        for fields, expected in (
+            ({**good, 'name': 'PDF_tools'}, 'lowercase letters, digits and hyphens'),
+            ({**good, 'name': 'p' * (MAX_NAME_CHARS + 1)}, 'lowercase letters, digits and hyphens'),
+            ({**good, 'name': 'claude-helper'}, 'reserved word claude'),
+            ({**good, 'description': 'x when ' * 200}, f'limit {MAX_DESCRIPTION_CHARS}'),
+            ({**good, 'description': 'Tags archive/<name> when a branch goes.'}, "XML-like tags ['<name>']"),
+            ({**good, 'description': 'Use when you need a PDF read.'}, "third person: ['you']"),
+            ({**good, 'description': 'Extracts text from PDFs.'}, 'does not say when'),
+        ):
+            with self.subTest(expected):
+                self.assertTrue(any(expected in problem for problem in frontmatter_problems(fields)))
+        by_hand = {'name': 'router', 'description': 'Ask which skill fits your work.', 'disable-model-invocation': 'true'}
+        self.assertEqual(frontmatter_problems(by_hand), [])  # a human reads it: no point of view, no "when"
+
+    def test_reference_checks_find_the_unpointed_file_and_the_long_one_without_contents(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp)
+            (folder / 'templates').mkdir()
+            (folder / 'SKILL.md').write_text('See [forms](FORMS.md) and `templates/<type>.md`.\n')
+            long_text = '# Title\n' + 'line\n' * CONTENTS_OVER_LINES
+            (folder / 'FORMS.md').write_text(long_text.replace('# Title\n', '# Title\n\n## Contents\n', 1))
+            (folder / 'templates/memo.md').write_text(long_text)
+            (folder / 'STRAY.md').write_text('# short\n')
+            (folder / 'CREDITS.md').write_text('# thanks\n')
+            self.assertEqual(unpointed_references(folder), ['STRAY.md'])
+            self.assertEqual(missing_contents(folder), ['templates/memo.md'])
 
     def test_model_invoked_descriptions_do_not_collide(self):
         model_invoked = model_invoked_descriptions(skills.WORKSPACE / 'skills')
