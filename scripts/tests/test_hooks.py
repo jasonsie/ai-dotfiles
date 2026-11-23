@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import shlex
 import subprocess
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -54,7 +55,7 @@ class InstallHooksTest(unittest.TestCase):
         out = io.StringIO()
         with redirect_stdout(out):
             count = hooks.install(self.home, () if uninstall else clis, clis if uninstall else (), apply,
-                                  self.chosen)
+                                  self.chosen, python=None)
         self.output = out.getvalue()
         return count
 
@@ -362,14 +363,14 @@ class InstallHooksTest(unittest.TestCase):
         seeds = self.seed()
         self.install(apply=True)
         with patch.object(installer, 'REGISTRY', registry(self.home, agy=False)), redirect_stdout(io.StringIO()):
-            self.assertEqual(hooks.run(self.home, 'all', True, False), 1)  # agy out
+            self.assertEqual(hooks.run(self.home, 'all', True, False), 2)  # agy out; the door's Python linked
             self.assertEqual(hooks.run(self.home, 'all', False, False), 0)
         self.assertEqual(self.read('agy'), seeds['agy'])
         self.assertEqual(sorted(self.read('claude')['hooks']), CLAUDE_EVENTS)
 
     def test_run_follows_the_target_and_uninstall_ignores_the_switches(self):
         with patch.object(installer, 'REGISTRY', registry(self.home, agy=False)), redirect_stdout(io.StringIO()):
-            self.assertEqual(hooks.run(self.home, 'all', True, False), 2)  # agy is off: no file
+            self.assertEqual(hooks.run(self.home, 'all', True, False), 3)  # agy is off: no file; the Python link
             self.assertFalse(self.path('agy').exists())
             self.assertEqual(hooks.run(self.home, 'claude', True, True), 1)
             self.assertEqual(self.read('claude'), {})
@@ -405,6 +406,23 @@ class InstallHooksTest(unittest.TestCase):
             self.assertNotIn('herdr_title', self.path(cli).read_text(), cli)
             self.assertNotIn('UserPromptSubmit', self.read(cli), cli)
             self.assertEqual(self.read(cli), {}, cli)
+
+    # --- the Python the door starts -----------------------------------------------------------
+
+    def test_the_door_starts_the_python_the_install_ran_with_until_every_cli_is_uninstalled(self):
+        link = self.home / hooks.PYTHON
+        with redirect_stdout(io.StringIO()):
+            hooks.run(self.home, 'all', True, False)
+            self.assertEqual(os.readlink(link), sys.executable)
+            self.assertEqual(hooks.run(self.home, 'all', False, False), 0)
+            self.assertEqual(hooks.run(self.home, 'claude', False, True), 1)  # a preview: its entries alone
+            hooks.run(self.home, 'claude', True, True)
+            self.assertTrue(link.is_symlink())  # the other CLIs still run the door
+            hooks.run(self.home, 'all', True, True)
+            self.assertFalse(link.is_symlink())
+            link.write_text('someone else\'s\n')
+            with self.assertRaisesRegex(ValueError, 'refusing'):
+                hooks.run(self.home, 'all', True, False)
 
     # --- the retired daily-log nudge --------------------------------------------------------
 

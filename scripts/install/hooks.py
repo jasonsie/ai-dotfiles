@@ -21,6 +21,13 @@ Pi has no hook file: skills.py links scripts/agent_hooks.ts as its extension, wh
 to the door. With --cloud (a cloud session's VM) only the features whose declaration says cloud get
 entries; the door, which sees CLAUDE_CODE_REMOTE there, runs only those.
 
+The door runs the Python this step ran with (install.sh's, checked to be 3.11+): the step links it as
+~/.local/state/ai-dotfiles/python3, and `ai-dotfiles hook` starts that instead of python3. A pyenv
+shim on PATH costs about 150 ms per call, and picks the Python of the session's folder, which may be
+a project's own: an older one, or one not installed, where it falls back to another. The link
+follows each install; while it is missing or broken the door starts python3. Like the commands
+skills.py links, it serves every CLI, so only an uninstall of every CLI removes it.
+
 An entry counts as ours when its command runs the door; anything else in its place is refused. An
 event no feature wants any more loses its entry. Hooks this script installed before and no longer
 does are taken out wherever they are found: each feature's own entries from before the door (found
@@ -45,6 +52,7 @@ import agent_hooks  # noqa: E402  (the CLIs' hook formats)
 TOOL_EVENTS = ('PreToolUse', 'PostToolUse')  # Antigravity: these take matcher groups, the rest bare handlers
 DOOR = '~/.local/bin/ai-dotfiles'  # where skills.py links scripts/ai-dotfiles
 MARK = f'{DOOR} hook '  # how an entry of ours is known
+PYTHON = installer.STATE + '/python3'  # the Python the door starts; scripts/ai-dotfiles reads this path
 AGY_NAME = 'ai-dotfiles-hook-'  # + kind: Antigravity's named entries
 # Retired, wherever found: each feature's own entries from before the door (November 2026), and the
 # daily-log Stop nudge (PostToolUse + Stop in every CLI), replaced by the daily pass that month.
@@ -236,12 +244,26 @@ def plan_file(home, cli, chosen, uninstall=False):
     return installer.edit(path, change)
 
 
-def install(home, add, remove=(), apply=False, chosen=None):
+def plan_python(home, uninstall=False):
+    """(path, before, after) for the link to the Python the door starts, or None when it is as wanted."""
+    path = home / PYTHON
+    before = installer.state(path)
+    after = ('absent',) if uninstall or not sys.executable else ('link', sys.executable)
+    if before == after:
+        return None
+    if before[0] not in ('absent', 'link'):
+        raise ValueError(f'Not created by this script; refusing to replace: {path}')
+    return path, before, after
+
+
+def install(home, add, remove=(), apply=False, chosen=None, python=True):
     """Merge the door's entries for the chosen features into the hook files of the CLIs in `add`;
-    take ours out for `remove`; retire what is no longer installed. One edit per file."""
+    take ours out for `remove`; retire what is no longer installed. One edit per file. `python`:
+    link the door's Python (True), remove the link (False), or leave it as it is (None)."""
     chosen = declared.find() if chosen is None else chosen
     plans = ([plan_file(home, cli, chosen) for cli in add] +
-             [plan_file(home, cli, chosen, True) for cli in remove])
+             [plan_file(home, cli, chosen, True) for cli in remove] +
+             ([] if python is None else [plan_python(home, uninstall=not python)]))
     changes = [change for change in plans if change]
     installer.show(changes, apply)
     if apply and changes:
@@ -257,10 +279,13 @@ def install(home, add, remove=(), apply=False, chosen=None):
 
 
 def run(home, target, write, uninstall, repo=WORKSPACE, cloud=False):
-    """Hooks for the CLIs switched on; none for those switched off, or for any on --uninstall."""
+    """Hooks for the CLIs switched on; none for those switched off, or for any on --uninstall. The
+    door's Python is linked on every install, and its link removed only with every CLI's hooks."""
     selected = installer.scope(target)
     on, off = ((), selected) if uninstall else installer.split(selected)
-    return install(home, on, off, write, [feature for feature in declared.find(repo) if feature.cloud or not cloud])
+    python = None if uninstall and set(selected) != set(installer.clis()) else not uninstall
+    chosen = [feature for feature in declared.find(repo) if feature.cloud or not cloud]
+    return install(home, on, off, write, chosen, python)
 
 
 def main():
