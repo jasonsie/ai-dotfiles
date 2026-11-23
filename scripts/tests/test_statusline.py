@@ -64,6 +64,7 @@ class RenderTest(unittest.TestCase):
         env = patch.dict(os.environ, {'HOME': HOME, 'WORKTREE_GUARD_STATE': temp.name})  # no guard state leaks in
         env.start()
         self.addCleanup(env.stop)
+        os.environ.pop(statusline.GATEWAY_ENV, None)  # nor a real gateway (patch.dict puts it back)
 
     def lines(self, data, facts=('main', '')):
         return [plain(line) for line in statusline.render(data, facts, NOW, UTC)]
@@ -162,6 +163,7 @@ class WorkNameTest(unittest.TestCase):
         env = patch.dict(os.environ, {'HOME': HOME, 'WORKTREE_GUARD_STATE': str(self.state)})
         env.start()
         self.addCleanup(env.stop)
+        os.environ.pop(statusline.GATEWAY_ENV, None)
 
     def keep(self, session, moved):
         """The guard's record of a session, written by the guard's own store."""
@@ -230,7 +232,7 @@ class WorkNameTest(unittest.TestCase):
     def test_runs_as_a_script_with_the_state_in_place(self):
         self.keep('x', self.moved())
         result = subprocess.run([sys.executable, str(ROOT / 'scripts/statusline.py')], input=json.dumps(self.agy()),
-                                capture_output=True, text=True, env=os.environ.copy())
+                                capture_output=True, text=True, env=os.environ.copy())  # the gateway's variable dropped in setUp
         self.assertIn('🌿 fix/x', plain(result.stdout))
 
 
@@ -280,10 +282,127 @@ class GitFactsTest(unittest.TestCase):
             self.assertEqual(statusline.git_facts(str(repo / '.claude/worktrees/agent-2')), ('feat/x', 'agent-2'))
 
 
+# What Magpie's GET /v1/magpie/quotas answers (`magpie quota --help`), trimmed; the accounts are made up.
+QUOTAS = {'object': 'list', 'data': [
+    {'provider': 'claude', 'kind': 'subscription', 'plan': 'max', 'user': 'someone@example.com',
+     'windows': [{'name': '5 hours', 'used': 63, 'remaining': 37, 'resetsAt': '2026-11-09T06:00:00+00:00'},
+                 {'name': '7 days', 'used': 51, 'remaining': 49, 'resetsAt': '2026-11-12T00:00:00Z'},
+                 {'name': '7 days · Fable', 'used': 45, 'remaining': 55, 'resetsAt': '2026-11-12T00:00:00Z'}],
+     'readAt': '2026-11-09T03:44:00Z', 'lastServedAt': '2026-11-09T03:40:00Z', 'last': True},
+    {'provider': 'codex', 'plan': 'free', 'user': 'someone@example.com',
+     'windows': [{'name': '30 days', 'used': 24, 'resetsAt': '2026-12-02T04:40:16Z'}],
+     'lastServedAt': '2026-11-08T10:00:00Z'},
+    {'provider': 'copilot', 'user': 'someone@example.com', 'error': 'sign in again'},
+]}
+WITHOUT_LIMITS = {key: value for key, value in CLAUDE.items() if key != 'rate_limits'}
+FULL_LINE = '⏳ 63% → 06:00  51% → Thu 00:00  7 days · Fable 45% → Thu 00:00  💰 $0.12'
+
+
+class Reply(io.BytesIO):
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_):
+        return False
+
+
+class Opener:
+    """A urllib opener stand-in: records each URL and answers with `body` (bytes, or an exception it raises)."""
+
+    def __init__(self, body):
+        self.body, self.urls = body, []
+
+    def open(self, url, timeout=None):
+        self.urls.append((url, timeout))
+        if isinstance(self.body, Exception):
+            raise self.body
+        return Reply(self.body)
+
+
+class GatewayTest(unittest.TestCase):
+    """Behind a gateway on this machine Claude Code sends no rate_limits; the windows are asked of the gateway."""
+
+    def usage(self, data, entries=QUOTAS['data']):
+        return plain(statusline.usage_line(data, NOW, UTC, ask=lambda: entries))
+
+    def entries(self, base, body=json.dumps(QUOTAS).encode()):
+        opener = Opener(body)
+        return statusline.gateway_entries({statusline.GATEWAY_ENV: base}, opener=opener), opener.urls
+
+    def test_the_claude_account_s_windows_show_when_the_payload_has_none(self):
+        self.assertEqual(self.usage(WITHOUT_LIMITS), FULL_LINE)
+
+    def test_the_cli_s_own_figures_win_and_the_gateway_is_not_asked(self):
+        def ask():
+            raise AssertionError('asked the gateway')
+        line = lambda data: plain(statusline.usage_line(data, NOW, UTC, ask=ask))  # noqa: E731
+        self.assertEqual(line(CLAUDE), '⏳ 23% → 06:00  41% → Thu 00:00  💰 $0.12')
+        self.assertEqual(line(ANTIGRAVITY), '⏳ gemini-weekly 6% → Thu 07:50  💰 $0.42')
+        self.assertEqual(line({**WITHOUT_LIMITS, 'rate_limits': {}}), '💰 $0.12')  # every window reset: still claude.ai
+
+    def test_the_model_s_provider_picks_the_account(self):
+        codex = {**WITHOUT_LIMITS, 'model': {'id': 'codex/gpt-6-luna'}}
+        self.assertEqual(self.usage(codex), '⏳ 30 days 24% → Wed 04:40  💰 $0.12')
+        prefixed = {**WITHOUT_LIMITS, 'model': {'id': 'claude/claude-fable-5-2[1m]'}}
+        self.assertEqual(self.usage(prefixed), FULL_LINE)
+        self.assertEqual(self.usage({**WITHOUT_LIMITS, 'model': None}), FULL_LINE)  # no model: Claude's
+
+    def test_a_group_or_unknown_provider_takes_the_account_that_answered_last(self):
+        group = {**WITHOUT_LIMITS, 'model': {'id': 'group/auto-claude-opus-5-5'}}
+        self.assertEqual(self.usage(group), FULL_LINE)
+        nobody_last = [{**entry, 'last': None} for entry in QUOTAS['data']]
+        self.assertEqual(self.usage(group, nobody_last), '💰 $0.12')
+
+    def test_of_several_accounts_the_one_that_answered_last(self):
+        older = {'provider': 'claude', 'lastServedAt': '2026-11-01T00:00:00Z',
+                 'windows': [{'name': '5 hours', 'used': 99, 'resetsAt': '2026-11-09T06:00:00Z'}]}
+        newer = {'provider': 'claude', 'lastServedAt': '2026-11-09T03:00:00Z',
+                 'windows': [{'name': '5 hours', 'used': 10, 'resetsAt': '2026-11-09T06:00:00Z'}]}
+        self.assertEqual(self.usage(WITHOUT_LIMITS, [older, newer, {'provider': 'claude'}]), '⏳ 10% → 06:00  💰 $0.12')
+        self.assertEqual(self.usage(WITHOUT_LIMITS, [{**older, 'last': True}, newer]), '⏳ 99% → 06:00  💰 $0.12')
+
+    def test_no_account_no_windows_or_bad_entries_show_nothing(self):
+        bad_windows = [1, {'name': 5, 'used': 1}, {'name': 'x', 'used': '9'}, {'name': 'x', 'used': True}]
+        for entries in ([], [QUOTAS['data'][2]], [{'provider': 'claude', 'windows': 'x'}],
+                        [{'provider': 'claude', 'windows': bad_windows}], [{'provider': 'claude', 'lastServedAt': 5}]):
+            self.assertEqual(self.usage(WITHOUT_LIMITS, entries), '💰 $0.12', entries)
+
+    def test_a_window_whose_reset_has_passed_is_left_out(self):
+        windows = [{'name': '5 hours', 'used': 90, 'resetsAt': '2026-11-01T00:00:00Z'}, {'name': '7 days', 'used': 5}]
+        self.assertEqual(self.usage(WITHOUT_LIMITS, [{'provider': 'claude', 'windows': windows}]), '⏳ 5%  💰 $0.12')
+
+    def test_only_a_gateway_on_this_machine_is_asked_and_with_no_key(self):
+        entries, urls = self.entries('http://127.0.0.1:3425')
+        self.assertEqual([entry['provider'] for entry in entries], ['claude', 'codex', 'copilot'])
+        self.assertEqual(urls, [('http://127.0.0.1:3425/v1/magpie/quotas', statusline.GATEWAY_TIMEOUT)])
+        for base, url in (('http://localhost:3425/anthropic/', 'http://localhost:3425/v1/magpie/quotas'),
+                          ('http://[::1]:8080', 'http://[::1]:8080/v1/magpie/quotas'),
+                          ('https://127.0.0.1', 'https://127.0.0.1/v1/magpie/quotas'),
+                          ('http://user:secret@127.0.0.1:1', 'http://127.0.0.1:1/v1/magpie/quotas')):
+            self.assertEqual(self.entries(base)[1], [(url, statusline.GATEWAY_TIMEOUT)], base)
+        for base in ('', 'https://gateway.example.com', 'http://10.0.0.5:3425', 'ftp://127.0.0.1', 'not a url',
+                     'http://127.0.0.1.example.com', 'http://127.0.0.1:port'):
+            self.assertEqual(self.entries(base), ([], []), base)
+        self.assertEqual(statusline.gateway_entries({}, opener=Opener(b'{}')), [])
+
+    def test_a_gateway_that_fails_or_answers_otherwise_gives_nothing(self):
+        for body in (OSError('refused'), TimeoutError(), b'not json', b'[1]', b'{"data": 3}', b'{"error": "404"}'):
+            self.assertEqual(self.entries('http://127.0.0.1:3425', body)[0], [], body)
+        self.assertEqual(self.entries('http://127.0.0.1:3425', b'{"data": [1, {"provider": "x"}]}')[0], [{'provider': 'x'}])
+
+    def test_render_asks_the_gateway_only_without_rate_limits(self):
+        asked = []
+        ask = lambda: asked.append(1) or QUOTAS['data']  # noqa: E731
+        self.assertEqual(plain(statusline.render(WITHOUT_LIMITS, ('main', ''), NOW, UTC, ask=ask)[-1]), FULL_LINE)
+        statusline.render(CLAUDE, ('main', ''), NOW, UTC, ask=ask)
+        self.assertEqual(asked, [1])
+
+
 class MainTest(unittest.TestCase):
     def run_main(self, text):
         out = io.StringIO()
         with patch.dict(os.environ, {'HOME': HOME}):
+            os.environ.pop(statusline.GATEWAY_ENV, None)
             status = statusline.main(io.StringIO(text), out)
         return status, plain(out.getvalue())
 
@@ -300,7 +419,7 @@ class MainTest(unittest.TestCase):
 
     def test_runs_as_a_script(self):
         result = subprocess.run([sys.executable, str(ROOT / 'scripts/statusline.py')], input=json.dumps(CLAUDE),
-                                capture_output=True, text=True, env={**os.environ, 'HOME': HOME})
+                                capture_output=True, text=True, env={**os.environ, 'HOME': HOME, statusline.GATEWAY_ENV: ''})
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn('🤖 Fable 5.1 · max  📟 v2.1.318', plain(result.stdout))
 
