@@ -663,7 +663,7 @@ gets its setup from the committed `.claude/settings.json`:
   CLI itself reports it (`mcp list`, a session listing the skill, `codex debug prompt-input`).
 - **Flow switch:** the repo-local git config `worktree-guard.flow`, toggled by the person's
   `/worktree-flow` once they click OK in its macOS dialog; no agent and no prompt the person did
-  not type can click it. A repo
+  not type can click it, and the guard refuses an agent's `git config` write of the key. A repo
   that is off gets nothing from the guard. Claude's `WorktreeCreate` hook still runs there, only to
   reproduce Claude's own default (a branch `worktree-<name>` from the session's HEAD).
 - **Work name:** `<type>/<slug>` (for example `fix/prune-worktrees`), what a task is called. It
