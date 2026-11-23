@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 """worktree-guard: a repo that is on works through worktrees, one per task, one session each.
 
-  worktree-guard hook (pre|end) --cli (claude|codex|agy|pi)   JSON in; JSON or nothing out
-  worktree-guard hook (create|remove) --cli claude    Claude's WorktreeCreate/Remove: path out, no JSON
   worktree-guard list   [--repo DIR]                  linked worktrees: owner, branch, merged, left behind
   worktree-guard done   DESCRIPTION [--path DIR]      a linked worktree's one-line summary
   worktree-guard rm     NAME [--force] [--repo DIR]   archive tag, then remove worktree and branch
@@ -12,6 +10,11 @@
   worktree-guard shipped NAME [--repo DIR]            delete a pushed worktree whose PR is open (ship runs it)
   worktree-guard release [PATH]                       clear a worktree's owner (people only)
   worktree-guard share   [PATH]                       let any session edit it (people only)
+
+The CLIs' hooks reach the guard through the door (`ai-dotfiles hook`, lib/door.py), which calls
+hook(event) before edits and shell commands, when a session ends, and for Claude Code's own
+worktrees; ../feature.json says which events, per CLI. A cloud session runs none of it: the session
+already works alone on its own branch, and the guard's records belong to a Mac.
 
 A repo that is off (the default) gets nothing: every edit passes, with no owner, no move and no
 message. The guard no longer moves a clashing session into an agent/<cli>-<id8> worktree; ones
@@ -57,7 +60,6 @@ import contextlib
 from dataclasses import replace
 import fcntl
 import hashlib
-import io
 import json
 import os
 from pathlib import Path
@@ -758,20 +760,9 @@ def hook(event):
     return agent_hooks.handle(event, decide, SESSIONS)
 
 
-def answer(cli, kind):
-    return lambda data: agent_hooks.call(cli, kind, data, decide, SESSIONS)
-
-
 def failed(error):
     """What the door says in the guard's place when it fails before a tool call: never a block."""
     return Note(f'worktree-guard failed ({error}); this edit was not protected from other sessions.')
-
-
-def cmd_hook(args):
-    if args.kind in agent_hooks.CLAUDE_ONLY:
-        return cmd_native(args)
-    return agent_hooks.serve(args.cli, args.kind, answer(args.cli, args.kind),
-                             on_error=failed if args.kind == 'pre' else None)
 
 
 # --- linked worktrees: metadata, listing, removal --------------------------------------
@@ -1311,27 +1302,6 @@ def native_remove(event):
         git(main, 'branch', '-D', branch, check=False)
 
 
-def cmd_native(args):
-    """`hook create|remove --cli claude`: Claude reads the new worktree's path from our stdout, so
-    nothing else goes there; a failure says why on stderr and exits 1 (a missing path fails the
-    creation, which is right: there is no worktree to enter)."""
-    if args.cli != 'claude':
-        return 0
-    try:
-        event = agent_hooks.read(args.cli, args.kind, json.loads(sys.stdin.read() or '{}'))
-    except ValueError:
-        event = agent_hooks.read(args.cli, args.kind, {})
-    try:
-        if args.kind == 'create':
-            print(native_create(event))
-        else:
-            native_remove(event)
-    except Exception as error:  # the message is all Claude shows
-        print(f'worktree-guard: {error}', file=sys.stderr)
-        return 1
-    return 0
-
-
 def cmd_release(args):
     worktree = worktree_of(Path(args.path or os.getcwd()).resolve())
     path = claim_file(worktree) if worktree else None
@@ -1364,10 +1334,6 @@ def parser():
     top = argparse.ArgumentParser(prog='worktree-guard', description=__doc__,
                                   formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = top.add_subparsers(dest='command', required=True)
-    hook = sub.add_parser('hook', help='the CLI hook: JSON on stdin')
-    hook.add_argument('kind', choices=('pre', 'end', *agent_hooks.CLAUDE_ONLY))
-    hook.add_argument('--cli', choices=agent_hooks.CLIS, required=True)
-    hook.set_defaults(run=cmd_hook)
     for name, run, help_text in (('list', cmd_list, 'linked worktrees: owner, branch, merged, left behind'),
                                  ('prune', cmd_prune, 'rm every merged, clean, unowned linked worktree')):
         command = sub.add_parser(name, help=help_text)
@@ -1403,14 +1369,10 @@ def parser():
 
 
 def main(argv=None):
-    argv = sys.argv[1:] if argv is None else list(argv)
-    is_hook = argv[:1] == ['hook']
     try:
-        # A bad hook call must stay silent and exit 0: status 2 and stderr would steer the CLI.
-        with contextlib.redirect_stderr(io.StringIO() if is_hook else sys.stderr):
-            args = parser().parse_args(argv)
+        args = parser().parse_args(sys.argv[1:] if argv is None else list(argv))
     except SystemExit as error:
-        return 0 if is_hook else int(error.code or 0)
+        return int(error.code or 0)
     return args.run(args)
 
 
