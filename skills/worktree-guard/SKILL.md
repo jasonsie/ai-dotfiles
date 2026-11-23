@@ -33,7 +33,7 @@ flips it with `/worktree-flow` (the `worktree-flow` skill), never an agent on it
 refuses an agent's `git config` write of the key. `list` shows `flow: on|off`. In a repo that is on, an edit of a file in the
 main checkout (or a git command that changes it) is stopped with "name this work". Reads pass.
 The edited file's repo decides, wherever the session started; a file outside git is never
-gated. A repo that is off gets nothing: no owner, no move, no message.
+gated.
 In a repo that is on, only the main checkout and the worktrees under `.claude/worktrees/` are gated
 or claimed; a linked worktree elsewhere (Codex's or Antigravity's app makes them) is left alone.
 
@@ -106,8 +106,8 @@ no other CLI has them). `claude -w <name>`, `EnterWorktree` with a name and a su
 - Claude does not call remove for a subagent's or a workflow's worktree; they stay until
   someone removes them (`prune`, `rm`).
 
-Desktop's Worktree toggle stays off: whether it fires the hook is untested here (it needs the
-Desktop app), so use `worktree new` from a session started in the repo instead.
+Desktop's Worktree toggle stays off, since its worktrees are not known to pass through the hook:
+use `worktree new` from a session started in the repo instead.
 
 ## Messages
 
