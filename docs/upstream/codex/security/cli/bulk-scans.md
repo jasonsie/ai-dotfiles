@@ -104,15 +104,8 @@ npx @openai/codex-security bulk-scan repositories.csv \
   --workers 4
 ```
 
-`--workers` controls concurrent repository scans and defaults to `4`. It does
-not set the number of independent standard-scan workers within each deep scan;
-configure those limits through
-[`[deep_scan]`](/codex/security/cli/reference#configure-deep-scans). Use `--mode
-deep` to select deep scanning for rows without their own `mode`. Each CSV row
-can still choose its own scan mode and repository scope.
-
-Set `[deep_scan].max_time_hours` to limit worker execution for each deep scan in
-the campaign. The `--max-time-hours` flag works with `scan`, not `bulk-scan`.
+`--workers` controls how many repositories the campaign scans at once and
+defaults to `4`.
 
 The CLI checks out each pinned revision, scans the selected target, records the
 result, and removes the temporary repository checkout. A repository counts as
@@ -193,13 +186,11 @@ security-scans/
     │   └── attempt-1/
     │       ├── scan-manifest.json
     │       ├── findings.json
-    │       ├── coverage.json
     │       └── report.md
     └── identity/
         └── attempt-1/
             ├── scan-manifest.json
             ├── findings.json
-            ├── coverage.json
             └── report.md
 ```
 
@@ -208,8 +199,8 @@ security-scans/
 - `results.jsonl` records each repository attempt, its status, artifact
   directory, and any available cost or error details.
 - `report.md` provides a readable report for one repository attempt.
-- `findings.json` and `coverage.json` record that attempt's findings and
-  reviewed scope.
+- Open `findings.json` for the attempt's findings and `scan-manifest.json` for
+  its configured scope and review exclusions.
 
 Export one completed repository scan when you need a portable result:
 

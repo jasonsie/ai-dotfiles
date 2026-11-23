@@ -1,30 +1,36 @@
 > Source: https://antigravity.google/docs/ide/browser
 > Mirror maintained by .github/workflows/sync-cli-docs.yml — do not edit by hand.
 
-# Browser overview
+# IDE browser overview
 
 Available on: Antigravity IDE
 
-Google Antigravity can open, read, and actuate a local Chrome browser, enabling you to test development websites, read documentation sources, and automate a variety of browser tasks.
+In the Antigravity IDE (`v2.6.0+`) and the Google Antigravity VS Code extension (`v1.9.0+`), the agent can open, read, and actuate a local Google Chrome browser through [`/browser`](/docs/commands/browser) to test local development sites, read documentation, and verify visual changes.
+
+Tip
+
+Looking for zero-setup built-in browser automation? The built-in side-panel browser, plain-language auto-invocation, parallel browser tabs, live animated cursor, and pause-and-resume sign-in handoff are available exclusively in the **[Antigravity App](/docs/browser)** (`v2.30.0+`, personal Google Accounts). Antigravity IDE doesn’t include a built-in browser and always runs browser tasks in your local Google Chrome when you invoke [`/browser`](/docs/commands/browser).
 
 * * *
 
-## Core mechanisms
+## Prerequisites and setup
 
-Using the specialized [Browser Subagent](/docs/subagents), Antigravity operates on browser tabs as needed, capturing screenshots and saving action videos as interactive artifacts.
+Type [`/browser`](/docs/commands/browser) followed by your task in the Antigravity panel to delegate a web check to the `browser` subagent (plain-language prompts don’t auto-launch the browser subagent in the IDE). The subagent drives your local Google Chrome through the Chrome DevTools MCP server, which Antigravity IDE starts with `npx`:
 
-To completely disable browser tools, toggle the **Browser Tools** setting in the **Browser** section of the user settings.
+1.  Install [Node.js](https://nodejs.org/) so that `npx` is available on your `PATH`.
+2.  Open Google Chrome (version 144 or later) on the **same machine** as your workspace, go to `chrome://inspect/#remote-debugging`, and turn on **Allow remote debugging for this browser instance** (refer to [Set up Chrome](/docs/commands/browser#set-up-chrome)).
+3.  Run `/browser <task>` in the Antigravity panel, and click **Allow** within 60 seconds when Chrome asks whether to allow remote debugging.
 
-* * *
+Note
 
-## Deep dive
+**Local workspaces only**: Because the Chrome DevTools MCP server runs alongside the workspace agent process, `/browser` works in local workspaces where Antigravity IDE and Google Chrome run on the same computer. In Remote-SSH, Dev Containers, or cloud workstation sessions, the remote agent host can’t attach to Chrome on your local machine.
 
-Explore the key security and privacy features of Antigravity’s browser integration:
+## Capabilities and settings
 
-Allowlist and denylist
+Once connected to Chrome, the `browser` subagent can navigate pages, click and fill in forms, inspect console messages and network requests, run performance traces and Lighthouse audits, take screenshots, and optionally record page interactions as a WebM video (refer to [Browser recordings](/docs/ide/browser-recordings)). Because `/browser` shares a single live Chrome connection and your active Chrome profile, run one browser session at a time; refer to [Chrome profile](/docs/ide/separate-chrome-profile).
 
-Learn about the two-layer security model (denylist and allowlist) used to control URL access. [Read the allowlist and denylist guide](/docs/ide/allowlist-denylist)
+To control what the subagent can do, click **Antigravity** in the status bar and select **Open Settings** > **Browser** (or click **More Actions…** in the Antigravity panel header > **Open Settings**, or run **Antigravity: Open Settings** from the Command Palette):
 
-Isolated profile
-
-Understand how the agent executes inside a completely separate Chrome profile to protect your personal data. [Read the isolated profile guide](/docs/ide/separate-chrome-profile)
+*   **Enable Browser Tools**: Turns agent browser tools on or off.
+*   **Browser Javascript Execution Policy**: Controls whether the `/browser` subagent asks for review (**Request Review**, default), runs automatically (**Always Proceed**), or blocks custom JavaScript (`evaluate_script`) in the page (**Disabled**).
+*   **Browser Actuation Rules**: Click **Edit** to configure allowed and denied sites for opening URLs and downloading files; refer to [Allowlist and denylist](/docs/ide/allowlist-denylist).
