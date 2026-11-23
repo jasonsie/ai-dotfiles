@@ -64,7 +64,7 @@ and `agents/`, the engineering skills' setup.
   its `local_edits` from `skills/skills.lock`, and update `which-skill` (a test checks it).
 - A skill a cloud session cannot run (it needs the Mac, or a GitHub call the cloud refuses)
   gets its reason in `config/cloud.json`.
-- Keep `config/` and `scripts/` free of machine paths (`/Users/<name>`, `/opt/homebrew`);
+- Keep `config/`, `lib/` and `scripts/` free of machine paths (`/Users/<name>`, `/opt/homebrew`);
   the healthcheck enforces this.
 - No credentials in this repo. Per-project rules belong to each project, not here.
 - A new adapted skill or docs source gets a row in `THIRD-PARTY-NOTICES.md` and, for a new
