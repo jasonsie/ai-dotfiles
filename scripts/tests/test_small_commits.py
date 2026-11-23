@@ -1,9 +1,11 @@
 """small-commits: every `git commit` an agent runs stays small, one concern, and says why.
 
+Every hook call goes through the door (lib/door.py), as the CLIs' do: in this process with the
+commit gate alone, or as the CLI runs it, `ai-dotfiles hook`.
+
 Run: python3 -m unittest discover -s scripts/tests -p 'test_small_commits.py' -v
 """
 from contextlib import redirect_stdout
-import importlib.util
 import io
 import json
 import os
@@ -17,12 +19,13 @@ from unittest.mock import patch
 
 from support import ROOT
 
-SCRIPT = ROOT / 'skills/small-commits/scripts/small_commits.py'
-SPEC = importlib.util.spec_from_file_location('small_commits', SCRIPT)
-assert SPEC is not None and SPEC.loader is not None
-sc = importlib.util.module_from_spec(SPEC)
-sys.modules['small_commits'] = sc  # dataclasses resolve their annotations through sys.modules
-SPEC.loader.exec_module(sc)
+sys.path.insert(0, str(ROOT / 'lib'))
+import door  # noqa: E402
+import features  # noqa: E402
+
+COMMITS = next(feature for feature in features.find() if feature.name == 'small-commits')
+sc = door.module_of(COMMITS)  # the module the door runs
+DOOR = ROOT / 'scripts/ai-dotfiles'
 
 GOOD = 'feat(x): add the thing\n\nWhy: the user asked\nScope: x\nVerified: none'
 HEREDOC = '''git commit -m "$(cat <<'EOF'
@@ -39,6 +42,13 @@ EOF
 
 def git(cwd, *args):
     return subprocess.run(['git', '-C', str(cwd), *args], check=True, capture_output=True, text=True).stdout.strip()
+
+
+def door_env(state, **extra):
+    """The environment `ai-dotfiles hook` runs in here: this Python, no Herdr pane to label, and the
+    state of every feature a shell command reaches kept under `state`."""
+    return {**{k: v for k, v in os.environ.items() if not k.startswith('HERDR_')}, 'PYTHON': sys.executable,
+            'WORKTREE_GUARD_STATE': str(state / 'guard'), sc.ENV: str(state / 'commits'), **extra}
 
 
 class ParsingTest(unittest.TestCase):
@@ -121,7 +131,7 @@ class Repo(unittest.TestCase):
         else:
             tool = 'Bash' if cli in ('claude', 'codex') else 'bash'
             data = {'session_id': session, 'cwd': cwd, 'tool_name': tool, 'tool_input': {'command': command}}
-        return sc.answer(cli, 'pre')(data)
+        return door.call(cli, 'pre', data, [COMMITS])[0]
 
     def denied(self, reply, cli='claude'):
         """The reason a reply blocks with, or None when it lets the call run."""
@@ -284,15 +294,16 @@ class HookTest(Repo):
         self.stage()
         data = {'session_id': 's', 'cwd': str(self.repo), 'tool_name': 'Bash',
                 'tool_input': {'command': f'git commit -m {shlex.quote(GOOD)}'}}
-        run = subprocess.run([sys.executable, str(SCRIPT), 'hook', 'pre', '--cli', 'claude'], input=json.dumps(data),
-                             capture_output=True, text=True, env={**os.environ, sc.ENV: str(broken)})
+        run = subprocess.run([str(DOOR), 'hook', 'pre', '--cli', 'claude'], input=json.dumps(data),
+                             capture_output=True, text=True, env=door_env(self.repo.parent, **{sc.ENV: str(broken)}))
         self.assertEqual((run.returncode, run.stderr), (0, ''))
         self.assertIn('this commit was not checked', json.loads(run.stdout)['hookSpecificOutput']['additionalContext'])
 
     def test_the_command_never_fails_or_speaks_outside_json(self):
         for stdin, args in (('not json', ['hook', 'pre', '--cli', 'codex']), ('{}', ['hook', 'end', '--cli', 'claude']),
                             ('{}', ['hook', 'pre'])):
-            run = subprocess.run([sys.executable, str(SCRIPT), *args], input=stdin, capture_output=True, text=True)
+            run = subprocess.run([str(DOOR), *args], input=stdin, capture_output=True, text=True,
+                                 env=door_env(self.repo.parent))
             self.assertEqual((run.returncode, run.stderr), (0, ''), args)
             if run.stdout.strip():
                 json.loads(run.stdout)
