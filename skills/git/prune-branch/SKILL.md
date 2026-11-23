@@ -9,6 +9,12 @@ Tag the branch first (`archive-tag`): a deleted branch is kept nowhere else. The
 `ai-dotfiles git prune` while on the merged branch. It checks out the base, pulls it
 fast-forward, and deletes the branch locally and on origin, skipping what is gone already.
 
+**"neither in origin/main nor under an archive tag"**: the branch, here or on origin, holds a
+commit that the delete would lose, so the run stopped with nothing deleted. Do what the message
+says (pull origin's commits in when it names origin's branch), tag with `ai-dotfiles git tag`
+(`--unmerged` when the branch never merged), then rerun. A dry run fetches nothing and does not
+make this check.
+
 Run in a linked worktree, it detaches there instead, fast-forwards the main checkout when git
 can, and deletes the worktree last, so only the archive tag is left. worktree-guard keeps it,
 as a `skipped:` line with why, unless the guard made it in a repo whose flow is on, no other
