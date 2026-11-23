@@ -9,6 +9,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+import unittest.mock
 
 from support import ROOT
 
@@ -147,6 +148,21 @@ class PreReplyTest(unittest.TestCase):
                          {'decision': 'deny', 'reason': 'busy'})
         self.assertIsNone(agent_hooks.render('codex', 'end', Shown(None, 'ignored')))
 
+    def test_a_deny_carries_its_note_in_each_cli_shape(self):
+        deny = agent_hooks.Deny('blocked', 'earlier note')
+        for cli in ('claude', 'codex'):
+            out = agent_hooks.render(cli, 'pre', deny)['hookSpecificOutput']
+            self.assertEqual((out['permissionDecision'], out['permissionDecisionReason'], out['additionalContext']),
+                             ('deny', 'blocked', 'earlier note'))
+        self.assertEqual(agent_hooks.render('agy', 'pre', deny), {'decision': 'deny', 'reason': 'blocked\nearlier note'})
+        self.assertEqual(agent_hooks.render('pi', 'pre', deny), {'block': True, 'reason': 'blocked\nearlier note'})
+        self.assertNotIn('additionalContext', agent_hooks.render('claude', 'pre', agent_hooks.Deny('x'))['hookSpecificOutput'])
+
+    def test_a_worktree_is_answered_with_its_path_as_text(self):
+        self.assertEqual(agent_hooks.render('claude', 'create', Path('/w/.claude/worktrees/x')), '/w/.claude/worktrees/x')
+        self.assertIsNone(agent_hooks.render('claude', 'create', None))
+        self.assertIsNone(agent_hooks.render('claude', 'remove', None))
+
     def test_a_pre_event_carries_the_action_input_and_pid(self):
         event = agent_hooks.read('claude', 'pre', {'session_id': 's', 'tool_name': 'Bash',
                                                     'tool_input': {'command': 'ls'}})
@@ -203,6 +219,14 @@ class CallTest(unittest.TestCase):
         self.assertFalse(self.store.file('old').exists())
         self.assertTrue(self.store.file('s1').exists())
 
+    def test_handle_keeps_the_state_and_skips_an_event_without_a_session(self):
+        event = agent_hooks.read('claude', 'stop', raw('claude'))
+        self.assertEqual(agent_hooks.handle(event, self.nudge_once, self.store, 1000.0), Continue('go on'))
+        self.assertIsNone(agent_hooks.handle(event, self.nudge_once, self.store, 1000.0))
+        self.assertEqual(self.store.load('s1'), {'nudged': True})
+        self.assertIsNone(agent_hooks.handle(agent_hooks.read('claude', 'stop', {}), self.nudge_once, self.store))
+        self.assertEqual(len(self.seen), 2)
+
     def test_session_names_cannot_leave_the_folder(self):
         self.assertEqual(self.store.file('../x/y').parent, self.folder)
         self.store.file('bad').parent.mkdir(parents=True)
@@ -237,6 +261,26 @@ class ServeTest(unittest.TestCase):
         self.assertEqual(self.serve('{}', broken), (0, '{}\n'))
         self.assertEqual(self.serve('not json', lambda data: {'x': 1}), (0, '{}\n'))
         self.assertEqual(self.serve('{}', broken, cli='claude'), (0, ''))
+
+
+class KindsTest(unittest.TestCase):
+    def test_every_kind_a_cli_hands_over_has_a_native_name_and_a_time_within_its_cap(self):
+        self.assertEqual(set(agent_hooks.KINDS), set(agent_hooks.CLIS))
+        caps = {('codex', 'end'): 3, ('codex', 'interrupt'): 3, ('claude', 'end'): 60}  # the CLIs' own limits
+        for cli, kinds in agent_hooks.KINDS.items():
+            for kind in kinds:
+                self.assertIn(kind, agent_hooks.NATIVE, (cli, kind))
+                self.assertGreater(agent_hooks.timeout(cli, kind), 0, (cli, kind))
+                self.assertLessEqual(agent_hooks.timeout(cli, kind), caps.get((cli, kind), 600), (cli, kind))
+        for cli, times in agent_hooks.TIMEOUTS.items():
+            self.assertLessEqual(set(times), set(agent_hooks.KINDS[cli]), cli)
+        self.assertLessEqual(set(agent_hooks.TOOL_KINDS) | set(agent_hooks.RAW), set(agent_hooks.NATIVE))
+
+    def test_a_cloud_session_is_claude_codes_remote_flag(self):
+        with unittest.mock.patch.dict(os.environ, {'CLAUDE_CODE_REMOTE': 'true'}):
+            self.assertTrue(agent_hooks.in_cloud())
+        with unittest.mock.patch.dict(os.environ, {'CLAUDE_CODE_REMOTE': ''}):
+            self.assertFalse(agent_hooks.in_cloud())
 
 
 class InstallTableTest(unittest.TestCase):

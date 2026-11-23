@@ -59,6 +59,27 @@ NATIVE = {'pre': 'PreToolUse', 'tool': 'PostToolUse', 'stop': 'Stop', 'end': 'Se
           'prompt': 'UserPromptSubmit', 'create': 'WorktreeCreate', 'remove': 'WorktreeRemove',
           'error': 'StopFailure', 'permission': 'PermissionRequest', 'form': 'Elicitation',
           'start': 'SessionStart', 'interrupt': 'Interrupt'}
+# The kinds each CLI hands over. Antigravity has no session end, and no prompt event (PreInvocation
+# carries no prompt text). Worktree events, API errors and MCP forms are Claude Code's. Codex runs
+# SessionStart only inside a session's first turn, too late to report a resumed session, so 'start'
+# is Claude Code's and Pi's. Pi's are the events its extension (agent_hooks.ts) sends.
+KINDS = {
+    'claude': ('pre', 'tool', 'stop', 'end', 'prompt', 'error', 'permission', 'form', 'start', 'create', 'remove'),
+    'codex': ('pre', 'tool', 'stop', 'end', 'prompt', 'permission', 'interrupt'),
+    'agy': ('pre', 'tool', 'stop'),
+    'pi': ('pre', 'stop', 'end', 'prompt', 'start'),
+}
+TOOL_KINDS = ('pre', 'tool', 'permission')  # a tool call fires these: a feature may want them for some tools only
+# Claude Code's worktree events: it reads a WorktreeCreate hook's stdout as the new worktree's path,
+# not as JSON, and a hook that fails either event fails it.
+RAW = ('create', 'remove')
+# The time the door has for one call, in seconds: the installer writes it into the hook entry, and
+# the door answers within it (lib/door.py). Per event, never a feature's budget, so a budget changes
+# no entry. Codex runs SessionEnd and Interrupt hooks 3 s at most; Claude Code gives SessionEnd
+# hooks 1.5 s unless an entry asks for more (up to 60 s); a worktree takes a while to make.
+TIMEOUT = 10
+TIMEOUTS = {'claude': {'pre': 60, 'end': 60, 'create': 60, 'remove': 60}, 'codex': {'pre': 60, 'end': 3, 'interrupt': 3},
+            'agy': {'pre': 60}, 'pi': {'pre': 60, 'end': 60}}
 NO_SESSION_END = ('agy',)  # Antigravity's hooks have no end-of-session event
 NO_PROMPT = ('agy',)  # nor one for a submitted prompt (PreInvocation carries no prompt text)
 CLAUDE_ONLY = ('create', 'remove')  # worktree events: only Claude Code lets a hook make and remove worktrees
@@ -113,8 +134,9 @@ class Note:
 
 @dataclass(frozen=True)
 class Deny:
-    """Block the tool call; the model sees `reason` (a 'pre' reply)."""
+    """Block the tool call; the model sees `reason`, and `note` beside it (a 'pre' reply)."""
     reason: str
+    note: str = ''
 
 
 @dataclass(frozen=True)
@@ -176,6 +198,11 @@ def read(cli, kind, data):
                  source=text(data.get('source')), reason=text(data.get('reason')), outcome=text(data.get('outcome')))
 
 
+def reason_of(deny):
+    """A Deny's reason with its note after it, for the CLIs whose block carries one text only."""
+    return '\n'.join(part for part in (deny.reason, deny.note) if part)
+
+
 def render_pre(cli, reply):
     """A 'pre' reply: Claude Code and Codex share hookSpecificOutput; Antigravity always wants
     a decision; Pi's extension applies block, input, note and status itself."""
@@ -198,14 +225,14 @@ def render_pre(cli, reply):
         return {'hookSpecificOutput': out}
     if cli == 'agy':
         if isinstance(reply, Deny):
-            return {'decision': 'deny', 'reason': reply.reason}
+            return {'decision': 'deny', 'reason': reason_of(reply)}
         out = {'decision': 'allow'}
         if isinstance(reply, Rewrite):
             out['overwrite'] = reply.tool_input
         text = reply.text if isinstance(reply, Note) else getattr(reply, 'note', '')
         return {**out, 'reason': text} if text else out
     if isinstance(reply, Deny):
-        return {'block': True, 'reason': reply.reason}
+        return {'block': True, 'reason': reason_of(reply)}
     if isinstance(reply, Rewrite):
         return {'input': reply.tool_input, **({'note': reply.note} if reply.note else {})}
     if isinstance(reply, Note):
@@ -214,9 +241,11 @@ def render_pre(cli, reply):
 
 
 def render(cli, kind, reply):
-    """The JSON a CLI expects for `reply`, or None to print nothing."""
+    """The JSON a CLI expects for `reply`, or None to print nothing; for a RAW kind, the text."""
     if kind == 'pre':
         return render_pre(cli, reply)
+    if kind in RAW:
+        return None if reply is None else str(reply)
     if kind in ('end', 'prompt'):  # a prompt hook's stdout would reach the model as context
         return None
     if isinstance(reply, Continue):
@@ -272,21 +301,35 @@ class Store:
                 pass
 
 
-def call(cli, kind, data, handle, store, now=None):
-    """The rendered reply to one hook call. handle(event, state) reads and changes the session's
-    state, saved after it; a call without a session id gets the quiet reply."""
-    event = read(cli, kind, data)
+def handle(event, decide, store, now=None):
+    """decide(event, state)'s reply, with the session's state loaded before and saved after; None,
+    and decide never called, for an event without a session id."""
     if not event.session:
-        return render(cli, kind, None)
+        return None
     store.prune(time.time() if now is None else now)
     state = store.load(event.session)
-    if kind == 'stop' and cli in UNFLAGGED_CONTINUATION and state.pop(CONTINUED, False):
+    if event.kind == 'stop' and event.cli in UNFLAGGED_CONTINUATION and state.pop(CONTINUED, False):
         event = replace(event, continuation=True)
-    reply = handle(event, state)
-    if isinstance(reply, Continue) and cli in UNFLAGGED_CONTINUATION:
+    reply = decide(event, state)
+    if isinstance(reply, Continue) and event.cli in UNFLAGGED_CONTINUATION:
         state[CONTINUED] = True
     store.save(event.session, state)
-    return render(cli, kind, reply)
+    return reply
+
+
+def call(cli, kind, data, decide, store, now=None):
+    """The rendered reply to one hook call for one feature: handle() between read() and render()."""
+    return render(cli, kind, handle(read(cli, kind, data), decide, store, now))
+
+
+def timeout(cli, kind):
+    """The door's time for one call of `kind` from `cli`, in seconds (TIMEOUTS)."""
+    return TIMEOUTS.get(cli, {}).get(kind, TIMEOUT)
+
+
+def in_cloud():
+    """Whether this is a Claude Code cloud session: Claude Code sets CLAUDE_CODE_REMOTE there."""
+    return os.environ.get('CLAUDE_CODE_REMOTE') == 'true'
 
 
 def serve(cli, kind, answer, stdin=None, stdout=None, on_error=None):
