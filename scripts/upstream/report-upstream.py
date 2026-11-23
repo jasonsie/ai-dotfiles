@@ -28,7 +28,13 @@ CATALOGS = 'docs/upstream/catalogs.json'
 PAGES = ('docs/upstream', f':!{CATALOGS}', ':!docs/upstream/INDEX.md', ':!docs/upstream/*/MIRROR-INDEX.*')  # git pathspec: the mirrored pages only
 LOCK = WORKSPACE / 'skills/skills.lock'
 MANAGED = WORKSPACE / 'config/cli-settings.json'
-COLLECTIONS = ('affaan-m/everything-claude-code', 'anthropics/skills', 'mattpocock/skills')
+COLLECTIONS = (
+    'addyosmani/agent-skills',
+    'affaan-m/everything-claude-code',
+    'anthropics/skills',
+    'mattpocock/skills',
+    'obra/superpowers',
+)
 FIXED_TERMS = ('AGENTS.md', 'AGENTS.override.md', 'CLAUDE.md', 'GEMINI.md', 'SKILL.md',
                '.agents/skills', '.claude/skills', '.gemini/config', '.pi/agent',
                'mcpServers', 'mcp_servers', 'mcp add', 'mcp.json', 'symlink')
