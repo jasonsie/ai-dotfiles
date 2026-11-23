@@ -1,8 +1,10 @@
 import io
 import json
+import math
 import os
 from contextlib import redirect_stdout
 from pathlib import Path
+import re
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -12,6 +14,144 @@ import installer
 
 skills = load('install/skills.py')
 ROOTS = sorted({where(cli, 'skills') for cli in CLIS})
+
+MAX_SKILL_BYTES = 20_000
+COLLISION_THRESHOLD = 0.75
+DISALLOWED_SKILL_FILES = ('test-*.md', 'CREATION-LOG.md')
+STOPWORDS = frozenset({
+    'a', 'an', 'and', 'any', 'are', 'as', 'at', 'be', 'before', 'by', 'for',
+    'from', 'in', 'into', 'is', 'it', 'its', 'my', 'need', 'needs', 'of', 'on',
+    'or', 'our', 'so', 'that', 'the', 'them', 'this', 'to', 'use', 'want',
+    'we', 'when', 'with', 'you', 'your', 'help', 'me', 'i',
+})
+FENCE_RE = re.compile(r'^\s*(`{3,}|~{3,})')
+INLINE_CODE_RE = re.compile(r'``[^`]*``|`[^`]*`')
+LINK_RE = re.compile(r'!?\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)')
+
+
+def parse_frontmatter(text):
+    """Parse SKILL.md YAML frontmatter; raise ValueError on missing closing --- or duplicate keys."""
+    lines = text.splitlines()
+    if not lines or lines[0] != '---':
+        raise ValueError('missing opening ---')
+    try:
+        end = lines.index('---', 1)
+    except ValueError as err:
+        raise ValueError('missing closing ---') from err
+    fm_lines = lines[1:end]
+    fields = {}
+    block_key = None
+    block_lines = []
+    for line in fm_lines:
+        if not line.strip():
+            continue
+        if line.startswith((' ', '\t')):
+            if block_key is not None:
+                block_lines.append(line.strip())
+            continue
+        if block_key is not None:
+            fields[block_key] = ' '.join(block_lines).strip()
+            block_key = None
+            block_lines = []
+        if line.lstrip().startswith('#'):
+            continue
+        key, sep, raw = line.partition(':')
+        if not sep:
+            raise ValueError(f'malformed frontmatter line: {line!r}')
+        key = key.strip()
+        if key in fields:
+            raise ValueError(f'duplicate frontmatter key: {key}')
+        val = raw.strip()
+        if val in ('|', '>', '|-', '>-'):
+            block_key = key
+            fields[key] = ''
+        else:
+            if len(val) >= 2 and val[0] == val[-1] and val[0] in ('"', "'"):
+                val = val[1:-1]
+            fields[key] = val
+    if block_key is not None:
+        fields[block_key] = ' '.join(block_lines).strip()
+    return fields, fm_lines
+
+
+def broken_relative_links(md_path):
+    """Return [(lineno, target)] for relative Markdown links in md_path whose target does not exist."""
+    broken = []
+    fence = None
+    for lineno, line in enumerate(md_path.read_text().splitlines(), 1):
+        match = FENCE_RE.match(line)
+        if match:
+            marker = match.group(1)
+            if fence is None:
+                fence = (marker[0], len(marker))
+            elif marker[0] == fence[0] and len(marker) >= fence[1]:
+                fence = None
+            continue
+        if fence is not None:
+            continue
+        cleaned = INLINE_CODE_RE.sub('', line)
+        for match in LINK_RE.finditer(cleaned):
+            target = match.group(1)
+            if target.startswith(('http://', 'https://', 'mailto:', '#')) or '<' in target or '>' in target:
+                continue
+            path_part = target.split('#', 1)[0]
+            if not path_part:
+                continue
+            if not (md_path.parent / path_part).resolve().exists():
+                broken.append((lineno, target))
+    return broken
+
+
+def _tokenize(text):
+    return [tok for tok in re.split(r'[^a-z0-9]+', text.lower()) if len(tok) > 2 and tok not in STOPWORDS]
+
+
+def model_invoked_descriptions(skills_root):
+    """{name: description} for the skills an agent can fire itself (no disable-model-invocation: true)."""
+    found = {}
+    for name, folder in sorted(skills.skills(skills_root).items()):
+        fields, _ = parse_frontmatter((folder / 'SKILL.md').read_text())
+        if fields.get('disable-model-invocation', '').lower() != 'true':
+            found[name] = fields['description']
+    return found
+
+
+def description_collisions(items, threshold=COLLISION_THRESHOLD):
+    """Return [(cosine, name_a, name_b)] for pairs at or above threshold under stdlib TF-IDF.
+
+    Only the descriptions are scored; names are labels. Counting name tokens as well would let one
+    description under two different names score below the threshold.
+    """
+    docs = {}
+    df = {}
+    for name, description in items.items():
+        tf = {}
+        for tok in _tokenize(description):
+            tf[tok] = tf.get(tok, 0) + 1
+        docs[name] = tf
+        for tok in tf:
+            df[tok] = df.get(tok, 0) + 1
+    n = len(docs)
+    vectors = {}
+    for name, tf in docs.items():
+        vec = {tok: count * math.log(1 + n / (1 + df[tok])) for tok, count in tf.items()}
+        norm = math.sqrt(sum(val * val for val in vec.values()))
+        vectors[name] = (vec, norm)
+    collisions = []
+    names = sorted(vectors)
+    for i, a in enumerate(names):
+        vec_a, norm_a = vectors[a]
+        if not norm_a:
+            continue
+        for b in names[i + 1:]:
+            vec_b, norm_b = vectors[b]
+            if not norm_b:
+                continue
+            dot = sum(val * vec_b[tok] for tok, val in vec_a.items() if tok in vec_b)
+            score = dot / (norm_a * norm_b)
+            if score >= threshold:
+                collisions.append((score, a, b))
+    return sorted(collisions, reverse=True)
 
 
 class InstallSkillsTest(unittest.TestCase):
@@ -107,8 +247,10 @@ class InstallSkillsTest(unittest.TestCase):
             text = (folder / 'SKILL.md').read_text()
             self.assertTrue(text.startswith(f'---\nname: {name}\n'), name)
             self.assertNotRegex(text, r'/Users/|/opt/homebrew')
+            fields, fm_lines = parse_frontmatter(text)
+            self.assertTrue(fields.get('description', '').strip(), f'{name}: empty description')
             # Strict YAML (Pi) rejects ': ' or ' #' inside an unquoted value.
-            for line in text.split('---', 2)[1].strip().splitlines():
+            for line in fm_lines:
                 key, _, value = line.partition(': ')
                 if value[:1] not in ('"', "'", '|', '>'):
                     self.assertNotRegex(value, r': | #|:$', f'{name}: quote {key}')
@@ -291,6 +433,76 @@ class InstallSkillsTest(unittest.TestCase):
         self.assertEqual(len(self.folder('.agents/')), 2)  # Pi is on and reads ~/.agents/skills
         self.install(('codex', 'pi'), apply=True, uninstall=True)
         self.assertEqual(self.folder('.agents/'), [])
+
+
+class SkillQualityTest(unittest.TestCase):
+    def test_repo_skills_pass_size_hygiene_and_link_checks(self):
+        skills_root = skills.WORKSPACE / 'skills'
+        names = skills.skills(skills_root)
+        disallowed = sorted(
+            str(path.relative_to(skills_root))
+            for pattern in DISALLOWED_SKILL_FILES
+            for path in skills_root.rglob(pattern)
+        )
+        self.assertEqual(disallowed, [], f'disallowed scratch files in skills/: {disallowed}')
+        for name, folder in sorted(names.items()):
+            skill_md = folder / 'SKILL.md'
+            size = skill_md.stat().st_size
+            self.assertLess(size, MAX_SKILL_BYTES, f'{name}/SKILL.md is {size} bytes (limit {MAX_SKILL_BYTES})')
+            for md in sorted(folder.rglob('*.md')):
+                broken = broken_relative_links(md)
+                self.assertEqual(broken, [], f'{md.relative_to(skills_root)} has broken links: {broken}')
+
+    def test_model_invoked_descriptions_do_not_collide(self):
+        model_invoked = model_invoked_descriptions(skills.WORKSPACE / 'skills')
+        self.assertGreater(len(model_invoked), 0)
+        self.assertNotIn('implement-spec', model_invoked)  # disable-model-invocation: true excluded
+        collisions = description_collisions(model_invoked, threshold=COLLISION_THRESHOLD)
+        self.assertEqual(
+            collisions,
+            [],
+            f'model-invoked skill description collisions >= {COLLISION_THRESHOLD}: {collisions}',
+        )
+
+    def test_collision_check_flags_a_copy_of_any_real_description(self):
+        model_invoked = model_invoked_descriptions(skills.WORKSPACE / 'skills')
+        for name, description in model_invoked.items():
+            with self.subTest(skill=name):
+                hits = description_collisions({**model_invoked, 'zz-copy': description})
+                self.assertIn((name, 'zz-copy'), [(a, b) for _, a, b in hits])  # 'zz-' sorts last
+
+    def test_parse_frontmatter_checks_closing_fence_duplicates_and_blocks(self):
+        with self.assertRaisesRegex(ValueError, 'missing closing ---'):
+            parse_frontmatter('---\nname: demo\ndescription: hi\n')
+        with self.assertRaisesRegex(ValueError, 'duplicate frontmatter key: description'):
+            parse_frontmatter('---\nname: demo\ndescription: one\ndescription: two\n---\n')
+        fields, _ = parse_frontmatter(
+            '---\nname: demo\ndescription: >\n  first line\n  second line\nmetadata:\n  author: test\n---\n'
+        )
+        self.assertEqual(fields['description'], 'first line second line')
+
+    def test_broken_relative_links_catches_missing_and_ignores_fences_code_and_urls(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp)
+            (folder / 'EXISTS.md').write_text('# ok\n')
+            md = folder / 'SKILL.md'
+            md.write_text(
+                'See [ok](EXISTS.md#heading), [web](https://example.com), [anchor](#local),\n'
+                'inline `[fake](NOPE.md)` and [placeholder](<path>), plus [bad](MISSING.md).\n'
+                '```markdown\n[fenced](ALSO_MISSING.md)\n```\n'
+            )
+            self.assertEqual(broken_relative_links(md), [(2, 'MISSING.md')])
+
+    def test_description_collisions_flag_one_description_under_two_names(self):
+        same = 'Review pull request diffs against coding standards and spec requirements.'
+        items = {
+            'spec-audit': same,
+            'diff-check': same,
+            'daily-log': 'Record finished engineering work in the daily log journal file.',
+        }
+        hits = description_collisions(items, threshold=COLLISION_THRESHOLD)
+        self.assertEqual([(a, b) for _, a, b in hits], [('diff-check', 'spec-audit')])
+        self.assertAlmostEqual(hits[0][0], 1.0)
 
 
 if __name__ == '__main__':

@@ -5,13 +5,16 @@ authors and keeps its own license. Full license texts are in [LICENSES/](LICENSE
 
 ## Skills adapted from other repositories
 
-Each folder keeps the author's LICENSE file. `skills/skills.lock` records the source path,
-the pinned commit and the local edits for every one of them.
+Each folder keeps the author's LICENSE file. The obra/superpowers sections sit in folders from
+mattpocock/skills, so their copyright line is in the table below and their license text in
+[LICENSES/MIT.txt](LICENSES/MIT.txt). `skills/skills.lock` records the source path, the pinned
+commit and the local edits for every one of them.
 
 | Skills | Source | License | Copyright |
 |---|---|---|---|
 | `codebase-design`, `diagnosing-bugs`, `domain-modeling`, `grill-with-docs`, `grilling`, `handoff`, `implement`, `implement-spec`, `improve-codebase-architecture`, `migrate-to-shoehorn`, `pr`, `prototype`, `research`, `retro`, `setup-agent-skills`, `setup-pre-commit`, `spec-review`, `tdd`, `teach`, `to-questionnaire`, `to-spec`, `to-tickets`, `triage`, `wait-what`, `wayfinder`, `which-skill`, `wizard`, `writing-for-agents` | [mattpocock/skills](https://github.com/mattpocock/skills) | MIT | (c) 2026 Matt Pocock |
 | `onboard` | [affaan-m/ECC](https://github.com/affaan-m/ECC) | MIT | (c) 2026 Affaan Mustafa |
+| `implement`, `implement-spec`, `writing-for-agents` (adapted sections) | [obra/superpowers](https://github.com/obra/superpowers) | MIT | (c) 2025 Jesse Vincent |
 
 `skills/pr/CREDITS.md` carries that skill's own credits.
 
