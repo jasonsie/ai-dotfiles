@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """small-commits: every commit an agent makes stays small, one concern, and says why.
 
-  small-commits hook pre --cli (claude|codex|agy|pi)   JSON in; JSON or nothing out
   small-commits check [GIT COMMIT ARGS...]             what the hook would say to `git commit ARGS` here
+
+The CLIs' hooks reach it through the door (`ai-dotfiles hook`, lib/door.py), which calls
+hook(event) before each shell command (../feature.json); a cloud session runs it too.
 
 The hook sees each `git commit` a session runs and measures what it would commit: the staged
 diff; with -a, every tracked change; with pathspecs, those paths; with --amend, the result
@@ -23,11 +25,9 @@ Python 3.11+, stdlib only.
 from __future__ import annotations
 
 import argparse
-import contextlib
 from dataclasses import dataclass, field
 from fnmatch import fnmatch
 import hashlib
-import io
 import os
 from pathlib import Path
 import re
@@ -412,16 +412,14 @@ def decide(event, state):
     return Note(' '.join(notes)) if notes else None
 
 
-def answer(cli, kind):
-    return lambda data: agent_hooks.call(cli, kind, data, decide, SESSIONS)
+def hook(event):
+    """The door's call (lib/door.py) before a tool call: decide() with the session's state."""
+    return agent_hooks.handle(event, decide, SESSIONS)
 
 
 def failed(error):
+    """What the door says in the gate's place when it fails: never a block."""
     return Note(f'small-commits failed ({error}); this commit was not checked.')
-
-
-def cmd_hook(args):
-    return agent_hooks.serve(args.cli, args.kind, answer(args.cli, args.kind), on_error=failed)
 
 
 def cmd_check(args):
@@ -457,10 +455,6 @@ def parser():
     top = argparse.ArgumentParser(prog='small-commits', description=__doc__,
                                   formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = top.add_subparsers(dest='command', required=True)
-    hook = sub.add_parser('hook', help='the CLI hook: JSON on stdin')
-    hook.add_argument('kind', choices=('pre',))
-    hook.add_argument('--cli', choices=agent_hooks.CLIS, required=True)
-    hook.set_defaults(run=cmd_hook)
     check = sub.add_parser('check', help="what the hook would say to `git commit ARGS` run here; ARGS are git "
                                          "commit's own (-a, --amend, paths, -m MSG), passed through untouched")
     check.set_defaults(run=None)
@@ -471,13 +465,10 @@ def main(argv=None):
     argv = sys.argv[1:] if argv is None else list(argv)
     if argv[:1] == ['check'] and argv[1:2] not in (['-h'], ['--help']):
         return cmd_check(argv[1:])  # git commit's options are not ours to parse
-    is_hook = argv[:1] == ['hook']
     try:
-        # A bad hook call must stay silent and exit 0: status 2 and stderr would steer the CLI.
-        with contextlib.redirect_stderr(io.StringIO() if is_hook else sys.stderr):
-            args = parser().parse_args(argv)
+        args = parser().parse_args(argv)
     except SystemExit as error:
-        return 0 if is_hook else int(error.code or 0)
+        return int(error.code or 0)
     return args.run(args)
 
 

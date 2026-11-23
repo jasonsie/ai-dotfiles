@@ -11,8 +11,8 @@ writes every change or none: it refuses a path whose state is no longer `before`
 up each file it replaces, sets each path atomically, and on failure puts every changed
 path back. What a step may replace, and what it records, stays in the step.
 
-The links and hook commands a step writes name the checkout the live setup runs from,
-live_root(): the repo's main checkout when the step runs in a linked worktree (`ai-dotfiles
+The links a step writes name the checkout the live setup runs from (hook entries name none:
+they run the door), live_root(): the repo's main checkout when the step runs in a linked worktree (`ai-dotfiles
 worktree new` makes one per task and `ship` deletes it), else this checkout. What a step
 installs is still read from the checkout it runs in, so a dry run in a worktree previews what
 installing would change once the work merges.

@@ -2,13 +2,13 @@
 
 Run: python3 -m unittest discover -s scripts/tests -p 'test_agent_hooks.py' -v
 """
-import io
 import json
 import os
 from pathlib import Path
 import sys
 import tempfile
 import unittest
+import unittest.mock
 
 from support import ROOT
 
@@ -147,6 +147,21 @@ class PreReplyTest(unittest.TestCase):
                          {'decision': 'deny', 'reason': 'busy'})
         self.assertIsNone(agent_hooks.render('codex', 'end', Shown(None, 'ignored')))
 
+    def test_a_deny_carries_its_note_in_each_cli_shape(self):
+        deny = agent_hooks.Deny('blocked', 'earlier note')
+        for cli in ('claude', 'codex'):
+            out = agent_hooks.render(cli, 'pre', deny)['hookSpecificOutput']
+            self.assertEqual((out['permissionDecision'], out['permissionDecisionReason'], out['additionalContext']),
+                             ('deny', 'blocked', 'earlier note'))
+        self.assertEqual(agent_hooks.render('agy', 'pre', deny), {'decision': 'deny', 'reason': 'blocked\nearlier note'})
+        self.assertEqual(agent_hooks.render('pi', 'pre', deny), {'block': True, 'reason': 'blocked\nearlier note'})
+        self.assertNotIn('additionalContext', agent_hooks.render('claude', 'pre', agent_hooks.Deny('x'))['hookSpecificOutput'])
+
+    def test_a_worktree_is_answered_with_its_path_as_text(self):
+        self.assertEqual(agent_hooks.render('claude', 'create', Path('/w/.claude/worktrees/x')), '/w/.claude/worktrees/x')
+        self.assertIsNone(agent_hooks.render('claude', 'create', None))
+        self.assertIsNone(agent_hooks.render('claude', 'remove', None))
+
     def test_a_pre_event_carries_the_action_input_and_pid(self):
         event = agent_hooks.read('claude', 'pre', {'session_id': 's', 'tool_name': 'Bash',
                                                     'tool_input': {'command': 'ls'}})
@@ -174,7 +189,9 @@ class CallTest(unittest.TestCase):
         return None
 
     def call(self, cli, kind, data, now=1000.0):
-        return agent_hooks.call(cli, kind, data, self.nudge_once, self.store, now)
+        """The rendered reply to one call, as the door gives it for this feature alone."""
+        event = agent_hooks.read(cli, kind, data)
+        return agent_hooks.render(cli, kind, agent_hooks.handle(event, self.nudge_once, self.store, now))
 
     def test_no_session_is_quiet_and_never_reaches_the_feature(self):
         self.assertEqual(self.call('agy', 'stop', {}), {'decision': 'stop'})
@@ -203,6 +220,14 @@ class CallTest(unittest.TestCase):
         self.assertFalse(self.store.file('old').exists())
         self.assertTrue(self.store.file('s1').exists())
 
+    def test_handle_keeps_the_state_and_skips_an_event_without_a_session(self):
+        event = agent_hooks.read('claude', 'stop', raw('claude'))
+        self.assertEqual(agent_hooks.handle(event, self.nudge_once, self.store, 1000.0), Continue('go on'))
+        self.assertIsNone(agent_hooks.handle(event, self.nudge_once, self.store, 1000.0))
+        self.assertEqual(self.store.load('s1'), {'nudged': True})
+        self.assertIsNone(agent_hooks.handle(agent_hooks.read('claude', 'stop', {}), self.nudge_once, self.store))
+        self.assertEqual(len(self.seen), 2)
+
     def test_session_names_cannot_leave_the_folder(self):
         self.assertEqual(self.store.file('../x/y').parent, self.folder)
         self.store.file('bad').parent.mkdir(parents=True)
@@ -210,43 +235,27 @@ class CallTest(unittest.TestCase):
         self.assertEqual(self.store.load('bad'), {})
 
 
-class ServeTest(unittest.TestCase):
-    def serve(self, stdin, answer, cli='codex', kind='stop'):
-        out = io.StringIO()
-        status = agent_hooks.serve(cli, kind, answer, io.StringIO(stdin), out)
-        return status, out.getvalue()
+class KindsTest(unittest.TestCase):
+    def test_every_kind_a_cli_hands_over_has_a_native_name_and_a_time_within_its_cap(self):
+        self.assertEqual(set(agent_hooks.KINDS), set(agent_hooks.CLIS))
+        caps = {('codex', 'end'): 3, ('codex', 'interrupt'): 3, ('claude', 'end'): 60}  # the CLIs' own limits
+        for cli, kinds in agent_hooks.KINDS.items():
+            for kind in kinds:
+                self.assertIn(kind, agent_hooks.NATIVE, (cli, kind))
+                self.assertGreater(agent_hooks.timeout(cli, kind), 0, (cli, kind))
+                self.assertLessEqual(agent_hooks.timeout(cli, kind), caps.get((cli, kind), 600), (cli, kind))
+        for cli, times in agent_hooks.TIMEOUTS.items():
+            self.assertLessEqual(set(times), set(agent_hooks.KINDS[cli]), cli)
+        self.assertLessEqual(set(agent_hooks.TOOL_KINDS) | set(agent_hooks.RAW), set(agent_hooks.NATIVE))
 
-    def test_prints_one_json_line(self):
-        self.assertEqual(self.serve('{"a": 1}', lambda data: {'got': data['a']}), (0, '{"got": 1}\n'))
-        self.assertEqual(self.serve('{}', lambda data: None), (0, ''))
-
-    def test_on_error_says_what_failed(self):
-        def broken(data):
-            raise RuntimeError('bug')
-        status, out = self.serve('{}', broken, cli='claude', kind='pre')
-        self.assertEqual(status, 0)
-        self.assertEqual(out, '')
-        out = io.StringIO()
-        agent_hooks.serve('claude', 'pre', broken, io.StringIO('{}'), out,
-                          on_error=lambda error: agent_hooks.Note(f'guard failed: {error}'))
-        self.assertIn('guard failed: bug', json.loads(out.getvalue())['hookSpecificOutput']['additionalContext'])
-
-    def test_fails_open_with_the_quiet_reply(self):
-        def broken(data):
-            raise RuntimeError('bug')
-        self.assertEqual(self.serve('{}', broken), (0, '{}\n'))
-        self.assertEqual(self.serve('not json', lambda data: {'x': 1}), (0, '{}\n'))
-        self.assertEqual(self.serve('{}', broken, cli='claude'), (0, ''))
+    def test_a_cloud_session_is_claude_codes_remote_flag(self):
+        with unittest.mock.patch.dict(os.environ, {'CLAUDE_CODE_REMOTE': 'true'}):
+            self.assertTrue(agent_hooks.in_cloud())
+        with unittest.mock.patch.dict(os.environ, {'CLAUDE_CODE_REMOTE': ''}):
+            self.assertFalse(agent_hooks.in_cloud())
 
 
 class InstallTableTest(unittest.TestCase):
-    def test_native_events_per_hook_file(self):
-        wants = (('tool', 'edit'), ('stop', None))
-        self.assertEqual(agent_hooks.native_events('claude', wants),
-                         (('PostToolUse', 'tool', 'Edit|Write|NotebookEdit'), ('Stop', 'stop', None)))
-        self.assertEqual(agent_hooks.native_events('codex', wants)[0], ('PostToolUse', 'tool', 'Edit|Write'))
-        self.assertEqual(agent_hooks.native_events('pi', wants), ())
-
     def test_every_cli_with_a_matcher_knows_its_edit_tools(self):
         self.assertEqual(set(agent_hooks.MATCHERS), set(agent_hooks.HOOK_FILE_CLIS))
         self.assertEqual(set(agent_hooks.TOOLS), set(agent_hooks.CLIS))
@@ -256,40 +265,16 @@ class InstallTableTest(unittest.TestCase):
                 self.assertTrue(set(matcher.split('|')) <= named | {'Edit', 'Write'}, (cli, action))
         json.dumps(agent_hooks.MATCHERS)
 
-    def test_guard_events_and_a_cli_without_session_end(self):
-        wants = (('pre', ('edit', 'shell', 'read')), ('end', None))
-        self.assertEqual(agent_hooks.native_events('codex', wants),
-                         (('PreToolUse', 'pre', 'Edit|Write|Bash'), ('SessionEnd', 'end', None)))
-        self.assertEqual([e for e, _, _ in agent_hooks.native_events('agy', wants)], ['PreToolUse'])
-
-    def test_the_prompt_event_is_left_out_where_the_cli_has_none(self):
-        wants = (('prompt', None), ('end', None))
-        for cli in ('claude', 'codex'):
-            self.assertEqual(agent_hooks.native_events(cli, wants),
-                             (('UserPromptSubmit', 'prompt', None), ('SessionEnd', 'end', None)), cli)
-        self.assertEqual(agent_hooks.native_events('agy', wants), ())
-
-    def test_kinds_a_cli_lacks_are_left_out(self):
-        wants = (('error', None), ('permission', None), ('form', None), ('start', None), ('interrupt', None))
-        self.assertEqual([event for event, _, _ in agent_hooks.native_events('claude', wants)],
-                         ['StopFailure', 'PermissionRequest', 'Elicitation', 'SessionStart'])
-        self.assertEqual([event for event, _, _ in agent_hooks.native_events('codex', wants)],
-                         ['PermissionRequest', 'Interrupt'])
-        self.assertEqual(agent_hooks.native_events('agy', wants), ())
-
-    def test_dialog_tools_are_matched_by_name_and_never_widen_to_every_tool(self):
-        wants = (('pre', ('ask',)),)
-        self.assertEqual(agent_hooks.native_events('claude', wants),
-                         (('PreToolUse', 'pre', 'AskUserQuestion|ExitPlanMode'),))
-        for cli in ('codex', 'agy'):  # no such tools: no entry at all, not a PreToolUse for every tool
-            self.assertEqual(agent_hooks.native_events(cli, wants), (), cli)
-
-    def test_worktree_events_exist_for_claude_only_and_take_no_matcher(self):
-        wants = (('create', None), ('remove', None))
-        self.assertEqual(agent_hooks.native_events('claude', wants),
-                         (('WorktreeCreate', 'create', None), ('WorktreeRemove', 'remove', None)))
-        for cli in ('codex', 'agy', 'pi'):
-            self.assertEqual(agent_hooks.native_events(cli, wants), (), cli)
+    def test_the_kinds_each_cli_hands_over(self):
+        kinds = agent_hooks.KINDS
+        for cli in ('claude', 'codex', 'pi'):
+            self.assertLessEqual({'pre', 'prompt', 'stop', 'end'}, set(kinds[cli]), cli)
+        self.assertEqual(set(kinds['agy']) & {'prompt', 'end'}, set())  # no prompt or session end in Antigravity
+        self.assertEqual([cli for cli in kinds if 'create' in kinds[cli] or 'remove' in kinds[cli]], ['claude'])
+        self.assertEqual([cli for cli in kinds if {'error', 'form'} & set(kinds[cli])], ['claude'])
+        self.assertEqual([cli for cli in kinds if 'interrupt' in kinds[cli]], ['codex'])
+        self.assertEqual(sorted(cli for cli in kinds if 'permission' in kinds[cli]), ['claude', 'codex'])
+        self.assertEqual(sorted(cli for cli in kinds if 'start' in kinds[cli]), ['claude', 'pi'])  # Codex's comes too late
 
 
 if __name__ == '__main__':

@@ -1,0 +1,281 @@
+"""lib/door.py: one hook call serves every feature that wants the event, in order, in one process.
+
+Fixture features in a temporary folder prove the door's own rules: the order, the chaining, a
+block ending the chain, joined notes, and a skip on error and on overrun. The three real features'
+replies through the door are in their own tests (test_worktree_guard, test_small_commits,
+test_herdr_title).
+
+Run: python3 -m unittest discover -s scripts/tests -p 'test_door.py' -v
+"""
+import io
+import json
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+import tempfile
+import time
+import unittest
+from unittest.mock import patch
+
+from support import ROOT
+
+sys.path.insert(0, str(ROOT / 'lib'))
+import door  # noqa: E402
+import features  # noqa: E402
+
+HOOK = '''\
+"""A fixture feature: does what behavior.json beside it says, and logs what it saw."""
+import json
+from pathlib import Path
+import time
+
+import agent_hooks
+
+HERE = Path(__file__).parent
+
+
+def hook(event):
+    said = json.loads((HERE / 'behavior.json').read_text())
+    with open(said['log'], 'a') as log:
+        log.write(json.dumps({'name': HERE.name, 'kind': event.kind, 'input': event.tool_input}) + '\\n')
+    time.sleep(said.get('sleep', 0))
+    if 'raise' in said:
+        raise RuntimeError(said['raise'])
+    reply = None
+    if 'rewrite' in said:
+        reply = agent_hooks.Rewrite({**event.tool_input, **said['rewrite']}, said.get('note', ''))
+    elif 'deny' in said:
+        reply = agent_hooks.Deny(said['deny'])
+    elif 'note' in said:
+        reply = agent_hooks.Note(said['note'])
+    elif 'path' in said:
+        reply = said['path']
+    if 'shown' in said:
+        reply = agent_hooks.Shown(reply, *said['shown'])
+    return reply
+
+
+def failed(error):
+    return agent_hooks.Note(f'{HERE.name} failed ({error})')
+'''
+EVERY_TOOL = {**{cli: {'pre': True, 'end': True, 'stop': True} for cli in ('claude', 'codex', 'pi')},
+              'agy': {'pre': True, 'stop': True}}
+
+
+class Fixture(unittest.TestCase):
+    def setUp(self):
+        temp = tempfile.TemporaryDirectory(prefix='door 空間 ')
+        self.addCleanup(temp.cleanup)
+        self.root = Path(temp.name)
+        self.log = self.root / 'seen.jsonl'
+
+    def feature(self, name, order, wants=None, budget=None, cloud=False, fail=None, **behavior):
+        folder = self.root / 'features' / name
+        folder.mkdir(parents=True)
+        wants = wants or EVERY_TOOL
+        kinds = {kind for each in wants.values() for kind in each}
+        (folder / 'feature.json').write_text(json.dumps({'version': 1, 'cloud': cloud, 'hooks': {
+            'module': 'hook.py', 'order': order, 'wants': wants,
+            'budget': {kind: (budget or 10) for kind in kinds}}}))
+        (folder / 'hook.py').write_text(HOOK)
+        if fail is not None:
+            behavior['raise'] = fail
+        (folder / 'behavior.json').write_text(json.dumps({'log': str(self.log), **behavior}))
+
+    def call(self, cli='claude', kind='pre', command='git status', tool='Bash', **data):
+        payload = {'session_id': 's1', 'cwd': '/w', 'tool_name': tool, 'tool_input': {'command': command}, **data}
+        return door.call(cli, kind, payload, features.find(self.root), stderr=io.StringIO())
+
+    def main(self, *argv, data=None, env=None):
+        """(status, stdout, stderr) of the door's command line on this folder's features."""
+        out, err = io.StringIO(), io.StringIO()
+        with patch.dict(os.environ, env or {}):
+            status = door.main(['hook', *argv], root=self.root, stdin=io.StringIO(json.dumps(data or {})),
+                               stdout=out, stderr=err)
+        return status, out.getvalue(), err.getvalue()
+
+    def seen(self):
+        return [json.loads(line) for line in self.log.read_text().splitlines()] if self.log.exists() else []
+
+
+class ChainTest(Fixture):
+    def test_features_run_in_order_and_each_sees_the_input_as_the_one_before_left_it(self):
+        self.feature('a-steers', 2, rewrite={'command': 'cd /x && git status'}, note='a moved it')
+        self.feature('z-first', 1, note='z first')
+        self.feature('b-last', 3, note='b saw it')
+        out, status = self.call()
+        self.assertEqual(status, 0)
+        self.assertEqual([row['name'] for row in self.seen()], ['z-first', 'a-steers', 'b-last'])  # order, not name
+        self.assertEqual([row['input']['command'] for row in self.seen()],
+                         ['git status', 'git status', 'cd /x && git status'])
+        self.assertEqual(out['hookSpecificOutput'], {
+            'hookEventName': 'PreToolUse', 'permissionDecision': 'allow',
+            'updatedInput': {'command': 'cd /x && git status'}, 'additionalContext': 'z first\na moved it\nb saw it'})
+        pi, _ = self.call('pi', tool='bash')
+        self.assertEqual(pi, {'input': {'command': 'cd /x && git status'}, 'note': 'z first\na moved it\nb saw it'})
+
+    def test_the_first_block_ends_the_chain_and_carries_the_notes_said_before_it(self):
+        self.feature('a', 1, note='a noted')
+        self.feature('b', 2, deny='b says no')
+        self.feature('c', 3, note='never asked')
+        out, _ = self.call()
+        self.assertEqual(out['hookSpecificOutput'], {'hookEventName': 'PreToolUse', 'permissionDecision': 'deny',
+                                                     'permissionDecisionReason': 'b says no',
+                                                     'additionalContext': 'a noted'})
+        self.assertEqual([row['name'] for row in self.seen()], ['a', 'b'])
+        self.assertEqual(self.call('pi', tool='bash')[0], {'block': True, 'reason': 'b says no\na noted'})
+        self.assertEqual(self.call('agy')[0], {'decision': 'deny', 'reason': 'b says no\na noted'})
+
+    def test_lines_for_the_person_are_joined_and_the_last_status_stands(self):
+        self.feature('a', 1, shown=['made fix/x', 'fix/x'])
+        self.feature('b', 2, note='b noted', shown=['also this', None])
+        out, _ = self.call('codex')
+        self.assertEqual(out['systemMessage'], 'made fix/x\nalso this')
+        self.assertEqual(out['hookSpecificOutput']['additionalContext'], 'b noted')
+        self.assertEqual(self.call('pi', tool='bash')[0], {'note': 'b noted', 'status': None})
+
+    def test_only_the_features_that_want_the_event_and_the_tool_run(self):
+        self.feature('edits', 1, wants={'claude': {'pre': ['edit']}}, note='edits')
+        self.feature('every', 2, wants={'claude': {'pre': True}}, note='every')
+        self.feature('codex-only', 3, wants={'codex': {'pre': ['shell']}}, note='codex')
+        self.feature('ends', 4, wants={'claude': {'end': True}}, note='ends')
+        self.call()
+        self.assertEqual([row['name'] for row in self.seen()], ['every'])
+        self.call(tool='Write')
+        self.assertEqual([row['name'] for row in self.seen()][1:], ['edits', 'every'])
+
+    def test_nothing_to_say_is_each_clis_quiet_reply(self):
+        self.feature('quiet', 1)
+        self.assertEqual(self.call()[0], None)
+        self.assertEqual(self.call('codex', 'stop')[0], {})
+        self.assertEqual(self.call('agy')[0], {'decision': 'allow'})
+        self.assertEqual(self.call('claude', 'end')[0], None)
+
+
+class SkipTest(Fixture):
+    def test_a_feature_that_fails_is_skipped_and_before_a_tool_call_says_so(self):
+        self.feature('a', 1, fail='boom')
+        self.feature('b', 2, note='b answered')
+        out, status = self.call()
+        self.assertEqual(status, 0)
+        self.assertEqual(out['hookSpecificOutput'], {'hookEventName': 'PreToolUse',
+                                                     'additionalContext': 'a failed (boom)\nb answered'})
+        self.assertEqual(self.call('codex', 'stop')[0], {})  # after the tool call: skipped, nothing said
+
+    def test_a_feature_past_its_budget_is_skipped_and_the_rest_still_answer(self):
+        self.feature('slow', 1, budget=0.3, sleep=5)
+        self.feature('b', 2, note='b answered')
+        started = time.monotonic()
+        out, _ = self.call()
+        self.assertLess(time.monotonic() - started, 2)
+        self.assertEqual(out['hookSpecificOutput']['additionalContext'],
+                         'slow failed (took more than 0.3 s)\nb answered')
+
+    def test_codexs_session_end_and_interrupt_are_answered_within_its_3_s_cap_whatever_the_budgets(self):
+        wants = {'codex': {'end': True, 'interrupt': True}}
+        self.feature('hangs', 1, wants=wants, budget=60, sleep=60)
+        self.feature('after', 2, wants=wants, budget=60)
+        for kind in ('end', 'interrupt'):
+            started = time.monotonic()
+            self.assertEqual(self.call('codex', kind), (None, 0))
+            self.assertLess(time.monotonic() - started, 3 - door.MARGIN / 2, kind)
+        self.assertEqual([row['name'] for row in self.seen()], ['hangs', 'hangs'])  # no time was left for `after`
+
+    def test_a_door_process_ends_codexs_session_end_within_3_s_from_its_start(self):
+        """Interpreter start, imports and exit included: the call's whole life fits Codex's cap."""
+        self.feature('hangs', 1, wants={'codex': {'end': True}}, budget=60, sleep=60)
+        code = 'import sys; sys.path.insert(0, sys.argv[1]); import door; sys.exit(door.main(sys.argv[3:], root=sys.argv[2]))'
+        started = time.monotonic()
+        done = subprocess.run([sys.executable, '-c', code, str(ROOT / 'lib'), str(self.root), 'hook', 'end', '--cli', 'codex'],
+                              input='{"session_id": "s"}', capture_output=True, text=True, timeout=10)
+        self.assertLess(time.monotonic() - started, 3)
+        self.assertEqual((done.returncode, done.stdout, done.stderr), (0, '', ''))
+
+    def test_a_feature_that_cannot_load_is_skipped(self):
+        self.feature('broken', 1, note='x')
+        (self.root / 'features/broken/hook.py').write_text('def hook(event:\n')
+        self.feature('b', 2, note='b answered')
+        out, _ = self.call()
+        self.assertEqual(out['hookSpecificOutput']['additionalContext'], 'b answered')
+
+
+class CommandTest(Fixture):
+    def test_a_cloud_session_runs_only_the_features_that_say_cloud(self):
+        self.feature('mac', 1, note='mac only')
+        self.feature('both', 2, cloud=True, note='cloud too')
+        status, out, _ = self.main('pre', '--cli', 'claude', data={'session_id': 's', 'tool_name': 'Bash'},
+                                   env={'CLAUDE_CODE_REMOTE': 'true'})
+        self.assertEqual(json.loads(out)['hookSpecificOutput']['additionalContext'], 'cloud too')
+        status, out, _ = self.main('pre', '--cli', 'claude', data={'session_id': 's', 'tool_name': 'Bash'},
+                                   env={'CLAUDE_CODE_REMOTE': ''})
+        self.assertEqual(json.loads(out)['hookSpecificOutput']['additionalContext'], 'mac only\ncloud too')
+
+    def test_a_worktree_is_answered_with_its_path_and_a_failure_with_its_reason(self):
+        self.feature('refuses', 1, wants={'claude': {'create': True, 'remove': True}}, fail='taken')
+        self.feature('makes', 2, wants={'claude': {'create': True}}, path='/w/.claude/worktrees/x')
+        self.assertEqual(self.main('create', '--cli', 'claude', data={'name': 'x'}),
+                         (0, '/w/.claude/worktrees/x\n', 'refuses: taken\n'))
+        self.assertEqual(self.main('remove', '--cli', 'claude'), (1, '', 'refuses: taken\n'))
+
+    def test_a_bad_call_stays_silent_and_exits_zero(self):
+        self.feature('a', 1, note='x')
+        for argv in (('bogus', '--cli', 'claude'), ('pre',), ('pre', '--cli', 'gemini')):
+            self.assertEqual(self.main(*argv), (0, '', ''), argv)
+        out, err = io.StringIO(), io.StringIO()
+        status = door.main(['hook', 'stop', '--cli', 'codex'], root=self.root, stdin=io.StringIO('not json'),
+                           stdout=out, stderr=err)
+        self.assertEqual((status, out.getvalue(), err.getvalue()), (0, '{}\n', ''))
+
+    def test_a_declaration_that_does_not_check_gives_the_quiet_reply_and_says_why(self):
+        self.feature('a', 1, note='x')
+        (self.root / 'features/a/feature.json').write_text('{"version": 2}')
+        status, out, err = self.main('stop', '--cli', 'codex', data={'session_id': 's'})
+        self.assertEqual((status, out), (0, '{}\n'))
+        self.assertIn('features/a/feature.json', err)
+
+
+PI_DRIVER = """
+import extension from %s;
+const on = {};
+extension({ on: (name, handler) => { on[name] = handler; } });
+const status = [];
+const ctx = { cwd: %s, model: { id: "m" }, ui: { setStatus: (key, value) => status.push([key, value ?? null]) },
+              sessionManager: { getSessionId: () => "p1", getSessionFile: () => "" } };
+const call = (id, toolName, input) => on.tool_call({ toolName, toolCallId: id, input }, ctx) ?? null;
+const commit = call("c1", "bash", { command: "git commit -m 'add b'" });
+const read = call("c2", "read", { path: "b.txt" });
+console.log(JSON.stringify({ commit, read, status }));
+"""
+
+
+@unittest.skipUnless(shutil.which('node'), "Node runs Pi's extension here")
+class PiExtensionTest(unittest.TestCase):
+    """scripts/agent_hooks.ts as Pi loads it: a tool call asks the door, which runs the real features."""
+
+    def test_a_tool_call_asks_the_door_and_a_bad_commit_is_blocked(self):
+        temp = Path(tempfile.mkdtemp(prefix='pi door '))
+        self.addCleanup(shutil.rmtree, temp, ignore_errors=True)
+        repo = temp / 'repo'
+        for args in (['init', '-q', '-b', 'main', str(repo)], ['-C', str(repo), 'config', 'user.email', 't@t'],
+                     ['-C', str(repo), 'config', 'user.name', 't']):
+            subprocess.run(['git', *args], check=True)
+        (repo / 'b.txt').write_text('b\n')
+        subprocess.run(['git', '-C', str(repo), 'add', 'b.txt'], check=True)
+        driver = temp / 'driver.mjs'
+        driver.write_text(PI_DRIVER % (json.dumps(str(ROOT / 'scripts/agent_hooks.ts')), json.dumps(str(repo))))
+        env = {key: value for key, value in os.environ.items() if not key.startswith('HERDR_')}
+        env.update(HOME=str(temp), PYTHON=sys.executable, WORKTREE_GUARD_STATE=str(temp / 'guard'),
+                   SMALL_COMMITS_STATE=str(temp / 'commits'), GIT_CONFIG_GLOBAL=os.devnull)
+        done = subprocess.run(['node', '--experimental-strip-types', '--no-warnings', str(driver)], cwd=repo,
+                              capture_output=True, text=True, env=env, timeout=60)
+        self.assertEqual(done.returncode, 0, done.stderr)
+        seen = json.loads(done.stdout)
+        self.assertIs(seen['commit']['block'], True)
+        self.assertIn('small-commits blocked this commit', seen['commit']['reason'])
+        self.assertEqual((seen['read'], seen['status']), (None, []))  # the guard, off here, says nothing
+
+
+if __name__ == '__main__':
+    unittest.main()

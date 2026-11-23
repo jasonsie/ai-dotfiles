@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 """herdr-title: an agent's row in Herdr's sidebar says what its prompt is for and whose move it is.
 
-  herdr-title hook KIND --cli (claude|codex|pi)   one CLI hook call, JSON in; KIND is prompt, stop,
-                                                  error, interrupt, permission, pre, form, start or
-                                                  end; nothing out (Codex's stop: {})
   herdr-title classify                            a model's turn for one prompt or stop; the hook starts it
+
+The CLIs' hooks reach it through the door (`ai-dotfiles hook`, lib/door.py), which calls hook(event)
+at each prompt, stop, error, interrupt, permission dialog, question or plan tool (pre), MCP form,
+resume (start) and session end, per CLI as ../feature.json says. Its reply is always none (the
+door gives each CLI its quiet reply: Codex's stop wants {}). A cloud session runs none of it:
+Herdr, whose rows it labels, runs on the Mac.
 
 The label has three layers, type › status › result: `grill › run` while the agent works,
 `grill › wait › ask` when it waits for the user's answer, `› fail` after an error, `› done` once
@@ -46,7 +49,6 @@ from __future__ import annotations
 import argparse
 import contextlib
 import fcntl
-import io
 import json
 import os
 from pathlib import Path
@@ -68,7 +70,6 @@ DEFAULT_STATE = '~/.local/state/ai-dotfiles/herdr-title'
 KEEP_SECONDS = 7 * 24 * 3600
 SESSIONS = agent_hooks.Store(ENV, DEFAULT_STATE, KEEP_SECONDS)
 PANES = agent_hooks.Store(ENV, DEFAULT_STATE, KEEP_SECONDS, sub='panes')  # the session each pane belongs to
-CLIS = ('claude', 'codex', 'pi')  # the CLIs that hand over each prompt
 SWARM = 'claude-swarm-'  # the tmux server Claude Code starts for an agent team's teammates
 # What a session's labels say under Herdr's done and idle states, by the session's mode: normal
 # (a typed prompt; a stop judged done), open (a Codex prompt, until its stop hook answers), pending
@@ -502,42 +503,32 @@ HANDLERS = {'prompt': on_prompt, 'stop': on_stop, 'error': lambda event: settle(
             'start': on_start, 'end': on_end}
 
 
-def cmd_hook(args):
-    """Every call goes through serve, so each CLI gets the reply it expects even outside Herdr."""
-    def answer(data):
-        if pane() and not outsider(args.cli):
-            event = agent_hooks.read(args.cli, args.kind, data)
-            if event.session:
-                if args.kind == 'prompt':
-                    SESSIONS.prune(time.time())
-                    PANES.prune(time.time())
-                HANDLERS[args.kind](event)
-        return agent_hooks.render(args.cli, args.kind, None)
-    return agent_hooks.serve(args.cli, args.kind, answer)
+def hook(event):
+    """The door's call (lib/door.py) for one event; the reply is always none, so each CLI gets its
+    quiet reply. Nothing runs outside a Herdr pane, for a session that only shares the pane's
+    environment, or without a session id."""
+    if pane() and not outsider(event.cli) and event.session:
+        if event.kind == 'prompt':
+            SESSIONS.prune(time.time())
+            PANES.prune(time.time())
+        HANDLERS[event.kind](event)
+    return None
 
 
 def parser():
     top = argparse.ArgumentParser(prog='herdr-title', description=__doc__,
                                   formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = top.add_subparsers(dest='command', required=True)
-    hook = sub.add_parser('hook', help='the CLI hook: JSON on stdin')
-    hook.add_argument('kind', choices=tuple(HANDLERS))
-    hook.add_argument('--cli', choices=CLIS, required=True)
-    hook.set_defaults(run=cmd_hook)
     sub.add_parser('classify', help="the model's turn: a request as JSON on stdin (the hook starts it)"
                    ).set_defaults(run=cmd_classify)
     return top
 
 
 def main(argv=None):
-    argv = sys.argv[1:] if argv is None else list(argv)
-    is_hook = argv[:1] == ['hook']
     try:
-        # A bad hook call must stay silent and exit 0: status 2 and stderr would steer the CLI.
-        with contextlib.redirect_stderr(io.StringIO() if is_hook else sys.stderr):
-            args = parser().parse_args(argv)
+        args = parser().parse_args(sys.argv[1:] if argv is None else list(argv))
     except SystemExit as error:
-        return 0 if is_hook else int(error.code or 0)
+        return int(error.code or 0)
     return args.run(args)
 
 

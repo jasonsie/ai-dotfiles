@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "cloud": true,
+  "hooks": {
+    "module": "scripts/small_commits.py",
+    "order": 20,
+    "budget": {"pre": 30},
+    "wants": {
+      "claude": {"pre": ["shell"]},
+      "codex": {"pre": ["shell"]},
+      "agy": {"pre": ["shell"]},
+      "pi": {"pre": ["shell"]}
+    }
+  }
+}
