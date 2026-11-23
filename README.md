@@ -57,7 +57,7 @@ The first run links `ai-dotfiles` and `daily-log` into `~/.local/bin`. From then
 ```bash
 ai-dotfiles [install]     # apply the setup (idempotent: a second run reports 0 changes)
 ai-dotfiles update        # fast-forward this repo on main, then install
-ai-dotfiles uninstall     # remove every link and hook that points into this repo
+ai-dotfiles uninstall     # remove every link into this repo and every hook entry it wrote
 ai-dotfiles check         # healthcheck
 ai-dotfiles worktree ...  # list, merge or remove agents' linked worktrees
 ai-dotfiles commit check  # what the commit hook would say to a `git commit`

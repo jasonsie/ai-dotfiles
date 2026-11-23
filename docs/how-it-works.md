@@ -19,7 +19,10 @@ config/              the sources the installers apply
   herdr-title.json     the label an agent's row in Herdr carries, and what decides it
 skills/              shared skills; skills.lock pins adapted ones; daily-log/ holds the
                      daily-log command and the day pass; worktree-guard/, small-commits/ and
-                     herdr-title/ their hooks; git/ a bundle: the git step skills and approve
+                     herdr-title/ their hooks, each declared in its feature.json; git/ a bundle:
+                     the git step skills and approve
+lib/                 features.py (each feature's feature.json, found by its folder) and door.py
+                     (`ai-dotfiles hook`: one call per event runs every feature that wants it)
 scripts/             ai-dotfiles, install.sh, uninstall.sh, healthcheck.sh (entry points);
                      agent_hooks.py and agent_sessions.py (the CLIs' hook formats and
                      session stores behind one interface); agent_hooks.ts (Pi's extension);
@@ -49,11 +52,9 @@ config/plugins.json           ─►  plugins.py (each CLI's plugin manager)   �
 skills/<name>/                ─►  skills.py (links)                        ─►  every CLI's skill folder
 scripts/ai-dotfiles           ─►  skills.py (link)                         ─►  ~/.local/bin
 skills/daily-log/scripts/     ─►  skills.py (link); launchd.py (plist)     ─►  ~/.local/bin/daily-log; ~/Library/LaunchAgents (04:00)
-skills/worktree-guard/scripts/ ─► hooks.py (merge)                         ─►  each CLI's hook file
-skills/small-commits/scripts/ ─►  hooks.py (merge)                         ─►  each CLI's hook file
-skills/herdr-title/scripts/   ─►  hooks.py (merge)                         ─►  Claude Code's and Codex's hook files
+skills/*/feature.json         ─►  hooks.py (one door entry per event)      ─►  each CLI's hook file: ai-dotfiles hook
 config/herdr-title.json       ─►  herdr_title.py (read on every call)      ─►  the label on the agent's row in Herdr
-scripts/agent_hooks.ts        ─►  skills.py (link)                         ─►  Pi's extension folder
+scripts/agent_hooks.ts        ─►  skills.py (link)                         ─►  Pi's extension folder; it calls the door
                                   installer.py: reads ai-clis.json; the safe writes every step shares
                                   scripts/healthcheck.sh checks the live state
 
@@ -67,10 +68,11 @@ changes. `ai-dotfiles` (linked on the first run) wraps the entry points from any
 `uninstall`, `check`.
 
 Run in a linked worktree (`.claude/worktrees/<name>`, which `ship` deletes), the steps read
-what they install from the worktree but name the main checkout in every link and hook command
-(`installer.live_root()`). So `--dry-run` there previews what installing will change once the
-work merges, and the healthcheck measures this Mac against the main checkout; its tests and
-portability check stay the worktree's. Something the work adds, such as a new skill, is linked
+what they install from the worktree but name the main checkout in every link
+(`installer.live_root()`); hook entries name no checkout, since each runs the door. So
+`--dry-run` there previews what installing will change once the work merges, and the
+healthcheck measures this Mac against the main checkout; its tests and portability check stay
+the worktree's. Something the work adds, such as a new skill, is linked
 before the main checkout has it, so install for real from the main checkout after the merge.
 
 ## Which CLIs: config/ai-clis.json
@@ -430,7 +432,7 @@ their meanings, and the words.
 ## Small commits
 
 A hook on every shell command gates `git commit` (PreToolUse on Bash / `run_command`; Pi
-through `scripts/agent_hooks.ts`, which plays both hooked features). There is no rule text
+through `scripts/agent_hooks.ts`, which sends each event to the door). There is no rule text
 in `config/global-agents.md`: the hook is the rule, and its block message points at the
 `small-commits` skill, which holds the protocol an agent follows (measure, plan, split,
 commit); `scripts/small_commits.py` in it is the hook.
@@ -451,10 +453,11 @@ commit); `scripts/small_commits.py` in it is the hook.
   reports it.
 - **`ai-dotfiles commit check [git commit args]`:** prints what the hook would say, the size by
   file and the verdict, without committing.
-- **Installed by `scripts/install/hooks.py`** as a second feature beside worktree-guard: one
-  PreToolUse entry per CLI with the shell matcher (Antigravity: `ai-dotfiles-small-commits-pre`).
+- **Declared in its `feature.json`:** PreToolUse for the shell tools of every CLI. The door
+  runs it after worktree-guard, from the one PreToolUse entry per CLI the hooks step writes.
   State, the sizes a session was warned about, is in `~/.local/state/ai-dotfiles/small-commits/`.
-  A cloud session on this repo runs the same hook from `.claude/settings.json` (Cloud sessions).
+  A cloud session on this repo runs it through the door, from `.claude/settings.json` (Cloud
+  sessions).
 
 ## Approve
 
@@ -526,7 +529,7 @@ gets its setup from the committed `.claude/settings.json`:
                             ignored by git), all but config/cloud.json's local_only, then
                             reloadSkills (Claude Code 2.1.152 or later);
                           scripts/ first on PATH through CLAUDE_ENV_FILE, so ai-dotfiles runs
-  PreToolUse on Bash    the small-commits hook
+  PreToolUse on Bash    the door (ai-dotfiles hook), which runs the cloud features: small-commits
 ```
 
 - **On a Mac nothing changes.** The gate is false there, so only the user-level hooks run and
