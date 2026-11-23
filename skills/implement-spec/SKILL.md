@@ -35,7 +35,7 @@ Communication to and from subagents should be sparse. Communicate primarily thro
 
 6. If this changes the **frontier** of available tickets, kick off more **implementer subagents** to work on the new tickets. This allows for maximum concurrency.
 
-7. Once all tickets are complete, load the `spec-review` skill (the Skill tool, where the CLI has one) on the integration branch and run a bounded fix loop (3 rounds max):
+7. Once all tickets are complete, load the `spec-review` skill (the Skill tool, where the CLI has one) on the integration branch and run a bounded fix loop (3 rounds max). Keep a **ledger** for it: a text file outside the repo (beside step 2's notes, if that step ran), one line per ruling and per round, shown to the user with step 8's result.
    - **Verify first.** Check each finding against the codebase and spec before dispatching a fix. Push back with technical reasoning on findings that contradict the spec, break existing behavior, or add unused scope (YAGNI), and record the ruling in the ledger.
    - **Fix.** Dispatch a fresh **implementer subagent** with the confirmed open findings (where the CLI has no subagents, fix in-session). It fixes each item, runs the covering tests, and reports the command and output. Never fix findings in the controller session when subagents are available.
    - **Re-review.** Re-run `spec-review` on the integration branch (scoped to the open findings and fix diff), then record a one-line ledger entry: `Review round <R>/3: <X> fixed, <Y> open (<one-liners>)`.

@@ -5,7 +5,7 @@ description: Writing documents for agents. Use when creating or editing skills, 
 
 Reference for writing any document an agent consumes: a skill, an `AGENTS.md` / `CLAUDE.md`, a doc reached by a pointer. The packaging differs; the writing does not: the same levers make each one predictable, since the agent takes the same _process_ every run rather than producing the same output.
 
-When the document you're writing is a skill, read [`SKILL-MECHANICS.md`](SKILL-MECHANICS.md) for frontmatter, invocation choice, and router skills.
+When the document you're writing is a skill, read [`SKILL-MECHANICS.md`](SKILL-MECHANICS.md) for frontmatter, invocation choice, router skills, packaging limits, and testing.
 
 ## Context pointers
 
@@ -83,6 +83,8 @@ Classify the baseline failure before choosing how to word a rule. A form that pr
 | Complies, but output has the wrong shape (bloated, buried verdict, restated spec) | Positive recipe or contract: state what the output is — its parts, in order | Prohibition list ("don't restate", "never narrate") |
 | Omits a required element from something it already produces | Structural: a required field or slot in the template it fills in | Prose reminders near the template |
 | Behavior depends on a condition | Conditional keyed to an observable predicate ("if the brief exists, cite it") | Unconditional rule + exemption clauses |
+
+The first row is the hard-guardrail case **Negation** allows, so pair the prohibition with its positive target.
 
 Two rules apply to whichever form you pick:
 

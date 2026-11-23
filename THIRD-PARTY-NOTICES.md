@@ -5,8 +5,10 @@ authors and keeps its own license. Full license texts are in [LICENSES/](LICENSE
 
 ## Skills adapted from other repositories
 
-Each folder keeps the author's LICENSE file. `skills/skills.lock` records the source path,
-the pinned commit and the local edits for every one of them.
+Each folder keeps the author's LICENSE file. The obra/superpowers sections sit in folders from
+mattpocock/skills, so their copyright line is in the table below and their license text in
+[LICENSES/MIT.txt](LICENSES/MIT.txt). `skills/skills.lock` records the source path, the pinned
+commit and the local edits for every one of them.
 
 | Skills | Source | License | Copyright |
 |---|---|---|---|

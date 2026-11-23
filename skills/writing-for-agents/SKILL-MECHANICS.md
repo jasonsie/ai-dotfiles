@@ -1,6 +1,6 @@
 # Skill mechanics
 
-The skill-specific branch of [`writing-for-agents`](SKILL.md): what changes when the document is a skill (frontmatter, the invocation choice, and router skills). Everything else about writing it is the universal reference in `SKILL.md`.
+The skill-specific branch of [`writing-for-agents`](SKILL.md): what changes when the document is a skill (frontmatter, the invocation choice, router skills, packaging limits, and testing). Everything else about writing it is the universal reference in `SKILL.md`.
 
 ## Invocation
 
@@ -28,4 +28,4 @@ When user-invoked skills multiply past what you can remember, that piled-up cogn
 
 ## Testing a skill (optional)
 
-For discipline-enforcing or behavior-shaping skills, run a lightweight RED→GREEN pressure test before shipping: give a fresh subagent a realistic, tempting scenario **without** the skill to observe the baseline failure and exact rationalizations (RED), write minimal guidance matched to that failure mode (see `Match the form to the failure` in `SKILL.md`), then re-run **with** the skill (GREEN) and close any remaining loopholes. Skip for pure reference skills.
+For discipline-enforcing or behavior-shaping skills, run a lightweight RED→GREEN pressure test before shipping: give a fresh subagent (where the CLI has none, a fresh session) a realistic, tempting scenario **without** the skill to observe the baseline failure and exact rationalizations (RED), write minimal guidance matched to that failure mode (see `Match the form to the failure` in `SKILL.md`), then re-run **with** the skill (GREEN) and close any remaining loopholes. Skip for pure reference skills.
