@@ -93,7 +93,7 @@
       ],
       "commit": "abeeaf95660ba9e8b7c753eb38f441ca707a8823",
       "license": "MIT",
-      "local_edits": "setup pointer names setup-agent-skills; Skill-tool calls reworded; review step uses spec-review; one ticket at a time where the CLI has no sub-agents; slashes dropped from skill names in the description; step 7 adds bounded 3-round verify/fix/re-review loop with ledger and breaker (adapted from obra/superpowers@22f0b46 skills/subagent-driven-development/references/fix-loop.md and skills/receiving-code-review/SKILL.md, MIT)"
+      "local_edits": "setup pointer names setup-agent-skills; Skill-tool calls reworded; review step uses spec-review; one ticket at a time where the CLI has no sub-agents; slashes dropped from skill names in the description; step 7 adds bounded 3-round verify/fix/re-review loop with breaker and a ledger (one line per ruling and per round, in a text file outside the repo, shown to the user with step 8's result) (adapted from obra/superpowers@22f0b46 skills/subagent-driven-development/references/fix-loop.md and skills/receiving-code-review/SKILL.md, MIT)"
     },
     "improve-codebase-architecture": {
       "repo": "mattpocock/skills",
@@ -282,7 +282,7 @@
       ],
       "commit": "abeeaf95660ba9e8b7c753eb38f441ca707a8823",
       "license": "MIT",
-      "local_edits": "\"Match the form to the failure\" table and no-nuance/exemption rules in SKILL.md, plus 20k size cap, layout hygiene, and optional RED->GREEN pressure-testing note in SKILL-MECHANICS.md (adapted from obra/superpowers@22f0b46 skills/writing-skills/SKILL.md, MIT)"
+      "local_edits": "\"Match the form to the failure\" table and no-nuance/exemption rules in SKILL.md, plus 20k size cap, layout hygiene, and optional RED->GREEN pressure-testing note in SKILL-MECHANICS.md (adapted from obra/superpowers@22f0b46 skills/writing-skills/SKILL.md, MIT); a sentence ties the table's prohibition row to Negation; the pressure test falls back to a fresh session where the CLI has no subagents; both pointers to SKILL-MECHANICS.md name its packaging and testing sections"
     },
     "migrate-to-shoehorn": {
       "repo": "mattpocock/skills",
