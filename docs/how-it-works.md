@@ -281,6 +281,15 @@ session as JSON on stdin and shows what it prints.
   reset has passed is left out. The figures are those of the session's last API response: the
   CLI re-runs the script on changes in the session and at each reset time, not on a clock, so
   they can lag what other sessions have spent since.
+- **Behind a gateway** such as Magpie, Claude Code signs in with `ANTHROPIC_AUTH_TOKEN` and sends
+  no `rate_limits`: it sends them for a claude.ai sign-in only. With neither `rate_limits` nor
+  `quota` in the payload and `ANTHROPIC_BASE_URL` on this machine (`127.0.0.1`, `localhost`,
+  `::1`), the script asks the gateway's quotas route instead (`GET /v1/magpie/quotas`, no key):
+  the account of the provider the model names (`codex/…`), Claude's for a model with no
+  provider, the one that answered last for a routing group (`group/…`). Its `5 hours` and
+  `7 days` show with no label; other windows keep the gateway's names
+  (`7 days · Fable 45% → Thu 08:00`). A gateway on another machine is never asked, and one that
+  does not answer within 0.3 s shows nothing. Each refresh asks anew.
 - **Codex** runs no script: `tui.status_line` lists its own items (`current-dir`, `git-branch`,
   `model-with-reasoning`, `codex-version`, `context-remaining`) and cannot follow a steered
   session, so its footer keeps showing the main checkout: **a gap, not emulated**. Instead
