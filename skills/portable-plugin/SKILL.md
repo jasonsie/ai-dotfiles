@@ -25,9 +25,9 @@ The facts below were checked on 2026-11-05 with Claude Code 2.1.318, Codex 0.166
    - `agy plugin validate --strict .` reports no error. Three warnings are expected in a repo that also
      serves Claude Code and Codex, and only these: `.mcp.json`, `hooks/hooks.json` and a root `AGENTS.md`
      are "never loaded" by Antigravity. Any other warning is a defect.
-   - Every frontmatter (skills, agents, commands) loads with a strict YAML parser, such as
-     PyYAML's `safe_load` on the block between the `---` lines. Pi skips a skill that fails,
-     silently, and `claude plugin validate` flags only agents.
+   - Every frontmatter (skills, agents, commands) loads with a strict YAML parser: the YAML
+     check below prints nothing and exits 0. Pi skips a skill that fails, silently, and
+     `claude plugin validate` flags only agents.
    - The trial install below lists every skill in every CLI. Codex and Pi have no validator:
      this listing is their check.
 3. **Release**: bump `version` in `.claude-plugin/plugin.json`, merge, then run
@@ -95,6 +95,25 @@ The facts below were checked on 2026-11-05 with Claude Code 2.1.318, Codex 0.166
 - **README support table**: a row per feature (skills, commands on PATH, hooks, MCP servers,
   agents), a column per CLI, each gap named.
 
+## YAML check
+
+Run from the plugin folder; it needs PyYAML (`python3 -m pip install pyyaml`). Each failing file
+is printed with the parser's reason.
+
+```bash
+python3 - <<'EOF'
+import glob, sys, yaml
+bad = 0
+for path in sorted(glob.glob('skills/*/SKILL.md') + glob.glob('agents/*.md') + glob.glob('commands/*.md')):
+    try:
+        yaml.safe_load(open(path).read().split('\n---', 1)[0].removeprefix('---'))
+    except yaml.YAMLError as error:
+        bad += 1
+        print(f'{path}: {error}')
+sys.exit(1 if bad else 0)
+EOF
+```
+
 ## Trial install
 
 Run from the plugin folder; each line uses a throwaway home, so the real config stays as it is.
@@ -106,6 +125,9 @@ Read `<marketplace>` from `.claude-plugin/marketplace.json`.
 ( export HOME="$(mktemp -d)"; agy plugin install "$PWD" && agy plugin list --json )
 ( export PI_CODING_AGENT_DIR="$(mktemp -d)"; pi install "$PWD" && (echo '{"type":"get_commands"}'; sleep 8) | pi --mode rpc --no-session | grep -o '"skill:[^"]*"' )
 ```
+
+Pi's line holds stdin open for 8 seconds, the time Pi takes to start and answer; an empty
+listing on a slow start means raise the `sleep`, not that the skills failed.
 
 A released tag installs the same way from GitHub: `'<owner>/<repo>#<tag>'` for Claude,
 `<owner>/<repo> --ref <tag>` for Codex, `https://github.com/<owner>/<repo>/tree/<tag>` for
