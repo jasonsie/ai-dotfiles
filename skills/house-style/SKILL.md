@@ -1,6 +1,6 @@
 ---
 name: house-style
-description: The company's house style (voice, formatting, terminology, templates, branding) for documents written for people. Use when the user says "match our format", "use our style", "write like this", "set up our house style", or pastes a sample doc or brand guide to learn from.
+description: The company's house style (voice, formatting, terminology, templates, branding) for documents written for people. Use before writing a spec, update, plan, memo or release notes for people, when the user says "match our format", "use our style", "write like this", "set up our house style", or pastes a sample doc or brand guide to learn from.
 ---
 
 The company's style for documents people read: two layers, one layout. This folder, linked into every CLI from the ai-dotfiles repo, is the global layer: `STYLE.md` for what every document shares (cover sections, plus the `Plain words` rule the `tutor` skill added), `templates/<type>.md` per document type. A project adds **deltas** at `docs/house-style/` (or the path a `House style: <path>` line in its `AGENTS.md` names): the same file names, holding only what differs. Artifacts agents read (a `to-spec` spec, tickets, a PR body, a handoff) follow their own skills.
@@ -25,6 +25,8 @@ Pick the type whose *When* fits the request, naming it when the request didn't; 
 1. `STYLE.md`
 2. `templates/<type>.md`; none → the writing skill's own structure
 3. the project's `STYLE.md`, then its `<type>.md`
+
+Before sending, check the draft against what was loaded (the template's sections and length, `Plain words`), fix what differs and check again.
 
 ## Capture
 

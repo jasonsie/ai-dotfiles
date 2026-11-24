@@ -10,8 +10,8 @@ Inside a Herdr pane, a hook labels the agent's row in the sidebar with three lay
 [scripts/herdr_title.py](scripts/herdr_title.py) keeps one **mode** per session and reports one
 label for each state Herdr detects; the session's agent does nothing for it. The types, the
 words, the rules that decide at once and both model instructions are
-[config/herdr-title.json](../../config/herdr-title.json) in the ai-dotfiles repo, the single
-source for every answer below.
+[config/herdr-title.json](../../config/herdr-title.json) in the ai-dotfiles repo (this folder is a
+link into it: follow `../..` from its real path), the single source for every answer below.
 
 ## Read a label
 

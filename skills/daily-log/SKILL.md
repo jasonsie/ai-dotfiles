@@ -27,7 +27,7 @@ daily-log add --done "<project>: <what the day was about>" "keyword: <tags>" "de
   today's block, `daily-log path` its file.
 
 The command is `~/.local/bin/daily-log`, linked by ai-dotfiles; without the link, run
-`python3 ~/.claude/skills/daily-log/scripts/daily_log.py`.
+`python3 <this skill folder>/scripts/daily_log.py`.
 
 ## Grammar
 

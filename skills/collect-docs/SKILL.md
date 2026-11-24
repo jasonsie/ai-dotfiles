@@ -9,8 +9,8 @@ disable-model-invocation: true
 `$ARGUMENTS — <github org | owner/repo | docs site URL> [what to collect]`
 
 `docs/upstream/` is machine-written from `config/upstream-docs.json`; this skill ends with one
-new entry there, synced and indexed. Work in the ai-dotfiles checkout on a new branch and leave
-the edits uncommitted for review.
+new entry there, synced and indexed. Work in a worktree of ai-dotfiles: start with `ai-dotfiles
+worktree new docs/<source>` and finish with the `ship` skill, which opens the PR for review.
 
 ## 1. Scope
 
@@ -27,7 +27,7 @@ GitHub org or repository: `python3 <this skill folder>/survey.py <org | owner/re
 last push, path, KB) from the repository inventory and a scan of each matching repository's
 tree. A repository named outright lists every document file; in an org scan a repository whose
 name was the match (`eng-practices`, `styleguide`) hides its guides behind plain file names, so
-rescan it alone. An org above 1,000 repositories needs `--limit` (google: 2,932). Then:
+rescan it alone. An org above 1,000 repositories needs `--limit` (google is one). Then:
 
 - `gh search code '"style guide" org:<org>'`, also with "coding conventions", "code style",
   "documentation style" and "writing guide": catches guides whose file names say nothing, and
@@ -81,8 +81,10 @@ run prints `done: ok=<n>` with the count you expected.
 - Report in chat: pages mirrored per repository, the skipped candidates with their reasons,
   licenses worth a look. The config entry and its `notes` are the record; nothing hand-written
   goes under `docs/upstream/`.
+- Commit per the `small-commits` skill, then run the `ship` skill.
 
 Known from the Google and Facebook surveys: an org may have no style-guide repository at all,
 with guides inside project repositories, one file each; default branches vary (`master`,
-`gh-pages`, `static_h`); large repositories return truncated trees; three Google guides are
-HTML; the weekly report shows drift, so following a branch beats pinning.
+`gh-pages`, `static_h`); large repositories return truncated trees; a guide's format changes
+upstream (HTML to Markdown), and the weekly report shows that drift, so following a branch beats
+pinning.
