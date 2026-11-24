@@ -3,7 +3,7 @@
 
 # Learn command (/learn)
 
-Available on: Antigravity App, Antigravity CLI, Antigravity IDE
+Available on: Antigravity App, Antigravity CLI, IDE extensions (VS Code, Visual Studio, Eclipse), Antigravity IDE
 
 Capture what the agent learned in this session, such as a correction you made, a constraint it kept missing, or a multi-step setup that finally worked, and persist it as a [rule](/docs/rules) or [skill](/docs/skills) so future sessions benefit automatically.
 
@@ -42,7 +42,7 @@ To point the agent at exactly what to capture, add an instruction:
 /learn always run vitest with --pool=forks in this repo
 ```
 
-```text
+```prompt
 /learn save the database transaction retry pattern we just used as a project rule
 ```
 
@@ -62,7 +62,7 @@ The agent still classifies and scopes the lesson, but skips the discovery step.
 `/learn` writes to the same locations that Antigravity discovers customizations from. The agent chooses the scope, workspace or global, based on whether the lesson is specific to this project or applies everywhere, and confirms the location in the proposal.
 
 | Type | Workspace scope | Global scope |
-| :-- | :-- | :-- |
+| --- | --- | --- |
 | **Rule** | `AGENTS.md` or `GEMINI.md` in the workspace folder or `.agents/`, or `.agents/rules/<name>.md` | `~/.gemini/AGENTS.md`, `~/.gemini/GEMINI.md`, `~/.gemini/config/AGENTS.md`, `~/.gemini/config/GEMINI.md`, or `~/.gemini/config/rules/<name>.md` |
 | **Skill** | `.agents/skills/<name>/SKILL.md` | `~/.gemini/config/skills/<name>/SKILL.md` |
 

@@ -3,6 +3,8 @@
 
 # CLI best practices
 
+Available on: Antigravity CLI
+
 Master the workflows, prompt architectures, and local configuration choices to maximize agent velocity while maintaining robust control.
 
 ## Establish verification loops
@@ -78,6 +80,10 @@ If you watch an agent execute an incorrect search pattern or write code that dev
 ### Rewind history with `/rewind`
 
 If an agent has made several successive changes that introduce build errors, you don’t need to discard the session. Type `/rewind` (or `/undo`) to roll back your conversation thread to a previous stable checkout.
+
+### Compact between milestones with `/compact`
+
+After finishing an exploration phase or completing a subtask in a long session, run [`/compact`](/docs/commands/compact) (or `/compact <next-step>`) to summarize earlier turns into a checkpoint so subsequent turns run with a leaner context window.
 
 ### Branch experiments with `/fork`
 

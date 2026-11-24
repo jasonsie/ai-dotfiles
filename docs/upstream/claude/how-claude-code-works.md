@@ -70,7 +70,7 @@ When you run `claude` in a directory, Claude Code gains access to:
 * **Your terminal.** Any command you could run: build tools, git, package managers, system utilities, scripts. If you can do it from the command line, Claude can too.
 * **Your git state.** Current branch, uncommitted changes, and recent commit history.
 * **Your [CLAUDE.md](https://code.claude.com/docs/en/memory.md).** A markdown file where you store project-specific instructions, conventions, and context that Claude should know every session. If your repository has an AGENTS.md for other coding agents, Claude [can read that](https://code.claude.com/docs/en/memory.md#agents-md) in place of a CLAUDE.md.
-* **[Auto memory](https://code.claude.com/docs/en/memory.md#auto-memory).** Learnings Claude saves automatically as you work, like your preferences. The first 200 lines or 25KB of MEMORY.md, whichever comes first, load at the start of each session.
+* **[Auto memory](https://code.claude.com/docs/en/memory.md#auto-memory).** Learnings Claude saves automatically as you work, like your preferences. The first 200 lines or 25KB of MEMORY.md, whichever comes first, load at session start while auto memory is on.
 * **Extensions you configure.** [MCP servers](https://code.claude.com/docs/en/mcp.md) for external services, [skills](https://code.claude.com/docs/en/skills.md) for workflows, [subagents](https://code.claude.com/docs/en/sub-agents.md) for delegated work, and [Claude in Chrome](https://code.claude.com/docs/en/chrome.md) for browser interaction.
 
 Because Claude sees your whole project, it can work across it. When you ask Claude to "fix the authentication bug," it searches for relevant files, reads multiple files to understand context, makes coordinated edits across them, runs tests to verify the fix, and commits the changes if you ask. This is different from inline code assistants that only see the current file.
@@ -103,7 +103,7 @@ Claude Code saves your conversation locally as you work. Each message, tool use,
 
 Each Claude Code conversation is a session tied to your current directory. The `/resume` picker shows sessions from the current worktree by default, with keyboard shortcuts to widen the list to other worktrees or projects. See [Manage sessions](https://code.claude.com/docs/en/sessions.md#use-the-session-picker) for the full list of picker shortcuts and how name resolution works.
 
-Claude sees your current branch's files. When you switch branches, Claude sees the new branch's files, but your conversation history stays the same. Claude remembers what you discussed even after switching.
+Claude sees your current branch's files. When you switch branches, Claude sees the new branch's files, but your conversation history stays the same.
 
 Since sessions are tied to directories, you can run parallel Claude sessions by using [git worktrees](https://code.claude.com/docs/en/worktrees.md), which create separate directories for individual branches.
 
@@ -127,7 +127,7 @@ If Claude follows a rule you didn't write, such as adding a `Co-Authored-By` tra
 
 * Your CLAUDE.md files
 * The instructions of your [output style](https://code.claude.com/docs/en/output-styles.md)
-* A note when a file Claude read earlier changes on disk
+* A note that a file Claude edited earlier has since changed on disk
 * The commit and pull request attribution lines
 
 To change or remove the attribution lines, set [`attribution`](https://code.claude.com/docs/en/settings-reference#attribution). To remove Claude Code's built-in commit and pull request instructions, set [`includeGitInstructions`](https://code.claude.com/docs/en/settings-reference#includegitinstructions) to `false`. For the other switches, see [Turn off the context your agent replaces](https://code.claude.com/docs/en/agent-sdk/modifying-system-prompts.md#turn-off-the-context-your-agent-replaces).
@@ -190,7 +190,7 @@ Built-in commands also guide you through setup:
 
 ### It's a conversation
 
-Claude Code is conversational. You don't need perfect prompts. Start with what you want, then refine:
+Claude Code is conversational, so start with what you want, then refine:
 
 ```text theme={null}
 Fix the login bug

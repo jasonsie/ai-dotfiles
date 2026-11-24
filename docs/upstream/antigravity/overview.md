@@ -62,11 +62,11 @@ Shall I run the checkout test suite to verify?
 
 Ask anything, @ to mention, / for actions
 
-Gemini 4 HydrogenHigh
+Gemini 4 NeonMedium
 
 Model
 
-Gemini 4 Carbon _High_Gemini 4 Argon _High_Gemini 4 Hydrogen _High_Orchestrator _Carbon_Orchestrator _Argon_Gemini 3.8 Flash _Medium_Claude Sonnet 5.5 _Thinking_Claude Opus 5.5 _Thinking_GPT-OSS 120B _Medium_
+Gemini 4 Neon _Medium_NewGemini 4 Carbon _Medium_NewGemini 4 Argon _Medium_Leaving SoonGemini 4 Hydrogen _Medium_NewOrchestrator _Gemini 4 Neon Medium_NewGemini 3.8 Flash _Medium_Leaving SoonClaude Sonnet 5.5 _Thinking_NewClaude Opus 5.5 _Thinking_NewGPT-OSS 120B _Medium_
 
 TerminalsProject
 
@@ -124,7 +124,7 @@ Antigravity CLI 1.2.14
 
 developer@example.com (Google AI Pro)
 
-Gemini 4 Hydrogen (High)
+Gemini 4 Neon (Medium)
 
 ~/projects/checkout-service
 
@@ -144,7 +144,7 @@ Edit(src/pricing/discounts.ts)(ctrl+o to expand)
 
 \>
 
-? for shortcutsGemini 4 Hydrogen · high
+? for shortcutsGemini 4 Neon · medium
 
 A keyboard-first terminal client that runs Antigravity workflows in local shells, remote cloud environments, and SSH sessions.
 
@@ -171,11 +171,11 @@ Project ReviewComprehensive review report for Spring PetClinic application detai
 
 Ask anything, @ to mention, / for actions
 
-Gemini 4 Hydrogen High
+Gemini 4 Neon Medium
 
 Model
 
-Gemini 4 Carbon HighGemini 4 Argon HighGemini 4 Hydrogen HighOrchestrator (Carbon)Orchestrator (Argon)Gemini 3.8 Flash MediumClaude Sonnet 5.5 (Thinking)Claude Opus 5.5 (Thinking)GPT-OSS 120B (Medium)
+Gemini 4 NeonMediumNewGemini 4 CarbonMediumNewGemini 4 ArgonMediumLeaving SoonGemini 4 HydrogenMediumNewOrchestratorGemini 4 Neon MediumNewGemini 3.8 FlashMediumLeaving SoonClaude Sonnet 5.5 (Thinking)NewClaude Opus 5.5 (Thinking)NewGPT-OSS 120B (Medium)
 
 Preview README.mdproject\_review.md
 
@@ -255,7 +255,7 @@ Frontier Gemini models
 
 Gemini 4 & 3.8
 
-Co-trained with Google DeepMind. Powering all local agents with frontier speed, configurable reasoning levels, and large context capacity across Gemini 4 Carbon, Gemini 4 Argon, Gemini 4 Hydrogen, Gemini 3.8 Flash, and Gemini 3.1 Pro.
+Co-trained with Google DeepMind. Powering all local agents with frontier speed, configurable reasoning levels, and large context capacity across Gemini 4 Neon, Gemini 4 Carbon, Gemini 4 Argon, Gemini 4 Hydrogen, Gemini 3.8 Flash, and Gemini 3.1 Pro.
 
 [Model specifications](/docs/models/)
 
@@ -303,6 +303,8 @@ Experience the model selector directly below. Antigravity lets you adjust reason
 
 † Available with paid Google AI Pro plans or on trial with eligible premium devices. To switch to a paid Google AI Pro plan, [submit a request](https://one.google.com/support).
 
+‡ In [Gemini Enterprise](/docs/enterprise#supported-models-in-gemini-enterprise), Orchestrator only runs Gemini 4 Carbon (High) as the planner paired with Gemini 4 Hydrogen (High) as the executor; custom planner and executor selection is available on Google AI Pro and Google AI Ultra only.
+
 * * *
 
 ## Product comparison
@@ -346,7 +348,7 @@ SDK
 | [VPC Service Controls (VPC-SC)](/docs/enterprise/) |  |  |  |  |
 | [Request, response & telemetry logging](/docs/enterprise/) |  |  |  |  |
 
-Capabilities are tailored to each surface's execution target. Enterprise features under IDE Ext. apply to Antigravity IDE extensions (GA in VS Code & Visual Studio; Preview in JetBrains, Zed, and Xcode).
+Capabilities are tailored to each surface's execution target. Enterprise features under IDE Ext. apply to Antigravity IDE extensions (GA in VS Code, Visual Studio, JetBrains, Zed, Xcode, and Eclipse).
 
 [Features guide](/docs/features/)
 

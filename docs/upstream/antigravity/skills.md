@@ -3,7 +3,7 @@
 
 # Agent skills
 
-Available on: Antigravity App, Antigravity CLI, Antigravity IDE
+Available on: Antigravity App, Antigravity CLI, IDE extensions (VS Code, Visual Studio, Eclipse, JetBrains, Android Studio, Zed, Xcode), Antigravity IDE
 
 Skills are an [open standard](https://agentskills.io/home) for extending agent capabilities. A skill is a folder containing a `SKILL.md` file with instructions that the agent can follow when working on specific tasks.
 
@@ -60,7 +60,7 @@ When reviewing code, follow these steps:
 The YAML frontmatter supports the following fields:
 
 | Field | Required | Description |
-| :-- | :-- | :-- |
+| --- | --- | --- |
 | `name` | No | A unique identifier for the skill (lowercase, hyphens for spaces). Defaults to the folder name if not provided. |
 | `description` | Yes | A clear description of what the skill does and when to use it. This is what the agent sees when deciding whether to apply the skill. |
 
@@ -107,7 +107,7 @@ Explore how to create and manage skills on your preferred surface:
 The Antigravity App loads skills from two primary locations:
 
 | Location | Scope |
-| :-- | :-- |
+| --- | --- |
 | `<workspace-root>/.agents/skills/<skill-folder>/` | Workspace-specific |
 | `~/.gemini/config/skills/<skill-folder>/` | Global (all workspaces) |
 
@@ -130,7 +130,7 @@ You can invoke skills in the Antigravity App in two ways:
 The Antigravity CLI features full support for local and global agent skills:
 
 | Location | Scope |
-| :-- | :-- |
+| --- | --- |
 | `<workspace-root>/.agents/skills/<skill-folder>/` | Workspace-specific |
 | `~/.gemini/config/skills/<skill-folder>/` | Global (all workspaces, shared with the Antigravity App) |
 | `~/.gemini/config/plugins/<plugin-folder>/skills/` | Plugin-provided skills ([Plugins](/docs/plugins)) |
@@ -165,7 +165,7 @@ agy plugin install ./my-skills-plugin
 In the standalone Antigravity IDE, skills are discovered from the following locations:
 
 | Location | Scope |
-| :-- | :-- |
+| --- | --- |
 | `<workspace-root>/.agents/skills/<skill-folder>/` | Workspace-specific |
 | `~/.gemini/config/skills/<skill-folder>/` | Global (all workspaces; legacy `~/.gemini/antigravity/skills/` is also supported) |
 

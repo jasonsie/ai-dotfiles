@@ -5,7 +5,7 @@ Official Claude Code docs: setup, settings, permissions, hooks, MCP, skills, sub
 
 Consult through the `upstream-docs` skill (`find`, `outline`, `show`): read a section, not a file.
 
-Pages: 204
+Pages: 220
 
 - [accessibility.md](accessibility.md): Set up Claude Code for screen readers such as VoiceOver and NVDA, plus settings for screen magnifiers, reduced motion, and colorblind-friendly themes.
 - [admin-setup.md](admin-setup.md): A decision map for administrators deploying Claude Code, covering API providers, managed settings, policy enforcement, usage monitoring, and data handling.
@@ -33,12 +33,12 @@ Pages: 204
 - [agent-sdk/sessions.md](agent-sdk/sessions.md): How sessions persist agent conversation history, and when to use continue, resume, and fork to return to a prior run.
 - [agent-sdk/skills.md](agent-sdk/skills.md): Control which skills Claude can invoke in Claude Agent SDK sessions, dispatch commands by name, and author skills your sessions discover
 - [agent-sdk/streaming-output.md](agent-sdk/streaming-output.md): Get real-time responses from the Agent SDK as text and tool calls stream in
-- [agent-sdk/streaming-vs-single-mode.md](agent-sdk/streaming-vs-single-mode.md): Understanding the two input modes for Claude Agent SDK and when to use each
+- [agent-sdk/streaming-vs-single-mode.md](agent-sdk/streaming-vs-single-mode.md): Send follow-up messages and images to one Agent SDK session with streaming input, read each response, and interrupt a response to redirect Claude.
 - [agent-sdk/structured-outputs.md](agent-sdk/structured-outputs.md): Return validated JSON from agent workflows using JSON Schema, Zod, or Pydantic. Get type-safe, structured data after multi-turn tool use.
 - [agent-sdk/subagents.md](agent-sdk/subagents.md): Define and invoke subagents to isolate context, run tasks in parallel, and apply specialized instructions in your Claude Agent SDK applications.
 - [agent-sdk/todo-tracking.md](agent-sdk/todo-tracking.md): Track todos in Agent SDK sessions and render Claude's progress in your application from structured tool calls
 - [agent-sdk/tool-search.md](agent-sdk/tool-search.md): Scale your agent to thousands of tools by discovering and loading only what's needed, on demand.
-- [agent-sdk/troubleshooting.md](agent-sdk/troubleshooting.md): Fix Agent SDK errors: the Claude Code CLI fails to start or exits, a tool message is too large, or a result arrives without structured output.
+- [agent-sdk/troubleshooting.md](agent-sdk/troubleshooting.md): Fix Agent SDK errors: the Claude Code CLI fails to start or exits, your prompt generator throws, a tool message is too large, or structured output is missing.
 - [agent-sdk/typescript-v2-preview.md](agent-sdk/typescript-v2-preview.md): Reference for the removed V2 TypeScript Agent SDK session API, with session-based send/stream patterns for multi-turn conversations.
 - [agent-sdk/typescript.md](agent-sdk/typescript.md): Complete API reference for the TypeScript Agent SDK, including all functions, types, and interfaces.
 - [agent-sdk/user-input.md](agent-sdk/user-input.md): Surface Claude's approval requests and clarifying questions to users, then return their decisions to the SDK.
@@ -47,10 +47,17 @@ Pages: 204
 - [agents.md](agents.md): Compare the ways Claude Code can take on multiple tasks at once: subagents, agent view, agent teams, dynamic workflows, and projects.
 - [amazon-bedrock.md](amazon-bedrock.md): Learn about configuring Claude Code through Amazon Bedrock, including setup, IAM configuration, and troubleshooting.
 - [analytics.md](analytics.md): View Claude Code usage metrics, track adoption, and measure engineering velocity in the analytics dashboard.
+- [approvals-classifiers.md](approvals-classifiers.md): Let a Claude Approvals rule depend on Code Review's answer or on a question you define. Add a classifier, read its answer, and limit what a run costs.
+- [approvals-github-rules.md](approvals-github-rules.md): See how the Claude Approvals check works with required reviews, CODEOWNERS, and merge queues, what can merge with no person, and who can change a policy
+- [approvals-policy.md](approvals-policy.md): Reference for the Claude Approvals policy file, `.claude/approvals.yml`: its keys, how rules combine, how approvals count, and an example policy.
+- [approvals-pull-requests.md](approvals-pull-requests.md): Find what a Claude Approvals check title means and what to do next, use the comment commands, and handle pull requests from Claude and from forks
+- [approvals-setup.md](approvals-setup.md): Turn on Claude Approvals in a GitHub repository: start in observe mode, enforce the policy, require the check, limit what it spends, and turn it off
+- [approvals-troubleshooting.md](approvals-troubleshooting.md): Fix a Claude Approvals check that didn't appear or doesn't pass, a policy file that Approvals refuses, and a classifier that gives no answer
+- [approvals.md](approvals.md): Set how many people a path in your GitHub repository needs, and where Claude may approve, with a policy file and a pull request check
 - [artifacts.md](artifacts.md): Artifacts turn Claude Code's work into live, interactive pages on claude.ai that you can keep private, share with your organization, or publish to a public link.
 - [authentication.md](authentication.md): Log in to Claude Code and configure authentication for individuals, teams, and organizations.
 - [auto-mode-classifier-billing.md](auto-mode-classifier-billing.md): Resolve the Claude Code notice saying this session isn't eligible for auto mode's no-charge classifier requests: what it means, why it appears, and what to do.
-- [auto-mode-config.md](auto-mode-config.md): Tell the auto mode classifier which repos, buckets, and domains your organization trusts. Set environment context, override the default block and allow rules, and inspect your effective config with the auto-mode CLI subcommands.
+- [auto-mode-config.md](auto-mode-config.md): Tell the auto mode classifier which repos, buckets, and domains your organization trusts, set your own block and allow rules, and inspect your config.
 - [best-practices.md](best-practices.md): Get more out of Claude Code: tell Claude what it can't see, give it a check to run, and enforce the rules that can't have exceptions.
 - [champion-kit.md](champion-kit.md): A playbook for engineers advocating Claude Code internally: what to share, how to answer questions, and how to grow adoption on your team.
 - [changelog.md](changelog.md): Release notes for Claude Code, including new features, improvements, and bug fixes by version.
@@ -70,7 +77,8 @@ Pages: 204
 - [claude-platform-on-aws.md](claude-platform-on-aws.md): Configure Claude Code to use the Anthropic-operated Claude API with AWS authentication, IAM access control, and AWS Marketplace billing.
 - [claude-projects.md](claude-projects.md): Hand Claude a stream of related tasks in one conversation and let it run them as parallel cloud sessions that share repositories, instructions, and memory.
 - [claude-security.md](claude-security.md): Install the Claude Security plugin to scan your codebase for vulnerabilities in a Claude Code session and turn findings into patches you review and apply.
-- [cli-reference.md](cli-reference.md): Complete reference for Claude Code command-line interface, including commands and flags.
+- [claude-ship.md](claude-ship.md): Meet the Claude Ship agents for GitHub pull requests: Code Review, PR Steward, and Claude Approvals
+- [cli-reference.md](cli-reference.md): Reference for the Claude Code command-line interface, including commands and flags.
 - [cloud-environments.md](cloud-environments.md): Configure cloud environments for Claude Code cloud sessions: network access levels, environment variables, setup scripts, and environment caching.
 - [code-mode.md](code-mode.md): Try Code Mode, an experimental feature in which Claude writes JavaScript that makes several tool calls in one step.
 - [code-review-costs.md](code-review-costs.md): Estimate and cap what your organization spends on Claude Code Review: how reviews are billed through usage credits, what drives cost, and where to track usage.
@@ -80,7 +88,7 @@ Pages: 204
 - [code-review-setup.md](code-review-setup.md): Turn on Code Review for your Claude organization: connect GitHub, install the Claude GitHub App, choose repositories, and set when reviews run
 - [code-review-troubleshooting.md](code-review-troubleshooting.md): Fix a Code Review that didn't start, failed, or was skipped for budget, find missing findings, and resolve setup and `REVIEW.md` problems.
 - [code-review.md](code-review.md): Catch bugs in GitHub pull requests with Code Review: Claude reviews each change, verifies its findings, and comments inline. For Team and Enterprise plans
-- [commands.md](commands.md): Complete reference for commands available in Claude Code, including built-in commands and bundled skills.
+- [commands.md](commands.md): Reference for commands available in Claude Code, including built-in commands and bundled skills.
 - [common-workflows.md](common-workflows.md): Step-by-step guides for exploring codebases, fixing bugs, refactoring, testing, and other everyday tasks with Claude Code.
 - [communications-kit.md](communications-kit.md): Launch announcements, drip-campaign messages, and FAQ responses for rolling Claude Code out to your engineering organization.
 - [computer-use.md](computer-use.md): Enable computer use in the Claude Code CLI so Claude can open apps, click, type, and see your screen on macOS. Test native apps, debug visual issues, and automate GUI-only tools without leaving your terminal.
@@ -117,7 +125,7 @@ Pages: 204
 - [hooks-guide.md](hooks-guide.md): Run shell commands automatically when Claude Code edits files, finishes tasks, or needs input. Format code, send notifications, validate commands, and enforce project rules.
 - [hooks.md](hooks.md): Reference for Claude Code hook events, configuration schema, JSON input/output formats, exit codes, async hooks, HTTP hooks, prompt hooks, and MCP tool hooks.
 - [how-claude-code-works.md](how-claude-code-works.md): Understand the agentic loop, built-in tools, and how Claude Code interacts with your project.
-- [interactive-mode.md](interactive-mode.md): Complete reference for keyboard shortcuts, input modes, and interactive features in Claude Code sessions.
+- [interactive-mode.md](interactive-mode.md): Reference for keyboard shortcuts, input modes, and interactive features in Claude Code sessions.
 - [jetbrains.md](jetbrains.md): Use Claude Code with JetBrains IDEs including IntelliJ, PyCharm, WebStorm, and more
 - [keybindings.md](keybindings.md): Customize keyboard shortcuts in Claude Code with a keybindings configuration file.
 - [large-codebases.md](large-codebases.md): Configure Claude Code for monorepos and large single-tree codebases with nested CLAUDE.md files, sparse worktrees, code intelligence, and per-package skills so Claude stays focused on the code you're working in.
@@ -153,8 +161,8 @@ Pages: 204
 - [plugins/host-marketplace.md](plugins/host-marketplace.md): Publish a plugin marketplace where users can reach it, grant access to a private one, and release updates and renames without breaking installs.
 - [plugins/install.md](plugins/install.md): Install Claude Code plugins from a marketplace on any surface you use, choose an install scope, and update or remove them later.
 - [plugins/loading.md](plugins/loading.md): Trace where Claude Code loads each plugin from, which settings file decides whether it loads, and why an update changed nothing.
-- [plugins/manifest-reference.md](plugins/manifest-reference.md): Complete reference for plugin.json: fields with types and defaults, accepted path forms, and the userConfig and environment variable schemas.
-- [plugins/marketplace-reference.md](plugins/marketplace-reference.md): Complete reference for marketplace.json fields, plugin entries, and the plugin and marketplace source objects, with where each is valid.
+- [plugins/manifest-reference.md](plugins/manifest-reference.md): Reference for plugin.json: fields with types and defaults, accepted path forms, and the userConfig and environment variable schemas.
+- [plugins/marketplace-reference.md](plugins/marketplace-reference.md): Reference for marketplace.json fields, plugin entries, and the plugin and marketplace source objects, with where each is valid.
 - [plugins/measure.md](plugins/measure.md): Measure a Claude Code plugin's token cost, find out whether people still use it, and pick the telemetry events for organization-wide plugin questions.
 - [plugins/mods/admin.md](plugins/mods/admin.md): Control Claude Code mods with managed settings: stop user-installed mods, allow only your own, review what a mod can do, and enforce policy with your own mod.
 - [plugins/mods/api.md](plugins/mods/api.md): Call the mods API from a Claude Code mod to add commands and tools, call a model, run work on a timer, message other sessions, and reach files and the network.
@@ -172,7 +180,12 @@ Pages: 204
 - [plugins/relevance.md](plugins/relevance.md): Add a relevance block to marketplace plugin entries so Claude Code suggests them when a user's work matches, and allowlist the marketplace in managed settings.
 - [plugins/security.md](plugins/security.md): Decide whether to trust a plugin before you install it, from what a plugin can do on your machine to how to review one and remove it.
 - [plugins/troubleshooting.md](plugins/troubleshooting.md): Fix plugin errors in Claude Code. Find the exact message you saw, grouped by stage from where /plugin runs through install and org policy.
-- [prompt-caching.md](prompt-caching.md): Claude Code manages prompt caching automatically. See why a model switch triggers a slow uncached turn, what `/compact` costs, why CLAUDE.md edits don't apply mid-session, and how to check your cache hit rate.
+- [pr-steward-pull-requests.md](pr-steward-pull-requests.md): See what PR Steward adds to your GitHub pull request, give it instructions, start or stop it with a comment or a label, and limit what it does for you
+- [pr-steward-security.md](pr-steward-security.md): Check which GitHub identity, permissions, and repositories PR Steward uses, where its sessions run, and what limits approvals and merges
+- [pr-steward-setup.md](pr-steward-setup.md): Turn on PR Steward for your Claude organization: require reviews, add a repository, set spend limits, and choose when it starts and for which authors
+- [pr-steward-troubleshooting.md](pr-steward-troubleshooting.md): Fix a PR Steward that didn't start, stopped, or paused on a GitHub pull request, and resolve the messages that an Owner sees while setting it up
+- [pr-steward.md](pr-steward.md): Let PR Steward push fixes to your GitHub pull requests for failing checks, merge conflicts, and review feedback
+- [prompt-caching.md](prompt-caching.md): See why a model switch triggers a slow uncached turn in Claude Code, what `/compact` costs, and how to check your prompt cache hit rate.
 - [prompt-library.md](prompt-library.md): Copy-paste prompts for Claude Code, tagged by task and role.
 - [quickstart.md](quickstart.md): Install Claude Code in your terminal, sign in, and use the CLI to explore your codebase and make your first code change.
 - [remote-control.md](remote-control.md): Continue a local Claude Code session from your phone, tablet, or any browser using Remote Control. Works with claude.ai/code and the Claude mobile app.
@@ -186,22 +199,25 @@ Pages: 204
 - [self-hosted-environments-deploy.md](self-hosted-environments-deploy.md): Run self-hosted runners in production: security hardening, network egress control, git credentials, Kubernetes and Compose recipes, and troubleshooting.
 - [self-hosted-environments-identity.md](self-hosted-environments-identity.md): Verify the CLAUDE_CODE_SESSION_ACCESS_TOKEN JWT so services on your network can trust requests from sessions in your self-hosted environment.
 - [self-hosted-environments-quickstart.md](self-hosted-environments-quickstart.md): Set up your first self-hosted environment: install Claude Code, create the environment, start a runner, and route a session to it.
-- [self-hosted-environments-reference.md](self-hosted-environments-reference.md): Complete reference for the self-hosted runner and orchestrator: CLI flags, environment variables, and Prometheus metrics.
+- [self-hosted-environments-reference.md](self-hosted-environments-reference.md): Reference for the self-hosted runner and orchestrator: CLI flags, environment variables, and Prometheus metrics.
 - [self-hosted-environments-testing.md](self-hosted-environments-testing.md): Verify a self-hosted runner image from CI: dispatch a session with the CLI, read Claude's replies through a Stop hook, and script the full loop.
 - [self-hosted-environments.md](self-hosted-environments.md): Run Claude Code cloud sessions on infrastructure you control: set up a self-hosted environment, deploy runners, and route sessions to your own compute.
 - [server-managed-settings.md](server-managed-settings.md): Centrally configure Claude Code for your organization through server-delivered settings, without requiring device management infrastructure.
 - [sessions.md](sessions.md): Name, resume, branch, and switch between Claude Code conversations. Covers `--continue`, `--resume`, `--from-pr`, the `/resume` picker, session naming, exporting transcripts, and where transcripts are stored.
 - [settings-example.md](settings-example.md): Realistic settings.json files for a developer, a team, and an organization: copy one, keep the keys you want, and change the values.
-- [settings-reference.md](settings-reference.md): Complete reference for every Claude Code settings.json key: where each one goes, its type and default, and a paste-ready example, with an index of every key.
+- [settings-reference.md](settings-reference.md): Reference for Claude Code settings.json keys: where each one goes, its type and default, and a paste-ready example, with an index of keys.
 - [settings.md](settings.md): Change Claude Code settings, pick the scope a key belongs in, verify the change, and learn which value Claude Code uses when a key is set in several places.
 - [setup.md](setup.md): System requirements, platform-specific installation, version management, and uninstallation for Claude Code.
+- [share-sessions.md](share-sessions.md): Check what recipients of a shared Claude Code session can read, choose who can open the link, and stop sharing.
+- [ship-command-troubleshooting.md](ship-command-troubleshooting.md): Look up a message or a symptom from `/ship` or `/steward`: a missing command, nothing committed or pushed, a watch that didn't start, or one that stopped.
+- [ship-command.md](ship-command.md): Run `/ship` to open a GitHub pull request, get a review, and have Claude work on feedback and failing checks, or `/steward` to skip the review on an open one.
 - [skills.md](skills.md): Create, manage, and share skills to extend Claude's capabilities in Claude Code. Includes custom commands and bundled skills.
 - [slack.md](slack.md): Delegate coding tasks from Slack. This earlier version answers mentions only from Pro, Max, and Ultra accounts in workspaces not connected to Claude Tag.
 - [statusline.md](statusline.md): Configure a custom status bar to monitor context window usage, costs, and git status in Claude Code
 - [sub-agents.md](sub-agents.md): Create and use specialized AI subagents in Claude Code for task-specific workflows and improved context management.
 - [terminal-config.md](terminal-config.md): Fix Shift+Enter for newlines, get a terminal bell when Claude finishes, configure tmux, match the color theme, and enable Vim mode in the Claude Code CLI.
 - [third-party-integrations.md](third-party-integrations.md): Learn how Claude Code can integrate with various third-party services and infrastructure to meet enterprise deployment requirements.
-- [tools-reference.md](tools-reference.md): Complete reference for the tools Claude Code can use, including permission requirements and per-tool behavior.
+- [tools-reference.md](tools-reference.md): Reference for the tools Claude Code can use, including permission requirements and per-tool behavior.
 - [troubleshoot-install.md](troubleshoot-install.md): Fix command not found, PATH, permission, network, and authentication errors when installing or signing in to Claude Code.
 - [troubleshooting.md](troubleshooting.md): Fix high CPU or memory usage, hangs, auto-compact thrashing, and search problems in Claude Code, and find the right page for other issues.
 - [ultrareview.md](ultrareview.md): Run a deep, multi-agent code review in the cloud with /code-review ultra to find and verify bugs before you merge.

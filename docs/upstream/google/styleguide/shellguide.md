@@ -265,7 +265,7 @@ Examples:
 <div class='goodcode'></div>
 
 ```shell
-# TODO(mrmonkey): Handle the unlikely edge cases (bug ####)
+# TODO(username): Handle the unlikely edge cases (bug ####)
 ```
 
 <a id="s5-formatting"></a>

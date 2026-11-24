@@ -3,7 +3,7 @@
 
 # Plan (/plan)
 
-Available on: Antigravity App, Antigravity CLI
+Available on: Antigravity App, Antigravity CLI, IDE extensions (VS Code, Visual Studio, Eclipse, JetBrains, Android Studio, Zed, Xcode), Antigravity IDE
 
 The `/plan` command facilitates structured planning, codebase exploration, and requirements discovery before jumping directly into code execution. For non-trivial tasks, `/plan` ensures complex changes are well-understood, properly scoped, and organized before files are modified.
 
@@ -58,7 +58,7 @@ Type `/plan` followed by your goal in the prompt input:
 
 To start an interactive discovery session for the current workspace context without a predefined prompt:
 
-```text
+```prompt
 /plan
 ```
 
@@ -100,11 +100,11 @@ For detailed instructions on artifact navigation and commenting workflows, refer
 Antigravity provides complementary planning commands and multi-agent orchestrators depending on task scope and complexity:
 
 | Command | Primary Focus | Best For | Plan Tier |
-| :-- | :-- | :-- | :-- |
+| --- | --- | --- | --- |
 | **`/plan`** | **Requirements discovery and reviewable plans** | Scoping complex tasks, refactors, and multi-file changes before modifying code | All plans |
 | **[`/grill-me`](/docs/commands/grill-me)** | **Socratic design interviews** | Deep requirement alignment and edge-case probing before drafting designs | All plans |
 | **[`/boost`](/docs/boost)** | **Multi-agent deep reasoning** | Hard concurrency bugs, race conditions, and algorithmic optimizations | Paid plans |
-| **[`/swarm`](/docs/swarm)** | **Parallel board coordination** | Broad tasks that split cleanly across independent files, packages, or investigation tracks | Google AI Pro and Ultra |
+| **[`/swarm`](/docs/swarm)** | **Parallel board coordination** | Broad tasks that split cleanly across independent files, packages, or investigation tracks | All plans |
 | **[`/teamwork`](/docs/teamwork)** | **Collaborative agent teams** | Long-horizon campaigns, repository migrations, and open-ended research | Paid plans |
 
 * * *

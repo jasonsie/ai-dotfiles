@@ -6,9 +6,9 @@ Consult through the `upstream-docs` skill (`find`, `outline`, `show`); add a sou
 
 | Source | Kind | Pages | What |
 |---|---|---|---|
-| [claude](claude/MIRROR-INDEX.md) | llms | 204 | Official Claude Code docs: setup, settings, permissions, hooks, MCP, skills, subagents, plugins, the Agent SDK and the changelog. |
-| [codex](codex/MIRROR-INDEX.md) | llms | 201 | Official Codex docs (CLI, IDE extension, cloud): configuration, sandboxing, MCP, skills, automation and the condensed Codex manual. |
+| [claude](claude/MIRROR-INDEX.md) | llms | 220 | Official Claude Code docs: setup, settings, permissions, hooks, MCP, skills, subagents, plugins, the Agent SDK and the changelog. |
+| [codex](codex/MIRROR-INDEX.md) | llms | 205 | Official Codex docs (CLI, IDE extension, cloud): configuration, sandboxing, MCP, skills, automation and the condensed Codex manual. |
 | [pi](pi/MIRROR-INDEX.md) | docs-json | 42 | Pi coding agent docs from the earendil-works/pi repository: usage, configuration, prompt templates, skills, extensions, slash commands, sessions. |
-| [antigravity](antigravity/MIRROR-INDEX.md) | llms | 102 | Antigravity CLI and IDE docs: agent settings, rules, skills, MCP, artifacts, browser use and the changelog. |
+| [antigravity](antigravity/MIRROR-INDEX.md) | llms | 117 | Antigravity CLI and IDE docs: agent settings, rules, skills, MCP, artifacts, browser use and the changelog. |
 | [google](google/MIRROR-INDEX.md) | github | 82 | Google's engineering style guides (19 languages plus Markdown docs), the Swift guide, the code review guide (eng-practices) and the OpenDocs documentation planning guides and templates. |
 | [facebook](facebook/MIRROR-INDEX.md) | github | 34 | Meta engineering conventions from github.com/facebook project repositories: C++, C, Rust and Thrift coding guidelines, design-system and CLI conventions, and docs-writing guides (flipper, folly, buck2, astryx, docusaurus). |

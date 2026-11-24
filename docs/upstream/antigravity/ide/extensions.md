@@ -27,15 +27,23 @@ Official VSIX extension for Visual Studio 2026 and .NET solution architectures.
 
 ### JetBrains
 
-One-click installation for IntelliJ IDEA, PyCharm, WebStorm, GoLand, CLion, Rider, and more (Enterprise support in Preview).
+One-click installation for IntelliJ IDEA, PyCharm, WebStorm, GoLand, CLion, Rider, and more.
 
 [Install & JetBrains Guide](/docs/ide/extensions/jetbrains)
 
 ![Antigravity in JetBrains IDEs](/assets/image/blog/jetbrains-extension-marketplace.png)
 
+### Android Studio
+
+Agentic coding with Google Antigravity inside the Android Studio Agent tool window via the ACP Registry.
+
+[Install & Android Studio Guide](/docs/ide/extensions/android-studio)
+
+![Antigravity in Android Studio](/assets/image/blog/android-studio-extension-marketplace.png)
+
 ### Zed
 
-High-performance, native agentic editing in the Zed editor (Enterprise support in Preview).
+High-performance, native agentic editing in the Zed editor.
 
 [Install & Zed Guide](/docs/ide/extensions/zed)
 
@@ -43,7 +51,7 @@ High-performance, native agentic editing in the Zed editor (Enterprise support i
 
 ### Xcode
 
-Native agentic development inside Xcode for macOS, iOS, iPadOS, watchOS, and visionOS (Enterprise support in Preview).
+Native agentic development inside Xcode for macOS, iOS, iPadOS, watchOS, and visionOS.
 
 [Install & Xcode Guide](/docs/ide/extensions/xcode)
 
@@ -51,7 +59,7 @@ Native agentic development inside Xcode for macOS, iOS, iPadOS, watchOS, and vis
 
 ### Eclipse
 
-Agentic workflows, multi-step task execution, and diff reviews inside Eclipse on macOS, Linux, and Windows (Public Preview).
+Agentic workflows, multi-step task execution, and diff reviews inside Eclipse on macOS, Linux, and Windows.
 
 [Install & Eclipse Guide](/docs/ide/extensions/eclipse)
 
@@ -79,7 +87,7 @@ If you are an individual developer, you can sign in with any personal Google Acc
 
 ### Enterprise teams and organizations
 
-For enterprise developers, Antigravity integrates directly with **Gemini Enterprise** and Google Cloud governance (currently in **Preview** for JetBrains, Zed, Xcode, and Eclipse):
+For enterprise developers, Antigravity integrates directly with **Gemini Enterprise** and Google Cloud governance (currently in **Preview** for Android Studio):
 
 1.  Click **Sign In** and select **Sign in with Gemini Enterprise**.
 2.  Authenticate using your corporate identity (including BYOID and Workforce Identity Federation).

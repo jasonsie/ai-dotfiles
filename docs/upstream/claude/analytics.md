@@ -74,11 +74,10 @@ Contribution metrics cover repositories hosted on github.com. For repositories o
 >
 > These metrics are deliberately conservative and represent an underestimate of Claude Code's actual impact. Only lines and PRs where there is high confidence in Claude Code's involvement are counted.
 
-The dashboard displays these summary metrics at the top:
+The dashboard displays these summary metrics:
 
-* **PRs with CC**: total count of merged pull requests that contain at least one line of code written with Claude Code
-* **Lines of code with CC**: total lines of code across all merged PRs that were written with Claude Code assistance. Only "effective lines" are counted: lines with more than 3 characters after normalization, excluding empty lines and lines with only brackets or trivial punctuation.
-* **PRs with Claude Code (%)**: percentage of all merged PRs that contain Claude Code-assisted code
+* **PRs with Claude Code**: merged pull requests that contain at least one line of code written with Claude Code. One card shows the count, and one shows the share of all merged PRs
+* **LOC with Claude Code**: total lines of code (LOC) across all merged PRs that were written with Claude Code assistance. Only "effective lines" are counted: lines with more than 3 characters after normalization.
 * **Suggestion accept rate**: percentage of times users accept Claude Code's code editing suggestions, including Edit, Write, and NotebookEdit tool usage
 * **Lines of code accepted**: total lines of code that Claude Code's Edit and Write tools added or removed in accepted edits. This excludes rejected suggestions, and lines deleted later don't reduce the total.
 
@@ -86,28 +85,15 @@ The dashboard displays these summary metrics at the top:
 
 The dashboard includes several charts to visualize trends over time.
 
-#### Track adoption
-
-The Adoption chart shows daily usage trends:
-
-* **users**: daily active users
-* **sessions**: number of active Claude Code sessions per day
-
 #### Measure PRs per user
 
-This chart displays individual developer activity over time:
-
-* **PRs per user**: total number of PRs merged per day divided by daily active users
-* **users**: daily active users
+**Total PRs per user** is the number of PRs merged per day divided by daily active users.
 
 Use this to understand how individual productivity changes as Claude Code adoption increases.
 
 #### View pull requests breakdown
 
-The Pull requests chart shows a daily breakdown of merged PRs:
-
-* **PRs with CC**: pull requests containing Claude Code-assisted code
-* **PRs without CC**: pull requests without Claude Code-assisted code
+The **PRs with Claude Code** chart compares each day's merged PRs with Claude Code to **All PRs**.
 
 Toggle to **Lines of code** view to see the same breakdown by lines of code rather than PR count.
 
@@ -134,8 +120,6 @@ When a pull request is merged:
 4. Metrics are calculated for AI-assisted lines and total lines
 
 Before comparison, lines are normalized: whitespace is trimmed, multiple spaces are collapsed, quotes are standardized, and text is converted to lowercase.
-
-Merged pull requests containing Claude Code-assisted lines are labeled as `claude-code-assisted` in GitHub.
 
 #### Time window
 
@@ -165,7 +149,7 @@ Use contribution metrics to demonstrate ROI, identify adoption patterns, and fin
 
 #### Monitor adoption
 
-Track the Adoption chart and user counts to identify:
+Track the **Users** and **Sessions** charts to identify:
 
 * Active users who can share best practices
 * Overall adoption trends across your organization
@@ -176,7 +160,7 @@ Track the Adoption chart and user counts to identify:
 Contribution metrics help answer "Is this tool worth the investment?" with data from your own codebase:
 
 * Track changes in PRs per user over time as adoption increases
-* Compare PRs and lines of code shipped with vs. without Claude Code
+* Compare PRs and lines of code shipped with Claude Code to all PRs and lines of code
 * Use alongside [DORA metrics](https://dora.dev/), sprint velocity, or other engineering KPIs to understand changes from adopting Claude Code
 
 #### Identify power users
@@ -190,8 +174,6 @@ The Leaderboard helps you find team members with high Claude Code adoption who c
 #### Access data programmatically
 
 On the Enterprise plan, the [Claude Enterprise Analytics API](https://platform.claude.com/docs/en/api/admin/analytics) returns per-user engagement, usage, and cost reports for your organization across Claude surfaces, including Claude Code. A Primary Owner creates a key with the `read:analytics` scope at [claude.ai/analytics/api-keys](https://claude.ai/analytics/api-keys). The API is not available on the Teams plan.
-
-To query contribution data through GitHub instead, search for PRs labeled with `claude-code-assisted`.
 
 ## Access analytics for API customers
 

@@ -53,7 +53,7 @@ Each example pairs a trigger type with the kind of work scheduled tasks are suit
 
 Create a scheduled task from the web at [claude.ai/code/routines](https://claude.ai/code/routines), from the Desktop app, or from the CLI. All three surfaces write to the same cloud account, so a scheduled task you create in one shows up in the others immediately. In the Desktop app's **Code** tab, click **Scheduled** in the sidebar or in the sidebar's **More** menu, then **New task**, and continue with [Create from the web](#create-from-the-web).
 
-Scheduled tasks run autonomously as full Claude Code cloud sessions. The session runs shell commands, uses [skills](https://code.claude.com/docs/en/skills.md), and calls any connectors you include. Outside a [project](https://code.claude.com/docs/en/claude-projects.md#what-threads-pick-up-from-your-repositories)'s threads, those skills include the ones committed to the cloned repository. You don't choose a permission mode when you create the task: see [Permission prompts during a run](#permission-prompts-during-a-run) for when a run stops to wait for you.
+Scheduled tasks run autonomously as full Claude Code cloud sessions. The session runs shell commands, uses [skills](https://code.claude.com/docs/en/skills.md), and calls any connectors you include. Those skills include the ones committed to the cloned repository. For a task in a project, check [which threads load them](https://code.claude.com/docs/en/claude-projects.md#what-threads-pick-up-from-your-repositories). You don't choose a permission mode when you create the task: see [Permission prompts during a run](#permission-prompts-during-a-run) for when a run stops to wait for you.
 
 What a scheduled task can reach is determined by:
 
@@ -102,13 +102,13 @@ In the **Trigger** row, choose how the task starts. To combine several triggers,
 
 **4. Select repositories**
 
-Expand **Advanced settings**. Under **Repository** on the **General** tab, select one or more GitHub repositories for Claude to work in.
+In the **Repository** row below **Trigger**, select one or more GitHub repositories for Claude to work in. If the row isn't there, expand **Advanced settings** and find **Repository** on the **General** tab.
 
 Each repository is cloned at the start of a run. Claude creates `claude/`-prefixed branches for its changes.
 
 **5. Select an environment**
 
-After you select a repository, **Cloud environment** appears below it. Pick a [cloud environment](https://code.claude.com/docs/en/cloud-environments.md) for the task. If an environment is already selected, you can keep it or select a different one. Environments control what the cloud session has access to:
+Find **Cloud environment** below **Trigger**, or under **Advanced settings > General** if it isn't there, and pick a [cloud environment](https://code.claude.com/docs/en/cloud-environments.md) for the task. If an environment is already selected, you can keep it or select a different one. Environments control what the cloud session has access to:
 
 * **Network access**: set the level of internet access available during each run
 * **Environment variables**: provide values Claude can use during each run. They're [visible to anyone who uses the environment](https://code.claude.com/docs/en/cloud-environments.md#what-carries-over-from-your-setup), so in an Anthropic-hosted environment, store keys for the APIs Claude calls during a run as [network secrets](https://code.claude.com/docs/en/cloud-environments.md#add-network-secrets) instead. That section also lists the requests that never get a secret
@@ -124,7 +124,7 @@ Select a model in the prompt input's model selector for Claude to use on every r
 
 **7. Review connectors**
 
-Switch to the **Connectors** tab of **Advanced settings**. All of your connected [MCP connectors](https://code.claude.com/docs/en/mcp.md) are included by default. Remove any the task doesn't need: Claude can use an included connector during a run, including writes. For when a run stops to ask you first, see [Permission prompts during a run](#permission-prompts-during-a-run).
+Expand **Advanced settings** and open the **Connectors** tab. All of your connected [MCP connectors](https://code.claude.com/docs/en/mcp.md) are included by default. Remove any the task doesn't need: Claude can use an included connector during a run, including writes. For when a run stops to ask you first, see [Permission prompts during a run](#permission-prompts-during-a-run).
 
 **8. Create the task**
 
@@ -444,7 +444,7 @@ Go to [claude.ai/code/routines](https://claude.ai/code/routines), click the sche
 
 **2. Open the environment selector**
 
-Go to **Advanced settings > General > Cloud environment**, expanding **Advanced settings** first if it's collapsed. Click the cloud icon showing your environment's name, such as **Default**.
+Find **Cloud environment** below **Trigger**, or under **Advanced settings > General** if it isn't there. Click the cloud icon showing your environment's name, such as **Default**.
 
 **3. Open the environment settings**
 
@@ -482,7 +482,7 @@ While your subscription is paused, your scheduled tasks are put on hold and don'
 
 ## Where the name routines still appears
 
-Scheduled tasks were previously called routines, and these places keep the earlier name. Each one refers to the same feature:
+Scheduled tasks were previously called routines, and these places keep the earlier name:
 
 * **App**: in some accounts the sidebar entry and page title read **Routines**, the button reads **New routine**, and other labels say routine. To create a task there, see [Full-page form](#full-page-form).
 * **Web address**: `claude.ai/code/routines`
@@ -494,11 +494,13 @@ Scheduled tasks were previously called routines, and these places keep the earli
 
 ### `/schedule` returns "Unknown command"
 
-The CLI hides `/schedule` when one of its requirements isn't met: the command menu shows `No commands match "/schedule"` while you type. Submitting it returns `Unknown command: /schedule`, except in the cases below that note a different answer.
+If you submit `/schedule` when one of its requirements isn't met, you see `Unknown command: /schedule` or a message that says why the command is unavailable.
 
 The cause is usually one of the following:
 
-* You are authenticated with a Console API key, an [Anthropic profile or federation credential](https://code.claude.com/docs/en/authentication.md#anthropic-profiles-and-federation-credentials), or a cloud provider such as Amazon Bedrock, Google Cloud's Agent Platform, or Microsoft Foundry. `/schedule` requires a claude.ai subscription login. With a Console API key or a profile, and feature-flag fetching enabled, submitting `/schedule` instead shows `/schedule is available with Claude for Enterprise — ask your admin about migrating from API-key access`. With a cloud-provider login, you still see `Unknown command: /schedule`. If `ANTHROPIC_API_KEY` or `ANTHROPIC_AUTH_TOKEN` is set in your shell, or `apiKeyHelper` is set in `settings.json`, remove it first, since these take precedence over a claude.ai login. A profile or federation credential takes precedence too, so switch that off as well
+* You are authenticated with a Console API key, an [Anthropic profile or federation credential](https://code.claude.com/docs/en/authentication.md#anthropic-profiles-and-federation-credentials), or a cloud provider such as Amazon Bedrock, Google Cloud's Agent Platform, or Microsoft Foundry. `/schedule` requires a claude.ai subscription login. With a Console API key or a profile, and feature-flag fetching enabled, submitting `/schedule` shows `/schedule is available with Claude for Enterprise — ask your admin about migrating from API-key access`.
+
+  If `ANTHROPIC_API_KEY` or `ANTHROPIC_AUTH_TOKEN` is set in your shell, or `apiKeyHelper` is set in `settings.json`, remove it, since it takes precedence over a claude.ai login. If you use a profile or federation credential, switch that off as well
 * You are fully signed out, with no API key or other credential. With feature-flag fetching enabled, submitting `/schedule` shows `/schedule requires a claude.ai subscription. Run /login to sign in with your claude.ai account.` Before v2.1.268, a signed-out session showed the same Claude for Enterprise message as a Console API key
 * You are inside a cloud session, where submitting `/schedule` answers that the command isn't available in that environment. Manage scheduled tasks from the [web UI](https://claude.ai/code/routines) instead
 * Your organization's policy disables [cloud sessions](https://code.claude.com/docs/en/claude-code-on-the-web.md), which scheduled tasks require. In this case, submitting `/schedule` answers [`Cloud sessions are disabled by your organization's policy`](https://code.claude.com/docs/en/errors#cloud-sessions-are-disabled-by-your-organizations-policy) instead. Before v2.1.268, it returned `Unknown command: /schedule`

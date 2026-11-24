@@ -126,14 +126,20 @@ Avoid uninformative package names like `util`, `utility`, `common`, `helper`,
 *   [Go Tip #97: What's in a Name](https://google.github.io/styleguide/go/index.html#gotip)
 *   [Go Tip #108: The Power of a Good Package Name](https://google.github.io/styleguide/go/index.html#gotip)
 
-When an imported package is renamed (e.g. `import foopb
-"path/to/foo_go_proto"`), the local name for the package must comply with the
-rules above, as the local name dictates how the symbols in the package are
-referenced in the file. If a given import is renamed in multiple files,
-particularly in the same or nearby packages, the same local name should be used
-wherever possible for consistency.
+When an imported package is renamed (e.g.
+`import foopb "path/to/foo_go_proto"`), the local name for the package must
+comply with the rules above, as the local name dictates how the symbols in the
+package are referenced in the file. If a given import is renamed in multiple
+files, particularly in the same or nearby packages, the same local name should
+be used wherever possible for consistency.
 
-<!--#include file="/go/g3doc/style/includes/special-name-exception.md"-->
+> **Note:** The following are exempt from this rule:
+>
+> *   Generated Protocol Buffer API
+> *   Standard library interface to the operating system, e.g.
+>     https://pkg.go.dev/syscall#pkg-constants
+>
+> **Human-written code is held to a higher standard.**
 
 See also: [Go blog post about package names](https://go.dev/blog/package-names).
 
@@ -169,8 +175,9 @@ lowercase.) This applies even when it breaks conventions in other languages.
 Constant names should not be a derivative of their values and should instead
 explain what the value denotes.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 const MaxPacketSize = 512
 
 const (
@@ -185,8 +192,9 @@ const (
 
 Do not use non-MixedCaps constant names or constants with a `K` prefix.
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 const MAX_PACKET_SIZE = 512
 const kMaxBufferSize = 1024
 const KMaxUsersPergroup = 500
@@ -196,8 +204,9 @@ Name constants based on their role, not their values. If a constant does not
 have a role apart from its value, then it is unnecessary to define it as a
 constant.
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 const Twelve = 12
 
 const (
@@ -206,7 +215,13 @@ const (
 )
 ```
 
-<!--#include file="/go/g3doc/style/includes/special-name-exception.md"-->
+> **Note:** The following are exempt from this rule:
+>
+> *   Generated Protocol Buffer API
+> *   Standard library interface to the operating system, e.g.
+>     https://pkg.go.dev/syscall#pkg-constants
+>
+> **Human-written code is held to a higher standard.**
 
 <a id="initialisms"></a>
 
@@ -248,7 +263,13 @@ DB            | Exported   | `DB`     | `Db`
 DB            | Unexported | `db`     | `dB`
 Txn           | Exported   | `Txn`    | `TXN`
 
-<!--#include file="/go/g3doc/style/includes/special-name-exception.md"-->
+> **Note:** The following are exempt from this rule:
+>
+> *   Generated Protocol Buffer API
+> *   Standard library interface to the operating system, e.g.
+>     https://pkg.go.dev/syscall#pkg-constants
+>
+> **Human-written code is held to a higher standard.**
 
 <a id="getters"></a>
 
@@ -265,7 +286,13 @@ call, a different word like `Compute` or `Fetch` can be used in place of `Get`,
 to make it clear to a reader that the function call may take time and could
 block or fail.
 
-<!--#include file="/go/g3doc/style/includes/special-name-exception.md"-->
+> **Note:** The following are exempt from this rule:
+>
+> *   Generated Protocol Buffer API
+> *   Standard library interface to the operating system, e.g.
+>     https://pkg.go.dev/syscall#pkg-constants
+>
+> **Human-written code is held to a higher standard.**
 
 <a id="variable-names"></a>
 
@@ -390,8 +417,6 @@ itself, the canonical name for the constructor is `New` if one is required.
 > *   `db.LoadFromDatabase` -> `db.Load`
 > *   `goatteleportutil.CountGoatsTeleported` -> `gtutil.CountGoatsTeleported`
 >     or `goatteleport.Count`
-> *   `myteampb.MyTeamMethodRequest` -> `mtpb.MyTeamMethodRequest` or
->     `myteampb.MethodRequest`
 
 <a id="repetitive-with-type"></a>
 
@@ -411,14 +436,16 @@ Repetitive Name               | Better Name
 If the value appears in multiple forms, this can be clarified either with an
 extra word like `raw` and `parsed` or with the underlying representation:
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 limitRaw := r.FormValue("limit")
 limit, err := strconv.Atoi(limitRaw)
 ```
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 limitStr := r.FormValue("limit")
 limit, err := strconv.Atoi(limitStr)
 ```
@@ -432,44 +459,50 @@ noise without benefit. The package name, method name, type name, function name,
 import path, and even filename can all provide context that automatically
 qualifies all names within.
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 // In package "ads/targeting/revenue/reporting"
 type AdsTargetingRevenueReport struct{}
 
 func (p *Project) ProjectName() string
 ```
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 // In package "ads/targeting/revenue/reporting"
 type Report struct{}
 
 func (p *Project) Name() string
 ```
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 // In package "sqldb"
 type DBConnection struct{}
 ```
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 // In package "sqldb"
 type Connection struct{}
 ```
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 // In package "ads/targeting"
 func Process(in *pb.FooProto) *Report {
     adsTargetingID := in.GetAdsTargetingID()
 }
 ```
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 // In package "ads/targeting"
 func Process(in *pb.FooProto) *Report {
     id := in.GetAdsTargetingID()
@@ -480,12 +513,13 @@ Repetition should generally be evaluated in the context of the user of the
 symbol, rather than in isolation. For example, the following code has lots of
 names that may be fine in some circumstances, but redundant in context:
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 func (db *DB) UserCount() (userCount int, err error) {
     var userCountInt64 int64
     if dbLoadError := db.LoadFromDatabase("count(distinct users)", &userCountInt64); dbLoadError != nil {
-        return 0, fmt.Errorf("failed to load user count: %s", dbLoadError)
+        return 0, fmt.Errorf("load user count: %s", dbLoadError)
     }
     userCount = int(userCountInt64)
     return userCount, nil
@@ -495,12 +529,13 @@ func (db *DB) UserCount() (userCount int, err error) {
 Instead, information about names that are clear from context or usage can often
 be omitted:
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 func (db *DB) UserCount() (int, error) {
     var count int64
     if err := db.Load("count(distinct users)", &count); err != nil {
-        return 0, fmt.Errorf("failed to load user count: %s", err)
+        return 0, fmt.Errorf("load user count: %s", err)
     }
     return int(count), nil
 }
@@ -549,8 +584,9 @@ See this [post from The Go Blog on documentation] for more on commentary.
 
 [post from The Go Blog on documentation]: https://blog.golang.org/godoc-documenting-go-code
 
+<div class='goodcode'></div>
+
 ```text
-# Good:
 // This is a comment paragraph.
 // The length of individual lines doesn't matter in Godoc;
 // but the choice of wrapping makes it easy to read on narrow screens.
@@ -566,8 +602,9 @@ See this [post from The Go Blog on documentation] for more on commentary.
 Avoid comments that fit large amounts of text onto a single line, which is a
 poor reader experience.
 
+<div class='badcode'></div>
+
 ```text
-# Bad:
 // This is a comment paragraph. While some code editors and viewers will wrap the paragraph for the reader, others will display a very long line that will overflow most windows and require users to scroll horizontally. In addition, even on a screen capable of displaying the entire line, it is easier to read a narrower paragraph than very wide one.
 //
 // Don't worry too much about the long URL:
@@ -586,8 +623,9 @@ should be [full sentences] that begin with the name of the object being
 described. An article ("a", "an", "the") can precede the name to make it read
 more naturally.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 // A Request represents a request to run a command.
 type Request struct { ...
 
@@ -603,8 +641,9 @@ and therefore should be written for anyone using the package.
 A documentation comment applies to the following symbol, or the group of fields
 if it appears in a struct.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 // Options configure the group management service.
 type Options struct {
     // General setup:
@@ -644,8 +683,9 @@ always be capitalized and punctuated. Simple end-of-line comments (especially
 for struct fields) can be simple phrases that assume the field name is the
 subject.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 // A Server handles serving quotes from the collected works of Shakespeare.
 type Server struct {
     // BaseDir points to the base directory under which Shakespeare's works are stored.
@@ -691,8 +731,9 @@ When naming parameters, consider how function signatures appear in Godoc. The
 name of the function itself and the type of the result parameters are often
 sufficiently clear.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 func (n *Node) Parent1() *Node
 func (n *Node) Parent2() (*Node, error)
 ```
@@ -700,16 +741,18 @@ func (n *Node) Parent2() (*Node, error)
 If a function returns two or more parameters of the same type, adding names can
 be useful.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 func (n *Node) Children() (left, right *Node, err error)
 ```
 
 If the caller must take action on particular result parameters, naming them can
 help suggest what the action is:
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 // WithTimeout returns a context that will be canceled no later than d duration
 // from now.
 //
@@ -725,8 +768,9 @@ would be unclear what is meant by "cancel function".
 Don't use named result parameters when the names produce
 [unnecessary repetition](#repetitive-with-type).
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 func (n *Node) Parent1() (node *Node)
 func (n *Node) Parent2() (node *Node, err error)
 ```
@@ -765,8 +809,9 @@ in a deferred closure.
 Package comments must appear immediately above the package clause with no blank
 line between the comment and the package name. Example:
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 // Package math provides basic constants and mathematical functions.
 //
 // This package does not guarantee bit-identical results across architectures.
@@ -779,8 +824,9 @@ multiple files, exactly one of the files should have a package comment.
 Comments for `main` packages have a slightly different form, where the name of
 the `go_binary` rule in the BUILD file takes the place of the package name.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 // The seed_generator command is a utility that generates a Finch seed file
 // from a set of JSON study configs.
 package main
@@ -791,8 +837,9 @@ written in the BUILD file. When the binary name is the first word, capitalizing
 it is required even though it does not strictly match the spelling of the
 command-line invocation.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 // Binary seed_generator ...
 // Command seed_generator ...
 // Program seed_generator ...
@@ -815,8 +862,9 @@ Tips:
     useful to copy and paste from the source file, as with sample command-lines
     (for binaries) and template examples.
 
+    <div class='goodcode'></div>
+
     ```go
-    // Good:
     /*
     The seed_generator command is a utility that generates a Finch seed file
     from a set of JSON study configs.
@@ -859,8 +907,9 @@ their names, and their local names must have a `pb` suffix. See
 [proto and stub best practices](best-practices#import-protos) for more
 information.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 import (
     foosvcpb "path/to/package/foo_service_go_proto"
 )
@@ -871,8 +920,9 @@ uninformative name (e.g. `util` or `v1`) Do this sparingly: do not rename the
 package if the code surrounding the use of the package conveys enough context.
 When possible, prefer refactoring the package itself with a more suitable name.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 import (
     core "github.com/kubernetes/api/core/v1"
     meta "github.com/kubernetes/apimachinery/pkg/apis/meta/v1beta1"
@@ -896,13 +946,14 @@ Imports should be organized into the following groups, in order:
 
 1.  Other (project and vendored) packages
 
-1.  Protocol Buffer imports (e.g., `fpb "path/to/foo_go_proto"`)
+1.  Protocol Buffer imports (e.g., `foopb "path/to/foo_go_proto"`)
 
 1.  Import for [side-effects](https://go.dev/doc/effective_go#blank_import)
     (e.g., `_ "path/to/package"`)
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 package main
 
 import (
@@ -927,9 +978,9 @@ import (
 
 <a id="TOC-ImportBlank"></a>
 
-Packages that are imported only for their side effects (using the syntax `import
-_ "package"`) may only be imported in a main package, or in tests that require
-them.
+Packages that are imported only for their side effects (using the syntax
+`import _ "package"`) may only be imported in a main package, or in tests that
+require them.
 
 Some examples of such packages include:
 
@@ -968,8 +1019,9 @@ the [language spec](https://go.dev/ref/spec#Import_declarations) for more.
 Do **not** use this feature in the Google codebase; it makes it harder to tell
 where the functionality is coming from.
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 package foo_test
 
 import (
@@ -980,8 +1032,9 @@ import (
 var myThing = Bar() // Bar defined in package foo; no qualification needed.
 ```
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 package foo_test
 
 import (
@@ -1005,8 +1058,9 @@ var myThing = foo.Bar()
 Use `error` to signal that a function can fail. By convention, `error` is the
 last result parameter.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 func Good() error { /* ... */ }
 ```
 
@@ -1016,8 +1070,9 @@ all non-error return values as unspecified unless explicitly documented
 otherwise. Commonly, the non-error return values are their zero values, but this
 cannot be assumed.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 func GoodLookup() (*Result, error) {
     // ...
     if err != nil {
@@ -1032,8 +1087,9 @@ Concrete error types are susceptible to subtle bugs: a concrete `nil` pointer
 can get wrapped into an interface and thus become a non-nil value (see the
 [Go FAQ entry on the topic][nil error]).
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 func Bad() *os.PathError { /*...*/ }
 ```
 
@@ -1054,25 +1110,31 @@ a proper noun or an acronym) and should not end with punctuation. This is
 because error strings usually appear within other context before being printed
 to the user.
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 err := fmt.Errorf("Something bad happened.")
 ```
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 err := fmt.Errorf("something bad happened")
 ```
 
 On the other hand, the style for the full displayed message (logging, test
-failure, API response, or other UI) depends, but should typically be
-capitalized.
+failure, API response, or other UI) depends, but should typically be capitalized
+unless directly referring to an unexported identifier (such as in a
+[test failure](#identify-the-function)).
+
+<div class='goodcode'></div>
 
 ```go
-// Good:
 log.Infof("Operation aborted: %v", err)
 log.Errorf("Operation aborted: %v", err)
 t.Errorf("Op(%q) failed unexpectedly; err=%v", args, err)
+t.Errorf("arrangeInputs(%q) = %v, want %v", args, got, want)
+t.Fatalf("Connection failed: %v", err)
 ```
 
 <a id="handle-errors"></a>
@@ -1096,8 +1158,9 @@ In the rare circumstance where it is appropriate to ignore or discard an error
 (for example a call to [`(*bytes.Buffer).Write`] that is documented to never
 fail), an accompanying comment should explain why this is safe.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 var b *bytes.Buffer
 
 n, _ := b.Write(p) // never returns a non-nil error
@@ -1119,8 +1182,9 @@ In C and similar languages, it is common for functions to return values like -1,
 null, or the empty string to signal errors or missing results. This is known as
 in-band error handling.
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 // Lookup returns the value for key or -1 if there is no mapping for key.
 func Lookup(key string) int
 ```
@@ -1128,8 +1192,9 @@ func Lookup(key string) int
 Failing to check for an in-band error value can lead to bugs and can attribute
 errors to the wrong function.
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 // The following line returns an error that Parse failed for the input value,
 // whereas the failure was that there is no mapping for missingKey.
 return Parse(Lookup(missingKey))
@@ -1142,8 +1207,9 @@ to indicate whether its other return values are valid. This return value may be
 an error or a boolean when no explanation is needed, and should be the final
 return value.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 // Lookup returns the value for key or ok=false if there is no mapping for key.
 func Lookup(key string) (value string, ok bool)
 ```
@@ -1153,8 +1219,9 @@ causes a compile-time error, since `Lookup(key)` has 2 outputs.
 
 Returning errors in this way encourages more robust and explicit error handling:
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 value, ok := Lookup(key)
 if !ok {
     return fmt.Errorf("no value for %q", key)
@@ -1183,8 +1250,9 @@ terminal condition (e.g., `return`, `panic`, `log.Fatal`).
 Code that runs if the terminal condition is not met should appear after the `if`
 block, and should not be indented in an `else` clause.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 if err != nil {
     // error handling
     return // or continue, etc.
@@ -1192,8 +1260,9 @@ if err != nil {
 // normal code
 ```
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 if err != nil {
     // error handling
 } else {
@@ -1206,8 +1275,9 @@ if err != nil {
 > is usually better to move the declaration out and use a standard `if`
 > statement:
 >
+> <div class='goodcode'></div>
+>
 > ```go
-> // Good:
 > x, err := f()
 > if err != nil {
 >   // error handling
@@ -1217,8 +1287,9 @@ if err != nil {
 > // across multiple lines
 > ```
 >
+> <div class='badcode'></div>
+>
 > ```go
-> // Bad:
 > if x, err := f(); err != nil {
 >   // error handling
 >   return
@@ -1260,8 +1331,9 @@ current package.
 
 *   Include field names for types from other packages.
 
+    <div class='goodcode'></div>
+
     ```go
-    // Good:
     // https://pkg.go.dev/encoding/csv#Reader
     r := csv.Reader{
       Comma: ',',
@@ -1275,15 +1347,17 @@ current package.
     considered to be part of a struct's public API; specifying the field name is
     needed to avoid unnecessary coupling.
 
+    <div class='badcode'></div>
+
     ```go
-    // Bad:
     r := csv.Reader{',', '#', 4, false, false, false, false}
     ```
 
 *   For package-local types, field names are optional.
 
+    <div class='goodcode'></div>
+
     ```go
-    // Good:
     okay := Type{42}
     also := internalType{4, 2}
     ```
@@ -1292,10 +1366,9 @@ current package.
     very common to do so. For example, a struct with a large number of fields
     should almost always be initialized with field names.
 
-    <!-- TODO: Maybe a better example here that doesn't have many fields. -->
+    <div class='goodcode'></div>
 
     ```go
-    // Good:
     okay := StructWithLotsOfFields{
       field1: 1,
       field2: "two",
@@ -1318,28 +1391,32 @@ The most common mistake in this area is putting the closing brace on the same
 line as a value in a multi-line struct literal. In these cases, the line should
 end with a comma and the closing brace should appear on the next line.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 good := []*Type{{Key: "value"}}
 ```
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 good := []*Type{
     {Key: "multi"},
     {Key: "line"},
 }
 ```
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 bad := []*Type{
     {Key: "multi"},
     {Key: "line"}}
 ```
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 bad := []*Type{
     {
         Key: "value"},
@@ -1357,8 +1434,9 @@ literals is only permitted when both of the following are true.
 *   The inner values are also literals or proto builders (i.e. not a variable or
     other expression)
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 good := []*Type{
     { // Not cuddled
         Field: "value",
@@ -1369,8 +1447,9 @@ good := []*Type{
 }
 ```
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 good := []*Type{{ // Cuddled correctly
     Field: "value",
 }, {
@@ -1378,16 +1457,18 @@ good := []*Type{{ // Cuddled correctly
 }}
 ```
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 good := []*Type{
     first, // Can't be cuddled
     {Field: "second"},
 }
 ```
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 okay := []*pb.Type{pb.Type_builder{
     Field: "first", // Proto Builders may be cuddled to save vertical space
 }.Build(), pb.Type_builder{
@@ -1395,8 +1476,9 @@ okay := []*pb.Type{pb.Type_builder{
 }.Build()}
 ```
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 bad := []*Type{
     first,
     {
@@ -1414,32 +1496,36 @@ explicitly is when dealing with a complex type that is not common in your
 project, when the repetitive type names are on lines that are far apart and can
 remind the reader of the context.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 good := []*Type{
     {A: 42},
     {A: 43},
 }
 ```
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 repetitive := []*Type{
     &Type{A: 42},
     &Type{A: 43},
 }
 ```
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 good := map[Type1]*Type2{
     {A: 1}: {B: 2},
     {A: 3}: {B: 4},
 }
 ```
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 repetitive := map[Type1]*Type2{
     Type1{A: 1}: &Type2{B: 2},
     Type1{A: 3}: &Type2{B: 4},
@@ -1462,8 +1548,9 @@ following struct draws attention to the only option that is being specified.
 
 [Zero-value]: https://golang.org/ref/spec#The_zero_value
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 import (
   "github.com/golang/leveldb"
   "github.com/golang/leveldb/db"
@@ -1485,8 +1572,9 @@ ldb := leveldb.Open("/my/table", &db.Options{
 })
 ```
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 import (
   "github.com/golang/leveldb"
   "github.com/golang/leveldb/db"
@@ -1563,8 +1651,9 @@ For most purposes, there is no functional difference between `nil` and the empty
 slice. Built-in functions like `len` and `cap` behave as expected on `nil`
 slices.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 import "fmt"
 
 var s []int         // nil
@@ -1582,28 +1671,32 @@ If you declare an empty slice as a local variable (especially if it can be the
 source of a return value), prefer the nil initialization to reduce the risk of
 bugs by callers.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 var t []string
 ```
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 t := []string{}
 ```
 
 Do not create APIs that force their clients to make distinctions between nil and
 the empty slice.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 // Ping pings its targets.
 // Returns hosts that successfully responded.
 func Ping(hosts []string) ([]string, error) { ... }
 ```
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 // Ping pings its targets and returns a list of hosts
 // that successfully responded. Can be empty if the input was empty.
 // nil signifies that a system error occurred.
@@ -1617,8 +1710,9 @@ than `== nil`.
 
 This implementation accepts both `nil` and zero-length slices as "empty":
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 // describeInts describes s with the given prefix, unless s is empty.
 func describeInts(prefix string, s []int) {
     if len(s) == 0 {
@@ -1630,8 +1724,9 @@ func describeInts(prefix string, s []int) {
 
 Instead of relying on the distinction as a part of the API:
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 func maybeInts() []int { /* ... */ }
 
 // describeInts describes s with the given prefix; pass nil to skip completely.
@@ -1659,8 +1754,9 @@ Avoid introducing a line break if it would align the rest of the line with an
 indented code block. If this is unavoidable, leave a space to separate the code
 in the block from the wrapped line.
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 if longCondition1 && longCondition2 &&
     // Conditions 3 and 4 have the same indentation as the code within the if.
     longCondition3 && longCondition4 {
@@ -1686,8 +1782,9 @@ However, they precede a change in indentation, and therefore it is difficult to
 break the line in a way that does not make subsequent lines look like part of
 the function body in a confusing way:
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 func (r *SomeType) SomeLongFunctionName(foo1, foo2, foo3 string,
     foo4, foo5, foo6 int) {
     foo7 := bar(foo1)
@@ -1700,8 +1797,9 @@ the call sites of functions that would otherwise have many arguments.
 
 Lines can often be shortened by factoring out local variables.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 local := helper(some, parameters, here)
 good := foo.Call(list, of, parameters, local)
 ```
@@ -1709,13 +1807,15 @@ good := foo.Call(list, of, parameters, local)
 Similarly, function and method calls should not be separated based solely on
 line length.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 good := foo.Call(long, list, of, parameters, all, on, one, line)
 ```
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 bad := foo.Call(long, list, of, parameters,
     with, arbitrary, line, breaks)
 ```
@@ -1724,13 +1824,15 @@ Avoid adding inline comments to specific function arguments where possible.
 Instead, use an [option struct](best-practices#option-structure) or add more
 detail to the function documentation.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 good := server.New(ctx, server.Options{Port: 42})
 ```
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 bad := server.New(
     ctx,
     42, // Port
@@ -1741,8 +1843,9 @@ If the API cannot be changed or if the local call is unusual (whether or not the
 call is too long), it is always permissible to add line breaks if it aids in
 understanding the call.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 canvas.RenderHeptagon(fillColor,
     x0, y0, vertexColor0,
     x1, y1, vertexColor1,
@@ -1763,15 +1866,17 @@ the string format, and the arguments can be provided on the next or subsequent
 lines. The decision about where the line breaks should go is best made based on
 semantic groupings of inputs, rather than based purely on line length.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 log.Warningf("Database key (%q, %d, %q) incompatible in transaction started by (%q, %d, %q)",
     currentCustomer, currentOffset, currentKey,
     txCustomer, txOffset, txKey)
 ```
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 log.Warningf("Database key (%q, %d, %q) incompatible in"+
     " transaction started by (%q, %d, %q)",
     currentCustomer, currentOffset, currentKey, txCustomer,
@@ -1785,8 +1890,9 @@ log.Warningf("Database key (%q, %d, %q) incompatible in"+
 An `if` statement should not be line broken; multi-line `if` clauses can lead to
 [indentation confusion](#indentation-confusion).
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 // The second if statement is aligned with the code within the if block, causing
 // indentation confusion.
 if db.CurrentStatusIs(db.InTransaction) &&
@@ -1798,8 +1904,9 @@ if db.CurrentStatusIs(db.InTransaction) &&
 If the short-circuit behavior is not required, the boolean operands can be
 extracted directly:
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 inTransaction := db.CurrentStatusIs(db.InTransaction)
 keysMatch := db.ValuesEqual(db.TransactionKey(), row.Key())
 if inTransaction && keysMatch {
@@ -1810,16 +1917,18 @@ if inTransaction && keysMatch {
 There may also be other locals that can be extracted, especially if the
 conditional is already repetitive:
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 uid := user.GetUniqueUserID()
 if db.UserIsAdmin(uid) || db.UserHasPermission(uid, perms.ViewServerConfig) || db.UserHasPermission(uid, perms.CreateGroup) {
     // ...
 }
 ```
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 if db.UserIsAdmin(user.GetUniqueUserID()) || db.UserHasPermission(user.GetUniqueUserID(), perms.ViewServerConfig) || db.UserHasPermission(user.GetUniqueUserID(), perms.CreateGroup) {
     // ...
 }
@@ -1829,8 +1938,9 @@ if db.UserIsAdmin(user.GetUniqueUserID()) || db.UserHasPermission(user.GetUnique
 ensure that the [braces match](#literal-matching-braces) to avoid
 [indentation confusion](#indentation-confusion).
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 if err := db.RunInTransaction(func(tx *db.TX) error {
     return tx.Execute(userUpdate, x, y, z)
 }); err != nil {
@@ -1838,9 +1948,10 @@ if err := db.RunInTransaction(func(tx *db.TX) error {
 }
 ```
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
-if _, err := client.Update(ctx, &upb.UserUpdateRequest{
+if _, err := client.Update(ctx, &userpb.UserUpdateRequest{
     ID:   userID,
     User: user,
 }); err != nil {
@@ -1852,8 +1963,9 @@ Similarly, don't try inserting artificial linebreaks into `for` statements. You
 can always let the line simply be long if there is no elegant way to refactor
 it:
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 for i, max := 0, collection.Size(); i < max && !collection.HasPendingWriters(); i++ {
     // ...
 }
@@ -1861,8 +1973,9 @@ for i, max := 0, collection.Size(); i < max && !collection.HasPendingWriters(); 
 
 Often, though, there is:
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 for i, max := 0, collection.Size(); i < max; i++ {
     if collection.HasPendingWriters() {
         break
@@ -1873,8 +1986,9 @@ for i, max := 0, collection.Size(); i < max; i++ {
 
 `switch` and `case` statements should also remain on a single line.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 switch good := db.TransactionStatus(); good {
 case db.TransactionStarting, db.TransactionActive, db.TransactionWaiting:
     // ...
@@ -1885,8 +1999,9 @@ default:
 }
 ```
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 switch bad := db.TransactionStatus(); bad {
 case db.TransactionStarting,
     db.TransactionActive,
@@ -1903,8 +2018,9 @@ default:
 If the line is excessively long, indent all cases and separate them with a blank
 line to avoid [indentation confusion](#indentation-confusion):
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 switch db.TransactionStatus() {
 case
     db.TransactionStarting,
@@ -1923,8 +2039,9 @@ default:
 In conditionals comparing a variable to a constant, place the variable value on
 the left hand side of the equality operator:
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 if result == "foo" {
   // ...
 }
@@ -1933,8 +2050,9 @@ if result == "foo" {
 Instead of the less clear phrasing where the constant comes first
 (["Yoda style conditionals"](https://en.wikipedia.org/wiki/Yoda_conditions)):
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 if "foo" == result {
   // ...
 }
@@ -1958,8 +2076,9 @@ subsequent method calls to have surprising effects.
 In general, do not copy a value of type `T` if its methods are associated with
 the pointer type, `*T`.
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 b1 := bytes.Buffer{}
 b2 := b1
 ```
@@ -1970,8 +2089,9 @@ contain fields that should not be copied.
 
 These are acceptable:
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 type Record struct {
   buf bytes.Buffer
   // other fields omitted
@@ -1986,8 +2106,9 @@ func Consumer(r *Record) {...}
 
 But these are usually wrong:
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 type Record struct {
   buf bytes.Buffer
   // other fields omitted
@@ -2041,8 +2162,9 @@ exclusively at
 (e.g. [template.Must](https://golang.org/pkg/text/template/#Must) and
 [regexp.MustCompile](https://golang.org/pkg/regexp/#MustCompile)).
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 func MustParse(version string) *Version {
     v, err := Parse(version)
     if err != nil {
@@ -2061,8 +2183,9 @@ The same convention may be used in test helpers that only stop the current test
 for example in struct fields of [table driven tests](#table-driven-tests), as
 functions that return errors cannot be directly assigned to a struct field.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 func mustMarshalAny(t *testing.T, m proto.Message) *anypb.Any {
   t.Helper()
   any, err := anypb.New(m)
@@ -2105,8 +2228,9 @@ They should not be used when
 [ordinary error handling](best-practices#error-handling) is possible (including
 with some refactoring):
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 func Version(o *servicepb.Object) (*version.Version, error) {
     // Return error instead of using Must functions.
     v := version.MustParse(o.GetVersionString())
@@ -2130,8 +2254,9 @@ Even when goroutines do not leak, leaving them in-flight when they are no longer
 needed can cause other subtle and hard-to-diagnose problems. Sending on a
 channel that has been closed causes a panic.
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 ch := make(chan int)
 ch <- 42
 close(ch)
@@ -2151,8 +2276,9 @@ important to document when and why the goroutines exit.
 Code that follows best practices around context usage often helps make this
 clear. It is conventionally managed with a [`context.Context`]:
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 func (w *Worker) Run(ctx context.Context) error {
     var wg sync.WaitGroup
     // ...
@@ -2169,16 +2295,17 @@ func (w *Worker) Run(ctx context.Context) error {
 }
 ```
 
-There are other variants of the above that use raw signal channels like `chan
-struct{}`, synchronized variables, [condition variables][rethinking-slides], and
-more. The important part is that the goroutine's end is evident for subsequent
-maintainers.
+There are other variants of the above that use raw signal channels like
+`chan struct{}`, synchronized variables,
+[condition variables][rethinking-slides], and more. The important part is that
+the goroutine's end is evident for subsequent maintainers.
 
 In contrast, the following code is careless about when its spawned goroutines
 finish:
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 func (w *Worker) Run() {
     // ...
     for item := range w.q {
@@ -2234,6 +2361,11 @@ the required behavior rather than just abstract named patterns like "service" or
     interface solely for testing. Prefer testing via the [public API] of the
     real implementation instead.
 
+*   When testing with the real implementation is impractical, it's acceptable to
+    provide test-specific configurations or test doubles. These testing
+    facilities should be placed within a dedicated package (e.g., like
+    [spannertest]).
+
 Design interfaces to be small for easier implementation and composition
 ([GoTip #78: Minimal Viable Interfaces]). Document interfaces appropriately
 including their contract, edge cases, and expected errors. Keep interface types
@@ -2261,6 +2393,7 @@ Deeper discussion on interfaces exists in the
 [GoTip #49: Accept Interfaces, Return Concrete Types]: https://google.github.io/styleguide/go/index.html#gotip
 [testing RPC]: https://codelabs.developers.google.com/grpc/getting-started-grpc-go#3
 [test double]: https://abseil.io/resources/swe-book/html/ch13.html
+[spannertest]: https://pkg.go.dev/cloud.google.com/go/spanner/spannertest
 [public API]: https://abseil.io/resources/swe-book/html/ch12.html#test_via_public_apis
 
 <a id="generics"></a>
@@ -2352,8 +2485,9 @@ The list below spells out each case in further detail:
 *   If the receiver is a slice and the method doesn't reslice or reallocate the
     slice, use a value rather than a pointer.
 
+    <div class='goodcode'></div>
+
     ```go
-    // Good:
     type Buffer []byte
 
     func (b Buffer) Len() int { return len(b) }
@@ -2361,8 +2495,9 @@ The list below spells out each case in further detail:
 
 *   If the method needs to mutate the receiver, the receiver must be a pointer.
 
+    <div class='goodcode'></div>
+
     ```go
-    // Good:
     type Counter int
 
     func (c *Counter) Inc() { *c++ }
@@ -2377,8 +2512,9 @@ The list below spells out each case in further detail:
     [cannot safely be copied](#copying), use a pointer receiver. Common examples
     are [`sync.Mutex`] and other synchronization types.
 
+    <div class='goodcode'></div>
+
     ```go
-    // Good:
     type Counter struct {
         mu    sync.Mutex
         total int
@@ -2407,8 +2543,9 @@ The list below spells out each case in further detail:
     something that may be mutated, prefer a pointer receiver to make the
     intention of mutability clear to the reader.
 
+    <div class='goodcode'></div>
+
     ```go
-    // Good:
     type Counter struct {
         m *Metric
     }
@@ -2421,8 +2558,9 @@ The list below spells out each case in further detail:
 *   If the receiver is a [built-in type], such as an integer or a string, that
     does not need to be modified, use a value.
 
+    <div class='goodcode'></div>
+
     ```go
-    // Good:
     type User string
 
     func (u User) String() { return string(u) }
@@ -2431,8 +2569,9 @@ The list below spells out each case in further detail:
 *   If the receiver is a map, function, or channel, use a value rather than a
     pointer.
 
+    <div class='goodcode'></div>
+
     ```go
-    // Good:
     // See https://pkg.go.dev/net/http#Header.
     type Header map[string][]string
 
@@ -2443,8 +2582,9 @@ The list below spells out each case in further detail:
     with no mutable fields and no pointers, a value receiver is usually the
     right choice.
 
+    <div class='goodcode'></div>
+
     ```go
-    // Good:
     // See https://pkg.go.dev/time#Time.
     type Time struct { /* omitted */ }
 
@@ -2480,8 +2620,9 @@ automatically break, and a `fallthrough` statement is needed to achieve the
 C-style behavior. Use a comment rather than `break` if you want to clarify the
 purpose of an empty clause.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 switch x {
 case "A", "B":
     buf.WriteString(x)
@@ -2492,8 +2633,9 @@ default:
 }
 ```
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 switch x {
 case "A", "B":
     buf.WriteString(x)
@@ -2575,15 +2717,17 @@ to new source code locations. Don't use type aliasing when it is not needed.
 Go's format functions (`fmt.Printf` etc.) have a `%q` verb which prints strings
 inside double-quotation marks.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 fmt.Printf("value %q looks like English text", someText)
 ```
 
 Prefer using `%q` over doing the equivalent manually, using `%s`:
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 fmt.Printf("value \"%s\" looks like English text", someText)
 // Avoid manually wrapping strings with single-quotes too:
 fmt.Printf("value '%s' looks like English text", someText)
@@ -2620,15 +2764,17 @@ should follow the standard Go name style ([mixed caps]). Specifically, the flag
 name should be in snake case, and the variable name should be the equivalent
 name in camel case.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 var (
     pollInterval = flag.Duration("poll_interval", time.Minute, "Interval to use for polling.")
 )
 ```
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 var (
     poll_interval = flag.Int("pollIntervalSeconds", 60, "Interval to use for polling in seconds.")
 )
@@ -2756,8 +2902,9 @@ Exceptions are:
 The convention that [`context.Context`] comes first in functions also applies to
 test helpers.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 func readTestFile(ctx context.Context, t *testing.T, path string) string {}
 ```
 
@@ -2768,12 +2915,19 @@ third party library outside Google's control. Such cases are very rare, and
 should be discussed with the Google Go style mailing list before implementation
 and readability review.
 
-**Note:** Go 1.24 added a [`(testing.TB).Context()`] method. In tests, prefer
-using [`(testing.TB).Context()`] over [`context.Background()`] to provide the
-initial [`context.Context`] used by the test. Helper functions, environment or
-test double setup, and other functions called from the test function body that
-require a context should have one explicitly passed.
+In tests, prefer to use the innermost [`(testing.TB).Context()`] over
+[`context.Background()`] to provide the initial [`context.Context`] used by the
+test or subtest. Helper functions, environment or test double setup, and other
+functions called from the test function body that require a context should have
+one explicitly passed.
 
+**Note:** Contexts from `(testing.TB).Context()` are canceled before cleanup
+functions passed to [`(testing.TB).Cleanup`] are run. During cleanup, either use
+[`context.Background()`] or retain values from the test's context using
+[`context.WithoutCancel`].
+
+[`context.WithoutCancel`]: https://pkg.go.dev/context#WithoutCancel
+[`(testing.TB).Cleanup`]: https://pkg.go.dev/testing#TB.Cleanup
 [`(testing.TB).Context()`]: https://pkg.go.dev/testing#TB.Context
 
 Code in the Google codebase that must spawn background operations which can run
@@ -2822,8 +2976,9 @@ unseeded, the generator is completely predictable. Seeded with
 `time.Nanoseconds()`, there are just a few bits of entropy. Instead, use
 `crypto/rand`'s Reader, and if you need text, print to hexadecimal or base64.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 import (
     "crypto/rand"
     // "encoding/base64"
@@ -2875,8 +3030,9 @@ production of failure messages within a test (though the same pitfalls can apply
 to other test helpers as well). For more on the distinction between test helpers
 and assertion libraries, see [best practices](best-practices#test-functions).
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 var obj BlogPost
 
 assert.IsNotNil(t, "obj", obj)
@@ -2889,8 +3045,9 @@ Assertion libraries tend to either stop the test early (if `assert` calls
 `t.Fatalf` or `panic`) or omit relevant information about what the test got
 right:
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 package assert
 
 func IsNotNil(t *testing.T, name string, val any) {
@@ -2918,8 +3075,9 @@ itself.
 Assertion libraries often factor out comparisons and equality checks. Prefer
 using standard libraries such as [`cmp`] and [`fmt`] instead:
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 var got BlogPost
 
 want := BlogPost{
@@ -2936,8 +3094,9 @@ For more domain-specific comparison helpers, prefer returning a value or an
 error that can be used in the test's failure message instead of passing
 `*testing.T` and calling its error reporting methods:
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 func postLength(p BlogPost) int { return len(p.Body) }
 
 func TestBlogPost_VeritableRant(t *testing.T) {
@@ -3026,8 +3185,9 @@ If your function returns multiple return values, you don't need to wrap those in
 a struct before comparing them. Just compare the return values individually and
 print them.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 val, multi, tail, err := strconv.UnquoteChar(`\"Fran & Freddie's Diner\"`, '"')
 if err != nil {
   t.Fatalf(...)
@@ -3078,8 +3238,9 @@ Prefer calling `t.Error` over `t.Fatal` for reporting a mismatch. When comparing
 several different properties of a function's output, use `t.Error` for each of
 those comparisons.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 gotMean, gotVariance, err := MyDistribution(input)
 if err != nil {
   t.Fatalf("MyDistribution(%v) returned unexpected error: %v", input, err)
@@ -3097,8 +3258,9 @@ Calling `t.Fatal` is primarily useful for reporting an unexpected condition
 meaningless or even mislead the investigator. Note how the code below calls
 `t.Fatalf` and *then* `t.Errorf`:
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 gotEncoded := Encode(input)
 if gotEncoded != wantEncoded {
   t.Fatalf("Encode(%q) = %q, want %q", input, gotEncoded, wantEncoded)
@@ -3134,8 +3296,9 @@ The [`cmp`] package can compare more complex data structures not appropriately
 handled by `==`, such as slices. Use [`cmp.Equal`] for equality comparison and
 [`cmp.Diff`] to obtain a human-readable diff between objects.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 want := &Doc{
     Type:     "blogPost",
     Comments: 2,
@@ -3153,8 +3316,9 @@ passed the [`protocmp.Transform`] option.
 
 <!-- The order of want and got here is deliberate. See comment in #print-diffs. -->
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 if diff := cmp.Diff(want, got, protocmp.Transform()); diff != "" {
     t.Errorf("Foo() returned unexpected difference in protobuf messages (-want +got):\n%s", diff)
 }
@@ -3319,8 +3483,9 @@ some other error, then consider using [`errors.Is`] or `cmp` with
 > [unnecessary mechanism](guide#least-mechanism). Simplify the code by making
 > the want field a `bool`. You can then use a simple comparison with `!=`.
 >
+> <div class='goodcode'></div>
+>
 > ```go
-> // Good:
 > err := f(test.input)
 > if gotErr := err != nil; gotErr != test.wantErr {
 >     t.Errorf("f(%q) = %v, want error presence = %v", test.input, err, test.wantErr)
@@ -3380,18 +3545,20 @@ Subtests may be run individually using flags to the [Go test runner] or Bazel
 > **Warning:** Slash characters are particularly unfriendly in subtest names,
 > since they have [special meaning for test filters].
 >
-> > ```sh
-> > # Bad:
-> > # Assuming TestTime and t.Run("America/New_York", ...)
-> > bazel test :mytest --test_filter="Time/New_York"    # Runs nothing!
-> > bazel test :mytest --test_filter="Time//New_York"   # Correct, but awkward.
-> > ```
+> > <div class='badcode'></div>
+>
+> ```sh
+> # Assuming TestTime and t.Run("America/New_York", ...)
+> bazel test :mytest --test_filter="Time/New_York"    # Runs nothing!
+> bazel test :mytest --test_filter="Time//New_York"   # Correct, but awkward.
+> ```
 
 To [identify the inputs] of the function, include them in the test's failure
 messages, where they won't be escaped by the test runner.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 func TestTranslate(t *testing.T) {
     data := []struct {
         name, desc, srcLang, dstLang, srcText, wantDstText string
@@ -3419,8 +3586,9 @@ func TestTranslate(t *testing.T) {
 
 Here are a few examples of things to avoid:
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 // Too wordy.
 t.Run("check that there is no mention of scratched records or hovercrafts", ...)
 // Slashes cause problems on the command line.
@@ -3454,8 +3622,9 @@ Here is the minimal structure of a table-driven test. If needed, you may use
 different names or add extra facilities such as subtests or setup and cleanup
 functions. Always keep [useful test failures](#useful-test-failures) in mind.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 func TestCompare(t *testing.T) {
     compareTests := []struct {
         a, b string
@@ -3569,8 +3738,9 @@ Table test rows can sometimes become complicated, with the row values dictating
 conditional behavior inside the test case. The extra clarity from the
 duplication between the test cases is necessary for readability.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 type decodeCase struct {
     name   string
     input  string
@@ -3621,8 +3791,9 @@ In the counterexample below, note how hard it is to distinguish between which
 type of `Codex` is used per test case in the case setup. (The highlighted parts
 run afoul of the advice from [TotT: Data Driven Traps!][tott-97] .)
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 type decodeCase struct {
   name   string
   input  string
@@ -3674,8 +3845,9 @@ Do not use the index of the test in the test table as a substitute for naming
 your tests or printing the inputs. Nobody wants to go through your test table
 and count the entries in order to figure out which test case is failing.
 
+<div class='badcode'></div>
+
 ```go
-// Bad:
 tests := []struct {
     input, want string
 }{
@@ -3714,8 +3886,9 @@ helper to the line where the helper is called. This parameter should come after
 a [context](#contexts) parameter, if present, and before any remaining
 parameters.
 
+<div class='goodcode'></div>
+
 ```go
-// Good:
 func TestSomeFunction(t *testing.T) {
     golden := readFile(t, "testdata/golden-result.txt")
     // ... tests against golden ...
@@ -3764,8 +3937,9 @@ To write a test in the same package:
 *   Use `package foo` for the test file
 *   Do not explicitly import the package to be tested
 
+<div class='goodcode'></div>
+
 ```build
-# Good:
 go_library(
     name = "foo",
     srcs = ["foo.go"],
@@ -3804,8 +3978,9 @@ package as the code being tested. In these cases, use a package name with the
 
 *   If an integration test does not have an obvious library that it belongs to
 
+    <div class='goodcode'></div>
+
     ```go
-    // Good:
     package gmailintegration_test
 
     import "testing"
@@ -3813,8 +3988,9 @@ package as the code being tested. In these cases, use a package name with the
 
 *   If defining the tests in the same package results in circular dependencies
 
+    <div class='goodcode'></div>
+
     ```go
-    // Good:
     package fireworks_test
 
     import (
@@ -3864,8 +4040,8 @@ has not achieved consensus about.
 *   **Empty composite literal vs. `new` or `make`**. `&File{}` and `new(File)`
     are equivalent. So are `map[string]bool{}` and `make(map[string]bool)`. See
     also [composite declaration best practices].
-*   **got, want argument ordering in cmp.Diff calls**. Be locally consistent,
-    and [include a legend](#print-diffs) in your failure message.
+*   **`got`, `want` argument ordering in `cmp.Diff` calls**. Be locally
+    consistent, and [include a legend](#print-diffs) in your failure message.
 *   **`errors.New` vs `fmt.Errorf` on non-formatted strings**.
     `errors.New("foo")` and `fmt.Errorf("foo")` may be used interchangeably.
 

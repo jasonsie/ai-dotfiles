@@ -9,19 +9,13 @@ A deep scan runs multiple independent standard scans over the same repository
 or folder and combines their findings. Use it when you want repeated review
 and can allow for the additional runtime and token use.
 
-Start with a [standard scan](https://learn.chatgpt.com/docs/security/plugin/scans) to check that the
-scope and security context match your goal. Repeated review can find issues
-missed by an earlier pass, but doesn't guarantee complete detection or identical
-results between runs.
 
-## Choose between standard and deep scans
 
-|            | Standard scan                               | Deep scan                                      |
-| ---------- | ------------------------------------------- | ---------------------------------------------- |
-| Review     | One standard scan                           | Multiple standard scans with combined findings |
-| Use it for | A first scan or a review of a defined scope | Additional independent reviews of that scope   |
-| Scope      | Repository or folder                        | Repository or folder                           |
-| Changes    | Use the change-review workflow              | Not supported                                  |
+
+Start with a [standard scan](https://learn.chatgpt.com/docs/security/plugin/scans) to check the scope
+and security context. A deep scan can find issues an earlier pass missed, but
+results can still vary and coverage can remain incomplete. For a diff, use
+[Review code changes](https://learn.chatgpt.com/docs/security/plugin/code-changes).
 
 ## Start the deep scan
 
@@ -79,13 +73,9 @@ or structural hardening guidance when you request those outputs.
 Keep any linked `findings/` and `hardening/` directories with the report when
 sharing or archiving the result.
 
-Review the coverage summary before the findings. Even a deep scan has limits,
-so check deferred surfaces and remaining proof gaps before drawing a
-conclusion. For a finding you accept, continue with [Fix and verify a
+Check the coverage summary for deferred areas and the findings for unresolved
+questions. For a finding you accept, continue with [Fix and verify a
 finding](https://learn.chatgpt.com/docs/security/plugin/fix-findings).
-
-To review a pull request, commit, branch range, or local patch, use [Review code
-changes](https://learn.chatgpt.com/docs/security/plugin/code-changes). Deep scans don't accept diff targets.
 
 ## Configure deep-scan runtime
 
@@ -133,6 +123,8 @@ existing scan.
 - If a wait ends while the scan is still active, return to
   the same scan or conversation and ask Codex to continue it. A response ending
   or a wait timing out doesn't cancel the scan.
+- If Codex blocks a worker request because of a misalignment policy violation,
+  Deep Scan reports the refusal and stops without retrying the request.
 - If the scan reports a terminal failure or was canceled, keep the error and
   saved scan directory. Review saved findings separately from pending
   candidates, which haven't been confirmed. Coverage is incomplete, so an

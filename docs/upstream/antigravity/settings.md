@@ -3,7 +3,7 @@
 
 # Settings
 
-Available on: Antigravity App, Antigravity CLI, Antigravity IDE
+Available on: Antigravity App, Antigravity CLI, IDE extensions (VS Code, Visual Studio, Eclipse), Antigravity IDE
 
 Configure preferences, execution boundaries, command permissions, and tool telemetry across Antigravity surfaces.
 
@@ -40,8 +40,9 @@ Global settings apply across all workspaces:
     *   Fine-grained allow, ask, and deny rules (refer to **[Agent permissions](/docs/permissions)**).
 *   **Appearance**: Customize visual themes and panel layouts.
 *   **Browser** (`v2.30.0+`): Configure **Open Links In**, **Download Location**, **Browsing History**, and **Browser Actuation Rules** under **Settings** > **Browser** (refer to **[Browser use](/docs/browser#configure-browser-settings)**).
-*   **Model usage**: Choose and configure default reasoning models.
-*   **Customizations**: Manage Model Context Protocol (MCP) servers, custom skills, and plugins.
+*   **Models**: View model quota, toggle AI credit overages, and (on Google AI Pro and Ultra) configure default **Orchestrator Model** and **Executor Model** choices, including their thinking levels, under **Settings** > **Models** > **Orchestrator Settings** (refer to **[Choose a model](/docs/models#orchestrator)**).
+
+To install or manage plugins, MCP servers, skills, rules, and custom agents across workspaces, open **Customizations** in the left sidebar instead of **Settings**.
 
 Note
 
@@ -90,10 +91,10 @@ During [first-launch setup](/docs/getting-started) with a personal Google Accoun
 Switching layouts updates open and new conversations immediately without restarting the app. Both layouts run the exact same agent and support the same [models](/docs/models), [permission presets](/docs/permissions), [skills](/docs/skills), [rules](/docs/rules), [MCP servers](/docs/mcp), and [plugins](/docs/plugins)—switching only changes which controls are shown in the interface:
 
 | Area | Software Engineering | Knowledge Work |
-| :-- | :-- | :-- |
+| --- | --- | --- |
 | **Projects and folders** | Prompts for **Local** or **New worktree** mode on Git repos; shows Git branch pickers, GitHub controls, and **Open in IDE**; forks can target a new worktree. | Runs directly in your project’s folders without worktree or Git branch prompts; hides GitHub and **Open in IDE** controls; forks stay in the current folder (_Fork conversation in this folder_). |
 | **Conversation and approvals** | Keeps expandable `Worked for` tool groups, inline code diffs, line counts, and subagent cards in the thread; permission prompts include raw command-rule editors. | Shows a live progress line while the agent works that clears once the response finishes, keeping focus on replies and artifacts; permission prompts present plain-language summaries. |
-| **Side panel and Overview panel** | **Overview** includes **Review**, **Files**, **Terminal**, and **Extensions** rows, a **Customize Sections** menu, and sections for **Subagents**, **Background Tasks**, **Goals**, **Documents**, **Artifacts**, **Links**, **Modified Files**, and **Uploads**. | **Overview** stays hidden until the conversation produces output, omits **Review**, **Terminal**, and **Customize Sections**, labels the **Files** sidebar tree **Folders**, and focuses on **Documents**, **Artifacts**, **Links**, **Uploads**, and **Background Tasks**. |
+| **Side panel and Overview panel** | **Overview** includes **Review**, **Files**, **Terminal**, and **Plugins** rows, a **Customize Sections** menu, and sections for **Subagents**, **Background Tasks**, **Goals**, **Documents**, **Artifacts**, **Links**, **Modified Files**, and **Uploads**. | **Overview** stays hidden until the conversation produces output, omits **Review**, **Terminal**, and **Customize Sections**, labels the **Files** sidebar tree **Folders**, and focuses on **Documents**, **Artifacts**, **Links**, **Uploads**, and **Background Tasks**. |
 | **Customizations (`Installed` tab)** | Lists installed **Plugins**, **Skills & Rules**, **Custom Agents**, and **MCP Servers**. | Lists installed **Plugins** only (installed skills, rules, custom agents, and MCP tools remain active in the background). |
 | **Settings** | Displays developer subsections (**Terminal**, **Workspaces**, and **Labs**) and detailed permission rules directly. | Tucks advanced permission rules and developer subsections behind **Advanced Settings** in **Settings** > **General** and project settings, and hides the **Appearance** > **Conversation Steps** toggle and code syntax preview. |
 
@@ -222,8 +223,8 @@ The interactive settings panel (`/config`) and `settings.json` allow you to cust
 Manage how the agent interacts with your system and codebase:
 
 *   **Agent Mode (`agentMode`)**: Controls the session execution mode for file edits, command evaluation, and planning (can also be set per session with `--mode` or cycled with Shift + Tab; refer to [Choose an execution mode](/docs/cli/modes)):
-    *   `auto`: Automatically approves workspace file edits, runs terminal commands inside the [terminal sandbox](/docs/sandbox) by default, and automatically evaluates commands that need to run outside the sandbox so safe, reversible commands run without prompting while risky or irreversible commands pause for approval (shown as `auto` in the bottom-right status bar and `Auto mode: edits & safe commands auto-approved (shift+tab to cycle)` in the prompt input box).
-    *   `default` (the default; select `default` in `/config`, or leave `agentMode` unset or `""`): Prompts for interactive diff review before modifying or creating files, and follows `toolPermission` for commands.
+    *   `auto` (the default since `v1.5.7` where `auto` mode is available): Automatically approves workspace file edits, runs terminal commands inside the [terminal sandbox](/docs/sandbox) by default, and automatically evaluates commands that need to run outside the sandbox so safe, reversible commands run without prompting while risky or irreversible commands pause for approval (shown as `auto` in the bottom-right status bar and `Auto mode: edits & safe commands auto-approved (shift+tab to cycle)` in the prompt input box).
+    *   `default` (select `default` in `/config`, or set `agentMode` to `""`): Prompts for interactive diff review before modifying or creating files, and follows `toolPermission` for commands.
     *   `accept-edits`: Automatically approves workspace file edits and creations while continuing to follow `toolPermission` for commands.
     *   `plan`: Prepends `/plan` so the agent analyzes the codebase and outlines a plan before making edits.
 *   **Tool Permission (`toolPermission`)**: Controls when the agent asks for your approval before it uses a tool outside `auto` mode (and for `strict` and `always-proceed` overrides). Deny rules in your [permissions](#permissions) block an action in every mode:

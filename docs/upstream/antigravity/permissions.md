@@ -3,7 +3,7 @@
 
 # Agent permissions
 
-Available on: Antigravity App, Antigravity CLI
+Available on: Antigravity App, Antigravity CLI, IDE extensions (VS Code, Visual Studio, Eclipse), Antigravity IDE
 
 Antigravity uses a unified fine-grained permission engine to evaluate sensitive tool operations across Deny, Ask, and Allow access lists. If you are using Antigravity with Gemini Enterprise, see [Antigravity in Gemini Enterprise](/docs/enterprise#autonomous-tool-permissions-and-human-in-the-loop-controls).
 
@@ -28,7 +28,7 @@ Note
 The **permission preset** controls how agent actions are approved. Your configured allow, deny, and ask rules are layered on top of the preset and always take precedence:
 
 | Preset | [Terminal sandbox](/docs/sandbox) | Terminal Commands | File Access | MCP & Web |
-| :-- | :-- | :-- | :-- | :-- |
+| --- | --- | --- | --- | --- |
 | **Request Review** | Disabled | Always ask | Workspace only | Ask |
 | **Default** _(default)_ | Enabled | Allowed in sandbox; ask outside | Workspace + temp dirs | Ask |
 | **Auto** | Enabled | Allowed in sandbox; checked automatically outside | Workspace + temp dirs | Ask |
@@ -74,7 +74,7 @@ The picker changes your global preset, or the project’s preset if the project 
 The following table lists the supported permission actions, their target formats, and their default behavior:
 
 | Action | Target Format | Default Fallback |
-| :-- | :-- | :-- |
+| --- | --- | --- |
 | `read_file` | `read_file(/path)`, `read_file(dir)`, or `read_file(*)` | **Ask** (Allowed in workspace) |
 | `write_file` | `write_file(/path)` or `write_file(*)` | **Ask** (Allowed in workspace) |
 | `read_url` | `read_url(domain)` or `read_url(*)` | **Ask** |
@@ -207,7 +207,7 @@ Note
 The following table lists the supported permission actions in the previous permission settings, their target formats, and their default behavior:
 
 | Action | Target Format | Default Fallback |
-| :-- | :-- | :-- |
+| --- | --- | --- |
 | `read_file` | `read_file(/path)`, `read_file(dir)`, or `read_file(*)` | **Ask** (Allowed in workspace) |
 | `write_file` | `write_file(/path)` or `write_file(*)` | **Ask** (Allowed in workspace) |
 | `read_url` | `read_url(domain)` or `read_url(*)` | **Ask** |
@@ -345,7 +345,7 @@ action(target)
 The supported actions, target format specifications, and default fallbacks are listed in the following table:
 
 | Action | Target Format | Default Fallback |
-| :-- | :-- | :-- |
+| --- | --- | --- |
 | **`read_file`** | `read_file(/path)`, `read_file(dir)`, or `read_file(*)` | **Ask** (Auto-allowed in workspace) |
 | **`write_file`** | `write_file(/path)` or `write_file(*)` | **Ask** (Auto-allowed in workspace) |
 | **`read_url`** | `read_url(domain)` or `read_url(*)` | **Ask** |
@@ -398,16 +398,16 @@ When an action isn’t explicitly listed in your `allow`, `deny`, or `ask` lists
 
 Your fine-grained `allow`, `ask`, and `deny` rules always take precedence (`Deny > Ask > Allow`). For operations not covered by an explicit rule, Antigravity CLI evaluates your active [execution mode](/docs/cli/modes) (`--mode` or `agentMode` in `settings.json`) and `toolPermission` policy:
 
-*   **`auto` mode (`--mode=auto` or `"agentMode": "auto"`)**: Automatically approves workspace file edits and runs terminal commands inside the [Terminal sandbox](/docs/sandbox) by default. When a command needs to run outside the sandbox, Antigravity CLI automatically evaluates it so safe, reversible commands run without prompting, while risky or irreversible commands still pause for your approval. When active, the bottom-right status bar displays `auto` and the prompt placeholder reads `Auto mode: edits & safe commands auto-approved (shift+tab to cycle)`.
+*   **`auto` mode (`--mode=auto` or `"agentMode": "auto"`, default where available in `v1.5.7+`)**: Automatically approves workspace file edits and runs terminal commands inside the [Terminal sandbox](/docs/sandbox) by default. When a command needs to run outside the sandbox, Antigravity CLI automatically evaluates it so safe, reversible commands run without prompting, while risky or irreversible commands still pause for your approval. When active, the bottom-right status bar displays `auto` and the prompt placeholder reads `Auto mode: edits & safe commands auto-approved (shift+tab to cycle)`.
 *   **`accept-edits` mode (`--mode=accept-edits`)**: Automatically approves workspace file edits and creations while continuing to evaluate shell commands against your `toolPermission` policy and fine-grained rules.
-*   **`default` mode (default; select `default` in `/config`)**: Prompts for interactive diff review before modifying or creating files, and evaluates shell commands against your `toolPermission` policy (`request-review` by default).
+*   **`default` mode (select `default` in `/config`, or set `agentMode` to `""`)**: Prompts for interactive diff review before modifying or creating files, and evaluates shell commands against your `toolPermission` policy (`request-review` by default).
 *   **`toolPermission` overrides**: `strict` and `always-proceed` (`--dangerously-skip-permissions`) take precedence over `auto` mode. Outside `auto` mode, `proceed-in-sandbox` runs sandboxed commands without prompting and asks before commands outside the sandbox. Starting in `v1.4.4`, if the sandbox isn’t available on your machine, `proceed-in-sandbox` behaves like `request-review` (refer to [Terminal sandbox](/docs/sandbox)).
 
 Refer to **[Choose an execution mode](/docs/cli/modes)** for details on switching modes with Shift + Tab, `--mode`, or `/config`.
 
 Note
 
-The CLI starts in `default` mode (`request-review`) unless you choose another mode. `auto` mode is available in `v1.3.5+` on **macOS and Linux** and `v1.4.4+` on **Windows** when the terminal sandbox is available. It isn’t available for business or enterprise accounts.
+Since `v1.5.7`, the CLI starts in `auto` mode where `auto` mode is available, and in `default` mode (`request-review`) otherwise, unless you choose another mode. `auto` mode is available in `v1.3.5+` on **macOS and Linux** and `v1.4.4+` on **Windows** when the terminal sandbox is available. It isn’t available for business or enterprise accounts.
 
 * * *
 

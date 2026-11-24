@@ -9,9 +9,9 @@ In the Antigravity App, the side panel shows your work next to the conversation.
 
 ## The Overview panel
 
-Each conversation has an **Overview** panel at its top right. In this example, the agent planned and added an API endpoint, so the panel shows the line counts of the change and the two artifacts that the agent created:
+Each conversation has an **Overview** panel at its top right. In this example, the agent planned and added an API endpoint, so the panel shows the launcher rows and the two artifacts that the agent created:
 
-![The Antigravity App with a conversation in which the agent planned and added a GET /v1/bookmarks/ endpoint. The Overview panel at the top right shows the Review row with +24 -0, the Files, Terminal, and Extensions rows, and an Artifacts section that lists Walkthrough and Implementation Plan](/assets/image/docs/side-panel/overview-panel.png)
+![The Antigravity App with a conversation in which the agent planned and added a GET /v1/bookmarks/ endpoint. The Overview panel at the top right shows the Review, Files, Terminal, and Plugins rows, and an Artifacts section that lists Walkthrough and Implementation Plan](/assets/image/docs/side-panel/overview-panel.png)
 
 To show or hide the panel, click **Toggle Overview Panel** at the top right of the conversation, or press Cmd+Option+O on macOS or Ctrl+Alt+O on Windows and Linux. The panel is open by default, and Antigravity remembers your choice for each conversation.
 
@@ -24,18 +24,18 @@ In the **Knowledge Work** [interface layout](/docs/settings#interface-layout) (`
 ### Rows at the top
 
 | Row | What it does |
-| :-- | :-- |
+| --- | --- |
 | **Review** | Opens the **Review** tab with the changes in your project’s Git repository. The row shows the total lines added and deleted. For details, refer to [Review changes](/docs/review-changes). |
 | **Files** | Opens an **Open File** tab with your project’s file tree. Click a file to open it, or click **Open File** to search for one. |
 | **Terminal** | Opens a new terminal tab. Each click starts another terminal. |
-| **Extensions** | Lists the views that your installed [plugins](/docs/plugins) add to the side panel. Point to the row to see them. |
+| **Plugins** | Lists the views that your installed [plugins](/docs/plugins) and [MCP Apps](/docs/mcp-apps) add to the side panel. Point to the row to see them. |
 
 ### Sections
 
 Below the rows, the panel groups what the conversation produced into sections:
 
 | Section | What it lists |
-| :-- | :-- |
+| --- | --- |
 | **Subagents** | The [subagents](/docs/subagents) that the agent started. Click one to follow its conversation in the side panel. |
 | **Background Tasks** | Tasks that run in the background. Click one to open it in a tab. To stop a running task, point to it and click **Cancel Task**. |
 | **Goals** | The conversation’s goals, with running goals first. For details, refer to [Goals](/docs/commands/goal). |
@@ -92,7 +92,7 @@ Each pane has its own **Toggle Overview Panel** button. In narrow panes, the too
 ## Keyboard shortcuts
 
 | Action | macOS | Windows and Linux |
-| :-- | :-- | :-- |
+| --- | --- | --- |
 | Show or hide the Overview panel | Cmd+Option+O | Ctrl+Alt+O |
 | Show or hide the side panel | Cmd+Shift+B | Ctrl+Shift+B |
 | Open a new tab | Cmd+T | Ctrl+T |
@@ -111,3 +111,4 @@ To see all shortcuts, go to **Settings** > **Shortcuts**.
 *   [Review changes](/docs/review-changes): Review the agent’s diffs in the **Review** tab.
 *   [Artifacts](/docs/artifacts): Read and comment on the plans and walkthroughs that open in the side panel.
 *   [Search and command palette](/docs/search): Find conversations, files, and commands.
+*   [MCP Apps](/docs/mcp-apps): Add interactive HTML views, side panel tabs, and custom file viewers from MCP servers.

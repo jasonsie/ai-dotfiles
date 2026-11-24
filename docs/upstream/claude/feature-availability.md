@@ -55,6 +55,8 @@ These require signing in with a claude.ai account and are not reachable with an 
 * [Cloud scheduled tasks](https://code.claude.com/docs/en/routines.md) (`/schedule`)
 * [Ultrareview](https://code.claude.com/docs/en/ultrareview.md)
 * [Code Review](https://code.claude.com/docs/en/code-review.md): Team and Enterprise plans
+* [PR Steward](https://code.claude.com/docs/en/pr-steward.md): Team and Enterprise plans
+* [Claude Approvals](https://code.claude.com/docs/en/approvals.md): Team and Enterprise plans
 * [Remote Control](https://code.claude.com/docs/en/remote-control.md)
 * [Chrome extension](https://code.claude.com/docs/en/chrome.md)
 * [Computer use](https://code.claude.com/docs/en/computer-use.md): Pro, Max, and Ultra plans
@@ -249,7 +251,7 @@ Organization-level controls and usage visibility.
 
 > [!NOTE]
 >
-> If you authenticate through an [LLM gateway](https://code.claude.com/docs/en/llm-gateway), feature availability matches the underlying provider the gateway forwards to, except for the features Claude Code itself turns off. Whenever `ANTHROPIC_BASE_URL` points at a host other than `api.anthropic.com`, Claude Code turns off features such as [Remote Control](https://code.claude.com/docs/en/remote-control.md#requirements) and [server-managed settings](https://code.claude.com/docs/en/server-managed-settings.md#platform-availability), whatever the gateway forwards. Some features, such as the [Advisor](https://code.claude.com/docs/en/advisor.md#requirements), work only if the gateway forwards requests intact.
+> If you authenticate through an [LLM gateway](https://code.claude.com/docs/en/llm-gateway), feature availability matches the underlying provider the gateway forwards to, except for the features Claude Code itself turns off. Whenever `ANTHROPIC_BASE_URL` points at a host other than `api.anthropic.com`, Claude Code turns off features such as [Remote Control](https://code.claude.com/docs/en/remote-control.md#requirements), whatever the gateway forwards. Some features, such as the [Advisor](https://code.claude.com/docs/en/advisor.md#requirements), work only if the gateway forwards requests intact.
 >
 > For how the requests Claude Code sends differ between an Amazon Bedrock- or Agent Platform-format gateway, an `ANTHROPIC_BASE_URL` gateway, and a Claude apps gateway sign-in, see [client behavior by connection method](https://code.claude.com/docs/en/llm-gateway-protocol.md#how-the-connection-method-changes-client-behavior).
 
@@ -348,8 +350,10 @@ In Enterprise organizations with the [HIPAA configuration](https://code.claude.c
 | [Remote Control](https://code.claude.com/docs/en/remote-control.md) | ✓ | ✓ | ✓ | Admin-enabled | Admin-enabled |
 | [Channels](https://code.claude.com/docs/en/channels.md) | ✓ | ✓ | ✓ | Admin-enabled | Admin-enabled |
 | [Computer use](https://code.claude.com/docs/en/computer-use.md) | ✓ | ✓ | ✓ | ✗ | ✗ |
-| Dispatch ([Desktop](https://code.claude.com/docs/en/desktop.md#sessions-from-dispatch)) | ✓ | ✓ | ✓ | ✗ | ✗ |
+| Dispatch ([Desktop](https://code.claude.com/docs/en/desktop.md#sessions-from-dispatch)) | Not available to new users | Not available to new users | Not available to new users | ✗ | ✗ |
 | [Code Review](https://code.claude.com/docs/en/code-review.md) | ✗ | ✗ | ✗ | ✓ | ✓ |
+| [PR Steward](https://code.claude.com/docs/en/pr-steward.md) | ✗ | ✗ | ✗ | ✓ | ✓ |
+| [Claude Approvals](https://code.claude.com/docs/en/approvals.md) | ✗ | ✗ | ✗ | ✓ | ✓ |
 | [Artifacts](https://code.claude.com/docs/en/artifacts.md) | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [Analytics dashboard and contribution metrics](https://code.claude.com/docs/en/analytics.md) | ✗ | ✗ | ✗ | ✓ | ✓ |
 | [Enterprise Analytics API](https://code.claude.com/docs/en/analytics.md#access-data-programmatically) | ✗ | ✗ | ✗ | ✗ | ✓ |

@@ -3,7 +3,7 @@
 
 # Customization discovery
 
-Available on: Antigravity App, Antigravity CLI
+Available on: Antigravity App, Antigravity CLI, IDE extensions (VS Code, Visual Studio, Eclipse), Antigravity IDE
 
 Antigravity loads your rules, skills, custom agents, plugins, hooks, and MCP servers from standard folders in your project and your home directory. Use this page to decide where a customization belongs, to load customizations that live in other folders, and to check what Antigravity found.
 
@@ -17,7 +17,7 @@ Antigravity reads customizations from two scopes:
 Both scopes use the same layout. The following table lists where each type of customization lives inside `.agents/` or `~/.gemini/config/`:
 
 | Customization | Path inside `.agents/` or `~/.gemini/config/` |
-| :-- | :-- |
+| --- | --- |
 | [Rules](/docs/rules) | `rules/*.md`, `AGENTS.md`, `GEMINI.md` |
 | [Skills](/docs/skills) | `skills/<name>/SKILL.md` |
 | [Custom agents](/docs/subagents) | `agents/<name>.md` or `agents/<name>/agent.md` |
@@ -107,7 +107,7 @@ The first entry loads every skill in `tools/agent-skills/` except `load-test`. T
 A manifest supports the following top-level fields:
 
 | Field | Type | Description |
-| :-- | :-- | :-- |
+| --- | --- | --- |
 | `entries` | Array of objects | Folders to scan, or single customizations to load. |
 | `inherits` | Array of objects | Other manifests of the same type to include. |
 | `exclude` | Array of strings | Customizations to hide. Antigravity skips matching items in every location, including your personal folder. For an exception in the Antigravity CLI, see [Which customization wins](#which-customization-wins). |
@@ -115,7 +115,7 @@ A manifest supports the following top-level fields:
 Each object in `entries` and `inherits` supports these fields:
 
 | Field | Type | Description |
-| :-- | :-- | :-- |
+| --- | --- | --- |
 | `path` | String | Required. In `entries`, a folder that Antigravity scans one level deep, or the folder or file of a single customization. In `inherits`, the path to another manifest. |
 | `include_only` | Array of strings | Load only the matching items. Can name nested items, such as `database/migrate-schema`. |
 | `exclude` | Array of strings | Skip the matching items. |

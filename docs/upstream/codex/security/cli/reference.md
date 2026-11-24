@@ -29,6 +29,7 @@ The CLI provides these commands:
 | ---------------------------------- | ------------------------------------------------------------------- |
 | `codex-security scan`              | Run a Codex Security scan.                                          |
 | `codex-security scan import`       | [Save CSV or JSON findings as a scan](#codex-security-scan-import). |
+| `codex-security import continuum`  | [Collect AWS Continuum findings](#codex-security-import-continuum). |
 | `codex-security import github`     | [Read GitHub code scanning alerts](#codex-security-import-github).  |
 | `codex-security policy`            | Draft or update a repository security policy.                       |
 | `codex-security init`              | Create a YAML or JSON project configuration.                        |
@@ -129,6 +130,7 @@ usage: codex-security scan [-h] [--auth {auto,chatgpt,api-key}]
                            [--cyber-access-program PROGRAM]
                            [--provider {openai,openrouter,fireworks,amazon-bedrock}]
                            [--path PATH | --diff BASE | --working-tree]
+                           [--exclude-path PATH]
                            [--head HEAD] [--base BASE]
                            [--knowledge-base PATH] [--scan-prompt-file FILE]
                            [--validation-prompt-file FILE] [--rubric FILE]
@@ -299,6 +301,7 @@ Choose one target type for each scan.
 | Argument                 | Description                                                                     |
 | ------------------------ | ------------------------------------------------------------------------------- |
 | `--path PATH`            | Scan a path relative to the repository. Repeat the flag for more paths.         |
+| `--exclude-path PATH`    | Exclude a literal repository-relative file or directory. Repeat for more paths. |
 | `--diff BASE`            | Scan committed changes from `BASE` to `--head`. The head defaults to `HEAD`.    |
 | `--head HEAD`            | Set the head revision for `--diff`.                                             |
 | `--working-tree`         | Scan staged and unstaged changes against `--base`. The base defaults to `HEAD`. |
@@ -308,6 +311,15 @@ Choose one target type for each scan.
 `--path`, `--diff`, and `--working-tree` are mutually exclusive. `--head`
 requires `--diff`, and `--base` requires `--working-tree`. Deep mode supports
 repository and path targets.
+
+To exclude a directory and everything under it from review, pass
+`--exclude-path examples/`. To save that exclusion in your project config,
+add `exclude_paths: [examples/]` under `scan`. CLI exclusions replace the
+configured list.
+
+Exclusions apply to Standard, Deep, and diff scans and take precedence over
+`--path`. The scanner can still read excluded files for context. Exclusions
+filter out a finding only when all its locations fall under excluded paths.
 
 Diff and working-tree scans require the repository argument to be the Git
 worktree root. The selected refs must exist in that checkout.
@@ -645,6 +657,28 @@ source was reviewed. `scans rerun SCAN_ID` imports the retained input again.
 
 To scan a repository named `import`, use `scan ./import`.
 
+## `codex-security import continuum`
+
+Use AWS CLI v2.38.5 or later and sign in to the account and Region that own
+the Continuum environment. Run `codex-security import continuum ENVIRONMENT_ID --format json` with the
+short environment ID and save the output outside the checkout.
+The command collects code issues, linked findings, and supporting evidence.
+It requires one configured Git repository. If the environment also has S3
+sources, check which repository supplied the code before importing the report.
+
+**Migrating from `collect_continuum.py`.** To collect one finding and its
+matching validation evidence and patches, add `--finding-id FINDING_ID` and
+`--source-root /absolute/path/to/checkout` to the command above. Use the short
+finding ID. If the environment has more than one Git repository or any S3
+sources, also pass the AWS source name with `--repository-name`.
+You can still import saved finding exports and patch captures.
+
+For a local preview, pass the report to [`publish findings`](#codex-security-publish-findings)
+with `--provider continuum --to local --dry-run`. Set `--repository` to the
+matching checkout and use a stable `--source-key` for that environment and repository.
+For a finding capture, also pass the verified Git URL with `--source-repository-url`.
+See the [Continuum import guide](https://github.com/openai/codex-security/blob/main/docs/scanner-imports/continuum.md) for AWS permissions and collection commands.
+
 ## `codex-security import github`
 
 Read GitHub code scanning alerts without changing GitHub or checking out code:
@@ -818,8 +852,9 @@ scan, including scans that return errors. It doesn't run after
 cancellation or when a scan reaches its cost limit.
 
 `--workers` limits simultaneous repository scans and defaults to `4`. `--mode`
-defaults to `standard`, and `--max-attempts` defaults to `1`. Set
-`--max-attempts` to retry repository or scan errors. Exclusions and follow-up
+defaults to `standard`. `--max-attempts` limits attempts per unfinished CSV
+row on each run and defaults to `1`. See [Retry repository errors](https://learn.chatgpt.com/docs/security/cli/bulk-scans#retry-repository-errors)
+for an example across two runs. Exclusions and follow-up
 notes don't trigger retries of completed scans. Remaining execution failures
 return `2`; completed severity-policy violations return `1`.
 
@@ -904,6 +939,10 @@ and reuses saved matches. To save matches explicitly, use `scans match`:
 ```bash
 npx @openai/codex-security scans match PREVIOUS_SCAN_ID CURRENT_SCAN_ID
 ```
+
+When Standard and Deep scans ran in linked Git worktrees, Codex can use saved
+evidence to match findings across corresponding paths if both scans recorded
+the same repository generation, revision, and snapshot digest.
 
 A finding is unknown when its path is excluded or its match is uncertain. If
 the later scan doesn't find it in the code it scanned, it is not observed.
@@ -1095,6 +1134,9 @@ from an unfinished or failed scan. If no model was saved, the command returns
 an error. Review any provisional or recovered content identified in the
 document before reusing it.
 
+When a route appears in a test or in deleted code, Codex Security checks
+whether the application still serves it before including it as an entry point.
+
 To provide the exported model as context for another scan, pass its path to
 [`--knowledge-base`](#add-security-context).
 
@@ -1235,9 +1277,17 @@ are excluded, the preview exits with `0` and the import saves the accepted
 records and exits with `1`. A valid report with no findings exits with `0`.
 If all records are excluded, both commands exit with `2`.
 
+To import a CrowdStrike Falcon Cloud Security infrastructure-as-code report,
+use the JSON output of `fcs scan iac` from FCS CLI 4.x. Pass the report to
+`publish findings` with `--provider crowdstrike --to local`. Set `--repository`
+to the directory where you ran FCS so the reported paths resolve correctly.
+The importer checks the files against their recorded hashes. If a file has changed, use the scanned revision
+or generate a new report. CrowdStrike imports are local only.
+The [CrowdStrike import guide](https://github.com/openai/codex-security/blob/main/docs/scanner-imports/crowdstrike.md) shows how to generate the report and read back the saved findings.
+
 ### Publish a report to Cloud
 
-Keep the file, provider, and source key from the local preview. Set `--to cloud`,
+For providers that support Cloud, keep the file, provider, and source key from the local preview. Set `--to cloud`,
 pass the connected repository URL or Cloud ID to `--repository`, and preview again
 with `--dry-run --format json`. To publish, rerun without `--dry-run` and confirm.
 
@@ -1262,6 +1312,11 @@ These commands work with existing findings:
 `verify-fix` returns `2` if any check is inconclusive or fails. Otherwise, it
 returns `1` if any finding remains vulnerable, or `0` if all findings are fixed.
 Use each command's `--help` for selectors, model settings, and output options.
+
+Hosts that use `classify-severity --records` can opt in to diagnostic records
+on review requests and on the final result or error. Each record identifies the
+event and when it occurred.
+See the [host protocol guide](https://github.com/openai/codex-security/blob/main/sdk/typescript/docs/classify-severity-records.md#cli-diagnostic-records) for the Node.js condition and record format.
 
 ## `codex-security feedback`
 

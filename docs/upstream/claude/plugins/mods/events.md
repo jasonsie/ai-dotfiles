@@ -90,7 +90,7 @@ on('tool.call', { tool: /^mcp__github__/ }, hook)
 
 `hook` runs once for a Bash, Edit, or Write call, and once for a call to a tool whose name starts with `mcp__github__`. A call to any other tool, such as Read, matches none of the three, so `hook` doesn't run for it.
 
-The event name can be a wildcard. `'classic.*'` matches every [settings hook event](#hook-the-settings-hook-events). `'*'` matches every event except the [telemetry events](https://code.claude.com/docs/en/plugins/mods/reference.md#telemetry), which take their own name and a `{ to: 'collector' }` filter.
+The event name can be a wildcard. `'classic.*'` matches every [settings hook event](#hook-the-settings-hook-events). `'*'` matches most events, but not the [telemetry events](https://code.claude.com/docs/en/plugins/mods/reference.md#telemetry), which take their own name and a `{ to: 'collector' }` filter.
 
 Register each event once per matcher. If you call `on` twice for `session.start` with no matcher, the module fails to load with `on("session.start") is registered twice without a matcher`. Put everything your mod does at session start in one hook.
 
@@ -192,7 +192,7 @@ When Claude tries a command such as `rm -rf build`, the question appears with th
 * **The user types an answer**: `$.ui.ask` resolves to the typed text. The hook compares it with `Run it`, so any other text refuses the command.
 * **Nobody answers**: `$.ui.ask` rejects when the user dismisses the question or picks **Chat about this**, and in a `claude -p` run, so the `catch` block leaves the answer at `Refuse`
 
-Keep the wait inside a mods API call such as `$.ui.ask`, because that time doesn't count against the hook's [time limit](https://code.claude.com/docs/en/plugins/mods/reference.md#limits). Time spent awaiting a promise of your own does count.
+Keep the wait inside `$.ui.ask`, because that time doesn't count against the hook's [time limit](https://code.claude.com/docs/en/plugins/mods/reference.md#limits). Time spent awaiting a promise of your own does count.
 
 Claude Code skips a hook that times out, so the held command would run. To refuse it instead, chain [a `.catch` handler](#handle-a-hook-that-fails) onto the registration that `on` returns. That handler is separate from the `catch` block inside the hook.
 
@@ -399,7 +399,9 @@ On Claude Code's own read, if your hook returns a value outside the key's schema
 
 ### Handle the settings hook events
 
-Settings hooks are the command, HTTP, prompt, and agent hooks you configure in settings files. Each [settings hook event](https://code.claude.com/docs/en/hooks.md#hook-events), such as `Stop`, `SessionEnd`, or `PostToolUse`, is also an event named `classic.` followed by the settings hook event's name, such as `classic.Stop`. `e` is the JSON a settings hook receives on stdin, including `transcript_path`. Where the [built-in guard](https://code.claude.com/docs/en/plugins/mods/admin.md#know-what-happens-by-default) loads, [a hook on these events in a mod you install doesn't run](https://code.claude.com/docs/en/plugins/mods/admin.md#hooks-the-guard-passes-over).
+To handle a [settings hook event](https://code.claude.com/docs/en/hooks.md#hook-events), add the `classic.` prefix to its name, as in `classic.Stop`. Where the [built-in guard](https://code.claude.com/docs/en/plugins/mods/admin.md#know-what-happens-by-default) loads, [a hook on these events in a mod you install doesn't run](https://code.claude.com/docs/en/plugins/mods/admin.md#hooks-the-guard-passes-over).
+
+On `classic.PreToolUse`, `e` describes only the tool call: the tool's name in `e.tool` and a built-in tool's arguments as fields, such as `e.command` for Bash. On other events, `e` has the fields their settings hooks read from stdin.
 
 This hook uses `Stop`, which fires when Claude finishes responding, to log where the session's transcript is saved:
 
@@ -473,7 +475,7 @@ The same handler shape fits a guard on `prompt.submit` or `config.set`. When `ne
 At `tool.check` and `plugin.register`, a refusal returned after `next` resolved still holds, so return it without testing `next.called`:
 
 * **`tool.check`**: return `{ decision: 'deny', reason: 'the reason' }`
-* **`plugin.register`**: return `{ refuse: 'the reason' }`, as [Refuse mods when your check fails](https://code.claude.com/docs/en/plugins/mods/admin.md#refuse-mods-when-your-check-fails) shows
+* **`plugin.register`**: return `{ refuse: 'the reason' }`. On v2.1.326 or later, the other mod's whole plugin then stays out. To stop only the mod, see [Refuse mods when your check fails](https://code.claude.com/docs/en/plugins/mods/admin.md#refuse-mods-when-your-check-fails).
 
 At `tool.call`, a `deny` returned after `next` resolved [withholds the result from Claude](#guard-or-change-a-tool-call).
 

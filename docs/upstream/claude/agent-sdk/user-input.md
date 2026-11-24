@@ -49,14 +49,14 @@ const options = { canUseTool: handleToolRequest };
 
 The callback fires in two cases:
 
-1. **Tool needs approval**: Claude wants to use a tool that isn't auto-approved by a [permission rule](https://code.claude.com/docs/en/agent-sdk/permissions.md) or permission mode. Check `tool_name` for the tool (e.g., `"Bash"`, `"Write"`).
+1. **Tool needs approval**: Claude makes a call that the [permission flow](https://code.claude.com/docs/en/agent-sdk/permissions.md#how-permissions-are-evaluated) hasn't already approved or denied. Check `tool_name` for the tool (for example, `"Bash"`, `"Write"`).
 2. **Claude asks a question**: Claude calls the `AskUserQuestion` tool. Check if `tool_name == "AskUserQuestion"` to handle it differently. If you specify a `tools` array, include `AskUserQuestion` for this to work. For more information, see [Handle clarifying questions](#handle-clarifying-questions).
 
 > [!WARNING]
 >
 > **An earlier step can allow or deny a call before `canUseTool` runs.** The [permission evaluation flow](https://code.claude.com/docs/en/agent-sdk/permissions.md#how-permissions-are-evaluated) checks deny rules, the permission mode, and allow rules before your callback.
 >
-> To run your checks on calls that a rule or the permission mode already allowed, use a [`PreToolUse` hook](https://code.claude.com/docs/en/agent-sdk/hooks), which runs for those calls and can allow, deny, or modify them.
+> To check calls that run without your callback, such as file reads inside your [working directories](https://code.claude.com/docs/en/permissions.md#working-directories), use a [`PreToolUse` hook](https://code.claude.com/docs/en/agent-sdk/hooks), which can allow, deny, or modify them.
 
 You can also use the [`PermissionRequest` hook](https://code.claude.com/docs/en/agent-sdk/hooks#available-hooks) to send external notifications (Slack, email, push) when Claude is waiting for approval.
 
@@ -256,7 +256,7 @@ The `ask_user` and `askUser` helpers in the following snippets stand in for your
 
 > [tab] Approve with changes
 >
-> The user approves but wants to modify the request first. You can change the input before the tool executes. Claude sees the result but isn't told you changed anything. Useful for sanitizing parameters, adding constraints, or scoping access.
+> The user approves but wants to modify the request first. You can change the input before the tool executes. Useful for sanitizing parameters, adding constraints, or scoping access.
 >
 > ```python Python theme={null}
 > async def can_use_tool(tool_name, input_data, context):

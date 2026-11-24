@@ -3,7 +3,7 @@
 
 # Model Context Protocol (MCP)
 
-Available on: Antigravity App, Antigravity CLI, Antigravity IDE
+Available on: Antigravity App, Antigravity CLI, IDE extensions (VS Code, Visual Studio, Eclipse, JetBrains, Android Studio, Zed, Xcode), Antigravity IDE
 
 Antigravity supports the [Model Context Protocol (MCP)](https://modelcontextprotocol.io), an open standard that lets AI agents and editors securely connect to local developer tools, databases, file parsers, and external remote APIs. This integration provides the AI model with real-time context and execution capabilities beyond your immediate workspace.
 
@@ -26,6 +26,10 @@ With MCP, Antigravity can execute specific, safe actions defined by your connect
 
 *   Create a Linear issue for a `TODO` item.
 *   Search Notion or GitHub for authentication patterns.
+
+### Add interactive UIs (MCP Apps)
+
+With [MCP Apps](/docs/mcp-apps), an MCP tool can point to a `ui://` HTML resource on the same server so the Antigravity App renders an interactive view inline in chat, in the side panel, full-page from the left sidebar, or as a custom file viewer. Non-UI surfaces such as the Antigravity CLI run the same tools using their plain-text `content` results.
 
 ## Getting started by surface
 
@@ -140,7 +144,7 @@ Whether configuring custom servers for the Antigravity App, Antigravity IDE, Ant
 Each server entry under `mcpServers` must specify **one transport property** (`command` for a local `stdio` server, or `serverUrl` for a remote Streamable HTTP server) and can include any of the optional properties below:
 
 | Property | Type | Default | Description |
-| :-- | :-- | :-- | :-- |
+| --- | --- | --- | --- |
 | **`command`** | `string` | _Required for `stdio`_ | Executable path or command name used to launch a local `stdio` MCP server process. |
 | **`serverUrl`** | `string` | _Required for remote_ | Endpoint URL of a remote MCP server that uses the Streamable HTTP transport. You can also use `url`. |
 | **`args`** | `string[]` | `[]` | Command-line arguments passed to the `command` executable (`stdio` transport only). |

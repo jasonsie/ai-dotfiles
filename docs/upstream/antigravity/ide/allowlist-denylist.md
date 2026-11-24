@@ -3,7 +3,7 @@
 
 # Allowlist and denylist
 
-Available on: Antigravity App, Antigravity IDE
+Available on: Antigravity App, IDE extensions, Antigravity IDE
 
 Antigravity asks before the [browser subagent](/docs/browser) opens a site or downloads a file from a domain that you haven’t allowed. To decide ahead of time, add rules to **Browser Actuation Rules**: allow the sites that the subagent can open or download from without asking, and deny the ones that it must never use.
 
@@ -12,7 +12,7 @@ Antigravity asks before the [browser subagent](/docs/browser) opens a site or do
 When the subagent tries to open a page on a site that has no rule, Antigravity prompts **Allow executing actions on this URL?** and asks you to choose one of the following:
 
 | Option | What it does |
-| :-- | :-- |
+| --- | --- |
 | **Yes, allow this time** | Allows the site for the rest of the subagent’s current task. |
 | **Yes, allow** _domain_ **in this conversation** | Allows the site until the conversation ends. |
 | **Yes, always allow** _domain_ | Adds an allow rule for the site to your Browser Actuation Rules. |

@@ -3,7 +3,7 @@
 
 # Terminal sandbox
 
-Available on: Antigravity App, Antigravity CLI
+Available on: Antigravity App, Antigravity CLI, IDE extensions (VS Code, Eclipse), Antigravity IDE
 
 The terminal sandbox isolates agent shell commands inside OS-level container boundaries to protect your workstation and sensitive files.
 
@@ -18,7 +18,7 @@ Antigravity includes a **terminal sandbox**, enabled by default, that isolates s
 The sandbox is built on native operating system primitives, so there are no virtual machines or Docker images to manage and no startup delay:
 
 | Operating System | Technology | Details |
-| :-- | :-- | :-- |
+| --- | --- | --- |
 | **Linux** | Namespaces | Kernel namespaces isolate the filesystem, hide host processes, and cut off networking. |
 | **macOS** | `sandbox-exec` | Seatbelt profiles (SBPL) restrict filesystem access and socket connections. |
 
@@ -27,7 +27,7 @@ The sandbox is built on native operating system primitives, so there are no virt
 Your **permission preset** controls whether the sandbox is used:
 
 | Preset | Sandbox | Commands |
-| :-- | :-- | :-- |
+| --- | --- | --- |
 | **Request Review** | Off | Always ask |
 | **Default** _(default)_ | On | Allowed in sandbox; ask outside |
 | **Auto** | On | Allowed in sandbox; safe, reversible commands allowed outside |
@@ -96,7 +96,7 @@ Select a project under **Settings** > **Projects** to override these settings fo
 The **Security Preset** dropdown in the same settings section bundles the terminal and file access policies:
 
 | Preset | Terminal Command Auto Execution | Outside-of-folders file access |
-| :-- | :-- | :-- |
+| --- | --- | --- |
 | **Default** | Require Review | Always Ask |
 | **Full machine** | Require Review | Allow |
 | **Turbo mode** | Always Proceed | Allow |
@@ -129,7 +129,7 @@ With the terminal sandbox enabled, Antigravity CLI executes commands inside an O
 The sandbox is built on native operating system primitives, so there are no virtual machines or Docker images to manage and no startup delay:
 
 | Operating System | Technology | Details |
-| :-- | :-- | :-- |
+| --- | --- | --- |
 | **Linux** | Namespaces | Kernel namespaces isolate the filesystem, hide host processes, and cut off networking. |
 | **macOS** | `sandbox-exec` | Seatbelt profiles (SBPL) restrict filesystem access and socket connections. |
 | **Windows** | Process security environments | Commands run in an AppContainer inside a process security environment, which restricts filesystem and network access. Requires Windows 11 24H2 or later with the August 2026 update or later. |
@@ -147,7 +147,7 @@ The sandbox is built on native operating system primitives, so there are no virt
 
 The configuration supports the following settings:
 
-*   **`agentMode`** (string, default: `""`, which is `default` mode): Setting `"agentMode": "auto"` enables the terminal sandbox automatically so commands run inside the sandbox by default, and automatically evaluates commands that need to run outside the sandbox so safe, reversible commands run without prompting while risky or irreversible commands pause for approval. Refer to [Choose an execution mode](/docs/cli/modes).
+*   **`agentMode`** (string, default: `"auto"` where available in `v1.5.7+`, otherwise `""` for `default` mode): Setting `"agentMode": "auto"` enables the terminal sandbox automatically so commands run inside the sandbox by default, and automatically evaluates commands that need to run outside the sandbox so safe, reversible commands run without prompting while risky or irreversible commands pause for approval. Refer to [Choose an execution mode](/docs/cli/modes).
 *   **`enableTerminalSandbox`** (boolean, default: `false`): Runs agent commands inside the sandbox. `auto` mode turns it on automatically.
 *   **`toolPermission`** (string, default: `"request-review"`): Outside `auto` mode, setting this to `"proceed-in-sandbox"` lets sandboxed commands run automatically, while commands that need to run outside the sandbox still prompt for review. Refer to [Settings](/docs/settings) for the other modes.
 

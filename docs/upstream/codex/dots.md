@@ -5,16 +5,13 @@
 
 > For the complete documentation index, see [llms.txt](https://learn.chatgpt.com/llms.txt). Markdown versions of documentation pages are available by appending `.md` to the page URL.
 
-<OFeatureCanvas>
+<DotsFeatureCanvas>
 
 <DotsCharacters
   client:load
   label="Dots characters"
   switchLabel="Choose your dot character"
 />
-
-<a id="introducing-o"></a>
-<a id="what-is-o"></a>
 
 Your dot is an always-on agent that keeps work moving across your tools and projects. You can keep talking to it while it works, and it reaches out with results or decisions that need you.
 
@@ -27,8 +24,6 @@ Your dot lives in the cloud and has its own computer and browser. You can reach 
 <a id="access-to-dots"></a>
 
 See [availability and access](#access) for plan, region, and workspace requirements.
-
-<a id="meet-your-o"></a>
 
 ## Make it your own
 
@@ -58,18 +53,14 @@ Create and talk to your dot in the ChatGPT mobile app, desktop app, or a desktop
 
 You can message your dot or call it to discuss work, change priorities, or make a decision. In ChatGPT, select the phone button in your dot’s conversation to start a call. You can also type messages while you’re talking. Work you’ve assigned can continue after the call ends.
 
-You reach the same dot in ChatGPT, Slack, Teams, or a call. Changing where you talk to it doesn’t start a new dot or reset its memory. Messages stay in their respective channels, while your dot can use relevant context across them. Before sharing information from a private conversation with other people, your dot checks that you’ve allowed it.
+You reach the same dot in ChatGPT, Slack, or a call. Changing where you talk to it doesn’t start a new dot or reset its memory. Messages stay in their respective channels, while your dot can use relevant context across them. Before sharing information from a private conversation with other people, your dot checks that you’ve allowed it.
 
 Tell your dot where to send different kinds of updates. For example, ask it to keep routine progress in ChatGPT and bring decisions to you in Slack. Explain which changes need your attention, such as a deadline at risk.
 
-<a id="choose-where-o-can-reach-you"></a>
-<a id="where-to-use-o"></a>
-
 Open your dot's profile and select **Add** to connect an available contact method. Texting is rolling out in beta to ChatGPT Pro users in the U.S. See how to [set up texting](https://learn.chatgpt.com/docs/dots/channels#texting) with iMessage or RCS on Android. See [Message your dot](https://learn.chatgpt.com/docs/dots/channels) for other ways to reach it.
 
-In Slack, you can DM your dot or mention it in a channel you’ve added it to. By default, it responds to you; you can instruct it to engage with others. Existing permissions and safeguards still apply to what it shares and does. Tell it which channels and events to watch for. Adding it to a channel alone doesn’t start monitoring. You can also message your dot in Microsoft Teams. See [Slack and Teams](https://learn.chatgpt.com/docs/dots/channels#slack-and-teams).
+In Slack, you can DM your dot or mention it in a channel you’ve added it to. By default, it responds to you; you can instruct it to engage with others. Existing permissions and safeguards still apply to what it shares and does. Tell it which channels and events to watch for. Adding it to a channel alone doesn’t start monitoring. See [Message your dot in Slack](https://learn.chatgpt.com/docs/dots/channels#slack) for setup instructions.
 
-<a id="how-o-works"></a>
 <a id="how-your-dot-works"></a>
 
 ## How dots work
@@ -190,25 +181,20 @@ You can add instructions for how you want your dot to work, such as asking it to
 
 Here's how dots compare with ChatGPT Work and Codex, and how they can work together.
 
-| Experience   | When to use it                                                                                                                                                                                                                                   |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Chat         | When you want an answer, an explanation, ideas, or help drafting something in conversation.                                                                                                                                                      |
-| ChatGPT Work | When you have a task to delegate, such as research, analysis, or creating a file, either now or on a schedule.                                                                                                                                   |
-| Codex        | When you want to build, debug, test, or review software and work directly with code and developer tools.                                                                                                                                         |
-| Your dot     | When you want an agent to keep track of an ongoing responsibility, figure out next steps as things change, and follow up between conversations. It can keep you updated in ChatGPT, Slack, or Teams and delegate tasks to ChatGPT Work or Codex. |
+| Experience   | When to use it                                                                                                                                                                                                                           |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Chat         | When you want an answer, an explanation, ideas, or help drafting something in conversation.                                                                                                                                              |
+| ChatGPT Work | When you have a task to delegate, such as research, analysis, or creating a file, either now or on a schedule.                                                                                                                           |
+| Codex        | When you want to build, debug, test, or review software and work directly with code and developer tools.                                                                                                                                 |
+| Your dot     | When you want an agent to keep track of an ongoing responsibility, figure out next steps as things change, and follow up between conversations. It can keep you updated in ChatGPT or Slack and delegate tasks to ChatGPT Work or Codex. |
 
-<a id="what-o-can-do"></a>
-<a id="things-to-try-with-o"></a>
-<a id="try-more-with-o"></a>
 <a id="what-could-you-do-with-yours"></a>
 
 ## Work with your dot
 
 Start with work you regularly need to check or update. Describe the responsibility and share the source material it needs, then review its work and explain what needs to change.
 
-<a id="work-with-o"></a>
 <a id="start-working-together"></a>
-<a id="give-o-your-first-task"></a>
 <a id="an-event-youre-organizing"></a>
 <a id="a-project-youre-working-on"></a>
 
@@ -269,7 +255,7 @@ Access depends on your plan, region, and workspace settings. Dots are rolling ou
 
 - **Pro 100, Pro 200, and Pro 500:** For users aged 18 and older outside the European Economic Area, United Kingdom, and Switzerland.
 - **Business Premium:** Available in supported ChatGPT regions, subject to workspace eligibility.
-- **Enterprise, Edu, and Healthcare:** Generally available in eligible workspaces. Workspaces with UAE data or inference residency are ineligible. During the admin preview, your admin can enable access for your role. Starting November 18, 2026, access is on by default unless your workspace opts out.
+- **Enterprise, Edu, and Healthcare:** Generally available in eligible workspaces. For current workspace eligibility and regional availability, see [Getting started with your dot](https://help.openai.com/en/articles/20001530-getting-started-with-your-dot) and [Data residency and inference residency for ChatGPT](https://help.openai.com/en/articles/9903489-data-residency-and-inference-residency-for-chatgpt). During the admin preview, your admin can enable access for your role. Starting November 18, 2026, access is on by default unless your workspace opts out.
 
 For Pro and Business Premium, conversations with your dot don’t count toward your ChatGPT usage limits. Tasks your dot starts or manages in Work or Codex count toward those products’ usage limits as usual. Your plan includes an allowance for deeper work, with extended limits for the first month after launch. For Enterprise pricing and delegated task charges, see [Enterprise preview and billing](https://learn.chatgpt.com/docs/enterprise/dots-admin-guide#enterprise-preview-and-billing).
 
@@ -280,9 +266,9 @@ You can create your dot in the ChatGPT mobile app, desktop app, or a desktop bro
 | Guide                                                | Covers                                                           |
 | ---------------------------------------------------- | ---------------------------------------------------------------- |
 | [Getting started](https://learn.chatgpt.com/docs/dots/getting-started)       | Setup, your first conversation, and assigning work.              |
-| [Messaging](https://learn.chatgpt.com/docs/dots/channels)                    | ChatGPT, calls, texting, Slack, and Teams.                       |
+| [Messaging](https://learn.chatgpt.com/docs/dots/channels)                    | ChatGPT, calls, texting, and Slack.                              |
 | [Tasks and memory](https://learn.chatgpt.com/docs/dots/tasks-and-memory)     | Assigned work, recurring tasks, context, and proactive research. |
 | [Computers and apps](https://learn.chatgpt.com/docs/dots/computers-and-apps) | Cloud work, local access, plugins, and website sign-in.          |
 | [Controls](https://learn.chatgpt.com/docs/dots/controls)                     | Review activity, manage permissions, and stop work.              |
 
-</OFeatureCanvas>
+</DotsFeatureCanvas>

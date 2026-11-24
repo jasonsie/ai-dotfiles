@@ -144,7 +144,7 @@ For Amazon Bedrock and Google Vertex AI, you can also run `claude` and select **
 
 ## Configure proxies and gateways
 
-Most organizations can use a cloud provider directly without additional configuration. However, you may need to configure a corporate proxy or LLM gateway if your organization has specific network or management requirements. These are different configurations that can be used together:
+You may need to configure a corporate proxy or LLM gateway if your organization has specific network or management requirements. These are different configurations that can be used together:
 
 * **Corporate proxy**: Routes traffic through an HTTP/HTTPS proxy. Use this if your organization requires all outbound traffic to pass through a proxy server for security monitoring, compliance, or network policy enforcement. Configure with the `HTTPS_PROXY` or `HTTP_PROXY` environment variables. Learn more in [Enterprise network configuration](https://code.claude.com/docs/en/network-config.md).
 * **LLM Gateway**: A service that sits between Claude Code and the cloud provider to handle authentication and routing. Use this if you need centralized usage tracking across teams, custom rate limiting or budgets, or centralized authentication management. Configure with the `ANTHROPIC_BASE_URL`, `ANTHROPIC_BEDROCK_BASE_URL`, `ANTHROPIC_AWS_BASE_URL`, `ANTHROPIC_VERTEX_BASE_URL`, or `ANTHROPIC_FOUNDRY_BASE_URL` environment variables. Learn more in [LLM gateways](https://code.claude.com/docs/en/llm-gateway).
@@ -173,7 +173,7 @@ If you deploy through [Amazon Bedrock](https://code.claude.com/docs/en/amazon-be
 
 ### Configure security policies
 
-Security teams can configure managed permissions for what Claude Code is and is not allowed to do, which cannot be overwritten by local configuration. [Learn more](https://code.claude.com/docs/en/security.md).
+Security teams can configure managed permissions for what Claude Code is and is not allowed to do. [Learn more](https://code.claude.com/docs/en/security.md).
 
 To limit which of these deployment options a managed machine may use, set [`allowedProviders`](https://code.claude.com/docs/en/settings-reference#allowedproviders) in managed settings. For example, `["bedrock"]` allows Amazon Bedrock and nothing else; a Bedrock fleet that also enables the Mantle endpoint lists `"mantle"` too. The entry says which endpoint variables also need a managed `env` pin. Requires Claude Code v2.1.285 or later.
 

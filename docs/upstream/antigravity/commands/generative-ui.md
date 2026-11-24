@@ -42,7 +42,7 @@ The response ends with a card for the widget’s artifact, which shows its title
 By default, the agent shares a widget as a standalone artifact. It embeds a widget inline only when the widget is compact and illustrates the surrounding explanation. The following table compares the two placements:
 
 | Placement | Where it appears | Best for |
-| :-- | :-- | :-- |
+| --- | --- | --- |
 | Standalone artifact (default) | In the side panel, up to the panel’s full height | Dashboards, simulations, and app prototypes |
 | Inline widget | In the agent’s response, up to 500 pixels tall | Small diagrams, plots, and explainers |
 
@@ -108,5 +108,6 @@ Widgets have the following behavior and limits:
 Explore related documentation:
 
 *   [Artifacts](/docs/artifacts): Learn how the agent shares plans, diffs, and other deliverables for you to review.
+*   [MCP Apps](/docs/mcp-apps): Attach reusable interactive HTML views to MCP tools inside a plugin or MCP server.
 *   [Agent skills](/docs/skills): See how skills extend the agent and how to invoke them.
 *   [Slash commands overview](/docs/slash-commands): Browse every available slash command.

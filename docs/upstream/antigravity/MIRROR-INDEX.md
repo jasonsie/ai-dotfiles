@@ -5,7 +5,7 @@ Antigravity CLI and IDE docs: agent settings, rules, skills, MCP, artifacts, bro
 
 Consult through the `upstream-docs` skill (`find`, `outline`, `show`): read a section, not a file.
 
-Pages: 102
+Pages: 117
 
 - [agent-settings.md](agent-settings.md): Learn about Agent settings.
 - [artifact-review.md](artifact-review.md): Learn about Artifact review.
@@ -20,7 +20,6 @@ Pages: 102
 - [cli/artifacts.md](cli/artifacts.md): Learn about Reviewing artifacts.
 - [cli/best-practices.md](cli/best-practices.md): Learn about CLI best practices.
 - [cli/commands/agents.md](cli/commands/agents.md): Learn about Agents command (/agents).
-- [cli/commands/btw.md](cli/commands/btw.md): Learn about Side question command (/btw).
 - [cli/commands/changelog.md](cli/commands/changelog.md): Learn about Changelog command (/changelog).
 - [cli/commands/codesearch.md](cli/commands/codesearch.md): Learn about Code search command (/codesearch).
 - [cli/commands/context.md](cli/commands/context.md): Learn about Context command (/context).
@@ -49,10 +48,13 @@ Pages: 102
 - [commands/antigravity-guide.md](commands/antigravity-guide.md): Learn about Antigravity guide command (/antigravity-guide).
 - [commands/automation.md](commands/automation.md): Learn about Automation command (/automation).
 - [commands/browser.md](commands/browser.md): Learn about Browser command (/browser).
+- [commands/btw.md](commands/btw.md): Learn about Side question command (/btw).
+- [commands/compact.md](commands/compact.md): Learn about Compact command (/compact).
 - [commands/generative-ui.md](commands/generative-ui.md): Learn about Generative UI command (/generative_ui).
 - [commands/goal.md](commands/goal.md): Learn about Goal command (/goal).
 - [commands/grill-me.md](commands/grill-me.md): Learn about Grill me command (/grill-me).
 - [commands/learn.md](commands/learn.md): Learn about Learn command (/learn).
+- [commands/mcp-app-development.md](commands/mcp-app-development.md): Learn about MCP Apps development command (/mcp-app-development).
 - [commands/schedule.md](commands/schedule.md): Learn about Schedule command (/schedule).
 - [customization-discovery.md](customization-discovery.md): Learn about Customization discovery.
 - [dynamic-workflows.md](dynamic-workflows.md): Learn about Dynamic Workflows (/run-workflow).
@@ -66,7 +68,15 @@ Pages: 102
 - [ide/allowlist-denylist.md](ide/allowlist-denylist.md): Learn about Allowlist and denylist.
 - [ide/browser-recordings.md](ide/browser-recordings.md): Learn about Browser recordings.
 - [ide/browser.md](ide/browser.md): Learn about Overview.
-- [ide/extensions.md](ide/extensions.md): Official IDE extensions bringing Antigravity agents natively into VS Code, JetBrains, Visual Studio, Zed, and Xcode.
+- [ide/extensions.md](ide/extensions.md): Learn about IDE extensions.
+- [ide/extensions/acp.md](ide/extensions/acp.md): Learn about Other editors (ACP).
+- [ide/extensions/android-studio.md](ide/extensions/android-studio.md): Learn about Android Studio.
+- [ide/extensions/eclipse.md](ide/extensions/eclipse.md): Learn about Eclipse.
+- [ide/extensions/jetbrains.md](ide/extensions/jetbrains.md): Learn about IntelliJ-based IDEs.
+- [ide/extensions/visual-studio.md](ide/extensions/visual-studio.md): Learn about Visual Studio.
+- [ide/extensions/vscode.md](ide/extensions/vscode.md): Learn about Visual Studio Code.
+- [ide/extensions/xcode.md](ide/extensions/xcode.md): Learn about Xcode.
+- [ide/extensions/zed.md](ide/extensions/zed.md): Learn about Zed.
 - [ide/review-changes-editor.md](ide/review-changes-editor.md): Learn about Review changes in the editor.
 - [ide/separate-chrome-profile.md](ide/separate-chrome-profile.md): Learn about Chrome profile.
 - [ide/tab.md](ide/tab.md): Learn about Tab.
@@ -75,9 +85,12 @@ Pages: 102
 - [install.md](install.md): Learn about Authenticate.
 - [jupyter-notebooks.md](jupyter-notebooks.md): Learn about Jupyter notebooks.
 - [marketplace.md](marketplace.md): Learn about Marketplace.
+- [mcp-apps.md](mcp-apps.md): Learn about MCP Apps.
 - [mcp.md](mcp.md): Learn about MCP.
+- [migration/workflows-to-skills.md](migration/workflows-to-skills.md): Learn about Workflows to skills migration.
 - [models.md](models.md): Learn about Choose a model.
 - [overview.md](overview.md): Learn about Choose your Antigravity.
+- [pay-as-you-go.md](pay-as-you-go.md): Learn about Pay As You Go.
 - [permissions.md](permissions.md): Learn about Permissions.
 - [plan.md](plan.md): Learn about Plan (/plan).
 - [plans.md](plans.md): Learn about Plans.
@@ -104,8 +117,10 @@ Pages: 102
 - [sidecars.md](sidecars.md): Learn about Sidecars.
 - [skills.md](skills.md): Learn about Agent skills.
 - [slash-commands.md](slash-commands.md): Learn about Slash commands overview.
+- [ssh.md](ssh.md): Learn about Connect over SSH.
 - [subagents.md](subagents.md): Learn about Custom subagents.
 - [swarm.md](swarm.md): Learn about Swarm (/swarm).
 - [teamwork.md](teamwork.md): Learn about Teamwork agent teams (/teamwork).
 - [voice-mode.md](voice-mode.md): Learn about Voice mode.
 - [walkthrough.md](walkthrough.md): Learn about Walkthrough.
+- [workspace.md](workspace.md): Learn about Google Workspace accounts.

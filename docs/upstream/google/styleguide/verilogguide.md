@@ -2342,7 +2342,7 @@ There are only a few cases where include directives are allowed:
     included into only one package.
 
     <div class='goodcode'></div>
-
+    
     ```verilog
     package foo_pkg;
       // Good: breaking large package into smaller files is okay.
@@ -2351,7 +2351,7 @@ There are only a few cases where include directives are allowed:
     ```
 
     <div class='badcode'></div>
-
+    
     ```verilog
     // Include 'foo_pkg' package because module 'foo_top' depends on it.
     // Bad: can lead to a repeated declaration of a package.
@@ -2365,7 +2365,7 @@ There are only a few cases where include directives are allowed:
     cannot be wrapped into its own module or package.
 
     <div class='goodcode'></div>
-
+    
     ```verilog
     module foo (
         `include "generated_signals.svh"  // Good: snippet, which cannot be wrapped
@@ -2374,7 +2374,7 @@ There are only a few cases where include directives are allowed:
     ```
 
     <div class='badcode'></div>
-
+    
     ```verilog
     module foo ();
       `include "common_assertions.svh"  // Bad: wrap into a module instead
