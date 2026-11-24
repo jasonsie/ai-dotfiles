@@ -3,7 +3,7 @@
 
 # Schedule command (/schedule)
 
-Available on: Antigravity App, Antigravity CLI, Antigravity IDE
+Available on: Antigravity App, Antigravity CLI, IDE extensions (VS Code, Visual Studio, Eclipse), Antigravity IDE
 
 Set a one-time timer or a recurring cron schedule that wakes the agent with an instruction, without blocking the conversation while it waits.
 
@@ -50,14 +50,14 @@ The `schedule` tool supports two mutually exclusive modes. The agent picks the m
 A timer waits for a fixed duration and then fires once:
 
 | Parameter | Description |
-| :-- | :-- |
+| --- | --- |
 | `DurationSeconds` | Seconds to wait before firing. |
 | `Prompt` | Instruction delivered to the agent when the timer fires. |
 | `TimerCondition` | Optional early-cancel condition: `never` (default), `any` (any incoming message), or the ID of a specific subagent or background task. |
 
 Timers are useful for “check back in N minutes” workflows. With a `TimerCondition`, the timer is cancelled early when a matching message arrives, such as a subagent finishing, and that message itself wakes the agent, so it doesn’t wait the full duration unnecessarily.
 
-```text
+```prompt
 /schedule wait up to 5 minutes for the test subagent to report back, then check its results either way
 ```
 
@@ -66,7 +66,7 @@ Timers are useful for “check back in N minutes” workflows. With a `TimerCond
 A cron schedule fires repeatedly on a standard five-field cron expression:
 
 | Parameter | Description |
-| :-- | :-- |
+| --- | --- |
 | `CronExpression` | Standard five-field cron expression, such as `*/5 * * * *` for every five minutes. |
 | `Prompt` | Instruction delivered on each trigger, suffixed with the iteration number. |
 | `MaxIterations` | Optional cap on the number of triggers. Defaults to unlimited. |

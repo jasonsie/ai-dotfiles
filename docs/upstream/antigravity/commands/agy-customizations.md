@@ -3,7 +3,7 @@
 
 # Customizations command (/agy-customizations)
 
-Available on: Antigravity App, Antigravity CLI, Antigravity IDE
+Available on: Antigravity App, Antigravity CLI, IDE extensions, Antigravity IDE
 
 Load the Antigravity customization reference into the agent’s context before you ask it to create, change, or explain a [rule](/docs/rules), [skill](/docs/skills), [plugin](/docs/plugins), [hook](/docs/hooks), or [MCP server](/docs/mcp) configuration.
 
@@ -26,11 +26,11 @@ Type `/agy-customizations` followed by a request. The agent loads the guide, rea
 /agy-customizations create a PreToolUse hook that blocks git push --force
 ```
 
-```text
+```prompt
 /agy-customizations my deploy skill never shows up as /deploy, figure out why
 ```
 
-```text
+```prompt
 /agy-customizations should this be a rule or a skill?
 ```
 

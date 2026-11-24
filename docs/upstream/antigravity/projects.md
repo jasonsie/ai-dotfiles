@@ -16,7 +16,7 @@ A **project** is a configuration of folders defining the environment and the sco
 ### Key differences: workspace vs. projects
 
 | Feature | Original Model (Workspace) | New Model (Project) |
-| :-- | :-- | :-- |
+| --- | --- | --- |
 | **Organization Scope** | Tightly coupled to a single local repository. | Projects are a configuration of all of the context and folders that your agents should work with. |
 | **Directory Boundaries** | Agent is strictly confined to one folder structure. | A single project can span **multiple folders** at once. |
 | **Settings Isolation** | Settings inherited globally from the machine. | Projects have their own settings. Agents in a project use the project’s settings. |
@@ -31,6 +31,8 @@ A project is composed of **folders**, which define the directories and repositor
 
 *   **Local folders**: A folder that doesn’t have Git configured.
 *   **Local Git checkout**: A folder that is a Git repository checkout.
+
+To create projects whose folders and Git worktrees live on a remote Linux machine, click **+** next to **Projects** and choose **SSH Host…** (see [Connect over SSH](/docs/ssh)).
 
 #### Worktree selection (local vs. new worktree)
 

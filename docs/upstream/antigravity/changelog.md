@@ -9,9 +9,214 @@ New versions roll out gradually and may take a few days to reach all users.
 
 ## Antigravity App
 
-### [v2.32.0](/releases?tab=hub&version=2.32.0 "View release 2.32.0")
+### [v2.35.0](/releases?tab=hub&version=2.35.0 "View release 2.35.0")
 
 Latest
+
+November 23, 2026
+
+### Unlimited conversation history, Conversation Management API, and HTML artifact search
+
+This release keeps your local conversation history unlimited by default, offers a conversation management API for agents to create and manage Antigravity conversations, and adds Cmd+F search inside full-page HTML artifacts. It includes 20 improvements and 19 fixes.
+
+**Improvements:**
+
+*   Antigravity now keeps your local conversation history unlimited by default instead of pruning older conversations after 500.
+*   Agents, scripts, plugins, and automations can now use the built-in Conversation Management API and conversations skill to create, list, inspect, rename, pin, star, archive, tag, group, and delete local Antigravity conversations.
+*   The message box now places the Environment selector ahead of Project and Branch, putting SSH Host directly in the environment menu and scoping project lists with cloning submenus when remote agents are enabled.
+*   Auto permission mode now approves file reads outside your current project automatically while keeping sensitive configuration directories protected.
+*   Permission prompts for writing files outside your project now suggest directory scopes instead of single files, and bold target paths and patterns for faster scanning.
+*   You can now search inside full-page HTML artifacts with Cmd+F (Ctrl+F on Windows and Linux), complete with match highlighting and navigation.
+*   Markdown and plain-text file tabs now include a per-tab RTL text direction toggle in the header for reading RTL prose without flipping code blocks or other open tabs.
+*   Opening large swarms in the Swarm board is now much faster with on-demand message paging, incremental board updates, and reduced background polling while hidden.
+*   ClickUp, Midpage Legal Research, and Descrybe Legal Engine partner plugins are now available in the Marketplace.
+*   Updated the official Gemini API Marketplace plugin to v2.8.0 with Gemini 4 Neon usage and migration guidance.
+*   The queued messages card now names any active background tasks or subagents holding delivery after a turn ends, so you can see why a message is waiting or choose Send Now.
+*   Consecutive parallel subagent launches now collapse into a single expandable row, and adjacent Worked for sections with no intervening output merge automatically.
+*   The model and permissions selectors in the message box now lock with explanatory tooltips while a turn is running so changes are not mistaken as taking effect mid-turn.
+*   Default Orchestrator and Executor models in Settings > Models now start at High thinking effort when available instead of the highest available effort level.
+*   Selecting a side-question match in conversation search now opens both the parent conversation and its side-question tab directly.
+*   The Installed tab in Customizations now starts non-plugin sections collapsed until you search, plugin detail pages show an Added badge once installed, and chat plugin cards display install errors inline.
+*   Running conversations now include Archive right below Stop in sidebar and history menus.
+*   The Open IDE header button is now borderless to match adjacent controls, and on Windows and Linux the menu bar uses a slimmer layout with muted labels and a muted app icon.
+*   The Other License auto-assign screen now suggests your discoverable Google Cloud projects in a searchable dropdown during onboarding and in Settings.
+*   Unbound the default Cmd+U (Ctrl+U on Windows and Linux) shortcut for Automations; you can still assign a custom shortcut in Settings > Shortcuts.
+
+**Fixes:**
+
+*   Fixed an issue where comments added on code artifacts did not appear in the Review button counter, sidebar badges, or combined review submissions.
+*   Fixed an issue where pressing Stop right after sending a follow-up could drop the message instead of returning it to the message box.
+*   Fixed an issue where using Send Now on a queued message could overwrite draft text in the message box or lose keyboard focus, and kept queue collapse state scoped per conversation.
+*   Fixed an issue where sending a follow-up to an idle conversation could briefly flash a pending send card, and where a message waiting to send during a running turn could appear below the working indicator.
+*   Fixed an issue where splitting a terminal in the side panel reloaded the pane and lost its scroll position and keyboard focus.
+*   Fixed an issue where selecting a quote pill inside a side-question tab did not scroll the parent conversation to the quoted passage, and where closed side-question tabs were not restored when navigating back to them.
+*   Fixed an issue where reconnecting to a conversation wiped edits made inside an open permission prompt.
+*   Fixed an issue where approving a permission or question prompt could cause the conversation to jump.
+*   Fixed an issue where shell commands containing dollar signs inside agent question cards rendered as math formulas.
+*   Fixed an issue where single-line command and file pills could misalign their first letter by one pixel at fractional display zoom levels.
+*   Fixed an issue where Fill conversation width left extra left padding in single-turn conversations and narrow views where the navigator rail is hidden.
+*   Fixed an issue where focus rings around the Google Cloud project field and license cards were cut off during license selection.
+*   Fixed an issue where closing media previews or the voice picker could move keyboard focus to the wrong control instead of returning to the button that opened it.
+*   Fixed an issue where installed plugins disappeared from Customizations when disabled by an organization policy instead of showing as blocked and removable.
+*   Fixed an issue where failed skill, rule, or agent loads in Project Customizations appeared as an empty list instead of displaying an error.
+*   Fixed an issue where a Marketplace plugin card could briefly revert from a spinner back to the Add button after installation before showing the installed menu.
+*   Fixed an issue where file tools or sandboxed commands could access internal session connection files, and where Auto mode safety checks inspected commands from the wrong working directory.
+*   Fixed an issue where enterprise sign-in could save a token with stale project or license metadata, and where cached account status did not refresh right away after access was revoked.
+*   Fixed an issue where the desktop app repeatedly polled unavailable remote Git status and retried permanent permission or request errors instead of stopping or backing off.
+
+---
+
+### [v2.34.0](/releases?tab=hub&version=2.34.0 "View release 2.34.0")
+
+November 20, 2026
+
+### Gemini 4 Neon, MCP Apps, and more
+
+This release brings MCP App support and Gemini 4 Neon to eligible paid consumer plans. It includes 15 improvements and 24 fixes.
+
+**Improvements:**
+
+*   Gemini 4 Neon and Orchestrator (Neon) are now available for eligible paid consumer plans, and Gemini 4 Neon is available with Gemini API keys and Application Default Credentials. Enterprise and Application Default Credentials accounts also now support the Orchestrator.
+*   You can now choose whether Enter or Ctrl+Enter (Cmd+Enter on macOS) sends messages under Settings > General > Input Box.
+*   You can now start a side question directly from selected output in the integrated terminal using Cmd+E (Ctrl+E on Windows and Linux) or the selection popup.
+*   Diff views now use a single-column line-number gutter with color-coded change strips, giving code more horizontal room before wrapping.
+*   You can now drag conversation tabs from the side panel directly into the message box to reference them in a prompt.
+*   URLs typed or pasted into the message box are now automatically formatted as interactive links.
+*   Selecting a skill pill in a conversation now opens its skill definition file in the side panel.
+*   The Antigravity Dock icon now adapts to Dark Mode and tinted icon styles on macOS 26 and later.
+*   Added Clerk, Docusign, and TestMu AI partner plugins to the Marketplace.
+*   The Installed tab in Customizations now shows the first two bundles above a See more toggle so your plugins stay near the top.
+*   Sign out buttons for plugin accounts and plugin MCP servers now show a loading indicator while sign-out finishes.
+*   The model selector effort submenu now includes a Thinking effort header with a tooltip explaining latency and quota tradeoffs.
+*   Improved Git status refresh speed in large repositories by reusing recent status checks and limiting diffs to changed files.
+*   Notifications now skip the banner and sound when you are already viewing the conversation that finished or asked for input.
+*   Your reading position now stays anchored after approving a command prompt instead of jumping when the approval card collapses.
+
+**Fixes:**
+
+*   Fixed an issue where closing Antigravity on Windows while an update was staged could corrupt the installation, and ensured background processes shut down before installing updates.
+*   Fixed an issue where maximizing, restoring, or entering full screen on Linux could leave window content sized incorrectly and cut off the bottom of the sidebar.
+*   Fixed an issue where overflowing tabs in the side panel on macOS could make the window title bar undraggable.
+*   Fixed an issue where desktop Antigravity sessions missing a required authentication scope were not signed out when idle so you could sign back in with the required permissions.
+*   Fixed an issue where a transient background status poll error could clear your loaded account state and display No Model Selected.
+*   Fixed an issue where scrolling up past the top of a long agent response could bounce the view back down.
+*   Fixed an issue where a failed step update or subagent wakeup could cause the turn step checklist to flash or disappear.
+*   Fixed an issue where canceled agent responses kept animating indefinitely and retried stream errors could show discarded partial text.
+*   Fixed an issue where streamed Chinese, Japanese, and other spaceless-script text appeared in abrupt chunks instead of fading in word by word.
+*   Fixed an issue where plugins whose manifest file started with a UTF-8 byte order mark installed without error but failed to load.
+*   Fixed an issue where skills without a name field in their frontmatter could collide with each other instead of taking their folder name.
+*   Fixed an issue where number or arrow keys could select disabled options in permission and question prompts.
+*   Fixed an issue where exiting an IME composition without a standard end event could cause follow-up keystrokes in the message box to be ignored.
+*   Fixed an issue where selecting a quote chip did not scroll to the quoted message in longer paginated conversations.
+*   Fixed an issue where a fade gradient in the title bar painted over the overview button even when the side panel was closed.
+*   Fixed an issue where the focus outline around the search bar in Settings > Shortcuts was cut off on the sides.
+*   Fixed an issue where the Learn more link in the Google Cloud project picker pointed to a broken page.
+*   Fixed an issue where newly opened file and artifact tabs showed their inner sidebar expanded by default.
+*   Fixed an issue where Settings > General could show an empty Advanced Settings toggle when no nested options were visible.
+*   Fixed an issue where stopping voice dictation immediately after starting it could leave the microphone active.
+*   Fixed an issue where network paths in project customization files on Windows could be probed instead of rejected immediately.
+*   Fixed an issue where loading older messages in long conversations showed no loading indicator or error feedback.
+*   Fixed an issue where Trello and Zoho Books plugin icons appeared tiny or low-contrast in dark themes.
+*   Fixed an issue where window minimize, maximize, and close icons on Windows and Linux rendered brighter than adjacent header icons.
+
+---
+
+Model launch·November 18, 2026
+
+### Gemini 4 Neon
+
+Gemini 4 Neon is now available on Google AI Ultra, Google AI Pro, and Gemini Enterprise, and it's the default model if you haven't chosen one, with four thinking levels and Orchestrator (Neon) for planning with Gemini 4 Neon and implementing with Gemini 4 Hydrogen.
+
+[ Read on the Antigravity blog](/blog/gemini-4-neon-in-google-antigravity)
+
+---
+
+### [v2.33.0](/releases?tab=hub&version=2.33.0 "View release 2.33.0")
+
+November 17, 2026
+
+### Connect over SSH and GitHub pull request integration
+
+This release adds SSH host connections for running projects and agents on remote Linux machines, along with live GitHub pull request status pills, hover cards, and an Overview Pull Requests section. It also brings in-page Cmd/Ctrl+F search to the built-in browser and opens /swarm and UI plugin panels to business and enterprise accounts. It includes 16 improvements and 21 fixes.
+
+**Improvements:**
+
+*   You can now connect the Antigravity App to a remote 64-bit Linux machine over SSH from the sidebar, the project menu (SSH Host...), or the command palette (Connect to SSH Host...). Antigravity installs its remote server automatically over OpenSSH using your ~/.ssh/config so projects, Git worktrees, agents, and terminals run on the host and keep working even after you close the window.
+*   GitHub pull request links in chat and URL artifact cards now render as live status pills with hover cards, alongside a new Pull Requests section in the Overview panel and an optional conversation sidebar indicator.
+*   Finished /btw side-question answers now include an Insert into main conversation action, and you can start a side question from selected subagent text or promote a subagent tab to Full View when running /btw.
+*   You can now search within pages in the built-in browser with Cmd/Ctrl+F from either the browser toolbar or the page itself, while web apps with their own search keep handling the shortcut.
+*   You can now choose the Nord dark theme and matching syntax palette in Settings > Appearance.
+*   Added syntax highlighting for R and R Markdown (.R, .Rmd, .Rprofile, .Renviron, and NAMESPACE), including YAML frontmatter and inline or fenced R code chunks.
+*   Business and enterprise accounts can now use /swarm and open UI plugin panels from the side panel, Overview, New Tab, and title bar when allowed by organization admin settings.
+*   Added Cloudflare, Grafana Cloud, SonarQube, incident.io, Better Stack, Tavily, and Levels.fyi to the partner plugin marketplace, and updated the Gemini API plugin and 15 partner plugins.
+*   You can now open and play audio and video files up to 200 MB in the side panel instead of hitting a 20 MB limit, and attach .amr voice recordings in Gemini conversations.
+*   Text-heavy and dense PDFs now open and scroll faster in the side panel by deferring text-layer rendering, with a toolbar toggle to turn text selection on for very large documents.
+*   Settings > Shortcuts now lists additional navigation, conversation, and layout shortcuts for customization and stops showing false conflict warnings for inactive bindings.
+*   Messages sent immediately while the agent is working now appear as sent without pulsing and keep the turn above them steady on delivery. Agent response actions are now left-aligned below the status line, and a single running subagent opens from the status line in one step.
+*   Improved performance when switching conversations, typing in long chats, scrolling large file diffs in Review, reverting turns, and playing the welcome intro.
+*   Selected conversations now have stronger contrast in light themes, disabled Download and Export actions stay visible with a reason when a file cannot load, and shell commands run in the first listed project folder.
+*   Device management policies in admin\_settings.json can now lock sign-in and project settings, enforce permission ceilings, disable remote control, and restrict plugins or marketplace access.
+*   If you use remote agents, editing env-setup.sh now shows Saved setup routine with an Open in settings link, project setup scripts are labeled Environment, and multiple open windows share a single cloud polling loop.
+
+**Fixes:**
+
+*   Fixed an issue where the Continue button on the Terms of Service dialog could be pushed off screen in shorter windows and where the Creating a Project tip overlapped the welcome dialog on first launch.
+*   Fixed an issue where opening Antigravity offline or hitting a temporary network failure signed you out instead of keeping your saved session.
+*   Fixed an issue where macOS could repeatedly show Keychain Not Found dialogs every hour after a keychain write failed.
+*   Fixed an issue where Workforce Identity Federation (SSO) accounts had to re-enter their sign-in configuration after token expiry or an app restart.
+*   Fixed an issue where refreshing models or restarting after an enterprise license was revoked left the model selector empty instead of reopening subscription selection, and where top-tier Google AI plans still showed Upgrade links.
+*   Fixed an issue where, on Windows, timed-out Git status checks could leave background git.exe processes running and consuming gigabytes of memory.
+*   Fixed an issue where, on Windows, custom agent, rule, and hooks.json files saved with a UTF-8 byte order mark were ignored, command hooks with quoted paths failed, and multi-line scheduled automation prompts were truncated to the first line.
+*   Fixed an issue where attaching an empty text, Markdown, JSON, or HTML file caused that turn and every later message in the conversation to fail.
+*   Fixed an issue where sent voice memos and audio attachments showed 0:00 without playing, and where removing an audio attachment in the composer transferred its playback state to the next recording.
+*   Fixed an issue where dragging a file onto the edge padding of the message box failed with an editor error, and where moving up to another choice in a single-select question card erased your custom Other answer.
+*   Fixed an issue where @ and / menus in a split-view new-conversation pane were cut off at the top edge, and where pressing Ctrl+D on Windows or Linux split the pane instead of canceling an active turn or prompt.
+*   Fixed an issue where switching between View File and View Diff could leave the diff pane blank, where files over 500 KB showed a false trailing change, and where resizing the side panel briefly shifted Markdown scroll position.
+*   Fixed an issue where custom file viewers from plugins and MCP apps still showed non-working Preview, Raw, Word Wrap, and Export as PDF controls in the side panel.
+*   Fixed an issue where built-in browser approval prompts from the browser agent timed out after 60 seconds while you were away, where Comment and Quote missed text in same-origin iframes, and where the desktop app opened a local debug port on startup.
+*   Fixed an issue where remote MCP servers using OAuth signed you out after an hour when tokens refreshed, where configured MCP headers were sent across cross-origin redirects, and where OAuth sign-in callbacks failed on IPv6-only machines.
+*   Fixed an issue where empty internal plugin projects appeared in project pickers, where Create with Prompt on the Automations page could target a remote project instead of This Computer, and where /learn appended past rule file size limits.
+*   Fixed an issue where Mark all as read failed if an older conversation file was missing on disk, where files opened in the side panel were missing from Recent Files, and where renaming a conversation in the sidebar lost keyboard focus.
+*   Fixed an issue where long reasoning turns timed out after five minutes of thinking, where stale pooled network connections failed retries, and where a corrupt queued message file could block later messages in a conversation.
+*   Fixed an issue where unanswered microphone permission prompts in Voice mode waited indefinitely instead of timing out with a retryable error.
+*   Fixed an issue where organization file-access policies reset Always Proceed terminal settings on admin-managed accounts, and where hooks or wildcard rules could bypass enforced command or outside-project file review.
+*   Fixed an issue where, in remote conversations, post-clone setup scripts left the status stuck on Cloning repositories or Copying files instead of showing Setting up environment.
+
+---
+
+### [v2.32.2](/releases?tab=hub&version=2.32.2 "View release 2.32.2")
+
+November 16, 2026
+
+### Multi-turn /btw side-question tabs and diagnostic logging fix
+
+This release brings multi-turn /btw side-question tabs with read-only tool access to the Antigravity App and fixes an issue that could truncate diagnostic logs. It includes 1 improvement and 1 fix.
+
+**Improvements:**
+
+*   Side questions (/btw) now open in a dedicated Side Question tab in the side panel where you can ask multi-turn follow-up questions and let the agent read files, search your workspace, and run read-only commands without interrupting the main conversation.
+
+**Fixes:**
+
+*   Fixed an issue that could truncate diagnostic logs.
+
+---
+
+### [v2.32.1](/releases?tab=hub&version=2.32.1 "View release 2.32.1")
+
+November 13, 2026
+
+### Gemini 4 Hydrogen when you sign in with Google Cloud credentials
+
+This release adds Gemini 4 Hydrogen to the model selector when you sign in with Google Cloud application default credentials.
+
+**Improvements:**
+
+*   When you sign in with Google Cloud application default credentials, you can now choose Gemini 4 Hydrogen at low, medium, or high thinking levels in the model selector.
+
+---
+
+### [v2.32.0](/releases?tab=hub&version=2.32.0 "View release 2.32.0")
 
 November 13, 2026
 
@@ -1547,9 +1752,186 @@ Antigravity 2.0 Launch bug fixes.
 
 ## Antigravity CLI
 
-### [v1.5.8](/releases?tab=cli&version=1.5.8 "View release 1.5.8")
+### [v1.5.13](/releases?tab=cli&version=1.5.13 "View release 1.5.13")
 
 Latest
+
+November 19, 2026
+
+### Gemini 4 Neon support, column-aware table selection, faster multi-step tasks, and ACP fixes.
+
+Antigravity CLI 1.5.13 adds support for Gemini 4 Neon via ADC and enterprise model gateways, introduces column-aware mouse selection for Markdown tables, and speeds up multi-step agent tasks by batching independent operations. This release also resolves several issues across custom model configurations, non-QWERTY keyboard shortcuts, ACP editor integrations, and the Remote Control browser view.
+
+**Improvements:**
+
+*   Added Gemini 4 Neon (Low, Medium, High, and XHigh) to `/model` and `--model` when you sign in with Application Default Credentials (`AGY_ADC_AUTH`), and added support for Gemini 4 Neon through an enterprise model gateway.
+*   Improved mouse selection in Markdown tables in the `full screen (altscreen)` rendering mode and the artifact viewer: a drag that starts in a table now follows its columns, so you copy only the text of the column you drag in, or whole cells separated by tabs when you drag across columns, instead of the borders and the text of neighboring columns.
+*   Improved how the agent works through multi-step tasks: it now runs independent searches, file reads, and edits together in one step and chains related shell commands into a single command, so tasks take fewer turns.
+
+**Fixes:**
+
+*   Fixed custom models in `settings.json` ignoring `modelFeatures` flags set to `false`, such as `supportsThinking` and `supportsToolCalls`, so the CLI no longer requests thinking or tool calls from a model you've marked as not supporting them.
+*   Fixed agents starting a swarm on their own when you hadn't typed `/swarm`, which can use far more of your quota than a single agent; the swarm skill is no longer offered to the agent, and `/swarm` works as before.
+*   Fixed `Ctrl` and `Alt` shortcuts, such as `Ctrl+C` and `Ctrl+D`, acting as a different key on non-QWERTY keyboard layouts like Neo2, Dvorak, AZERTY, or German QWERTZ in terminals such as Ghostty; shortcuts now follow your keyboard layout.
+*   Fixed `Enter` adding a new line instead of running the command in `!` shell mode when Vim mode is on.
+*   Fixed `agy update` on Android (Termux) failing with a `directory /apex/com.android.runtime/bin is not fully accessible` error.
+*   Fixed the `/config` hint for the `Send Immediately` option of `Queued Messages`, which said it interrupts the agent; it now says your message joins the current turn and the agent reads it after its current step.
+*   Fixed the `status` of `--output-format json` and `stream-json` results reading `ERROR`, with the error of a failed attempt, for runs that succeeded after the CLI retried a model request; they now report `SUCCESS`.
+*   Fixed `agy acp` running the agent's shell commands in the directory the editor launched it from, such as your home directory, instead of the session's project folder.
+*   Fixed `agy acp` ignoring the file contents an editor attaches to a prompt, such as a file with unsaved changes in Zed; the agent now sees the editor's copy instead of the last saved version on disk.
+*   Fixed model pickers in editors connected through `agy acp`, such as Zed and JetBrains AI Chat, showing internal `MODEL_PLACEHOLDER_...` IDs and several rows with the same name when you use an enterprise model gateway; each model is now listed once under its model ID, and models that share a name show their ID next to it.
+*   Fixed `agy acp` showing an `API error (attempt N)` message in the editor's chat each time the CLI retried a model request, even when the retry succeeded; retries are now silent, as in the terminal, and the chat shows an error only when every retry fails.
+*   Fixed the built-in `/antigravity-guide` skill reading a redirect notice instead of the page when the agent looked up the Antigravity docs or changelog to answer your questions, such as what's new in the latest release.
+*   Fixed the Remote Control browser view jumping when you answer a permission prompt; the conversation now stays where you were reading instead of sliding down as the prompt closes.
+*   Fixed permission prompts in the Remote Control browser view resetting after a brief connection drop, which lost the option you had picked, your edits to the command or path, and anything you had typed for the `No` option.
+
+---
+
+### [v1.5.12](/releases?tab=cli&version=1.5.12 "View release 1.5.12")
+
+November 19, 2026
+
+### Remote Control split view, Gemini 4 Neon API key support, and faster conversation forking.
+
+Antigravity CLI 1.5.12 introduces split view in the Remote Control browser view, adds Gemini 4 Neon support when connecting with a `GEMINI_API_KEY`, improves `/fork` speed for large conversations, and resolves several network retry, rendering, and Remote Control bugs.
+
+**Improvements:**
+
+*   Added split view to the Remote Control browser view, so you can keep several conversations open side by side: choose `Split Right` or `Split Down` from the `Split` submenu of a conversation's menu in the sidebar or of the ⋮ menu in its title bar (not available on phones).
+*   Added Gemini 4 Neon (Low, Medium, High, and XHigh) to `/model` and `--model` when you connect with a `GEMINI_API_KEY`.
+*   Added a scroll position indicator to the `full screen (altscreen)` rendering mode: while you're scrolled up, the line above the prompt shows how much of the conversation is below what you're reading, such as `↓ 25 lines · 2 turns`.
+*   Improved Markdown headings in agent responses and artifacts, which now show only their text, set apart by bold, italic, or underline, instead of starting with `##` to `######` markers that looked like Markdown that failed to render.
+*   Improved `/fork` for conversations whose artifact folder has grown large, for example after the agent cloned a repository or kept build output in `scratch/`: the fork now leaves those files with the original conversation and points the forked agent to them instead of copying every file, so forking takes seconds instead of up to an hour, and deleting the original conversation also deletes those files.
+*   Improved scrolling back through a long conversation in the Remote Control browser view: `Loading older messages…` now shows while earlier messages load, and if they fail to load, `Couldn't load older messages · Retry` lets you try again instead of the view retrying silently every time you scroll up.
+*   Improved Auto mode's review of commands that would leave the terminal sandbox so it decides faster, times out less often, and asks you to approve safe commands less often: when the review runs on Gemini 4 Hydrogen, it now uses medium instead of high thinking.
+
+**Fixes:**
+
+*   Fixed agent turns stopping with an error after a brief connection problem, such as a connection the server reset, a model response that broke off partway through, or the network not being ready yet right after your computer wakes from sleep; the CLI now retries these requests automatically.
+*   Fixed Remote Control, `--remote-agent`, and voice dictation being offered when you connect with a `GEMINI_API_KEY`, where they could only fail, for example with a Remote Control link that never connected: `--remote-control` and `--remote-agent` now exit with code 2 at launch, and `/remote-control`, `/voice`, and `/record` are left out of autocomplete and `/help` and explain that they aren't available with a Gemini API key.
+*   Fixed the status line showing a red `AI: Out of credits` when you connect with a `GEMINI_API_KEY` and AI credits are turned on in your settings; API keys don't use AI credits, so that status and the `Use AI Credits` setting in `/config` no longer appear.
+*   Fixed copying a long prompt with the mouse in the `full screen (altscreen)` rendering mode putting a line break wherever the prompt wrapped on screen; a prompt you sent, or the text in the prompt box, now copies as you typed it.
+*   Fixed bold text next to Chinese, Japanese, or Korean text showing its `**` markers when the bold part starts or ends with punctuation, such as `**注意：**这里`.
+*   Fixed the Remote Control browser view crashing on a conversation that contains `@` mentions pasted back from a Markdown export, such as Google Docs' Copy as Markdown; such mentions now paste as plain text, and affected conversations open normally again.
+*   Fixed pressing `Enter` in the Remote Control browser view sending your message while the send button was disabled, such as before an attachment finished uploading or while the conversation was still loading; `Enter` now waits until you can send, and your draft stays in the message box.
+
+---
+
+Model launch·November 18, 2026
+
+### Gemini 4 Neon
+
+Gemini 4 Neon is now available on Google AI Ultra, Google AI Pro, and Gemini Enterprise, and it's the default model if you haven't chosen one, with four thinking levels and Orchestrator (Neon) for planning with Gemini 4 Neon and implementing with Gemini 4 Hydrogen.
+
+[ Read on the Antigravity blog](/blog/gemini-4-neon-in-google-antigravity)
+
+---
+
+### [v1.5.11](/releases?tab=cli&version=1.5.11 "View release 1.5.11")
+
+November 18, 2026
+
+### Drag-to-mention subagents, native Vim undo behavior, and remote plugin validation
+
+This release introduces drag-to-mention for subagent tabs in the Remote Control browser view, refines Vim mode undo behavior, and expands `agy plugin validate` to support `.zip` files and GitHub URLs, alongside fixes for API key quota commands, UTF-8 BOM plugin manifests, and large file uploads.
+
+**Improvements:**
+
+*   Added dragging a subagent's tab from the side panel into the message box in the Remote Control browser view, which adds an `@` mention of that subagent's conversation to your message.
+*   Improved undo in Vim mode to work like Vim: `u` now undoes one command at a time instead of grouping edits made close together, a change that enters Insert mode, such as `cw` or `o`, undoes together with everything you typed before `Esc`, and undoing or redoing an operator such as `dd` or `diw` puts the cursor at the start of the changed text.
+*   Improved `agy plugin validate` so you can check a plugin before you install it: besides a local folder, it now accepts a plugin `.zip` file, an `https://` link to one, or a GitHub repository URL, using `https://github.com/<owner>/<repo>/tree/<branch>/<path>` for a plugin in a subfolder.
+*   Changed file and artifact tabs in the side panel of the Remote Control browser view to open with their sidebar closed, so the file or artifact gets the panel's full width; previously the file tree or artifact list opened on its own whenever the panel was wide enough, and you can still open it with `Toggle sidebar` in the tab's header.
+
+**Fixes:**
+
+*   Fixed `/usage`, `/quota`, and `/credits` loading forever or showing an empty quota when you connect with a `GEMINI_API_KEY`, which has no account quota to show; they are now left out of autocomplete and `/help`, running one explains why and points you to the key's usage in AI Studio, and in `-p` runs they exit with code 2.
+*   Fixed plugins whose `plugin.json` starts with a UTF-8 byte order mark (BOM), as some Windows editors save it, not loading even though `agy plugin install` reported success, and `agy plugin validate` rejecting them.
+*   Fixed files larger than a few megabytes, such as photos and videos, failing to upload when you attach them in the Remote Control browser view; attachments up to 20 MB now upload.
+*   Fixed clicking a quote in one of your messages in the Remote Control browser view doing nothing when the quoted passage was too far back in a long conversation to have loaded yet; the view now loads that part of the conversation and scrolls to the passage.
+*   Fixed installing the CLI printing routine progress messages as lines starting with `ERROR: logging before google.Init`, which made a successful install look like it had failed.
+
+---
+
+### [v1.5.10](/releases?tab=cli&version=1.5.10 "View release 1.5.10")
+
+November 17, 2026
+
+### Remote agent accept-edits mode, Orchestrator for Enterprise/ADC, and Remote Control updates
+
+Version 1.5.10 adds accept-edits mode for remote agent sessions, enables the Orchestrator model for Gemini Enterprise and ADC accounts, and introduces new navigation, quoting, and overview features to the Remote Control browser view alongside memory, rate-limit, and sandbox improvements.
+
+**Improvements:**
+
+*   Added `accept-edits` mode to `--remote-agent` sessions: `Shift+Tab` now switches between the default mode and `accept-edits` instead of doing nothing. Sessions still start in the default mode, where the remote agent now asks before each file edit in its workspace, so you may see edit approval prompts you didn't get before; switch to `accept-edits` to let edits go ahead without asking.
+*   Added the Orchestrator model to `/model` for Gemini Enterprise accounts and sign-ins with Application Default Credentials (`AGY_ADC_AUTH`): it plans with Gemini 4 Carbon (High) and hands the plan's execution to Gemini 4 Hydrogen (High), and it appears when you can select both of those models.
+*   Added a conversation navigator to the Remote Control browser view: a rail with a mark for each of your prompts previews the prompt when you hover over it and jumps to it when you click, and `[` and `]` jump to the previous or next prompt.
+*   Added a `Quote` button to the Remote Control browser view: select text in an agent response and click `Quote` to add it to your next message as a quote.
+*   Added clickable links to the message box and your sent messages in the Remote Control browser view: a web address you type or paste opens with `Cmd+click` (`Ctrl+click` on Windows and Linux) or a middle-click, while a plain click still places the cursor.
+*   Added the time left to timers the agent sets, in the Remote Control browser view: each running timer in `Background Tasks` shows a countdown such as `59m left`, and when a timer is all that's running, the status line reads, for example, `Waiting for 1h timer · 59m left`.
+*   Improved rate-limit handling: when the model API asks the CLI to wait before retrying, the CLI now waits and retries for delays of up to 4 minutes instead of stopping the turn when the delay is longer than 30 seconds, so per-minute rate and capacity limits no longer end your turn, while spend-cap, prepaid-balance, and weekly quota errors now stop the turn right away.
+*   Improved `/model` when your plan offers more than one Orchestrator planner: the separate `Orchestrator (Carbon)` and `Orchestrator (Argon)` rows are now a single `Orchestrator` row with a `Planner` choice that you change with `←`/`→` or `Tab`, while `--model` and saved settings keep using the full names.
+*   Improved switching to a conversation that's already open in long sessions: `/resume <id>` back to it and the switch after `/fork` no longer load the conversation's whole history first, so they no longer pause for a second or more, and `/btw` and `/help` side questions start faster too.
+*   Improved memory use in long sessions: the CLI now keeps only recently used conversation steps in memory and reloads older ones from disk when it needs them, instead of holding every step for as long as the conversation is open, and it no longer loads every earlier subagent's full history at the start of each turn, which could take several GiB in sessions that ran many subagents.
+*   Improved click-to-expand in the `full screen (altscreen)` rendering mode: items you can click, such as `(ctrl+o to expand)` hints, thoughts, expanded tool groups, and the pinned prompt, now highlight when you hover over them.
+*   Improved the side panel in the Remote Control browser view: files and reviews open in tabs that come back when you reload the page, and a new Overview Panel, opened from the title bar or with `Cmd+Option+O` (`Ctrl+Alt+O` on Windows and Linux), lists the conversation's artifacts, modified files, subagents, and background tasks.
+*   Changed the terminal sandbox to block sandboxed commands from reading `~/.config` (or your `XDG_CONFIG_HOME`) and, on Windows, `AppData\Roaming` by default, since other programs keep settings and tokens there; previously they were readable. The settings of common developer tools such as Git, Go, npm, and Python stay readable, `~/.git-credentials` is now blocked, and you can still allow other paths explicitly in your sandbox rules.
+
+**Fixes:**
+
+*   Fixed Auto mode asking for approval to read files outside the workspace even when `Non-Workspace Access` is turned on in `/config`; Auto mode now honors that setting.
+*   Fixed long, high-effort model responses being canceled and restarted from scratch when the model went more than 5 minutes without sending anything while it was still thinking; the CLI now waits up to 10 minutes before it treats a silent response as stalled.
+*   Fixed turns failing with `model output must contain either output text or tool calls`, or the conversation compacting far earlier than needed, after the agent read very large files, such as multi-megabyte PDFs, before the conversation's first compaction.
+*   Fixed a rare race that could leave a new conversation unusable, with every message failing with `trajectory not found` even after a restart, when the conversation was created while the CLI was listing saved conversations, such as at startup or when an editor connected through `agy acp` refreshed its session list.
+*   Fixed `agy acp` holding back what the agent did after a turn ended: when a background task or subagent finishes and wakes the agent, its replies, tool calls, and permission requests now reach the editor right away instead of at your next prompt, so the agent no longer waits on a permission request the editor never showed.
+*   Fixed `agy acp` leaving a session's subagents and background tasks, such as dev servers, running after the editor canceled a prompt or closed the session, where they could keep working and wake the conversation again; canceling or closing now stops them, and closing does so even when no prompt is running.
+*   Fixed signing in to a plugin right after installing it from `/plugin`, where pasting the code from its sign-in page could fail with "The sign-in link changed. Open the new one above, then paste its code."
+*   Fixed plugins running while your organization turns them off with `pluginsDisabled` in managed admin settings: plugin MCP servers and other plugin processes no longer start before sign-in finishes, and they now stop as soon as an administrator turns plugins off during a session.
+*   Fixed skills whose `SKILL.md` has no `name` in its frontmatter: they were all named `SKILL`, so only the first one loaded and the rest were silently dropped; each is now named after its folder, and `agy plugin validate` reports that name.
+*   Fixed the agent writing LF line endings when it appends to a file that uses CRLF line endings, as is common on Windows, which left the file with mixed line endings and made later multi-line edits to it fail with `target content not found`; appended text now uses the file's own line endings.
+*   Fixed OSC 7501 terminal status showing the session as done while the agent was paused waiting for background subagents or tasks to finish; the terminal's tab or window now shows it as working until that work ends, and daemon tasks such as dev servers don't count.
+*   Fixed typing in the Remote Control browser view: with Chrome on Android, `Backspace` on the on-screen keyboard could stop deleting characters and later text could land in the middle of a word, and after typing with an input method or a phone keyboard's suggestions, `Enter` could add a new line instead of sending your message.
+*   Fixed scrolling up through a long agent turn in the Remote Control browser view, where the view could jump back down instead of reaching your prompt.
+*   Fixed the permission prompt in the Remote Control browser view letting the number or arrow keys select and submit an unavailable "always allow" option when one of your ask rules or a hook requires you to confirm each time; the keyboard now skips those options, as clicking already did.
+*   Fixed the model selector in the Remote Control browser view switching to `No Model Selected` after a brief connection or server error; it now keeps your account and model list until the next successful refresh.
+
+---
+
+### [v1.5.9](/releases?tab=cli&version=1.5.9 "View release 1.5.9")
+
+November 14, 2026
+
+### Added run\_workflow tool, admin pluginControls, faster Auto mode reviews, and MCP security fixes
+
+This release introduces the run\_workflow tool for parallel subagent Python workflows and adds pluginControls to managed admin settings, alongside improvements to Auto mode reviews, /resume performance, and /browser MP4 recordings, as well as several security and reliability fixes.
+
+**Improvements:**
+
+*   Added the `run_workflow` tool for everyone: the agent can run a Python workflow script that fans work out to many subagents in parallel or in stages and then combines their results. It uses the Python bundled with the CLI, so you don't need Python installed.
+*   Added a `pluginControls` section to managed admin settings, so organizations that don't use Gemini Enterprise can control plugins too: `pluginsDisabled` stops all plugins from loading, including built-in ones, and blocks installing or enabling them, while `marketplaceDisabled` turns off the plugin marketplace but keeps installed plugins working. Gemini Enterprise users keep following their organization's Cloud Console policy.
+*   Improved Auto mode's review of commands that would leave the terminal sandbox, so it decides faster and times out less often: the reviewer can now search the conversation, list directories, and search files directly instead of starting a sandboxed command for each check.
+*   Improved `/resume`: the conversation picker no longer fetches the full history of every open conversation, so it no longer stalls on "Loading conversations..." in long sessions, and `/resume <id>` now accepts any prefix that matches exactly one conversation, such as the short ID shown in the status line, and reports `conversation <id> not found` for an unknown ID instead of silently opening the picker.
+*   Improved `/browser` subagent session recordings, which are now `.mp4` files made with Chrome's built-in screen recording instead of `.webm`.
+
+**Fixes:**
+
+*   Fixed a security issue where custom headers configured for an HTTP MCP server, such as API keys, could be forwarded to a different host when the server responded with a redirect; they are now sent only to the configured server's own origin.
+*   Fixed the terminal UI accepting malformed or implausible window-size reports, such as negative or extremely large dimensions from stray escape sequences, which could make the CLI freeze or use excessive memory; these reports are now ignored.
+*   Fixed several `agy acp` issues: a session no longer fails with "Authentication required" after `agy acp --login` when `settings.json` names an auth method that has no credential (such as `gemini-api-key` without `GEMINI_API_KEY`), because the CLI now falls back to your saved login; prompts no longer fail when the ACP client passes an MCP server whose name contains spaces or other special characters; a failed turn now reports its specific error, such as a model or quota error, instead of "Agent execution terminated due to error."; and the diffs sent for completed edits no longer carry an extra trailing newline in `oldText` and `newText`.
+*   Fixed more cases of files saved with a UTF-8 byte order mark (BOM) being mishandled: `"modelProvider"` in `settings.json` is now honored on the first run, `agy acp` now loads your settings and authentication options instead of falling back to defaults, and `agy plugin validate` now runs all of its checks on such a `hooks.json` and reports the real syntax error and line instead of blaming the BOM.
+*   Fixed `-i`/`--prompt-interactive` together with `--remote-agent` and `--conversation` or `--continue`: the prompt is now sent to the resumed conversation after its history loads, instead of starting a new conversation, and it is handled like typed input, so it shows right away, waits behind a running turn, and reports a failed send.
+*   Fixed `!` shell commands on Windows: PowerShell no longer drops double quotes, so commands like `! git commit -m "two words"` run exactly as typed, and quitting the CLI or killing the task in the tasks panel now also ends the programs the command started instead of leaving them running and the task marked as running.
+*   Fixed `/copy` and other clipboard actions on Windows over SSH: the copy now reaches your local clipboard, and the copied text is no longer written to the CLI log file.
+*   Fixed scheduled automations on Windows receiving only the first line of a multi-line prompt; each scheduled or manually triggered run now gets the full prompt.
+*   Fixed the macOS "Keychain Not Found" dialog reappearing about once an hour: after a keychain write fails, the CLI now saves your sign-in token to its file-based storage for the rest of the session instead of retrying the keychain on every token refresh.
+*   Fixed a race where reloading MCP servers while several subagents were starting could launch duplicate MCP server processes, leaving some subagents with broken MCP tools or failed sign-ins.
+*   Fixed MCP server and plugin OAuth sign-in on machines without an IPv4 loopback address, such as IPv6-only VMs; the sign-in callback now falls back to `[::1]` when `127.0.0.1` is unavailable instead of failing silently.
+*   Fixed signing in to a plugin from `/plugin` sometimes reporting that the sign-in didn't finish when it had just succeeded.
+*   Fixed tool groups jumping around when expanded with `Ctrl+O`: the collapse hint now stays on the same line as the expand hint, and in low verbosity the token summary line no longer disappears from the expanded view.
+*   Fixed the model selector in the Remote Control browser view on phones, where the list could not be scrolled by touch past the first screen, so models near the end of the list could not be selected.
+
+---
+
+### [v1.5.8](/releases?tab=cli&version=1.5.8 "View release 1.5.8")
 
 November 13, 2026
 
@@ -4148,6 +4530,59 @@ VS CodeVisual StudioJetBrainsZedXcodeEclipse
 
 [Extension docs→](/docs/ide/extensions/vscode)
 
+Model launch·November 18, 2026
+
+### Gemini 4 Neon
+
+Gemini 4 Neon is now available on Google AI Ultra, Google AI Pro, and Gemini Enterprise, and it's the default model if you haven't chosen one, with four thinking levels and Orchestrator (Neon) for planning with Gemini 4 Neon and implementing with Gemini 4 Hydrogen.
+
+[ Read on the Antigravity blog](/blog/gemini-4-neon-in-google-antigravity)
+
+---
+
+### [v1.13.0](/docs/ide/extensions/vscode "View Visual Studio Code extension docs")
+
+Latest
+
+November 16, 2026
+
+### Keybinding scheme selector, standardized shortcuts, voice dictation, file attachments, and inline diff fixes
+
+Introduces a keybinding scheme selector in **Shortcuts** settings with standardized commands and shortcuts, adds microphone voice dictation and Explorer file attachment actions, and resolves image download, inline diff, authentication, and layout issues.
+
+**Improvements:**
+
+*   Keybinding Scheme Selector: Added a **Shortcuts** settings page with **VS Code Default** and **Antigravity (AGY) Style** schemes and a native shortcuts link.
+*   Standardized Commands & Shortcuts: Added keyboard shortcuts for conversation search, settings, model selection, history navigation, and canceling generation under consistent command titles.
+*   Voice Dictation Support: Added microphone capture support in the chat input for dictating prompts directly inside the extension.
+*   Context Menu Attachment: Added **Antigravity: Add to Antigravity Chat** to Explorer menus, editor tabs, and `Ctrl+L` / `Cmd+L` without a selection.
+*   Proxy Certificate Fallback: Added fallback support for standard Node.js trusted certificate environment variables during extension sign-in and proxy connections.
+*   Turn Navigation Shortcuts: Added keyboard shortcuts (`Ctrl+Alt+[` / `Ctrl+Alt+]` or `Cmd+Option+[` / `Cmd+Option+]`) to jump between conversation prompts.
+*   Skill Pill Navigation: Updated skill pills so clicking a pill opens its definition file directly.
+
+**Fixes:**
+
+*   Chat File Drag-and-Drop: Fixed dragging and dropping local files, folders, and remote workspace items into chat.
+*   Image & Diagram Downloads: Fixed downloading agent-generated images and diagrams from the chat preview modal.
+*   Editor Find Shortcuts: Fixed `Alt+Enter` and `Option+Enter` shortcuts in the Find widget and terminal being intercepted during active chats.
+*   Startup Connection Reliability: Fixed an issue where premature startup failure screens could appear while loading.
+*   External File Reverts: Fixed inline diff reviews staying active and causing save conflicts after reverting files externally.
+*   Background Inline Diffs: Fixed files with deletions opening as unsaved tabs when auto-opening edited files is disabled.
+*   Auto-Open Edited Files: Fixed newly edited files not opening automatically when the auto-open files setting is enabled.
+*   Integration Sign-In Links: Fixed authentication links for extensions and MCP servers failing to open in the system browser.
+*   Subscription Selection Recovery: Fixed an issue where refreshing models could get stuck instead of reopening subscription selection.
+*   Offline Sign-In Persistence: Fixed an issue where transient offline startups could sign out saved sessions.
+*   Follow-Up Message Delivery: Fixed follow-up messages in new workspace conversations queuing instead of sending immediately.
+*   Narrow Sidebar Layout: Fixed header controls, greeting text, and the chat input clipping in narrow sidebars.
+*   Mention Menu Positioning: Fixed `@` and `/` suggestion menus clipping off-screen in top-docked new-conversation panels.
+*   Question Input Drafts: Fixed custom text entered in single-select prompts clearing when switching between options.
+*   Voice Permission Timeouts: Fixed voice capture hanging indefinitely when microphone permission prompts remain pending.
+*   Voice Shortcut Focus: Fixed the voice dictation shortcut targeting the wrong input when comment boxes or side panes are open.
+*   Screen Reader Accessibility: Fixed UI freezes on Markdown dividers and restored native link announcements for inline entities.
+*   Addressed other minor user interface issues.
+
+---
+
 Model launch·November 12, 2026
 
 ### Gemini 4 Hydrogen
@@ -4169,8 +4604,6 @@ Gemini 4 Carbon is our strongest model for long-horizon software engineering, kn
 ---
 
 ### [v1.12.0](/docs/ide/extensions/vscode "View Visual Studio Code extension docs")
-
-Latest
 
 November 9, 2026
 
@@ -4567,6 +5000,36 @@ Introduces the 1.0.0 release of Antigravity for VS Code, bringing an agentic AI 
 
 ---
 
+Model launch·November 18, 2026
+
+### Gemini 4 Neon
+
+Gemini 4 Neon is now available on Google AI Ultra, Google AI Pro, and Gemini Enterprise, and it's the default model if you haven't chosen one, with four thinking levels and Orchestrator (Neon) for planning with Gemini 4 Neon and implementing with Gemini 4 Hydrogen.
+
+[ Read on the Antigravity blog](/blog/gemini-4-neon-in-google-antigravity)
+
+---
+
+### [v1.0.261116.0](/docs/ide/extensions/visual-studio "View Visual Studio extension docs")
+
+Latest
+
+November 16, 2026
+
+### Voice dictation support in the chat interface, and improved reliability when reviewing inline diffs.
+
+Introduces microphone-based voice dictation in the chat interface and improves inline diff review reliability across editor sessions.
+
+**Improvements:**
+
+*   Voice Dictation Support: Added microphone support for voice dictation in the chat interface.
+
+**Fixes:**
+
+*   Inline Diff Review: Fixed an issue where rejecting suggested code changes in the editor could fail.
+
+---
+
 Model launch·November 12, 2026
 
 ### Gemini 4 Hydrogen
@@ -4588,8 +5051,6 @@ Gemini 4 Carbon is our strongest model for long-horizon software engineering, kn
 ---
 
 ### [v1.0.261109.0](/docs/ide/extensions/visual-studio "View Visual Studio extension docs")
-
-Latest
 
 November 9, 2026
 
@@ -4871,6 +5332,16 @@ Introduces the initial release of the Google Antigravity extension for Visual St
 
 ---
 
+Model launch·November 18, 2026
+
+### Gemini 4 Neon
+
+Gemini 4 Neon is now available on Google AI Ultra, Google AI Pro, and Gemini Enterprise, and it's the default model if you haven't chosen one, with four thinking levels and Orchestrator (Neon) for planning with Gemini 4 Neon and implementing with Gemini 4 Hydrogen.
+
+[ Read on the Antigravity blog](/blog/gemini-4-neon-in-google-antigravity)
+
+---
+
 Model launch·November 12, 2026
 
 ### Gemini 4 Hydrogen
@@ -5124,6 +5595,16 @@ Introduces the Google Antigravity Agent Client Protocol (ACP) server (`antigravi
 
 *   Fixed session reliability and workspace hygiene by storing conversation artifacts under `<GEMINI_HOME>/antigravity-acp` instead of the user's project directory, expanding `~` in session `cwd` paths, automatically recovering sessions from closed local backend WebSocket connections, stripping stale thought signatures on session resume, removing the 60-second request timeout on long-running permission prompts, and sending `.json` attachments as `text/plain` on Gemini Enterprise.
 *   Fixed duplicate or spurious permission prompts on file edits and `ask_question`, suppressed internal policy-denial text and MCP schema cache reads from streaming into assistant responses, and surfaced actionable error messages for MCP server initialization failures, missing `GEMINI_API_KEY` or Gemini Enterprise license setup, and quota exhaustion.
+
+---
+
+Model launch·November 18, 2026
+
+### Gemini 4 Neon
+
+Gemini 4 Neon is now available on Google AI Ultra, Google AI Pro, and Gemini Enterprise, and it's the default model if you haven't chosen one, with four thinking levels and Orchestrator (Neon) for planning with Gemini 4 Neon and implementing with Gemini 4 Hydrogen.
+
+[ Read on the Antigravity blog](/blog/gemini-4-neon-in-google-antigravity)
 
 ---
 
@@ -5383,6 +5864,16 @@ Introduces the Google Antigravity Agent Client Protocol (ACP) server (`antigravi
 
 ---
 
+Model launch·November 18, 2026
+
+### Gemini 4 Neon
+
+Gemini 4 Neon is now available on Google AI Ultra, Google AI Pro, and Gemini Enterprise, and it's the default model if you haven't chosen one, with four thinking levels and Orchestrator (Neon) for planning with Gemini 4 Neon and implementing with Gemini 4 Hydrogen.
+
+[ Read on the Antigravity blog](/blog/gemini-4-neon-in-google-antigravity)
+
+---
+
 Model launch·November 12, 2026
 
 ### Gemini 4 Hydrogen
@@ -5639,6 +6130,37 @@ Introduces the Google Antigravity Agent Client Protocol (ACP) server (`antigravi
 
 ---
 
+### [v1.2.0](/docs/ide/extensions/eclipse "View Eclipse extension docs")
+
+Latest
+
+November 19, 2026
+
+### In-IDE issue reporting and retry actions, improved mid-session crash recovery, and sign-in flow reliability improvements
+
+Introduces in-IDE issue reporting and recovery actions on error panels alongside reliability fixes for browser authentication and session stability.
+
+**Improvements:**
+
+*   In-IDE Feedback Reporting: Added direct issue reporting and retry actions to error views across chat, settings, and artifact panels.
+
+**Fixes:**
+
+*   Service Crash Recovery: Fixed an issue where unexpected service terminations were not detected and displayed across open tool views.
+*   Sign-In Experience: Fixed an issue where completing sign-in prompted to launch an external desktop application instead of returning to the editor.
+
+---
+
+Model launch·November 18, 2026
+
+### Gemini 4 Neon
+
+Gemini 4 Neon is now available on Google AI Ultra, Google AI Pro, and Gemini Enterprise, and it's the default model if you haven't chosen one, with four thinking levels and Orchestrator (Neon) for planning with Gemini 4 Neon and implementing with Gemini 4 Hydrogen.
+
+[ Read on the Antigravity blog](/blog/gemini-4-neon-in-google-antigravity)
+
+---
+
 Model launch·November 12, 2026
 
 ### Gemini 4 Hydrogen
@@ -5660,8 +6182,6 @@ Gemini 4 Carbon is our strongest model for long-horizon software engineering, kn
 ---
 
 ### [v1.1.0](/docs/ide/extensions/eclipse "View Eclipse extension docs")
-
-Latest
 
 November 10, 2026
 
@@ -5738,9 +6258,38 @@ Gemini 3.8 Flash builds on 3.7 Flash as an everyday model for agentic developmen
 
 ## Antigravity SDK
 
-### [v0.1.23](/download#antigravity-sdk "View release 0.1.23")
+### [v0.1.24](/download#antigravity-sdk "View release 0.1.24")
 
 Latest
+
+November 16, 2026
+
+### Default model gemini-4-hydrogen, LiteRT vision and prefix caching, and cancellation cleanup.
+
+Antigravity SDK v0.1.24 updates the default model to gemini-4-hydrogen and maps ThinkingLevel.EXTRA\_HIGH to xhigh, expands LiteRTAgentConfig with on-device vision support, multi-turn KV prefix caching, and thought-channel streaming, and strengthens runtime reliability with deterministic subprocess and transport cleanup on cancellation, structured LocalOpenAIConnection error and usage reporting, and multi-turn state isolation.
+
+**Improvements:**
+
+*   **Default Model (`gemini-4-hydrogen`) & `ThinkingLevel.EXTRA_HIGH` Mapping**: Updated the SDK default model (`DEFAULT_MODEL`) from `"gemini-3.8-flash"` to `"gemini-4-hydrogen"` and mapped `ThinkingLevel.EXTRA_HIGH` to `"xhigh"` across Gemini API, Vertex AI, and Interactions API surfaces (normalizing per-request `"extra_high"` overrides in `localharness`). Override the default anytime via `model` or `ModelTarget` on `LocalAgentConfig`.<pre><code>from google.antigravity import (
+*   **On-Device Vision Support (`LiteRTAgentConfig`)**: Added automatic vision capability and hardware backend detection (`"gpu"` / `"cpu"`) via `litert_lm.ModelInfo` (with optional `vision_backend` override) and OpenAI-to-LiteRT multimodal image translation (`from_file`, `Image`) for vision-capable `.litertlm` checkpoints such as Gemma 4 26B (requires `litert-lm >= 0.19.1`).<pre><code>from google.antigravity import Agent, LiteRTAgentConfig, from\_file
+*   **LiteRT Multi-Turn Prefix Caching**: Reuses the active `LiteRT-LM` conversation KV cache across sequential loopback turns when message prefixes and tool schemas match, prefilling only newly added prompts and tool responses.
+*   **`LocalOpenAIConnection` Usage, Latency, and Retry Metadata**: Populates token usage (`Usage`) and latency metadata on streaming SSE chunks for OpenAI Chat Completions and Responses APIs, and parses HTTP `Retry-After` headers to support automatic retries on transient 429 and 5xx responses.
+*   **Tool Media Return Values (`struct_converter`)**: Added support for returning SDK media primitives (`Image`, `Audio`, `Video`, `Document`) and Pydantic models directly from custom tools, serializing them as `Content` protos while summarizing inline binary media cleanly in JSON step content.
+*   **Callable Tool Wrapping (`ToolRunner`)**: Preserved underlying function names, docstrings, and deferred stringified type hints (`from __future__ import annotations`) when wrapping `functools.partial` callables and callable class instances as tools.
+
+**Fixes:**
+
+*   **Reliable Subprocess and Transport Cleanup on Cancellation**: Session startup, cancellation via `asyncio.CancelledError`, and disconnection now reliably terminate and reap local runtime subprocesses and close stdio pipes and WebSocket or loopback transports without blocking on non-UTF-8 `stderr` or child file descriptors. Non-zero runtime exits during teardown now surface `AntigravityExecutionError` directly (resolving GitHub issue #279).<pre><code>import asyncio
+*   **LiteRT Thought Channel Streaming**: Resolved an issue where model thought tokens were omitted from LiteRT responses by emitting the thought channel as `reasoning` and `reasoning_content` fields in streaming SSE deltas and synchronous payloads (GitHub issue #267).
+*   **`LocalOpenAIConnection` Error Classification**: Non-200 HTTP responses now surface as `AntigravityConnectionError` (consistent with Gemini local connections) rather than generic execution errors, marking transient 429 and 5xx errors as retryable.
+*   **`ToolCall.canonical_path` Path Traversal Normalization**: Wire path normalization now resolves `.` and `..` segments for `file://` URIs and plain paths so traversal paths cannot bypass prefix-based workspace checks in user hooks.
+*   **Conversation Compaction Tracking**: `Conversation.compaction_indices` now records only root-level (`depth == 0`) `StepType.COMPACTION` steps once they reach `StepStatus.DONE`, ignoring in-progress `ACTIVE` updates and subagent compactions (`depth > 0`).
+*   **Multi-Turn `ChatResponse` & `Conversation` State Isolation**: Isolated per-turn response state by snapshotting `structured_output()`, `usage_metadata`, and `stop_reason` on turn completion, scoping `Conversation.get_last_structured_output()` to root (`depth == 0`) steps of the current turn, re-raising stream errors on repeat `structured_output()` calls, and draining any active unconsumed `ChatResponse` before starting a new turn.
+*   **Documentation & Examples**: Fixed the `types.AntigravityCancelledError` import in the cancellation guide, updated prioritized inference documentation to pass `GeminiAPIEndpoint` via `ModelTarget`, clarified default tool permissions (`confirm_run_command` gating `run_command`) in `README.md`, and updated Gemini documentation URLs to `aistudio.google.com`.
+
+---
+
+### [v0.1.23](/download#antigravity-sdk "View release 0.1.23")
 
 October 26, 2026
 
@@ -6303,6 +6852,46 @@ This release focuses on significant enhancements to the Model Context Protocol (
 
 ## Antigravity IDE
 
+### [v2.8.0](/releases?tab=ide&version=2.8.0 "View release 2.8.0")
+
+Latest
+
+November 19, 2026
+
+### Background update checks, instant startup, remote sign-in port forwarding, and Windows recovery fixes
+
+This release adds recurring background update checks with instant backend startup, automatic port forwarding for remote sign-in, keyboard shortcuts to search within conversations, and custom certificate and proxy support during sign-in. It also fixes Windows logoff recovery loops, multi-window task notification routing, and unintended backend binary downgrades or re-downloads.
+
+**Improvements:**
+
+*   Increased the default backend startup readiness timeout from 30 to 60 seconds to improve startup reliability on Windows.
+*   Added automatic port forwarding and authorization code fallback for sign-in across remote development environments.
+*   Enabled immediate startup on installed backend binaries without blocking editor activation on release checks.
+*   Added recurring background release checks and a notification prompt to restart when an update is ready.
+*   Added keyboard shortcuts to search within conversations when the Agent panel is focused.
+*   Added visually hidden semantic headings to conversation messages to improve turn-by-turn navigation for screen readers.
+*   Added support for custom root certificate authorities and proxy configurations during sign-in.
+
+**Fixes:**
+
+*   Fixed background recovery loops attempting doomed restarts during Windows desktop logoff or system shutdown.
+*   Fixed an issue where opening multiple editor windows on shared release channels could cause unintended backend binary downgrades.
+*   Fixed an issue where transient recovery timeouts could wipe local metadata and trigger unnecessary binary re-downloads.
+*   Fixed task completion notifications on Windows focusing the incorrect window across multi-window workspaces.
+*   Addressed other minor user interface issues.
+
+---
+
+Model launch·November 18, 2026
+
+### Gemini 4 Neon
+
+Gemini 4 Neon is now available on Google AI Ultra, Google AI Pro, and Gemini Enterprise, and it's the default model if you haven't chosen one, with four thinking levels and Orchestrator (Neon) for planning with Gemini 4 Neon and implementing with Gemini 4 Hydrogen.
+
+[ Read on the Antigravity blog](/blog/gemini-4-neon-in-google-antigravity)
+
+---
+
 Model launch·November 12, 2026
 
 ### Gemini 4 Hydrogen
@@ -6314,8 +6903,6 @@ Gemini 4 Hydrogen brings fast, dependable coding and agentic execution across fo
 ---
 
 ### [v2.7.0](/releases?tab=ide&version=2.7.0 "View release 2.7.0")
-
-Latest
 
 November 12, 2026
 

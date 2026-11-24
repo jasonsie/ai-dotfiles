@@ -9,19 +9,30 @@ Personal Google Accounts (such as `@gmail.com` addresses) can use Google Antigra
 
 *   **Location**: Your account must be associated with a country or territory where Antigravity is available. Refer to [What is Google Antigravity’s geographical availability?](#what-is-google-antigravitys-geographical-availability) to check your country.
 *   **Age**: Antigravity is unavailable to users under 18. Refer to [Why is my age unverified?](#why-is-my-age-unverified) if you believe this to be in error.
-*   **Account type**: Work or school accounts managed by an organization, such as Google Workspace accounts, aren’t personal Google Accounts. To sign in with one, refer to [Why can’t I sign in with my enterprise account?](#why-cant-i-sign-in-with-my-enterprise-account)
+*   **Account type**: Work or school accounts managed by an organization, such as Google Workspace accounts, aren’t personal Google Accounts. Refer to [Can I use Antigravity with my Google Workspace account?](#can-i-use-antigravity-with-my-google-workspace-account)
+
+## Can I use Antigravity with my Google Workspace account?
+
+This applies to accounts on your own domain, such as `you@yourcompany.com`, that are managed through Google Workspace or Cloud Identity, including one-person companies. Google Workspace plans don’t currently include Antigravity plans, higher rate limits, or AI credits, even if your organization subscribes to a Workspace plan with Gemini features. By default, a Workspace account signed in with **Continue with Google** gets a limited starter quota, unless your Workspace administrator has turned off access for individuals.
+
+To use Antigravity with more usage, choose one of these options:
+
+*   **Personal Google Account**: Sign in with a personal account and use the free plan or a Google AI Pro or Google AI Ultra subscription.
+*   **Your own Google Cloud project**: Sign in with your Workspace account, choose **Pay As You Go**, and pay per token at Google Cloud API pricing.
+*   **Gemini Enterprise**: Your administrator sets up Gemini Enterprise licenses for your organization.
+
+For a comparison and setup steps, refer to [Google Workspace accounts](/docs/workspace).
 
 ## Why can’t I sign in with my enterprise account?
 
-Enterprise accounts, such as Google Workspace and Gemini Enterprise accounts, are managed by your organization. Your administrator must give your account access to Antigravity before you can sign in. If sign-in fails, check the following:
+If you use Antigravity through a Gemini Enterprise subscription, your organization’s administrator must give your account access before you can sign in. If sign-in fails, check the following:
 
-*   **Google Workspace accounts**: Your Workspace administrator must explicitly provision Antigravity for your account. If it isn’t provisioned, sign-in fails. Contact your Workspace administrator to request access, or sign in with a personal Google Account instead.
-*   **Gemini Enterprise license**: Choose **Business account** when you sign in. Your organization’s Google Cloud administrator must assign you a Gemini Enterprise license or the required IAM role. If no licenses appear when you sign in, contact your administrator.
+*   **Gemini Enterprise license**: Select **Use Business Account** when you sign in. Your organization’s Google Cloud administrator must assign you a Gemini Enterprise license or the required IAM role. If no licenses appear when you sign in, contact your administrator.
 *   **AI developer tools**: AI developer tools may be turned off by default in Gemini Enterprise. Your administrator must turn them on for the region where your subscription is provisioned.
 *   **Identity**: If your email address exists with more than one identity provider, sign in with the identity that matches your Gemini Enterprise license.
 *   **Product**: Enterprise sign-in works in the Antigravity App, Antigravity CLI, and Antigravity IDE extensions, but not in the standalone Antigravity IDE.
 
-For Gemini Enterprise setup steps and more troubleshooting, refer to [Antigravity in Gemini Enterprise](/docs/enterprise#common-sign-in-and-license-issues).
+If your organization uses Google Workspace without Gemini Enterprise, refer to [Google Workspace accounts](/docs/workspace) instead. For Gemini Enterprise setup steps and more troubleshooting, refer to [Antigravity in Gemini Enterprise](/docs/enterprise#common-sign-in-and-license-issues).
 
 ## Why is my age unverified?
 
@@ -314,7 +325,7 @@ Refer to the [Terms of Service](/terms). You can opt out of data collection at a
 
 ## How do I sign in with a Google Cloud project?
 
-Follow the steps on the [Enterprise page](/docs/enterprise) to learn how to sign in with Google Cloud.
+To pay per token with your own Google Cloud project, follow [Pay As You Go](/docs/pay-as-you-go). To sign in with a Gemini Enterprise license, follow [Antigravity in Gemini Enterprise](/docs/enterprise).
 
 ## How do I get support?
 
@@ -330,7 +341,7 @@ Refer to the [Plans](/docs/plans) documentation for more details.
 
 ## How do I upgrade to a paid Google AI plan?
 
-Some models require a paid **Google AI Pro** or **Google AI Ultra** subscription and are not included in free trials. To upgrade:
+Paid **Google AI Pro** and **Google AI Ultra** subscriptions include higher quota entitlements and additional frontier models that may not be included in free trials (refer to [Plans](/docs/plans) for details). To upgrade:
 
 *   **Free or Google AI Plus users**: Subscribe to a paid **Google AI Pro** or **Google AI Ultra** plan on [Google One](https://one.google.com/ai).
 *   **Google AI Pro trial users**: [Submit a request to cancel your trial](https://one.google.com/support) and switch to a paid **Google AI Pro** plan, or upgrade directly to a paid **Google AI Ultra** plan on [Google One](https://one.google.com/ai). For memberships through third-party partners, Pixel Pass, or Google Fi, [learn how to manage third-party subscriptions](https://support.google.com/googleone/answer/15801606).

@@ -19,9 +19,9 @@ Make sure you meet the following prerequisites:
 Each execution mode makes a different tradeoff between conversational autonomy and developer oversight. The following table shows how Antigravity CLI handles file operations, command execution, and planning in each mode:
 
 | Mode | Behavior | Best for |
-| :-- | :-- | :-- |
-| `default` _(default)_ | Pauses for interactive diff review before modifying or creating files, and asks before running terminal commands. | Standard development, reviewing sensitive code changes, and careful refactoring. |
-| `auto` | Automatically approves workspace file edits, runs terminal commands in the sandbox by default, and automatically evaluates commands outside the sandbox so safe, reversible commands run without prompting. Available in `v1.3.5+` on macOS and Linux and `v1.4.4+` on Windows; requires the terminal sandbox and a personal account. | Autonomous workflows where safe edits and commands proceed without interruption while irreversible actions still prompt for confirmation. |
+| --- | --- | --- |
+| `default` | Pauses for interactive diff review before modifying or creating files, and asks before running terminal commands. | Standard development, reviewing sensitive code changes, and careful refactoring. |
+| `auto` _(default where available)_ | Automatically approves workspace file edits, runs terminal commands in the sandbox by default, and automatically evaluates commands outside the sandbox so safe, reversible commands run without prompting. Available in `v1.3.5+` on macOS and Linux and `v1.4.4+` on Windows; requires the terminal sandbox and a personal account. | Autonomous workflows where safe edits and commands proceed without interruption while irreversible actions still prompt for confirmation. |
 | `accept-edits` | Automatically approves file creations and edits inside your workspace, but still asks before running terminal commands. | Iterating on trusted code when you still want to approve every shell command manually. |
 | `plan` | Prepends the `/plan` instruction prefix to analyze and outline steps before writing code. | Exploring unfamiliar architecture or designing complex multi-step features. |
 
@@ -42,7 +42,7 @@ When Antigravity CLI pauses for a pending file edit confirmation in `default` mo
 
 ## Review modifications in default mode
 
-In `default` mode (`request-review`), Antigravity CLI pauses before applying any file writes to disk and renders an inline, syntax-highlighted diff preview. `agy` starts in `default` mode unless you set another mode with `agentMode` or `--mode`. To return to it during a session, press Shift + Tab until the mode indicator in the status bar clears, or set **Agent Mode** to `default` in `/config`.
+In `default` mode (`request-review`), Antigravity CLI pauses before applying any file writes to disk and renders an inline, syntax-highlighted diff preview. Since `v1.5.7`, `agy` starts in `auto` mode where `auto` mode is available for your account and platform, and in `default` mode otherwise. To switch to `default` mode during a session, press Shift + Tab until the mode indicator in the status bar clears, or set **Agent Mode** to `default` in `/config`.
 
 The following example shows a pending file edit, with the diff and the prompt to accept or reject it:
 
@@ -164,7 +164,7 @@ To inspect or update your default mode mid-session:
 
 ### Setting `agentMode` in `settings.json`
 
-Set `agentMode` directly inside your user or project configuration file (`"accept-edits"`, `"auto"`, or `"plan"`, or omit/`""` for `default`):
+Set `agentMode` directly inside your user or project configuration file (`""` for `default`, `"accept-edits"`, `"auto"`, or `"plan"`; omit `agentMode` to start in `auto` where it’s available):
 
 ```json
 {
@@ -187,7 +187,7 @@ agy --mode=plan
 ## Common mistakes
 
 | Mistake | Why it fails | Fix |
-| :-- | :-- | :-- |
+| --- | --- | --- |
 | Expecting `sandbox` in Shift + Tab cycling | `sandbox` is an OS containment permission setting, not an execution mode (`auto` mode enables the terminal sandbox automatically) | Use `--mode=auto`, pass `--sandbox`, or enable **Sandbox Mode** in `/config` |
 | Using legacy `/planning` or `/fast` commands | These vestigial commands were removed in `1.1.0` | Press Shift + Tab to cycle modes or type `/plan` before your prompt |
 | Passing `--permission-mode` | `agy` uses `--mode` (`--mode=accept-edits`, `--mode=auto`, or `--mode=plan`) for execution overrides | Run `agy --mode=accept-edits`, `agy --mode=auto`, or check `agy --help` |

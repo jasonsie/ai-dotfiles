@@ -3,6 +3,8 @@
 
 # CLI commands
 
+Available on: Antigravity CLI
+
 Review tables listing all TUI slash commands, default keyboard shortcuts, command-line flags, and JSON configuration parameters.
 
 ## Core slash commands
@@ -10,7 +12,7 @@ Review tables listing all TUI slash commands, default keyboard shortcuts, comman
 Type `/` inside the prompt box to open the typeahead command selection menu.
 
 | Command | Category | Alias | Execution Purpose |
-| :-- | :-- | :-- | :-- |
+| --- | --- | --- | --- |
 | **`/add-dir <path>`** | Utilities | — | Add a directory path to the active workspace. |
 | **[`/agents`](/docs/cli/commands/agents)** | Tools & Tasks | — | Open the [Agent Manager panel](/docs/cli/commands/agents) to switch custom agents and monitor background subagents. |
 | **[`/agy-customizations`](/docs/commands/agy-customizations)** `[request]` | Tools & Tasks | — | Load the [customization reference](/docs/commands/agy-customizations) so the agent can create, fix, or explain rules, skills, plugins, hooks, and MCP servers. |
@@ -18,13 +20,14 @@ Type `/` inside the prompt box to open the typeahead command selection menu.
 | **`/artifact`** | Tools & Tasks | — | Open the Artifact Review panel. |
 | **[`/boost`](/docs/boost)** `<task>` | Reasoning | — | Run on-demand multi-agent deep reasoning loops. |
 | **[`/browser`](/docs/commands/browser)** `<task>` | Tools & Tasks | — | Delegate web browsing, UI verification, and in-browser debugging to the [browser subagent](/docs/commands/browser). |
-| **[`/btw`](/docs/cli/commands/btw) `<query>`** | Utilities | — | Ask a [side question in the background](/docs/cli/commands/btw) without interrupting the main conversation. |
+| **[`/btw`](/docs/commands/btw) `<query>`** | Utilities | — | Ask a [side question in the background](/docs/commands/btw) without interrupting the main conversation. |
 | **[`/changelog`](/docs/cli/commands/changelog)** | Utilities | — | Open the [interactive release notes viewer](/docs/cli/commands/changelog) or print CLI changes in headless mode. |
 | **`/clear`** | Utilities | `/new` | Clear the terminal and reset active conversation contexts. |
 | **[`/codesearch`](/docs/cli/commands/codesearch) `<query>`** | Utilities | `/cs`, `/search` | Open the [interactive Code Search panel](/docs/cli/commands/codesearch) to search code across the workspace. |
+| **[`/compact`](/docs/commands/compact) `[message]`** | Conversations | — | Summarize the conversation so far into a [compaction checkpoint](/docs/commands/compact) to free up context, and optionally continue with `<message>`. |
 | **`/config`** | Configurations | `/settings` | Open the interactive Settings Editor overlay. |
 | **[`/context`](/docs/cli/commands/context)** | Utilities | — | Open the [context usage visualization panel](/docs/cli/commands/context). |
-| **`/copy [n|btw]`** | Utilities | — | Copy the last agent response, the n-th most recent response, or the latest [`/btw`](/docs/cli/commands/btw) answer. |
+| **`/copy [n|btw]`** | Utilities | — | Copy the last agent response, the n-th most recent response, or the latest [`/btw`](/docs/commands/btw) answer. |
 | **[`/credits`](/docs/cli/commands/credits)** | Account | — | View remaining AI credits and purchase links. |
 | **[`/diff`](/docs/cli/commands/diff)** | Utilities | — | Open the [interactive diff viewer](/docs/cli/commands/diff) to view changes, turns, and commits. |
 | **[`/effort`](/docs/cli/commands/effort) `[level]`** | Configurations | — | Set or inspect the active model’s [reasoning effort level](/docs/cli/commands/effort) (`low` through `max`, depending on the model). |
@@ -68,7 +71,7 @@ The following tables list the keyboard shortcut commands mapping global, prompt,
 These hotkeys are always active regardless of which panel, overlay, or prompt is currently focused.
 
 | Key | TUI Command | Action Behavior |
-| :-- | :-- | :-- |
+| --- | --- | --- |
 | Esc | `cli.escape` | Closes active panels, halts active streams, or clears empty prompts. |
 | Ctrl + C | `cli.escape` | Interrupts the agent’s current turn. When nothing is running, press it twice to exit the CLI. |
 | Ctrl + D | `cli.exit` | Exits the CLI session (only when the prompt box is empty). |
@@ -79,7 +82,7 @@ These hotkeys are always active regardless of which panel, overlay, or prompt is
 These keys are active when writing instructions inside the prompt box.
 
 | Key | TUI Command | Action Behavior |
-| :-- | :-- | :-- |
+| --- | --- | --- |
 | Enter | `cli.enter` | Submits your prompt or active menu selection to the agent. |
 | Shift + Enter / Ctrl + J | `prompt.insert_newline` | Inserts a clean newline without submitting. |
 | Shift + Tab | `cli.cycle_mode` | Cycles between execution modes (`default` > `accept-edits` > `auto` > `plan`; `auto` only where available). |
@@ -103,7 +106,7 @@ These keys are active when writing instructions inside the prompt box.
 These keys are active inside select panels, menus, and scrollable text boxes.
 
 | Key | TUI Command | Action Behavior |
-| :-- | :-- | :-- |
+| --- | --- | --- |
 | ↑ / ↓ | `navigation.up` / `navigation.down` | Scrolls highlighted selections up or down by one item. |
 | PgUp / Shift + ↑ | `navigation.page_up` / `navigation.half_page_up` | PgUp scrolls the active text viewport up one page; Shift + ↑ scrolls up half a page. |
 | PgDn / Shift + ↓ | `navigation.page_down` / `navigation.half_page_down` | PgDn scrolls the active text viewport down one page; Shift + ↓ scrolls down half a page. |
@@ -115,7 +118,7 @@ These keys are active inside select panels, menus, and scrollable text boxes.
 These keys are active during confirmation prompts.
 
 | Key | TUI Command | Action Behavior |
-| :-- | :-- | :-- |
+| --- | --- | --- |
 | y | `confirm.yes` | Authorizes the proposed tool, command, or active artifact. |
 | n | `confirm.no` | Rejects the proposed tool, command, or active artifact. |
 | Shift + A | `—` | (Inside Review panel) Approves all generated artifacts in one action (built-in shortcut). |
@@ -125,7 +128,7 @@ These keys are active during confirmation prompts.
 Pass startup flags when launching `agy` to configure the session or run non-interactively:
 
 | Flag | Default | Description |
-| :-- | :-- | :-- |
+| --- | --- | --- |
 | **`--mode`** | `""` | Set the agent [execution mode](/docs/cli/modes) for this session: `accept-edits`, `auto` (`v1.3.5+` on macOS and Linux, `v1.4.4+` on Windows; requires the terminal sandbox; not available for business or enterprise accounts; if it isn’t available, the CLI runs in `default` mode and `auto` is hidden from Shift+Tab and `/config`), or `plan`. |
 | **`--model`** | — | Select the model for the current CLI session (refer to `agy models`). |
 | **`--effort`** | — | Set the [reasoning effort](/docs/cli/commands/effort) for the current CLI session (`low` through `max`, depending on the model). |
@@ -168,8 +171,8 @@ This section lists every key you can set in `~/.gemini/antigravity-cli/settings.
 To get autocomplete and validation in editors such as VS Code, add `"$schema": "https://antigravity.google/schemas/v1/settings.json"` at the top of the file. For details, refer to [Editor autocomplete and validation](/docs/settings?tab=cli#editor-autocomplete-and-validation).
 
 | Option Key Name | Value Type | System Default | Parameter Characteristics & Options |
-| :-- | :-- | :-- | :-- |
-| **`agentMode`** | string | `""` (default mode) | Default startup [execution mode](/docs/cli/modes): `""` (standard `default` mode), `"accept-edits"` (auto-approve workspace file edits), `"auto"` (`v1.3.5+` on macOS and Linux, `v1.4.4+` on Windows; requires the terminal sandbox; auto-approves edits, runs commands in the terminal sandbox by default, and automatically checks any command that needs to run outside the sandbox so safe, reversible commands run without prompting while irreversible actions still prompt; not available for business or enterprise accounts; if it isn’t available, the CLI runs in `default` mode and `auto` is hidden from Shift+Tab and `/config`), or `"plan"` (research and outline steps before writing code). Can be overridden per session with `--mode`. |
+| --- | --- | --- | --- |
+| **`agentMode`** | string | `"auto"` where available (`v1.5.7+`), otherwise `""` (default mode) | Default startup [execution mode](/docs/cli/modes): `""` (standard `default` mode), `"accept-edits"` (auto-approve workspace file edits), `"auto"` (`v1.3.5+` on macOS and Linux, `v1.4.4+` on Windows; requires the terminal sandbox; auto-approves edits, runs commands in the terminal sandbox by default, and automatically checks any command that needs to run outside the sandbox so safe, reversible commands run without prompting while irreversible actions still prompt; not available for business or enterprise accounts; if it isn’t available, the CLI runs in `default` mode and `auto` is hidden from Shift+Tab and `/config`), or `"plan"` (research and outline steps before writing code). Can be overridden per session with `--mode`. |
 | **`colorScheme`** | string | `"terminal"` | Color theme: `"light"`, `"solarized light"`, `"colorblind-friendly light"`, `"dark"`, `"solarized dark"`, `"colorblind-friendly dark"`, `"tokyo night"`, or `"terminal"` (inherits native shell colors). |
 | **`altScreenMode`** | string | `"default"` | Screen buffer usage: `"default"` (renders the conversation inline and opens full-screen views in the alternate screen), `"always"` (runs the whole TUI in the alternate screen), or `"never"` (never uses the alternate screen; available only in `settings.json`). |
 | **`toolPermission`** | string | `"request-review"` | Global safety presets: `"request-review"` (prompts for write, bash, web, and MCP tools unless an allow rule covers them), `"proceed-in-sandbox"` (runs terminal commands without prompting when the sandbox is on and the command runs inside it; in `v1.4.4+`, behaves like `"request-review"` if the sandbox isn’t available), `"always-proceed"` (runs commands, web requests, and MCP tools without prompting unless an ask or deny rule matches), or `"strict"` (prompts before every tool action, including file reads, even if an allow rule matches). Deny rules apply in every mode. |

@@ -154,7 +154,7 @@ Instructions are only part of what ends up in Claude's context. File reads are a
 
 ### Block reads of generated and vendored code
 
-Claude's content searches respect `.gitignore` by default, so paths already listed there, such as `node_modules/`, `dist/`, and `build/`, stay out of search results without additional configuration.
+Claude's content searches respect `.gitignore` by default, so paths already listed there, such as `node_modules/`, `dist/`, and `build/`, stay out of search results.
 
 For paths that are checked in, such as a vendored SDK or committed generated code, add `Read` deny rules in `permissions.deny` to block Claude from opening those files.
 
@@ -356,7 +356,7 @@ Each route file has a corresponding `.test.ts` file.
 
 A different subdirectory holds different skills the same way: `packages/web/.claude/skills/component-patterns/` describes the frontend's component conventions instead of testing. When Claude works on a file in `packages/api/`, it loads the api-testing skill. When it works in `packages/web/`, it loads component-patterns.
 
-You can also scope a skill by file pattern instead of by placement. The [`paths` frontmatter field](https://code.claude.com/docs/en/skills#frontmatter-reference) takes glob patterns, and Claude loads the skill automatically only when it works with matching files. Use this for a skill that lives in the repository root's `.claude/skills/` but applies only to certain files, such as a database-migration skill scoped to `**/migrations/**`.
+You can also scope a skill by file pattern instead of by placement. The [`paths` frontmatter field](https://code.claude.com/docs/en/skills#frontmatter-reference) takes glob patterns, and Claude loads the skill automatically when it works with matching files. Use this for a skill that lives in the repository root's `.claude/skills/` but applies only to certain files, such as a database-migration skill scoped to `**/migrations/**`.
 
 For more on creating and organizing skills, see [Skills](https://code.claude.com/docs/en/skills.md).
 

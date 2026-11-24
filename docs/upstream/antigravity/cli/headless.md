@@ -400,7 +400,7 @@ Slash commands that the CLI can respond to directly (such as `/model` and `/usag
 ### Common mistakes
 
 | Mistake | Why it fails | How to fix it |
-| :-- | :-- | :-- |
+| --- | --- | --- |
 | **Pairing with `--output-format json` or `text`** | Those formats only emit a single output envelope when the process exits, causing every turn except the last one to be lost. | Always use `--output-format stream-json` with this input mode. |
 | **Passing a prompt with the `-p` flag** | Streaming mode exclusively listens for prompts on `stdin`. Any prompt passed through a command-line flag is dropped. | Send the prompt into `stdin` as a `user` message instead. |
 | **Sending `/model` or `/usage` into the stream** | The CLI handles these commands internally outside of the event stream, breaking the JSON flow. | Run `agy -p /model` as an entirely separate, standalone command. |
@@ -416,6 +416,10 @@ agy models
 ```
 
 ```plaintext
+gemini-4-neon-xhigh            Gemini 4 Neon (XHigh)
+gemini-4-neon-high             Gemini 4 Neon (High)
+gemini-4-neon-medium           Gemini 4 Neon (Medium)
+gemini-4-neon-low              Gemini 4 Neon (Low)
 gemini-4-carbon-high           Gemini 4 Carbon (High)
 gemini-4-carbon-medium         Gemini 4 Carbon (Medium)
 gemini-4-carbon-low            Gemini 4 Carbon (Low)
@@ -425,6 +429,7 @@ gemini-4-hydrogen-xhigh        Gemini 4 Hydrogen (XHigh)
 gemini-4-hydrogen-high         Gemini 4 Hydrogen (High)
 gemini-4-hydrogen-medium       Gemini 4 Hydrogen (Medium)
 gemini-4-hydrogen-low          Gemini 4 Hydrogen (Low)
+gemini-pro-orchestrator-neon   Orchestrator (Neon)
 gemini-pro-orchestrator        Orchestrator (Carbon)
 gemini-pro-orchestrator-argon  Orchestrator (Argon)
 gemini-3.8-flash-high          Gemini 3.8 Flash (High)
@@ -454,7 +459,7 @@ Unlike the interactive UI, headless mode doesn’t silently fall back when `--mo
 
 There is no interactive prompt in headless mode, so tools that would normally ask for confirmation are handled by policy.
 
-By default, the CLI respects the execution and permission modes in your settings. In `default` mode, actions such as shell commands default to **Ask**; in `auto` mode, workspace file edits and sandboxed or safe, reversible commands run automatically, while risky or irreversible actions still require approval. Any tool action that requires approval it can’t obtain in headless mode is soft-denied: the run continues, exits `0`, and prints a notice to `stderr` naming the tool and how to allow it.
+By default, the CLI respects the execution and permission modes in your settings. Since `v1.5.7`, if `agentMode` isn’t set, `agy -p` runs in `auto` mode where `auto` mode is available, and in `default` mode otherwise; pass `--mode` or set `agentMode` to pin a mode in CI pipelines. In `default` mode, actions such as shell commands default to **Ask**; in `auto` mode, workspace file edits and sandboxed or safe, reversible commands run automatically, while risky or irreversible actions still require approval. Any tool action that requires approval it can’t obtain in headless mode is soft-denied: the run continues, exits `0`, and prints a notice to `stderr` naming the tool and how to allow it.
 
 Grant a tool ahead of time by adding an `action(target)` rule under `permissions.allow` in `~/.gemini/antigravity-cli/settings.json`:
 

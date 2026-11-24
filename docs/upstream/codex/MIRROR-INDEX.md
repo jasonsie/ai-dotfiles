@@ -5,13 +5,13 @@ Official Codex docs (CLI, IDE extension, cloud): configuration, sandboxing, MCP,
 
 Consult through the `upstream-docs` skill (`find`, `outline`, `show`): read a section, not a file.
 
-Pages: 201
+Pages: 205
 
 - [administration.md](administration.md): Set access and policy boundaries for ChatGPT, Codex developer tools, APIs, plugins, and connected systems
 - [agent-approvals-security.md](agent-approvals-security.md): How to securely operate Codex with sandboxing, approvals, and network controls
 - [agent-configuration/agents-md.md](agent-configuration/agents-md.md): Give Codex extra instructions and context for your project
 - [agent-configuration/rules.md](agent-configuration/rules.md): Control which commands Codex can run outside the sandbox
-- [agent-configuration/speed.md](agent-configuration/speed.md): Increase speed without sacrificing intelligence
+- [agent-configuration/speed.md](agent-configuration/speed.md): Choose a speed in the ChatGPT Work or Codex composer and check which models and plans support Ultrafast.
 - [agent-configuration/subagents.md](agent-configuration/subagents.md): Use subagents in ChatGPT and Codex, and configure custom Codex agents
 - [amazon-bedrock.md](amazon-bedrock.md): Configure local ChatGPT Work and Codex surfaces to use OpenAI models available through Amazon Bedrock.
 - [annotations-extensibility.md](annotations-extensibility.md): Customize website selection, context, and controls for browser annotations
@@ -48,6 +48,7 @@ Pages: 201
 - [cyber-safety/recommended-configuration.md](cyber-safety/recommended-configuration.md): Configure isolation, least-privilege permissions, and guardrails for authorized cybersecurity work
 - [developer-commands.surface-cli.md](developer-commands.surface-cli.md): Control Codex during interactive sessions
 - [developer-commands.surface-ide.md](developer-commands.surface-ide.md): Reference for slash commands in the Codex IDE extension
+- [developer-settings.md](developer-settings.md): Configure development settings across ChatGPT and Codex clients
 - [developer-settings.surface-ide.md](developer-settings.surface-ide.md): Reference for Codex IDE extension settings
 - [developers.md](developers.md): Configure development workflows, environments, extensions, and integrations
 - [dots.md](dots.md): An always-on agent that keeps work moving and asks for your input when a decision needs you.
@@ -72,6 +73,7 @@ Pages: 201
 - [enterprise/compliance-api.md](enterprise/compliance-api.md): Understand the purpose and administration boundary of the Compliance API
 - [enterprise/configuration-server.md](enterprise/configuration-server.md): Serve configuration defaults and required settings to Codex from an HTTPS endpoint you operate.
 - [enterprise/connect-to-a-gateway.md](enterprise/connect-to-a-gateway.md): Configure a model gateway and authenticate with native gateway OAuth, an API key, or a credential helper.
+- [enterprise/connect-to-vertex-ai.md](enterprise/connect-to-vertex-ai.md): Configure Codex to send model requests through your Google Cloud project.
 - [enterprise/desktop-browser-policies.md](enterprise/desktop-browser-policies.md): Deploy and verify supported Chrome policies for the built-in desktop browser
 - [enterprise/dots-admin-guide.md](enterprise/dots-admin-guide.md): Configure dots access, manage personal dots, and review usage and admin activity in your Enterprise workspace.
 - [enterprise/dots-security.md](enterprise/dots-security.md): Review dots security controls, data handling, and audit and offboarding considerations
@@ -172,7 +174,7 @@ Pages: 201
 - [security/plugin/workbench.md](security/plugin/workbench.md): Start security scans, review findings, and inspect repository history in the Codex desktop app.
 - [security/scanner-imports.md](security/scanner-imports.md): Connect Wiz, Snyk Open Source, or Endor Labs, upload a scanner report, and choose which assessed findings to share.
 - [security/sdk.md](security/sdk.md): Run Codex Security scans from TypeScript, select targets, inspect results, and manage scan lifecycle.
-- [security/security-review.md](security/security-review.md): Configure and run in-depth security reviews for GitHub pull requests.
+- [security/security-review.md](security/security-review.md): Configure and run security reviews for GitHub pull requests.
 - [security/setup.md](security/setup.md): Connect GitHub, run your first security scan, and choose how to check future changes.
 - [security/threat-model.md](security/threat-model.md): Add deployment context and security assumptions to a monitored repository's threat model.
 - [sign-in-with-chatgpt.md](sign-in-with-chatgpt.md): Use your ChatGPT account in other apps, with usage limits that keep you in control.
@@ -181,6 +183,7 @@ Pages: 201
 - [sites/data-and-connections.md](sites/data-and-connections.md): Save records, connect apps, and add sign-in to your site
 - [sites/managing-a-site.md](sites/managing-a-site.md): Review analytics, change domains and settings, and manage site versions
 - [sites/publishing-and-sharing.md](sites/publishing-and-sharing.md): Review your site, choose its audience, and collaborate with editors
+- [sites/usage-and-cost.md](sites/usage-and-cost.md): Check hosting allowances and usage rates for Sites, and estimate your monthly cost
 - [skills-and-plugins.md](skills-and-plugins.md): Add reusable workflows, expertise, and connected tools to ChatGPT and Codex
 - [space.md](space.md): A home for your pages, slides, files, and shared work with ChatGPT
 - [space/agents.md](space/agents.md): Ask ChatGPT or a dot to draft, research, and revise a page
@@ -200,6 +203,7 @@ Pages: 201
 - [whats-new/devday-2026.md](whats-new/devday-2026.md): DevDay updates across ChatGPT, Codex, Sites, plugins, the API, and Enterprise.
 - [whats-new/dots-october-28-2026.md](whats-new/dots-october-28-2026.md): Reach your dot through iMessage or RCS on Android.
 - [whats-new/dots-october-9-2026.md](whats-new/dots-october-9-2026.md): This week in dots: mobile setup, more context from ChatGPT and Codex, and improvements to browsing, notifications, and everyday use.
+- [whats-new/gpt-62-astra-sol.md](whats-new/gpt-62-astra-sol.md): See what GPT-6.2 brings to the Responses API, Codex, and ChatGPT Work, including conversation settings, speed options, and model availability.
 - [whats-new/november-2-6-2026.md](whats-new/november-2-6-2026.md): Reply and share on iOS, give feedback in conversation, and continue tasks more reliably on Windows.
 - [whats-new/october-26-30-2026.md](whats-new/october-26-30-2026.md)
 - [whats-new/october-5-9-2026.md](whats-new/october-5-9-2026.md)

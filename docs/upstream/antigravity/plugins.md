@@ -3,12 +3,12 @@
 
 # Plugins
 
-Available on: Antigravity App, Antigravity CLI, Antigravity IDE
+Available on: Antigravity App, Antigravity CLI, IDE extensions (VS Code, Visual Studio, Eclipse), Antigravity IDE
 
 Plugins package reusable [skills](/docs/skills), [Model Context Protocol (MCP) servers](/docs/mcp), [custom agents and subagents](/docs/subagents), [rules](/docs/rules), and [lifecycle hooks](/docs/hooks) into a single versioned unit. You can install curated plugins from the [Antigravity Marketplace](/docs/marketplace), install plugins from a GitHub repository or local directory, or [build and publish your own plugins](/docs/build-plugins).
 
 | Goal | Guide |
-| :-- | :-- |
+| --- | --- |
 | **Browse the Marketplace catalog** | **[Marketplace](/docs/marketplace)** — discover, install, and configure Google and partner plugins in the App and CLI. |
 | **Use and manage installed plugins** | **This page** — learn [what plugins bundle](#what-a-plugin-bundles), [how to use installed plugins](#using-installed-plugins), and [how to manage plugins by surface](#managing-plugins-by-surface). |
 | **Build, validate, and publish a plugin** | **[Build plugins](/docs/build-plugins)** — follow the 3-step quickstart, `plugin.json` manifest schema, component authoring guides, `agy plugin validate`, and Marketplace submission. |
@@ -18,7 +18,7 @@ Plugins package reusable [skills](/docs/skills), [Model Context Protocol (MCP) s
 A single plugin can bundle any combination of five customization components:
 
 | Component | How it extends Antigravity |
-| :-- | :-- |
+| --- | --- |
 | **[Skills](/docs/skills)** | Task-specific workflows, helper scripts, and reference docs loaded on demand or invoked explicitly via `/<skill-name>`. |
 | **[MCP servers](/docs/mcp)** | Remote HTTPS or local `stdio` Model Context Protocol tool servers (`<plugin-name>_<server-name>`), including OAuth sign-in and user-prompted API key variables. |
 | **[Custom agents & subagents](/docs/subagents)** | Specialized agents with dedicated system prompts, model tiers, and tool allowlists that can run as background subagents or as your primary session agent. |
@@ -277,4 +277,5 @@ Ready to create a custom plugin for your team or publish a partner integration t
 *   **[Quickstart: create your first plugin](/docs/build-plugins#quickstart-create-your-first-plugin)**
 *   **[`plugin.json` manifest reference and full JSON schema](/docs/build-plugins#manifest-file-pluginjson)**
 *   **[Authoring skills, MCP servers, custom agents, rules, and hooks](/docs/build-plugins#authoring-plugin-components)**
+*   **[Adding interactive HTML views to MCP tools with MCP Apps](/docs/mcp-apps)**
 *   **[Validating locally (`agy plugin validate`) and submitting to the Marketplace](/docs/build-plugins#validating-and-publishing-plugins)**

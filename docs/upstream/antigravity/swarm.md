@@ -9,7 +9,7 @@ The `/swarm` command runs a team of named agents that split your task, work on t
 
 Note
 
-**Plan availability**: The `/swarm` command is available on **Google AI Pro** and **Google AI Ultra** plans across the Google Antigravity App and the Antigravity CLI.
+**Plan availability**: The `/swarm` command is available on **all plans** across the Google Antigravity App and the Antigravity CLI (on business and enterprise accounts, when allowed by organization admin settings).
 
 **Preview**: Swarm is in preview. Every worker is its own agent, so a swarm uses quota much faster than a single conversation.
 
@@ -47,7 +47,7 @@ The coordinator doesn’t do the technical work itself. It hands out tasks, judg
 Each member of a swarm is in one of these states:
 
 | State | Meaning |
-| :-- | :-- |
+| --- | --- |
 | **Active** (working) | Running a turn: thinking, running a tool, or waiting on the model. |
 | **Waiting** | Asleep on the board, using no tokens until a post mentions it. |
 | **Killed** | Removed from the swarm. A killed worker can’t be revived; the coordinator adds a new worker instead. |
@@ -90,7 +90,7 @@ Describe what you want built or answered and how to check it. The coordinator de
 
 ### Antigravity App
 
-The **Swarm** pane opens in the side panel next to your conversation and follows whichever coordinator or worker conversation you’re viewing. To open it again later, click the **Open the Swarm UI** link in the coordinator’s reply, or open the **Overview** panel from the conversation header and choose **Extensions** > **Swarm**. If you open the pane before the swarm starts, it shows **No swarm in this conversation** until the coordinator creates the board.
+The **Swarm** pane opens in the side panel next to your conversation and follows whichever coordinator or worker conversation you’re viewing. To open it again later, click the **Open the Swarm UI** link in the coordinator’s reply, or open the **Overview** panel from the conversation header and choose **Plugins** > **Swarm**. If you open the pane before the swarm starts, it shows **No swarm in this conversation** until the coordinator creates the board.
 
 The header shows the swarm’s title and a **Live** indicator. Use the tabs to inspect the swarm:
 
@@ -125,7 +125,7 @@ The board shows the swarm’s title, the post count, and whether follow mode is 
 ![The Antigravity CLI's full-screen swarm board, showing the swarm title, post count, and follow mode, a Roster of five members all on Gemini 4 Carbon, the Posts feed with the coordinator's briefs and two workers' reports to the verifier, and the Message pane with the selected report above the key hints](/assets/image/docs/swarm/swarm-cli-board-v4.png)
 
 | Key | Action |
-| :-- | :-- |
+| --- | --- |
 | j / k or ↓ / ↑ | Move through posts or members, or scroll the **Message** pane. |
 | g / G | Jump to the first or last item. |
 | Enter | In **Posts**, show or hide the **Message** pane. In the **Roster**, show or hide the selected member’s details. |
@@ -210,14 +210,14 @@ The coordinator groups the failures, adds one worker per package, and wakes the 
 For everyday coding and quick questions, prompt the default agent directly. When a task benefits from multiple agents, compare Antigravity’s agent orchestrators and background subagents:
 
 |  | [Subagents](/docs/subagents) | [Boost (`/boost`)](/docs/boost) | Swarm (`/swarm`) | [Teamwork (`/teamwork`)](/docs/teamwork) |
-| :-- | :-- | :-- | :-- | :-- |
+| --- | --- | --- | --- | --- |
 | **Best for** | Delegating a focused side task, such as codebase research, browser checks, or a test run | Hard bugs, race conditions, algorithms, and tricky refactors that need deep reasoning | **Broad tasks that split cleanly across independent files, packages, or investigation tracks** | Multi-milestone projects, repository-scale migrations, simulations, and deep research |
 | **How agents coordinate** | Each subagent runs in the background and reports back to the agent that started it | An orchestrator runs an iterative pipeline where workers implement, challenge, fix, and re-verify solutions | **A coordinator splits the task across named workers and a verifier that talk on one shared message board** | A `Sentinel` and `Project Orchestrator` run specialized roles through a milestone plan with review gates |
 | **How you start** | Automatic delegation or `@subagent` mention | `/boost <task>` (starts immediately) | **`/swarm <task>` (starts immediately)** | `/teamwork <goal>`, followed by a scoping interview |
 | **Workspace** | Current workspace (or an isolated branch or working copy when requested) | Current workspace across isolated subagent contexts | **Current workspace by default, or per-worker working copies for overlapping edits** | Dedicated project directory (`~/teamwork_projects/{PROJECT_NAME}`) with exclusive file ownership |
 | **Verification** | Parent agent checks the subagent’s reply | Improvement workers try to break prior attempts and run real tests before the orchestrator spot-checks | **A dedicated `@verifier` worker reviews diffs and runs tests before sign-off** | Independent `Critic`, `Challenger`, `Auditor`, and `Success Auditor` gates verify each milestone |
 | **Typical horizon** | Seconds to minutes | Seconds to hours | **Minutes to hours** | Hours to days |
-| **Plan tier** | All plans | Paid plans | **Google AI Pro and Ultra** | Paid plans |
+| **Plan tier** | All plans | Paid plans | **All plans** | Paid plans |
 
 Use the following guidelines to choose the right approach:
 

@@ -3,7 +3,7 @@
 
 # Custom subagents
 
-Available on: Antigravity App, Antigravity CLI
+Available on: Antigravity App, Antigravity CLI, IDE extensions (VS Code, Visual Studio, Eclipse), Antigravity IDE
 
 Delegate parallel builds, multi-file code generation, and research sweeps to concurrent background subagents while maintaining your active programming flow.
 
@@ -36,7 +36,7 @@ You can define reusable custom subagents in Markdown format (`.md`) with YAML fr
 Antigravity automatically discovers custom subagent `.md` files in the following locations:
 
 | Location | Path | Scope |
-| :-- | :-- | :-- |
+| --- | --- | --- |
 | **Workspace Customizations** | `.agents/agents/<name>.md` or `.agents/agents/<name>/agent.md` | Workspace / Repository Root |
 | **Global Customizations** | `~/.gemini/config/agents/<name>.md` or `.../agents/<name>/agent.md` | Machine-wide / All Projects |
 | **Plugins** | `plugins/<plugin_name>/agents/` | Bundled Plugin Package |
@@ -46,7 +46,7 @@ Antigravity automatically discovers custom subagent `.md` files in the following
 Define agent metadata, capability limits, and execution policies using YAML frontmatter at the top of your `.md` file:
 
 | Property | Type | Default | Description |
-| :-- | :-- | :-- | :-- |
+| --- | --- | --- | --- |
 | `name` | `string` | _(Required)_ | The unique identifier for the custom agent. |
 | `description` | `string` | _(Required)_ | Detailed description used by the planner to determine when to delegate tasks to this agent. |
 | `tools` | `string[]` | `[]` | Explicit list of tools permitted for this subagent (for example, `view_file`, `replace_file_content`, `grep_search`, `run_command`). |
@@ -161,7 +161,7 @@ Invoking [`/boost`](/docs/boost) launches a multi-agent reasoning pipeline (`Orc
 
 Note
 
-**Plan availability**: The `/swarm` command is available on **Google AI Pro** and **Google AI Ultra** plans across the Antigravity App and the Antigravity CLI.
+**Plan availability**: The `/swarm` command is available on **all plans** across the Antigravity App and the Antigravity CLI (on business and enterprise accounts, when allowed by organization admin settings).
 
 Running [`/swarm`](/docs/swarm) turns your conversation into a coordinator that splits a task across named workers, usually with a verifier that reviews and tests their changes. Unlike subagents, which report privately to the agent that started them, swarm workers coordinate on one shared message board with `@mentions`, and idle workers wait without using tokens until someone mentions them. Learn more in the [Swarm documentation](/docs/swarm).
 

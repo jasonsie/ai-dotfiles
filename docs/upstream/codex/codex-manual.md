@@ -279,6 +279,8 @@ Build, connect, publish, and manage websites in ChatGPT.
 
 - [Manage a site](https://learn.chatgpt.com/docs/sites/managing-a-site): Review analytics, change settings, and manage site versions.
 
+- [Usage and cost](https://learn.chatgpt.com/docs/sites/usage-and-cost): Check hosting allowances, rates, and estimated monthly costs.
+
 #### ChatGPT dots
 
 Set up your dot and manage its ongoing work.
@@ -326,6 +328,64 @@ Find commands and settings for the ChatGPT desktop app.
 Source: [Glossary](https://learn.chatgpt.com/docs/glossary.md)
 
 Use this glossary as a quick reference for Codex terms across the app, CLI, IDE extension, cloud, SDK, and related integrations.
+
+### GPT-6.2
+
+Source: [GPT-6.2](https://learn.chatgpt.com/docs/whats-new/gpt-62-astra-sol.md)
+
+import "@styles/gpt-62-release.css";
+
+GPT-6.2 Astra and Sol launch in ChatGPT Work, Codex, and the API. Choose Astra for your hardest projects or Sol for everyday coding and writing.
+
+#### What’s new
+
+#### ChatGPT Work
+
+Use Astra or Sol in Work on the web, desktop, or mobile with Plus, Pro, Business, Enterprise, or Edu. Enterprise and Edu admins must first [enable the models in workspace settings](https://learn.chatgpt.com/docs/enterprise/workspace-model-availability#gpt-62-astra-and-gpt-62-sol-in-enterprise-and-edu).
+
+On supported consumer plans, new Work chats default to Sol at **Light** reasoning effort. Enterprise workspaces with model access default to Sol at **Medium**. If you see the Power slider, open **Advanced** to [choose a model and reasoning effort](https://learn.chatgpt.com/docs/models).
+
+#### Codex
+
+In the Codex app and CLI, choose Astra to trace a bug across services, fix it, and test the affected workflows. Choose Sol to review a pull request or revise code in response to feedback. Use the model picker in the app or `/model` in the CLI.
+
+Codex and Work share usage. Pro $200 subscribers can use Ultrafast with Sol. Pro $500 subscribers can use it with either model, as can eligible Enterprise and Edu workspaces once an owner enables Ultrafast. See [speed options](https://learn.chatgpt.com/docs/agent-configuration/speed#gpt-62-speed-options) and [plan and client availability](https://learn.chatgpt.com/docs/pricing#feature-availability).
+
+#### Chat
+
+To use GPT-6.2 Astra or Sol in ChatGPT, open Work. For the models you can select in Chat, see [models in ChatGPT](https://help.openai.com/en/articles/20001354-gpt-6-and-other-models-in-chatgpt).
+
+#### Responses API
+
+Use `gpt-6.2-astra` or `gpt-6.2-sol` in the Responses API. Both models support Ultrafast at launch.
+
+In standard, single-agent mode, you can change reasoning effort or switch from plain text to structured output between replies. Append a `configuration_update` item before the next user message and keep the request-level settings unchanged. [Keeping earlier input intact](https://developers.openai.com/api/docs/guides/keep-prefix-unchanged) helps preserve reasoning across turns and keeps that input eligible for prompt caching.
+
+If your project uses data residency, both models support US and EU regions for Standard, Fast, and Batch processing. Ultrafast supports US data residency only. See the [GPT-6.2 migration guide](https://developers.openai.com/api/docs/guides/latest-model?model=gpt-6.2-astra) and [API pricing by service tier](https://developers.openai.com/api/docs/pricing#text-tokens).
+
+#### Choose your model
+
+#### GPT-6.2 Astra
+
+Astra is the stronger choice for complex reasoning. It can work through a research question across multiple sources and check its conclusions against the data.
+
+#### Example use cases
+
+- **Diagnose a bug across services.** Give Astra the failing workflow and ask it to trace the cause, implement a fix, and run the affected tests.
+- **Build a deck from a report.** Give Astra the report and your slide template. Ask it to present the findings in your team’s layout and writing style.
+- **Investigate a research question.** Give Astra the sources and ask it to compare their findings and identify where the evidence disagrees.
+
+#### GPT-6.2 Sol
+
+Sol handles everyday coding, writing, and work that takes several steps. Compared with GPT-6.1 Sol, it lets you complete more tasks on the same paid plan.
+
+#### Example use cases
+
+- **Review a pull request.** Ask Sol to walk through a change and flag issues for the author to address.
+- **Revise code after review.** Give Sol the reviewer’s feedback and ask it to update the implementation and run the relevant tests.
+- **Turn meeting notes into a project brief.** Ask Sol to pull together decisions, next steps, and open questions from your notes.
+
+Explore the benchmarks and safety evaluations in the [release announcement](https://openai.com/index/introducing-gpt-6-2-astra-sol/).
 
 ### November 2–6, 2026
 
@@ -821,7 +881,20 @@ a]:min-w-0 [&>a]:no-underline">
 
 Source: [What's new](https://learn.chatgpt.com/docs/whats-new.md)
 
+import "@styles/gpt-62-release.css";
+
 For every versioned update, bug fix, and minor improvement, see the [ChatGPT and Codex changelog](https://learn.chatgpt.com/docs/changelog) and [API changelog](https://developers.openai.com/api/docs/changelog).
+
+#### [November 17, 2026](https://learn.chatgpt.com/docs/whats-new/gpt-62-astra-sol)
+
+#### [GPT-6.2](https://learn.chatgpt.com/docs/whats-new/gpt-62-astra-sol)
+
+GPT-6.2 Astra and Sol launch in ChatGPT Work, Codex, and the API. Use Astra
+for your hardest projects, from implementing and testing complex code
+changes to building slides that follow a template. Choose Sol for everyday
+coding, writing, and multistep workflows.
+
+[Read the full update →](https://learn.chatgpt.com/docs/whats-new/gpt-62-astra-sol)
 
 #### November 9–13, 2026
 
@@ -1106,7 +1179,7 @@ for the full update and smaller improvements.
 
 #### Take on demanding work with GPT-6 Astra
 
-[GPT-6 Astra](https://learn.chatgpt.com/docs/models#gpt-6-astra) combines advanced reasoning, computer
+[GPT-6 Astra](https://learn.chatgpt.com/docs/models?surface=app#app-gpt-6-astra) combines advanced reasoning, computer
 use, and stronger judgment for complex work across code, apps, and research in
 Codex and ChatGPT Work. Use it to carry out a workflow, check the result, and
 produce a document, spreadsheet, or presentation that fits your templates and
@@ -2029,20 +2102,17 @@ Some ChatGPT and Codex features ship behind a maturity label so you can understa
 
 Source: [Pricing](https://learn.chatgpt.com/docs/pricing.md)
 
-ChatGPT Work and Codex share usage. ChatGPT Work usage inside
-ChatGPT uses the same pricing, credits, and usage limits as Codex.
+ChatGPT Work and Codex share pricing, credits, and usage limits.
 
-GPT-5.5 retires from Codex with ChatGPT sign-in on October 14, 2026, at noon
-PDT (19:00 UTC). The OpenAI API and Codex sessions authenticated with an API
-key aren't affected. See [GPT-5.5 retirement](https://learn.chatgpt.com/docs/models#gpt-55-retirement)
-for migration guidance.
+- **Included usage:** Your ChatGPT plan includes a usage allowance. See
+  [plan options](#pricing-options) and [included usage](#included-usage).
+- **Credits and pay-as-you-go:** Eligible plans can extend usage with credits
+  or USD usage-based billing. See [token rates](#token-rates) and
+  [speed multipliers](#speed-multipliers).
+- **API-key billing:** API-key sessions use separate [API pricing](https://developers.openai.com/api/docs/pricing),
+  not your ChatGPT allowance. API prices don't estimate included tasks.
 
-See [token rates](#token-rates) for credit-based plans and
-[GPT-6.1 Sol model guidance](https://learn.chatgpt.com/docs/models#gpt-61-sol) for model details.
-API token prices are separate from subscription usage; don't use them to
-estimate included tasks.
-
-Pricing options
+#### Pricing options
 
 **Free** ($0 /month):
 
@@ -2137,25 +2207,7 @@ Everything in Business and:
 
 [Contact sales](https://chatgpt.com/contact-sales?utm_internal_source=openai_developers_codex)
 
-#### Invite friends and coworkers
-
-Eligible users can send Codex invitations from the profile menu in the
-lower-left corner of the app. Choose **Invite a friend** on an eligible personal
-plan or **Invite a coworker** in an eligible Business workspace, enter the
-recipient's email address, and send the invitation.
-
-The invitation dialog shows the current reward, recipient requirements, invite
-limits, and when rewards expire for your plan or promotion. Personal and
-Business referral programs have separate rewards and eligibility rules.
-Referrals aren't currently available for ChatGPT Enterprise.
-
-Business referrals use separate shared-workspace credit rewards; review the
-[current terms](https://help.openai.com/en/articles/20001271) before you send an
-invitation.
-
-#### Frequently asked questions
-
-#### What are the usage limits for my plan?
+#### Included usage
 
 The number of messages you can send depends on the model used, size and
 complexity of your tasks, and whether you run them locally or in the cloud.
@@ -2167,7 +2219,8 @@ Tasks that look similar can consume different amounts of your allowance. Model
 choice, context, reasoning, tool use, retrieval, and caching all affect usage,
 so prompt length alone isn't a reliable estimate.
 
-For model recommendations, see [Models](https://learn.chatgpt.com/docs/models).
+For model guidance, see [GPT-6.1 Sol](https://learn.chatgpt.com/docs/models#gpt-61-sol),
+[GPT-6.2 Sol](https://learn.chatgpt.com/docs/models#app-gpt-62-sol), and [Models](https://learn.chatgpt.com/docs/models).
 
 The estimates below show local messages per five-hour period for Plus and
 Standard Business. Pro plans currently have no five-hour limit. Cloud tasks
@@ -2181,6 +2234,14 @@ and reset times.
         Plus
 
         Standard Business
+
+      GPT-6.2 Astra
+      6-50
+      6-50
+
+      GPT-6.2 Sol
+      17-180
+      17-180
 
       GPT-6 Astra
       5-45
@@ -2218,83 +2279,45 @@ Excel](https://help.openai.com/articles/20001063) on Plus and Pro.
 GPT-6.1 Sol usage drawn from your subscription has no long-context surcharge
 in Codex or ChatGPT Work.
 
-Fast and Ultrafast modes use included subscription limits and paid credits
-at different rates, relative to Standard mode for the same model:
+#### Speed multipliers
 
-| Speed mode            | Included subscription usage | Purchased credits and Enterprise pay-as-you-go usage |
-| --------------------- | --------------------------- | ---------------------------------------------------- |
-| Fast                  | 2.5x                        | 2x                                                   |
-| GPT-6 Astra Ultrafast | 8x                          | 6x                                                   |
-| GPT-6.1 Sol Ultrafast | 8x                          | 6x                                                   |
+Speed multipliers are relative to Standard mode for the same model, where
+available. Credits / PAYG means purchased credits and Enterprise pay-as-you-go
+usage.
+
+    Fast
+
+| Model | Included usage | Credits / PAYG |
+| ----- | -------------- | -------------- |
+
+| GPT-6.2 Astra
+GPT-6.2 Sol | 2x | 2x |
+| GPT-6.1 Sol
+GPT-6.1 Terra | 2.5x | 2x |
+| GPT-6 Astra
+GPT-6 Sol
+GPT-6 Luna | 2.5x | 2x |
+
+    Ultrafast
+
+| Model | Included usage | Credits / PAYG |
+| ----- | -------------- | -------------- |
+
+| GPT-6.2 Astra
+GPT-6.2 Sol | 6x | 3x\* / 6x |
+| GPT-6 Astra | 8x | 6x |
+| GPT-6.1 Sol | 8x | 6x |
+
+\* For GPT-6.2 Astra and GPT-6.2 Sol, eligible overages paid with purchased
+credits and eligible Enterprise pay-as-you-go usage cost 3x the Standard rate
+through February 28, 2027. Both cost 6x starting March 1, 2027 (Pacific time).
+Included usage stays at 6x throughout.
 
 Check your [usage dashboard](#where-can-i-see-my-current-usage-limits) for
 current limits and reset times. See [Speed](https://learn.chatgpt.com/docs/agent-configuration/speed)
-for supported models and how speed modes affect usage.
+for supported models, plan eligibility, and administrator controls.
 
-Image generations use included limits ~3-5x faster on average, depending on
-image quality and size.
-
-For Ultrafast mode eligibility and administrator controls,
-see [Ultrafast mode](https://learn.chatgpt.com/docs/agent-configuration/speed#ultrafast-mode).
-
-#### How much does Sites cost?
-
-[Sites](https://learn.chatgpt.com/docs/sites) is included with eligible ChatGPT plans during public
-beta. Availability depends on your plan, region, and workspace settings.
-
-#### How much does Voice cost?
-
-Voice in Desktop uses your existing Codex usage budget at $0.05 per
-minute.
-
-GPT-Live manages the live conversation. The model handling your task is billed
-separately at its applicable token rates. Voice and tasks share your plan's usage
-limits.
-
-For Business, Edu, and Enterprise workspaces with credit-based billing, desktop
-voice costs 1.25 credits per minute. This rate also applies when Plus and Pro
-users spend additional credits. ChatGPT Voice in Desktop isn't available via API
-key.
-
-#### What happens when you hit usage limits?
-
-We want you to be able to complete work already in progress. If you reach your
-usage limits during an active turn, the agent will be able to continue working
-on that turn, subject to fair use limits.
-
-ChatGPT Plus and Pro users who reach their usage limit can purchase additional
-credits to continue working without needing to upgrade their existing plan.
-
-Business, Edu, and Enterprise plans with [flexible
-pricing](https://help.openai.com/en/articles/11487671-flexible-pricing-for-the-enterprise-edu-and-business-plans)
-can purchase additional workspace credits to continue working.
-
-All users may also run extra local chats using an API key, with usage charged at
-[standard API rates](https://platform.openai.com/docs/pricing).
-
-#### How does image generation count toward usage limits?
-
-Image generation counts toward the same general usage limits as local
-messages and cloud chats. Image generations use included limits 3-5x faster on
-average than similar turns without image generation, depending on
-image quality and size. After you reach your included limits, image generation
-also draws from [credits](#credits-overview).
-
-Image generation isn't available on the Free plan. When you use Codex with an
-API key, API pricing applies to image generation instead of included ChatGPT
-usage limits.
-
-#### Where can I see my current usage limits?
-
-You can find your current limits in the [usage
-dashboard](https://chatgpt.com/codex/settings/usage). If you want to see your
-remaining limits during an active Codex CLI session, you can use `/status`.
-
-Check the dashboard every week or two to understand your pace and remaining
-capacity. If usage is higher than expected, consider whether a smaller model or
-tighter task scope would still produce a useful result.
-
-#### What are tokens and credits?
+#### Token rates
 
 Tokens are small units of information that ChatGPT reads and writes. Your
 prompt, files, chat history, tool results, and ChatGPT's response all
@@ -2304,8 +2327,6 @@ Credits are the unit used to pay for eligible usage on credit-based plans.
 After you reach your included limits, available credits let you continue
 working. Credit purchase prices and applicable discounts depend on your plan
 or agreement.
-
-#### Token rates
 
 The rates below are for Standard speed, quoted in credits per million input
 tokens, cached input tokens, and output tokens. [Learn more about
@@ -2331,10 +2352,20 @@ sales](https://chatgpt.com/contact-sales?utm_internal_source=openai_developers_c
 
           Output Tokens
 
+        GPT-6.2 Astra
+        200 credits
+        10 credits
+        1,000 credits
+
         GPT-6 Astra
         250 credits
         25 credits
         1,250 credits
+
+        GPT-6.2 Sol
+        50 credits
+        2.5 credits
+        250 credits
 
         GPT-6.1 Sol
         50 credits
@@ -2398,10 +2429,10 @@ sales](https://chatgpt.com/contact-sales?utm_internal_source=openai_developers_c
 
           A typical GPT-5.6 Sol task may use 2-15 credits.
 
-          These are Standard credit rates. For purchased credits and Enterprise
-          pay-as-you-go usage, Fast mode uses 2x the Standard rate where
-          available, and Ultrafast mode uses 6x. Included subscription usage has
-          different multipliers. See
+          For USD usage-based billing, GPT-6.2 Astra at Standard speed costs $8
+          per million input tokens, $0.40 per million cached input tokens, and
+          $40 per million output tokens. GPT-6.2 Sol costs $2, $0.10, and $10
+          per million input, cached input, and output tokens, respectively. See
           [Speed](https://learn.chatgpt.com/docs/agent-configuration/speed) for availability
           and billing details.
 
@@ -2419,6 +2450,80 @@ Pro.](https://help.openai.com/en/articles/12642688)
 Edu.](https://help.openai.com/en/articles/11487671-flexible-pricing-for-the-enterprise-edu-and-business-plans)
 
 For Business and Enterprise/Edu credit billing, use the [credit-based rate card](https://help.openai.com/en/articles/11481834-chatgpt-rate-card-business-enterpriseedu-credit-based-pricing). If your Enterprise agreement specifies usage-based billing in USD, use the [Enterprise USD rate card](https://help.openai.com/en/articles/20001415-chatgpt-rate-card-enterprise-token-based-pricing) and your agreement instead. Workspace administrators can also review [ChatGPT Work usage and cost](https://learn.chatgpt.com/docs/enterprise/chatgpt-work-usage-and-cost#understand-tokens-and-credits).
+
+#### Invite friends and coworkers
+
+Eligible users can send Codex invitations from the profile menu in the
+lower-left corner of the app. Choose **Invite a friend** on an eligible personal
+plan or **Invite a coworker** in an eligible Business workspace, enter the
+recipient's email address, and send the invitation.
+
+The invitation dialog shows the current reward, recipient requirements, invite
+limits, and when rewards expire for your plan or promotion. Personal and
+Business referral programs have separate rewards and eligibility rules.
+Referrals aren't currently available for ChatGPT Enterprise.
+
+Business referrals use separate shared-workspace credit rewards; review the
+[current terms](https://help.openai.com/en/articles/20001271) before you send an
+invitation.
+
+#### Frequently asked questions
+
+#### How much does Sites cost?
+
+Sites is available in public beta on eligible plans. Availability depends on your region and workspace settings. Hosting is free through December 31, 2026. See [Sites usage and cost](https://learn.chatgpt.com/docs/sites/usage-and-cost) for plan allowances, hosting rates, and a monthly cost estimate.
+
+#### How much does Voice cost?
+
+Voice in Desktop uses your existing Codex usage budget at $0.05 per
+minute.
+
+GPT-Live manages the live conversation. The model handling your task is billed
+separately at its applicable token rates. Voice and tasks share your plan's usage
+limits.
+
+For Business, Edu, and Enterprise workspaces with credit-based billing, desktop
+voice costs 1.25 credits per minute. This rate also applies when Plus and Pro
+users spend additional credits. ChatGPT Voice in Desktop isn't available via API
+key.
+
+#### What happens when you hit usage limits?
+
+We want you to be able to complete work already in progress. If you reach your
+usage limits during an active turn, the agent will be able to continue working
+on that turn, subject to fair use limits.
+
+ChatGPT Plus and Pro users who reach their usage limit can purchase additional
+credits to continue working without needing to upgrade their existing plan.
+
+Business, Edu, and Enterprise plans with [flexible
+pricing](https://help.openai.com/en/articles/11487671-flexible-pricing-for-the-enterprise-edu-and-business-plans)
+can purchase additional workspace credits to continue working.
+
+All users may also run extra local chats using an API key, with usage charged at
+[standard API rates](https://platform.openai.com/docs/pricing).
+
+#### How does image generation count toward usage limits?
+
+Image generation counts toward the same general usage limits as local
+messages and cloud chats. Image generations use included limits 3-5x faster on
+average than similar turns without image generation, depending on
+image quality and size. After you reach your included limits, image generation
+also draws from [credits](#credits-overview).
+
+Image generation isn't available on the Free plan. When you use Codex with an
+API key, API pricing applies to image generation instead of included ChatGPT
+usage limits.
+
+#### Where can I see my current usage limits?
+
+You can find your current limits in the [usage
+dashboard](https://chatgpt.com/codex/settings/usage). If you want to see your
+remaining limits during an active Codex CLI session, you can use `/status`.
+
+Check the dashboard every week or two to understand your pace and remaining
+capacity. If usage is higher than expected, consider whether a smaller model or
+tighter task scope would still produce a useful result.
 
 #### What counts as Code Review usage?
 
@@ -2450,6 +2555,11 @@ For guidance on choosing and scoping tasks, see [Use Work
 efficiently](https://learn.chatgpt.com/docs/prompting#use-work-efficiently).
 
 #### Feature availability
+
+GPT-6.2 Astra and GPT-6.2 Sol are available on Plus, Pro, Business, Enterprise,
+and Edu in ChatGPT Work on web, mobile, and desktop, and in the Codex app and CLI.
+Both models are off by default in Enterprise and Edu workspaces. An administrator
+must enable them in the [workspace model settings](https://learn.chatgpt.com/docs/enterprise/workspace-model-availability#gpt-62-astra-and-gpt-62-sol-in-enterprise-and-edu).
 
 In ChatGPT, GPT-6.1 Sol is available in Work and Codex, not Chat. For Enterprise
 and Edu, the model is off by default until an administrator enables it. Using
@@ -2600,7 +2710,11 @@ A good default is to include four things in your prompt:
 
 This helps Codex stay scoped, make fewer assumptions, and produce work that's easier to review.
 
-Use GPT-6.1 Sol when available to your account and client, starting with the reasoning effort available by default in your client. Start with **High** for GPT-6 Luna or **Light** for GPT-6 Astra (`low` in configuration). Adjust based on the task and the result. See [Models](https://learn.chatgpt.com/docs/models) for available reasoning levels.
+If GPT-6.2 Sol is available to you, start there for most tasks. For a change
+that spans packages, choose GPT-6.2 Astra from the model picker.
+With either model, start with the reasoning effort your client selects. For GPT-6 Luna,
+start with **High**. For GPT-6 Astra, start with **Light** (`low` in
+configuration). See [Models](https://learn.chatgpt.com/docs/models) for available reasoning levels.
 
 - Low for faster, well-scoped tasks
 - Medium or High for more complex changes or debugging
@@ -2807,6 +2921,147 @@ A few common mistakes to avoid when first using Codex:
 - Treating Codex like something you have to watch step by step instead of using it in parallel with your own work
 - Using one chat for an entire project instead of one chat per coherent outcome. This leads to bloated context and worse results over time
 
+### Fast and Ultrafast modes
+
+Source: [Fast and Ultrafast modes](https://learn.chatgpt.com/docs/agent-configuration/speed.md)
+
+In ChatGPT Work and Codex, **Fast** and **Ultrafast** generate tokens faster
+than **Standard** on the same model. Both use more of your plan's allowance
+or credits.
+
+#### Choose a speed in the composer
+
+In ChatGPT Work on the web or in the Codex desktop app, open the model or
+effort picker at the bottom of the composer.
+
+- If **Ultrafast** is available to you, select the lightning bolt to open the
+  speed menu, then choose a speed.
+- If your only options are **Standard** and **Fast**, selecting the lightning
+  bolt switches between them immediately.
+
+In the advanced picker, select **Speed**. In ChatGPT Work on mobile, open the
+model picker and use the speed setting.
+
+Try switching speeds in the desktop picker below.
+
+## Fast mode
+
+Fast mode supports GPT-6.2 Astra and GPT-6.2 Sol. You can also use it with
+GPT-6.1 Sol, GPT-6.1 Terra, GPT-6 Astra, GPT-6 Sol, and GPT-6 Luna. On
+GPT-6.2 Astra and GPT-5.6, Fast generates tokens at about 1.5 times the
+speed of Standard.
+
+With ChatGPT sign-in, you can also use Fast in the Codex CLI and IDE extension.
+See [Fast pricing](https://learn.chatgpt.com/docs/pricing?codex-pricing-speed=fast#speed-multipliers)
+for the usage rate for your model.
+
+#### Ultrafast mode
+
+On GPT-6.2 Astra and GPT-6.2 Sol, Ultrafast generates tokens at up to
+4.5 times the speed of Standard on the same model. Choose Ultrafast in the
+[composer](#choose-a-speed-in-the-composer) in ChatGPT Work or the Codex app,
+or use the [Codex CLI](#codex-cli-controls).
+
+- **Pro.** The models you can use with Ultrafast depend on your plan. See
+  [GPT-6.2 Ultrafast availability by Pro plan](https://learn.chatgpt.com/docs/whats-new/gpt-62-astra-sol).
+  On Pro $500, both models are available. Ultrafast uses your included
+  allowance first, then any available credits.
+- **Enterprise and Edu.** Both models support Ultrafast in eligible workspaces.
+  If you don't see it, ask your workspace owner to check
+  [model access and Ultrafast permissions](#ultrafast-plan-and-workspace-requirements).
+
+ChatGPT Work and Codex share pricing, credits, and usage limits. See
+[Ultrafast pricing](https://learn.chatgpt.com/docs/pricing?codex-pricing-speed=ultrafast#speed-multipliers)
+for included usage, purchased credits, and eligible pay-as-you-go rates.
+
+GPT-6 Astra and GPT-6.1 Sol also support Ultrafast on Pro $500 and eligible
+Enterprise and Edu plans. In Codex, GPT-6 Astra generates tokens at up to
+eight times its Standard speed with Ultrafast.
+
+#### Ultrafast plan and workspace requirements
+
+Enterprise workspaces need a credit-based or USD usage-based agreement. Edu
+workspaces need a credit-based plan.
+
+Workspace owners must enable [the GPT-6.2 models they want members to use](https://learn.chatgpt.com/docs/enterprise/workspace-model-availability#gpt-62-astra-and-gpt-62-sol-in-enterprise-and-edu).
+Ultrafast is a separate permission and is off by default. Owners can enable it
+for selected users or the whole workspace in
+[workspace permissions](https://learn.chatgpt.com/docs/enterprise/roles-and-workspace-permissions).
+[Per-user spend controls](https://learn.chatgpt.com/docs/enterprise/usage-limits) apply.
+
+For GPT-6.2 Astra, GPT-6.2 Sol, and GPT-6 Astra, Ultrafast supports inference
+residency only in the United States. For GPT-6.1 Sol, it also supports Europe
+(EEA and Switzerland).
+
+#### Codex CLI controls
+
+In the CLI, type `/` to see which commands are available for your model.
+Use `/fast` or `/ultrafast` to choose a speed. Repeat the active command to
+return to Standard. The CLI saves your selection. To show Fast mode in the
+footer, use `/statusline`.
+
+#### API billing
+
+When you sign in to Codex with an API key, you pay API token rates. ChatGPT credit
+multipliers apply only when you sign in with ChatGPT. See
+[Ultrafast mode in the API](https://developers.openai.com/api/docs/guides/ultrafast-mode) for supported
+models, request configuration, and pricing.
+
+#### Retirement and migration
+
+[GPT-5.5 retired from Codex](https://learn.chatgpt.com/docs/models#gpt-55-retirement) for users signed
+in with ChatGPT on October 14, 2026, at noon PDT (19:00 UTC).
+
+### From concept art to editable SVGs and 3D scenes
+
+Source: [From concept art to editable SVGs and 3D scenes](https://learn.chatgpt.com/guides/svg-3d-design.md)
+
+{/_ vale alex.Condescending = NO _/}
+
+In October 2024, Simon Willison asked 16 language models to [draw a pelican riding a bicycle](https://simonwillison.net/2024/Oct/25/pelicans-on-a-bicycle/) as an SVG. Models have come a long way since then, and with GPT-6.2 Astra you can now create beautiful vector graphics and 3D models from a simple prompt.
+
+{/_ vale alex.Condescending = YES _/}
+
+To take those capabilities further, Astra can ask GPT Image for a reference suited to the medium, refine it, and use it as concept art for everything from editable app icons to detailed parametric CAD. [SVG & 3D Design](https://chatgpt.com/plugins/Plugin_13c5903473e081919917a1070fad1dd1?open_in_app) is a Codex plugin that guides Astra through this workflow so you can create richer, more ambitious assets with just a few words of direction.
+
+#### Designing app icons for light and dark mode
+
+Designing an app icon means thinking about how it will look everywhere from a high-resolution app listing to a tiny square on a home screen. You also need to consider light and dark mode, which can require rethinking the entire color palette.
+
+When asking Astra for a moth field guide icon, tell it how small the icon will get. That constraint carries through to the reference it asks GPT Image to make and helps it decide which wing markings are worth turning into curves. The light and dark themes can then share the same SVG and use different palettes.
+
+#### Creating vector illustrations for the web
+
+The tricky part of a web illustration is getting the richness of the art into a file you’d actually want to ship. When asking Astra for a tide pool in SVG, a color woodcut is a useful direction for the reference. Each area of ink has an edge Astra can draw as a path. Fine photographic texture takes many more paths to reproduce.
+
+Explore the original SVGs [without the skill](https://cdn.openai.com/devhub/docs/codex/svg-3d-design/tide-pool-without-skill.svg) and [with the skill](https://cdn.openai.com/devhub/docs/codex/svg-3d-design/tide-pool-with-skill.svg).
+
+#### Animating SVG curves and colors with code
+
+One of the other benefits of SVG is that it’s all just math. You can compose shapes in layers and animate their curves and colors with code.
+
+For a seascape that reacts to the weather, ask Astra to make wind speed a value you can set in JavaScript. That one value can change the height and speed of the waves and bend the foam along each crest. A separate daylight control lets you change the palette while the sea keeps moving.
+
+#### Building editable 3D models
+
+GPT-6 Astra can create detailed 3D models, particularly buildings. GPT-6.2 Astra builds on that strength. Organic shapes are harder to specify in words, which is where a visual reference becomes especially useful.
+
+{/_ vale alex.Condescending = NO _/}
+
+With a simple prompt like “A miniature woodland just after the rain,” Astra has a lot of details to fill in on its own. Ask GPT Image the same thing and you get a much richer picture of that little woodland. Even the moss has a pattern to it, growing thick between the wet stones and creeping into cracks in the stump. This is where a picture is worth a thousand words. It gives GPT-6.2 Astra all that detail to work from, and the model can now bring it to life in 3D.
+
+{/_ vale alex.Condescending = YES _/}
+
+Here’s Simon’s pelican on a bicycle again, this time in 3D, with and without the skill.
+
+#### Art direction for game environments and effects
+
+While you can create beautiful standalone assets with this workflow, you can also bring an entire world to life from a concept image. Here, Astra was asked to create a graphics museum on a hilltop, where visitors could explore exhibits showcasing beautiful materials and rich visual effects. GPT Image’s first concept was gorgeous, and it gave Astra a direction for everything from the layout of the gallery to the way afternoon light would fall across the polished stone floor.
+
+A little more steering pushed the exhibits further. One idea was a miniature volcano that would erupt inside a glass case. A single image could capture the most dramatic moment, but Astra also needed to work out how to get there. GPT Image was prompted to imagine the eruption in three stages, from the first flash at the vent to the plume at its peak and finally the embers cooling in the crater.
+
+Try [SVG & 3D Design](https://chatgpt.com/plugins/Plugin_13c5903473e081919917a1070fad1dd1?open_in_app) on a site or app you’re building. Pick an asset you’d love to give more personality, whether it’s an icon that changes with the theme or an illustration that moves as someone scrolls. Tell Codex where it will live and what it needs to do there, and give it room to explore the art direction.
+
 ### Multi-agent operations
 
 Source: [Subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents.md)
@@ -2931,24 +3186,23 @@ reasoning effort. To balance intelligence, speed, and price for each task,
 request a specific model or reasoning effort in your prompt,
 configure `[agents]` defaults in `config.toml`, or set `model` and
 `model_reasoning_effort` directly in the custom agent file.
-For example, use `gpt-6-luna` for fast scans or a higher-effort `gpt-6.1-sol` configuration for more demanding reasoning.
+For example, use `gpt-6-luna` for fast scans or increase Sol’s reasoning effort for a more demanding task.
 
-For most tasks in Codex, start with
-`gpt-6.1-sol` when your
-signed-in account or workspace has [access](https://learn.chatgpt.com/docs/models#gpt-6.1-sol).
-Otherwise, choose a model available to you. Use `gpt-6-luna` when you want a
-faster, lower-cost option for lighter subagent work.
+Start with Sol for everyday tasks when your [plan and
+client](https://learn.chatgpt.com/docs/pricing#feature-availability) support it. Otherwise, choose a
+model from your model picker. Use `gpt-6-luna` for lighter, lower-cost work.
 
 #### Model choice
 
-- **`gpt-6.1-sol`**: Start here for demanding agents. Use it for ambiguous, multi-step work that needs planning, tool use, validation, and follow-through across a larger context.
+- **`gpt-6.2-sol`**: Use Sol for everyday agents that plan, use tools, and check their work.
 - **`gpt-6-luna`**: Use for fast, narrowly scoped agents handling clear, repeatable, or high-volume work.
 
 #### Reasoning effort (`model_reasoning_effort`)
 
-For GPT-6.1 Sol, use a reasoning effort supported by your client and selected
-model. For explicit model settings, start with `high` for GPT-6 Luna or `low`
-for GPT-6 Astra. Adjust for the task using a level the selected model supports.
+When the parent agent uses GPT-6.2 Astra or GPT-6.2 Sol, start with the same
+model and reasoning effort for its subagents. Raise the effort for a subtask
+that needs deeper investigation, or lower it for a quick scan. If you select
+GPT-6 Luna explicitly, start with `high`. For GPT-6 Astra, start with `low`.
 
 - **`ultra`**: Use for the deepest reasoning when the selected model supports
   it.
@@ -3129,9 +3383,9 @@ The best custom agents are narrow and opinionated. Give each one clear job, a
 tool surface that matches that job, and instructions that keep it from
 drifting into adjacent work.
 
-The examples use [GPT-6.1 Sol](https://learn.chatgpt.com/docs/models#gpt-6.1-sol) where your signed-in
-account or workspace has access. If it isn't available, choose a model you can
-use.
+The reviewer and browser debugger examples use Sol in the app or CLI. For a
+custom agent you also run in the IDE extension, choose a `model` available in
+each client, such as `gpt-6.1-sol`.
 
 #### Example 1: PR review
 
@@ -3171,7 +3425,7 @@ Prefer fast search and targeted file reads over broad scans.
 ```toml
 name = "reviewer"
 description = "PR reviewer focused on correctness, security, and missing tests."
-model = "gpt-6.1-sol"
+model = "gpt-6.2-sol"
 model_reasoning_effort = "medium"
 developer_instructions = """
 Review code like an owner.
@@ -3236,7 +3490,7 @@ Identify entry points, state transitions, and likely files before the worker sta
 ```toml
 name = "browser_debugger"
 description = "UI debugger that uses browser tooling to reproduce issues and capture evidence."
-model = "gpt-6.1-sol"
+model = "gpt-6.2-sol"
 model_reasoning_effort = "medium"
 developer_instructions = """
 Reproduce the issue in the browser, capture exact steps, and report what the UI actually does.
@@ -3389,6 +3643,37 @@ where the project or chat appears in the sidebar.
 
 Restore archived chats from **Settings > Data Controls > Archived chats**.
 
+#### Use locked chats
+
+Locked chats keep conversations out of your normal history and search. You can return to them
+with your account PIN when you're ready.
+
+For example, you might lock a chat to:
+
+- Think through a career change before you're ready to discuss it.
+- Prepare for a difficult conversation.
+- Plan a surprise gift or celebration.
+
+You can lock eligible cloud Chat and Work conversations. Local Work and Codex
+conversations aren't supported.
+
+1. Open the chat's more menu (…), select **Lock chat**, confirm, and create or enter
+   your account PIN.
+2. Go to **Projects > Locked chats** and enter your PIN for temporary
+   access.
+3. Select **Lock now** when finished. Check other devices before screen sharing;
+   titles or content can remain visible until you refresh ChatGPT on those devices.
+
+Locking a project chat removes it from the project, so the chat no longer has
+access to project instructions, files, or memory. **Unlock chat** restores normal
+history.
+
+If you forget your PIN, resetting it permanently deletes locked chats and content
+protected only by that PIN.
+
+See [Using locked chats](https://help.openai.com/en/articles/20001411-using-locked-chats-in-chatgpt)
+for availability, sharing, files, memory, and PIN settings.
+
 #### Use local projects for folders and codebases
 
 To use an approved project folder while you [continue Work across devices](https://learn.chatgpt.com/docs/get-started-with-work#continue-work-across-devices),
@@ -3503,84 +3788,43 @@ chat.
 - [Learn how to use ChatGPT](https://learn.chatgpt.com/docs/use-chatgpt)
 - [Continue long-running work](https://learn.chatgpt.com/docs/long-running-work)
 
-### Speed
+### Prompting GPT-6.2 in Codex
 
-Source: [Speed](https://learn.chatgpt.com/docs/agent-configuration/speed.md)
+Source: [Prompting GPT-6.2 in Codex](https://learn.chatgpt.com/guides/prompting-gpt-6-2-astra.md)
 
-You can increase model speed in Codex in exchange for higher usage.
+Compared with GPT-6 Astra, GPT-6.2 Astra often gives you a first pass that’s closer to something you’d be happy to use. Its code is easier to read and review, and its writing gets to the point sooner. Its visual work is richer, too. On a slide, the layout draws your eye to the comparison that matters. In a 3D scene, details like texture and lighting give the work more character.
 
-#### Fast mode
+These prompting techniques apply across the GPT-6.2 model family, including GPT-6.2 Astra and GPT-6.2 Sol. Describe what you need the way you’d ask a colleague who knows the project, then tell Codex **what you’ll look for when you review the work**. If an icon needs to be recognizable in a 24-pixel toolbar, say so. Codex can pick up the style from the existing icons and work out how much detail will still read at that size.
 
-Fast mode speeds up supported models, including GPT-6.1 Sol, GPT-6.1 Terra,
-GPT-6 Astra, GPT-6 Sol, and GPT-6 Luna, where available. For GPT-5.6, the speed increase
-is 1.5x.
+#### Match reasoning effort to the task
 
-Use `/fast` in the CLI to toggle Fast mode. Use `/statusline` to show it in the
-footer. You can also persist the default with `service_tier = "fast"` plus
-`[features].fast_mode = true` in `config.toml`. Fast mode is available in the
-ChatGPT desktop app, Codex CLI, and IDE extension when you sign in with ChatGPT.
+Higher reasoning effort can help the model stick with a long-running task through the final checks, even when the answer you need is only a few lines. Tell it what counts as finished and where you want it to be exhaustive. If the team needs a recommendation, that might mean following a promising lead far enough to test it against competing explanations.
 
-For supported models, Fast mode uses included subscription limits at 2.5x the
-Standard rate. Purchased credits and Enterprise pay-as-you-go usage are billed
-at 2x the Standard rate.
+Choose [reasoning effort](https://learn.chatgpt.com/docs/models?surface=app#app-pick-a-reasoning-effort) based on the depth of the investigation. A quick survey can use **Medium**. Tracing even one suspected cause across several systems can warrant **High**. Consider **Extra High** when several causes may interact and the investigation needs to account for each one.
 
-#### Ultrafast mode
+#### Use subagents for parallel work
 
-Ultrafast supports GPT-6 Astra and GPT-6.1 Sol.
+When a task has several parts that can move ahead independently, tell Codex to [**use subagents as needed**](https://learn.chatgpt.com/docs/agent-configuration/subagents#triggering-subagent-workflows). That gives Codex permission to decide when parallel work will help and how to divide the task.
 
-GPT-6 Astra Ultrafast generates tokens up to 8x faster than GPT-6 Astra in
-Standard mode in Codex.
+If the same kind of work comes up regularly, put that instruction in the relevant [skill](https://learn.chatgpt.com/docs/build-skills) or `AGENTS.md` and say when it applies. For a research skill, for example, it might apply to requests with several independent questions.
 
-Ultrafast is available in Codex and ChatGPT Work on Pro $500 and eligible
-Enterprise and Edu plans. On Pro $500, Ultrafast uses your included usage first,
-then your available credits after that allowance runs out.
+With [**Ultra**](https://learn.chatgpt.com/docs/models?surface=app#app-know-when-to-use-max-or-ultra), Codex decides on its own when to bring in subagents. Save it for especially ambitious work that splits cleanly, such as an open-ended research project with several questions that each warrant a deep investigation. Each agent can keep its own working context as it follows one of those questions.
 
-Ultrafast mode bills purchased credits and Enterprise pay-as-you-go usage at
-6x the Standard rate. Ultrafast uses included subscription limits at 8x the
-Standard rate.
+#### Give Codex a visual reference and room to iterate
 
-For Enterprise workspaces, Ultrafast is off by default. Workspace owners can
-enable access for selected users or the workspace through
-[workspace permissions](https://learn.chatgpt.com/docs/enterprise/roles-and-workspace-permissions).
-Existing [per-user spend controls](https://learn.chatgpt.com/docs/enterprise/usage-limits) apply to
-eligible Ultrafast usage.
+When you have a particular look in mind, a reference image can show how the shapes fit together, which colors stand out, and where the eye should go first. Share one from your design software or ask Codex to create one with [GPT Image](https://learn.chatgpt.com/docs/image-generation#generate-or-edit-an-image). Once the reference captures the look you want, ask it to build the asset, render it, and refine it against the reference.
 
-#### Availability and billing details
+Have Codex review the result **at the size people will actually see it**. Details that look good in a large render can disappear in the finished product. If the result is interactive, ask it to try the actions it’s meant to support.
 
-ChatGPT Work and Codex share usage. Both use the same
-pricing, credits, and usage limits. See [Codex pricing](https://learn.chatgpt.com/docs/pricing) for
-details.
+The [SVG &amp; 3D Design plugin](https://chatgpt.com/plugins/Plugin_13c5903473e081919917a1070fad1dd1) includes a skill that guides Codex through this process for editable illustrations and 3D models.
 
-See [Models](https://learn.chatgpt.com/docs/models) for model availability and
-[Pricing](https://learn.chatgpt.com/docs/pricing#token-rates) for token rates.
+#### Keep your `AGENTS.md` lean
 
-#### Ultrafast plan and workspace requirements
+Use [`AGENTS.md`](https://learn.chatgpt.com/docs/agent-configuration/agents-md) for project requirements and conventions that Codex can’t infer from the code, tests, or docs. Include a workflow when the project depends on it. Leave routine decisions about how to do the work to Codex.
 
-- Eligible Enterprise workspaces use credit-based or USD usage-based
-  agreements. Usage is billed according to the workspace's agreement.
-- Eligible Edu plans use credits. Legacy Enterprise plans that rely on rate
-  limits instead of usage-based billing aren't supported.
+Each task in [Codex Cloud](https://learn.chatgpt.com/docs/environments/cloud-environments#start-a-task-in-codex-cloud) has a virtual machine to itself. If you keep using your computer while Codex works, use your personal `~/.codex/AGENTS.md` to steer it toward tools that let you carry on with your work. For a quick email lookup, for example, encourage Codex to use an available mail connector so your active app keeps focus.
 
-Other self-serve plans don't have access to Ultrafast at launch, even with
-purchased credits.
-
-GPT-6.1 Sol Ultrafast supports inference residency in the United States and
-Europe (EEA + Switzerland). GPT-6 Astra Ultrafast supports inference residency
-in the United States only.
-
-#### API billing
-
-With an API key, Codex uses API token pricing instead, and ChatGPT credit
-multipliers don't apply.
-
-For API availability, request configuration, and pricing, see
-[Ultrafast mode in the API](https://developers.openai.com/api/docs/guides/ultrafast-mode).
-
-#### Retirement and migration
-
-[GPT-5.5 retires](https://learn.chatgpt.com/docs/models#gpt-55-retirement) from Codex with ChatGPT
-sign-in on October 14, 2026, at noon PDT (19:00 UTC). The OpenAI API and
-Codex sessions authenticated with an API key aren't affected.
+When several agents share the machine, ask each to consider how many builds or tests it needs to run at once and to leave CPU and memory available for other work where possible. Give a demanding job room to use the full machine when it needs it. When wrapping up, have each agent stop the background jobs it started and remove the temporary files it created once they’re no longer needed.
 
 ### Connect computers and apps to your dot
 
@@ -3730,6 +3974,8 @@ Give ongoing instructions a clear scope: who can take part, what should happen,
 and when. Asking your dot to draft replies doesn't give it permission to send
 them. A specific instruction can cover future actions within that scope; an
 action outside it needs another decision.
+
+If you use Wallet, you’ll review and approve each payment using biometrics.
 
 Your dot can also research information from apps you've connected to look for
 ways to help. The tools it uses for that research can't send messages, change
@@ -4053,12 +4299,11 @@ Learn more about [plugins](https://learn.chatgpt.com/docs/plugins). To make a wo
 
 #### Use ChatGPT Work efficiently
 
-Choose [GPT-6 Astra](https://learn.chatgpt.com/docs/models#gpt-6-astra) for demanding work that needs
-careful reasoning, visual judgment, or a polished final file. Consider
-[GPT-6.1 Sol](https://learn.chatgpt.com/docs/models#gpt-61-sol) for complex work at a lower cost than
-Astra, or Luna for simpler tasks. Select from the models available in your
-model selector and check [plan usage](https://learn.chatgpt.com/docs/pricing) before starting a large
-task.
+For demanding work that needs careful reasoning, visual judgment, or a polished
+final file, choose [GPT-6.2 Astra](https://learn.chatgpt.com/docs/models?surface=app#app-gpt-62-astra)
+from the model picker. Choose [GPT-6.2 Sol](https://learn.chatgpt.com/docs/models?surface=app#app-gpt-62-sol)
+for everyday coding and writing, or Luna for simpler tasks.
+Check [plan usage](https://learn.chatgpt.com/docs/pricing) before starting a large task.
 
 ChatGPT Work is best for substantial tasks that involve multiple steps, sources, or
 tools, or require a completed deliverable. Longer or more complex tasks may use
@@ -4283,13 +4528,13 @@ Create and talk to your dot in the ChatGPT mobile app, desktop app, or a desktop
 
 You can message your dot or call it to discuss work, change priorities, or make a decision. In ChatGPT, select the phone button in your dot’s conversation to start a call. You can also type messages while you’re talking. Work you’ve assigned can continue after the call ends.
 
-You reach the same dot in ChatGPT, Slack, Teams, or a call. Changing where you talk to it doesn’t start a new dot or reset its memory. Messages stay in their respective channels, while your dot can use relevant context across them. Before sharing information from a private conversation with other people, your dot checks that you’ve allowed it.
+You reach the same dot in ChatGPT, Slack, or a call. Changing where you talk to it doesn’t start a new dot or reset its memory. Messages stay in their respective channels, while your dot can use relevant context across them. Before sharing information from a private conversation with other people, your dot checks that you’ve allowed it.
 
 Tell your dot where to send different kinds of updates. For example, ask it to keep routine progress in ChatGPT and bring decisions to you in Slack. Explain which changes need your attention, such as a deadline at risk.
 
 Open your dot's profile and select **Add** to connect an available contact method. Texting is rolling out in beta to ChatGPT Pro users in the U.S. See how to [set up texting](https://learn.chatgpt.com/docs/dots/channels#texting) with iMessage or RCS on Android. See [Message your dot](https://learn.chatgpt.com/docs/dots/channels) for other ways to reach it.
 
-In Slack, you can DM your dot or mention it in a channel you’ve added it to. By default, it responds to you; you can instruct it to engage with others. Existing permissions and safeguards still apply to what it shares and does. Tell it which channels and events to watch for. Adding it to a channel alone doesn’t start monitoring. You can also message your dot in Microsoft Teams. See [Slack and Teams](https://learn.chatgpt.com/docs/dots/channels#slack-and-teams).
+In Slack, you can DM your dot or mention it in a channel you’ve added it to. By default, it responds to you; you can instruct it to engage with others. Existing permissions and safeguards still apply to what it shares and does. Tell it which channels and events to watch for. Adding it to a channel alone doesn’t start monitoring. See [Message your dot in Slack](https://learn.chatgpt.com/docs/dots/channels#slack) for setup instructions.
 
 #### How dots work
 
@@ -4353,12 +4598,12 @@ You can add instructions for how you want your dot to work, such as asking it to
 
 Here's how dots compare with ChatGPT Work and Codex, and how they can work together.
 
-| Experience   | When to use it                                                                                                                                                                                                                                   |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Chat         | When you want an answer, an explanation, ideas, or help drafting something in conversation.                                                                                                                                                      |
-| ChatGPT Work | When you have a task to delegate, such as research, analysis, or creating a file, either now or on a schedule.                                                                                                                                   |
-| Codex        | When you want to build, debug, test, or review software and work directly with code and developer tools.                                                                                                                                         |
-| Your dot     | When you want an agent to keep track of an ongoing responsibility, figure out next steps as things change, and follow up between conversations. It can keep you updated in ChatGPT, Slack, or Teams and delegate tasks to ChatGPT Work or Codex. |
+| Experience   | When to use it                                                                                                                                                                                                                           |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Chat         | When you want an answer, an explanation, ideas, or help drafting something in conversation.                                                                                                                                              |
+| ChatGPT Work | When you have a task to delegate, such as research, analysis, or creating a file, either now or on a schedule.                                                                                                                           |
+| Codex        | When you want to build, debug, test, or review software and work directly with code and developer tools.                                                                                                                                 |
+| Your dot     | When you want an agent to keep track of an ongoing responsibility, figure out next steps as things change, and follow up between conversations. It can keep you updated in ChatGPT or Slack and delegate tasks to ChatGPT Work or Codex. |
 
 #### Work with your dot
 
@@ -4402,7 +4647,7 @@ Access depends on your plan, region, and workspace settings. Dots are rolling ou
 
 - **Pro 100, Pro 200, and Pro 500:** For users aged 18 and older outside the European Economic Area, United Kingdom, and Switzerland.
 - **Business Premium:** Available in supported ChatGPT regions, subject to workspace eligibility.
-- **Enterprise, Edu, and Healthcare:** Generally available in eligible workspaces. Workspaces with UAE data or inference residency are ineligible. During the admin preview, your admin can enable access for your role. Starting November 18, 2026, access is on by default unless your workspace opts out.
+- **Enterprise, Edu, and Healthcare:** Generally available in eligible workspaces. For current workspace eligibility and regional availability, see [Getting started with your dot](https://help.openai.com/en/articles/20001530-getting-started-with-your-dot) and [Data residency and inference residency for ChatGPT](https://help.openai.com/en/articles/9903489-data-residency-and-inference-residency-for-chatgpt). During the admin preview, your admin can enable access for your role. Starting November 18, 2026, access is on by default unless your workspace opts out.
 
 For Pro and Business Premium, conversations with your dot don’t count toward your ChatGPT usage limits. Tasks your dot starts or manages in Work or Codex count toward those products’ usage limits as usual. Your plan includes an allowance for deeper work, with extended limits for the first month after launch. For Enterprise pricing and delegated task charges, see [Enterprise preview and billing](https://learn.chatgpt.com/docs/enterprise/dots-admin-guide#enterprise-preview-and-billing).
 
@@ -4413,7 +4658,7 @@ You can create your dot in the ChatGPT mobile app, desktop app, or a desktop bro
 | Guide                                                | Covers                                                           |
 | ---------------------------------------------------- | ---------------------------------------------------------------- |
 | [Getting started](https://learn.chatgpt.com/docs/dots/getting-started)       | Setup, your first conversation, and assigning work.              |
-| [Messaging](https://learn.chatgpt.com/docs/dots/channels)                    | ChatGPT, calls, texting, Slack, and Teams.                       |
+| [Messaging](https://learn.chatgpt.com/docs/dots/channels)                    | ChatGPT, calls, texting, and Slack.                              |
 | [Tasks and memory](https://learn.chatgpt.com/docs/dots/tasks-and-memory)     | Assigned work, recurring tasks, context, and proactive research. |
 | [Computers and apps](https://learn.chatgpt.com/docs/dots/computers-and-apps) | Cloud work, local access, plugins, and website sign-in.          |
 | [Controls](https://learn.chatgpt.com/docs/dots/controls)                     | Review activity, manage permissions, and stop work.              |
@@ -4422,7 +4667,7 @@ You can create your dot in the ChatGPT mobile app, desktop app, or a desktop bro
 
 Source: [Message your dot](https://learn.chatgpt.com/docs/dots/channels.md)
 
-You reach the same dot through each connected contact method. Changing channels doesn’t reset its memory. Slack and Teams conversations show the messages exchanged there; they don’t mirror every message from other channels. Your dot can use relevant context across those conversations. Before sharing information from a private conversation with other people, it checks that you’ve allowed it. See [Context and memory](https://learn.chatgpt.com/docs/dots/tasks-and-memory#context-and-memory).
+You reach the same dot through each connected contact method. Changing channels doesn’t reset its memory. Slack conversations show the messages exchanged there; they don’t mirror every message from other channels. Your dot can use relevant context across those conversations. Before sharing information from a private conversation with other people, it checks that you’ve allowed it. See [Context and memory](https://learn.chatgpt.com/docs/dots/tasks-and-memory#context-and-memory).
 
 Open your dot's profile and select **Add** to see and connect the contact methods available to you. Connect apps and your computer separately to make them available for your dot’s work.
 
@@ -4432,9 +4677,9 @@ Create, message, or call your dot in the ChatGPT mobile app, desktop app, or a d
 
 To call your dot, open its conversation and select the phone button. In the desktop app, you can also select **Call** in its profile. Talk through a request, clarify a decision, or ask for a progress update. You can type messages while you’re talking, and your dot can also message you with progress or a question. Ending a call ends the voice conversation; work you've assigned can continue. Calls initiated by your dot are planned for after launch.
 
-#### Slack and Teams
+#### Slack
 
-You can message your dot in Slack and Microsoft Teams. Connect the contact method in your dot’s profile. In Slack, you can send a direct message or add your dot to a channel and mention it in a thread.
+Connect Slack in your dot’s profile. You can then send your dot a direct message or add it to a channel and mention it in a thread.
 
 By default, your dot responds to you in Slack. You can instruct it to engage with others. Existing permissions and safeguards still apply to what it shares and does. Your dot can message you privately to ask what you're comfortable sharing before it replies in a channel.
 
@@ -4524,43 +4769,23 @@ Availability, tools, reasoning settings, and usage limits differ by product and
 model version. Check the [models available in ChatGPT](https://learn.chatgpt.com/docs/models) or the
 [API model catalog](https://developers.openai.com/api/docs/models).
 
-#### Find the right model for your workflow
-
-Choose your work and task and get a recommendation.
-
-#### When to consider GPT-6.1 Terra
-
-Try [GPT-6.1 Terra](https://developers.openai.com/api/docs/models/gpt-6.1-terra) for concise writing based on
-supplied material, computer-use tasks with a defined outcome, and scoped code
-fixes. Provide clear inputs, requirements, and a way to verify the result, such as
-checking saved records or running regression tests.
-
-Compare it with GPT-6.1 Sol on the same inputs and reasoning effort. For writing,
-judge audience fit, voice, and useful detail as well as accuracy and length. For
-computer use, check the saved result and the accuracy of the completion report.
-
-#### When to consider GPT-6.1 Sol
-
-Consider GPT-6.1 Sol for complex projects where cost matters, such as
-creating a board presentation from financial results or building a website
-from a product brief. Compare it with Astra on the same task to assess the
-tradeoff between quality and cost.
-
-See the [API model page](https://developers.openai.com/api/docs/models/gpt-6.1-sol) for specifications
-and API pricing, or [Codex and ChatGPT Work availability](https://learn.chatgpt.com/docs/models#gpt-6.1-sol)
-for access through your ChatGPT plan.
-
 #### How to think about models and reasoning effort
 
-Luna is the most cost-efficient model, while Astra is our state-of-the-art,
-most powerful model. If cost and latency aren't a concern, you can default to
-Astra. To reduce costs or latency, use the guidance below to choose a model
-and reasoning effort for your needs.
+- For most API workflows, start with **GPT-6.2 Sol** at medium reasoning effort.
+- Choose **GPT-6.2 Astra** for demanding engineering or analysis.
+- Use **GPT-6 Luna** for small, repeatable tasks.
+- Choose **GPT-6.1 Terra** to interpret visual information, such as charts and screenshots.
 
-Luna is our most efficient model, while Astra is our state-of-the-art, most
-powerful model. If you don't need to think about usage or how long it takes to
-complete a task, you can default to Astra. To optimize usage, use the guidance
-below to choose a model and reasoning effort for your needs.
+- For most tasks in ChatGPT Work or Codex, start with **GPT-6.2 Sol**.
+- Choose **GPT-6.2 Astra** for complex projects.
+- Use **GPT-6 Luna** for small, repeatable tasks, especially simple automations that run frequently.
+- Choose **GPT-6.1 Terra** when the task requires visual reasoning, such as navigating browser or desktop apps.
+
+You can find more details on recommended tasks per model and reasoning effort below.
+
+#### Find the right model for your workflow
+
+Choose a task and a priority to see a suggested model and reasoning effort.
 
 #### Experiment
 
@@ -4582,19 +4807,11 @@ Start by considering:
 If you can, experiment using the same inputs to compare results and keep the
 lightest setting that meets your quality bar.
 
-Choose acceptance criteria before comparing models:
+Try the same model at two reasoning settings on a few tasks you do often.
+Which setting gets you to a usable result sooner, including the time you spend
+checking and editing it?
 
-- **Writing:** check required facts, qualifications, audience, and voice. Review
-  both outputs before deciding whether the shorter one is more useful.
-- **Computer use:** reopen the affected record or page to verify saved changes,
-  confirm that the workflow preserved unrelated data, and compare the completion
-  report with the actual result.
-- **Code and interfaces:** run regression tests. For an interactive application,
-  also inspect the rendered result on desktop and mobile.
-
-Repeat the comparison across representative tasks. Measure completion time
-alongside quality, including time spent reviewing or repairing the result. Then
-vary reasoning effort while keeping the model and inputs fixed.
+Whenever a new model comes out, try revisiting your previous settings.
 
 ### Prompting
 
@@ -4880,6 +5097,9 @@ Use Codex when you want ChatGPT to work with code, a codebase, or developer tool
 A useful Codex prompt names the behavior you want, points to the relevant code or
 reproduction steps, preserves important constraints, and says how to verify the
 change.
+
+For GPT-6.2 guidance on reasoning effort, subagents, and visual work, see
+[Prompting GPT-6.2 in Codex](https://learn.chatgpt.com/guides/prompting-gpt-6-2-astra).
 
 For a multi-step task, enter `/plan` in the app composer when you want Codex to
 investigate and propose an approach before editing. When [Goal mode](https://learn.chatgpt.com/docs/long-running-work)
@@ -5370,7 +5590,7 @@ necessarily change the notes your dot has already made.
 
 #### Across messaging channels
 
-ChatGPT, Slack, and Teams are ways to reach the same dot. Switching
+You can reach the same dot in ChatGPT and Slack. Switching
 between them doesn't create a separate dot or reset its saved notes. Information
 you share through one contact method can inform its work and replies through
 another.
@@ -5530,9 +5750,8 @@ Sandbox behavior, approvals, cyber-safety, and security-specific guidance.
 
 Source: [Codex Security CI/CD overview](https://learn.chatgpt.com/docs/security/cli/ci.md)
 
-Run Codex Security in CI to review pull-request or merge-request changes, scan
-your default branch, and preserve findings and coverage. See your CI
-provider's guide for the workflow, report handling, and enforcement options.
+Run Codex Security in CI to review pull or merge requests, scan your default
+branch, and save findings and coverage reports.
 
 #### Prepare the workflow
 
@@ -5563,8 +5782,7 @@ for the Action settings.
 
 Use the [GitHub Actions guide](https://learn.chatgpt.com/docs/security/cli/ci/github) for pull-request
 checks and scheduled repository scans. The Codex Security Action installs the CLI,
-saves reports, and adds a job summary and source annotations. The guide includes
-runner setup, optional Daybreak access, SARIF upload, and severity enforcement.
+saves reports, and adds a job summary and source annotations.
 
 #### Add the GitLab CI/CD pipeline
 
@@ -5587,11 +5805,9 @@ revisions, report formats, state and output directories, and retry behavior.
 Start with advisory results. Review representative findings, scan coverage,
 cost, and runtime before deciding which outcomes should block a merge.
 
-Evaluate both findings and scan completeness. The severity policy evaluates
-findings from the current scan at or above the configured threshold. Earlier
-open findings in the repository summary don't affect that policy. An
-incomplete scan can leave areas without a review even when it reports no
-findings.
+The severity policy considers findings from the current scan at or above your
+threshold. Earlier open findings don't affect it. Check scan completeness
+separately, since an incomplete scan can report no findings.
 
 Configure enforcement in the [GitHub Actions
 guide](https://learn.chatgpt.com/docs/security/cli/ci/github#choose-a-severity-policy) or the [GitLab
@@ -5603,9 +5819,7 @@ codes](https://learn.chatgpt.com/docs/security/cli/reference#exit-codes-and-sign
 
 Source: [Codex Security CLI FAQ](https://learn.chatgpt.com/docs/security/cli/faq.md)
 
-Find answers to common questions about scanning repositories and managing
-security findings from the terminal. For installation and a first scan, start
-with the [CLI quickstart](https://learn.chatgpt.com/docs/security/cli).
+For installation and a first scan, see the [CLI quickstart](https://learn.chatgpt.com/docs/security/cli).
 
 #### Repository scans
 
@@ -5771,14 +5985,10 @@ can show how findings changed, but a missing finding alone doesn't verify a fix.
 
 #### What does incomplete coverage mean
 
-In `scan-manifest.json`, check `scan.status` to see whether the scan finished.
-`scan.scope` records the configured scope. `scan.review.excludedPaths` lists
-path patterns the scan excluded from review. Check `scan.scope.limitations` for recorded
-gaps, such as a deep scan reaching its deadline before any review finished.
-
-Coverage gaps don't change a completed scan's exit code. Exit `0` doesn't mean
-every file was reviewed. A later scan can't establish that an earlier finding
-no longer exists when it doesn't cover that finding's original path.
+A scan can exit with code `0` without reviewing every file. Check
+`scan.scope.limitations` in `scan-manifest.json` for recorded coverage gaps.
+If you're checking an earlier finding, make sure the new scan covers its
+original path.
 
 #### Automation and cost
 
@@ -5822,7 +6032,7 @@ For a check before each commit, use
 Source: [Codex Security CLI quickstart](https://learn.chatgpt.com/docs/security/cli.md)
 
 Run a standard scan of a local repository with the standalone Codex Security
-CLI. This quickstart ends with a saved report you can review and revisit.
+CLI and save a report.
 For scans inside a Codex conversation, use the [Codex Security
 plugin](https://learn.chatgpt.com/docs/security/plugin).
 
@@ -5848,8 +6058,8 @@ npm install -g @openai/codex-security
 codex-security --version
 ```
 
-The package provides the `codex-security` command and its `cs` alias. Ensure
-npm's global executable directory is on your `PATH`.
+The package provides the `codex-security` command and its `cs` alias. Add
+npm's global executable directory to your `PATH` if needed.
 
 To run without a global installation, use `npx`:
 
@@ -5885,8 +6095,7 @@ sign-in or OpenAI API key.
 
 #### Prepare a scan
 
-Replace these paths with your repository and a new results directory outside
-its Git worktree:
+Choose your repository and a new results directory outside its Git worktree:
 
 ```bash
 REPOSITORY=/path/to/repository
@@ -6041,6 +6250,7 @@ The CLI provides these commands:
 | ---------------------------------- | ------------------------------------------------------------------- |
 | `codex-security scan`              | Run a Codex Security scan.                                          |
 | `codex-security scan import`       | [Save CSV or JSON findings as a scan](#codex-security-scan-import). |
+| `codex-security import continuum`  | [Collect AWS Continuum findings](#codex-security-import-continuum). |
 | `codex-security import github`     | [Read GitHub code scanning alerts](#codex-security-import-github).  |
 | `codex-security policy`            | Draft or update a repository security policy.                       |
 | `codex-security init`              | Create a YAML or JSON project configuration.                        |
@@ -6141,6 +6351,7 @@ usage: codex-security scan [-h] [--auth {auto,chatgpt,api-key}]
                            [--cyber-access-program PROGRAM]
                            [--provider {openai,openrouter,fireworks,amazon-bedrock}]
                            [--path PATH | --diff BASE | --working-tree]
+                           [--exclude-path PATH]
                            [--head HEAD] [--base BASE]
                            [--knowledge-base PATH] [--scan-prompt-file FILE]
                            [--validation-prompt-file FILE] [--rubric FILE]
@@ -6311,6 +6522,7 @@ Choose one target type for each scan.
 | Argument                 | Description                                                                     |
 | ------------------------ | ------------------------------------------------------------------------------- |
 | `--path PATH`            | Scan a path relative to the repository. Repeat the flag for more paths.         |
+| `--exclude-path PATH`    | Exclude a literal repository-relative file or directory. Repeat for more paths. |
 | `--diff BASE`            | Scan committed changes from `BASE` to `--head`. The head defaults to `HEAD`.    |
 | `--head HEAD`            | Set the head revision for `--diff`.                                             |
 | `--working-tree`         | Scan staged and unstaged changes against `--base`. The base defaults to `HEAD`. |
@@ -6320,6 +6532,15 @@ Choose one target type for each scan.
 `--path`, `--diff`, and `--working-tree` are mutually exclusive. `--head`
 requires `--diff`, and `--base` requires `--working-tree`. Deep mode supports
 repository and path targets.
+
+To exclude a directory and everything under it from review, pass
+`--exclude-path examples/`. To save that exclusion in your project config,
+add `exclude_paths: [examples/]` under `scan`. CLI exclusions replace the
+configured list.
+
+Exclusions apply to Standard, Deep, and diff scans and take precedence over
+`--path`. The scanner can still read excluded files for context. Exclusions
+filter out a finding only when all its locations fall under excluded paths.
 
 Diff and working-tree scans require the repository argument to be the Git
 worktree root. The selected refs must exist in that checkout.
@@ -6655,6 +6876,28 @@ source was reviewed. `scans rerun SCAN_ID` imports the retained input again.
 
 To scan a repository named `import`, use `scan ./import`.
 
+#### `codex-security import continuum`
+
+Use AWS CLI v2.38.5 or later and sign in to the account and Region that own
+the Continuum environment. Run `codex-security import continuum ENVIRONMENT_ID --format json` with the
+short environment ID and save the output outside the checkout.
+The command collects code issues, linked findings, and supporting evidence.
+It requires one configured Git repository. If the environment also has S3
+sources, check which repository supplied the code before importing the report.
+
+**Migrating from `collect_continuum.py`.** To collect one finding and its
+matching validation evidence and patches, add `--finding-id FINDING_ID` and
+`--source-root /absolute/path/to/checkout` to the command above. Use the short
+finding ID. If the environment has more than one Git repository or any S3
+sources, also pass the AWS source name with `--repository-name`.
+You can still import saved finding exports and patch captures.
+
+For a local preview, pass the report to [`publish findings`](#codex-security-publish-findings)
+with `--provider continuum --to local --dry-run`. Set `--repository` to the
+matching checkout and use a stable `--source-key` for that environment and repository.
+For a finding capture, also pass the verified Git URL with `--source-repository-url`.
+See the [Continuum import guide](https://github.com/openai/codex-security/blob/main/docs/scanner-imports/continuum.md) for AWS permissions and collection commands.
+
 #### `codex-security import github`
 
 Read GitHub code scanning alerts without changing GitHub or checking out code:
@@ -6827,8 +7070,9 @@ scan, including scans that return errors. It doesn't run after
 cancellation or when a scan reaches its cost limit.
 
 `--workers` limits simultaneous repository scans and defaults to `4`. `--mode`
-defaults to `standard`, and `--max-attempts` defaults to `1`. Set
-`--max-attempts` to retry repository or scan errors. Exclusions and follow-up
+defaults to `standard`. `--max-attempts` limits attempts per unfinished CSV
+row on each run and defaults to `1`. See [Retry repository errors](https://learn.chatgpt.com/docs/security/cli/bulk-scans#retry-repository-errors)
+for an example across two runs. Exclusions and follow-up
 notes don't trigger retries of completed scans. Remaining execution failures
 return `2`; completed severity-policy violations return `1`.
 
@@ -6913,6 +7157,10 @@ and reuses saved matches. To save matches explicitly, use `scans match`:
 ```bash
 npx @openai/codex-security scans match PREVIOUS_SCAN_ID CURRENT_SCAN_ID
 ```
+
+When Standard and Deep scans ran in linked Git worktrees, Codex can use saved
+evidence to match findings across corresponding paths if both scans recorded
+the same repository generation, revision, and snapshot digest.
 
 A finding is unknown when its path is excluded or its match is uncertain. If
 the later scan doesn't find it in the code it scanned, it is not observed.
@@ -7104,6 +7352,9 @@ from an unfinished or failed scan. If no model was saved, the command returns
 an error. Review any provisional or recovered content identified in the
 document before reusing it.
 
+When a route appears in a test or in deleted code, Codex Security checks
+whether the application still serves it before including it as an entry point.
+
 To provide the exported model as context for another scan, pass its path to
 [`--knowledge-base`](#add-security-context).
 
@@ -7244,9 +7495,17 @@ are excluded, the preview exits with `0` and the import saves the accepted
 records and exits with `1`. A valid report with no findings exits with `0`.
 If all records are excluded, both commands exit with `2`.
 
+To import a CrowdStrike Falcon Cloud Security infrastructure-as-code report,
+use the JSON output of `fcs scan iac` from FCS CLI 4.x. Pass the report to
+`publish findings` with `--provider crowdstrike --to local`. Set `--repository`
+to the directory where you ran FCS so the reported paths resolve correctly.
+The importer checks the files against their recorded hashes. If a file has changed, use the scanned revision
+or generate a new report. CrowdStrike imports are local only.
+The [CrowdStrike import guide](https://github.com/openai/codex-security/blob/main/docs/scanner-imports/crowdstrike.md) shows how to generate the report and read back the saved findings.
+
 #### Publish a report to Cloud
 
-Keep the file, provider, and source key from the local preview. Set `--to cloud`,
+For providers that support Cloud, keep the file, provider, and source key from the local preview. Set `--to cloud`,
 pass the connected repository URL or Cloud ID to `--repository`, and preview again
 with `--dry-run --format json`. To publish, rerun without `--dry-run` and confirm.
 
@@ -7271,6 +7530,11 @@ These commands work with existing findings:
 `verify-fix` returns `2` if any check is inconclusive or fails. Otherwise, it
 returns `1` if any finding remains vulnerable, or `0` if all findings are fixed.
 Use each command's `--help` for selectors, model settings, and output options.
+
+Hosts that use `classify-severity --records` can opt in to diagnostic records
+on review requests and on the final result or error. Each record identifies the
+event and when it occurred.
+See the [host protocol guide](https://github.com/openai/codex-security/blob/main/sdk/typescript/docs/classify-severity-records.md#cli-diagnostic-records) for the Node.js condition and record format.
 
 #### `codex-security feedback`
 
@@ -8491,6 +8755,9 @@ directory.
 The SDK supports repository, path, committed-diff, and working-tree targets.
 The default target is the complete repository.
 
+To skip files or directories, set `excludePaths: ["examples/"]` in the scan
+options.
+
 #### Scan selected paths
 
 Pass an array of paths inside the repository:
@@ -9098,15 +9365,12 @@ need dependencies or a working build to reproduce an issue. Configure those
 requirements in the [Codex cloud
 environment](https://learn.chatgpt.com/docs/environments/cloud-environment).
 
-If validation can't run, inspect what the finding establishes from source and
-what still depends on runtime or deployment behavior.
-
 #### What languages are supported?
 
 Daybreak analyzes source across languages. Results depend on the model's
 ability to reason about the language and framework, and on the available
-repository context. A successful scan doesn't imply equal coverage across
-languages or components. Check the report for the scope actually reviewed.
+repository context. Check the report for the scope reviewed, since coverage can
+vary across languages and components.
 
 #### Which scan should I use?
 
@@ -9136,26 +9400,22 @@ checkout](https://learn.chatgpt.com/docs/security/setup#scan-your-local-checkout
 
 #### What does validation establish?
 
-Read the evidence attached to the particular finding. Source analysis can
-establish a vulnerable code path. Execution evidence can show that a specific
-reproducer or test demonstrated the issue.
-
-A finding's recorded status and severity help organize review. Use the
-underlying evidence and prerequisites to decide whether it applies to your
-system and what to fix.
+Source analysis can establish a vulnerable code path. A successful reproducer
+or test can demonstrate the issue at runtime. Check the finding's evidence and
+prerequisites to decide whether it applies to your system. If validation can't
+run, identify what still depends on runtime or deployment behavior.
 
 #### What happens if validation fails?
 
-Inspect the attempted validation and any available logs. A failed reproducer
-can mean the issue doesn't apply, but it can also mean the environment or test
-was unsuitable. Resolve the stated gap before dismissing the finding or
-claiming that it was reproduced.
+Inspect the attempted validation and any available logs. The issue may not
+apply, or the environment or test may have been unable to exercise it.
+Investigate before dismissing the finding.
 
 #### What if the scan reports no findings?
 
-Confirm that the scan completed and reviewed the intended repository and
-revision. Read any recorded limits or unfinished work. A scan that reports no
-findings can still miss vulnerabilities.
+Check that the scan completed on the intended repository and revision, and
+review any coverage limits or unfinished work. A report with no findings
+doesn't rule out vulnerabilities.
 
 #### Fixes
 
@@ -9167,10 +9427,9 @@ See [Review a proposed fix](https://learn.chatgpt.com/docs/security/findings-and
 
 #### How do I know whether a patch fixed the issue?
 
-Review the patch's validation evidence, including whether the original issue
-still reproduces and whether legitimate behavior still works. If validation
-wasn't completed, keep that uncertainty with the finding. A proposed patch,
-draft pull request, or status change alone doesn't verify a fix.
+Check whether the original issue still reproduces and whether legitimate
+behavior still works. If validation is incomplete, record what remains
+untested. A patch, pull request, or status change alone doesn't verify a fix.
 
 ### Daybreak notifications
 
@@ -9230,7 +9489,7 @@ Export findings from a completed scan to use them in another tool. To track
 remediation or coordinate disclosure, ask Codex to prepare an issue or a
 private draft GitHub Security Advisory.
 
-#### Export a portable artifact
+#### Export findings
 
 In the desktop app, open a completed scan from **Security** > **Scans**. Under
 **Artifacts**, select **Findings JSON** to open the structured findings or
@@ -9419,8 +9678,8 @@ where you can publish findings.
 
 1. Select **Connect** beside the scanner, **Reconnect** if your connection expired, or **Import** to use an existing connection.
 2. Choose the source and the findings to import. If **Import all for a repository** is available for Snyk or Endor, choose a connected GitHub repository to include all matching projects in the selected organization or namespace. Otherwise, choose a project and select findings. In Wiz, you can also use a supported saved view.
-3. Review the finding count, repository, and commit for assessment. The count on **Import 12 findings**, for example, includes all 12 selected scanner findings, even those that can't be assessed. It can differ from the number of shared findings.
-4. Check what the confirmation will do. If it names a shared workspace and destination, confirming authorizes assessment and publication of eligible **Reportable** results there. People with access to that destination can read the published assessment and source evidence. Daybreak preselects the only eligible environment. If several environments are eligible, choose one before confirming. If the review offers private assessment or saving only, the results stay private.
+3. Review the finding count, repository, and commit. The count includes selected findings that can't be assessed, so it may exceed the number ultimately shared.
+4. Check the destination. Confirming a shared destination authorizes Daybreak to assess the findings and publish eligible **Reportable** results there. Anyone with destination access can read the published assessment and source evidence. Daybreak selects the environment automatically if only one is eligible. If several are eligible, choose one. Assessing or saving privately keeps the results private.
 5. Confirm when the count and destination are correct. If the review expires or the source changes, review it again. Once the import starts, you can close Settings and follow it in **My recent imports**.
 
 #### Choose a source
@@ -9472,6 +9731,10 @@ Automatic sharing requires a Reportable assessment, a scanner-reported severity,
 You can import a saved scanner export with `codex-security publish findings`. Preview locally with `--to local --dry-run`. To preview a cloud import, use `--to cloud --dry-run --format json` with a connected repository. A cloud preview contacts Daybreak and requires a file-backed ChatGPT login.
 
 Inspect the preview before removing `--dry-run` and confirming. A `privateImport` entry saves the findings to your private inbox. Entries in `requests` publish to the repository environments listed there. Check the receipt for exclusions, failures, and unprocessed rows. See the [CLI reference](https://learn.chatgpt.com/docs/security/cli/reference#codex-security-publish-findings) for local and cloud import examples and the [scanner import guides](https://github.com/openai/codex-security/blob/main/docs/scanner-imports/README.md) for CLI formats and commands.
+
+For AWS Continuum, [collect code issues or an individual finding](https://learn.chatgpt.com/docs/security/cli/reference#codex-security-import-continuum), then preview the saved report with the CLI. Codex Security can use validation evidence from the tested target to assess whether an attacker can reach the affected code.
+
+For CrowdStrike Falcon Cloud Security infrastructure-as-code scans, [import the saved JSON report into your local workbench](https://learn.chatgpt.com/docs/security/cli/reference#preview-and-save-a-local-report).
 
 #### Reopen an import
 
@@ -9546,15 +9809,12 @@ membership and which routes can bypass it. Select **Save**.
 
 Source: [Propose security hardening](https://learn.chatgpt.com/docs/security/plugin/security-hardening.md)
 
-Use `$codex-security:propose-security-hardening` to turn a collection of
-security evidence into structural or architectural hardening options. The
-workflow can analyze a completed Codex Security scan or start from supplied
-findings, disclosure reports, incident reviews, assessment documents, and
-source code.
-
-The result compares design options and their engineering tradeoffs. Codex
-changes the repository only after you select an option and ask it
-to implement it.
+Use `$codex-security:propose-security-hardening` to compare structural or
+architectural changes that address security findings or recurring vulnerability patterns.
+Start from a completed scan, supplied findings, disclosure or incident reports,
+assessment documents, or source code. Codex compares the options and their
+engineering tradeoffs and changes the repository only if you select an option
+and ask it to implement it.
 
 #### Prepare the evidence
 
@@ -9567,9 +9827,8 @@ Provide the workflow with:
 - Constraints for performance, memory, compatibility, reliability, operations,
   delivery time, or change scope.
 
-For example, repeated authorization bugs may suggest that a shared control
-would be easier to enforce than checks in each handler. The evidence may also
-support keeping a local fix instead of changing the architecture.
+For example, compare a shared authorization check with checks in each handler
+when several findings involve missing authorization.
 
 #### Run the workflow
 
@@ -9593,10 +9852,6 @@ Before choosing an option, check that the proposal:
   questions.
 - Includes rollout, validation, rollback, and implementation guidance.
 - Separates observed facts, inferences, and proposed design properties.
-
-Review the evidence and tradeoffs before choosing an option. An architecture
-diagram or design recommendation doesn't replace validation of the original
-findings or the implemented fix.
 
 #### Use hardening guidance from a scan
 
@@ -9932,10 +10187,8 @@ DaybreakObservations,
 DaybreakFix,
 } from "@components/react/illustrative/DaybreakFindings.react";
 
-Daybreak allows you to quickly review proposed fixes based on findings from your scans.
-Open **Overview** in Daybreak. Under **Proposed fixes**, select **Review** to
-inspect a patch. To investigate an issue first, open **Findings** and select a
-finding.
+In Daybreak, open **Findings** and select a finding to investigate it. To review
+a proposed patch, open **Overview** and select **Review** under **Proposed fixes**.
 
 #### What’s on the findings page?
 
@@ -9949,13 +10202,15 @@ reported severity and current status.
 
 #### Import findings from other scanners
 
-Open **Settings → Integrations**. Select **Connect** to link a scanner or **Import** to use an existing connection. Check the count, repository, and destination. If the confirmation names a shared destination, confirming authorizes assessment and publication of eligible **Reportable** results there.
-
-You can save or assess an uploaded report privately, or share eligible results. Reopen **My recent imports** for the private outcomes. Each shared finding lists the evidence from its scanners under **Observations**. See [Import scanner findings](https://learn.chatgpt.com/docs/security/scanner-imports) for the steps and limits.
+You can [import scanner findings](https://learn.chatgpt.com/docs/security/scanner-imports) from **Settings → Integrations**
+or upload a report. Check the destination before confirming an import. Confirming
+a shared destination authorizes assessment and publication of eligible **Reportable** results.
+Private results remain in **My recent imports**. On a shared finding, **Observations**
+lists the evidence from each scanner.
 
 #### Review a proposed fix
 
-1. Under **Findings**, select **Fix** on a finding to generate a patch. You can also select multiple findings in the list. For example, select two findings and choose **Generate 2 fixes**. Daybreak prepares the patches in the background. Open **Fixes** to review them.
+1. Under **Findings**, select **Fix** on a finding, or select multiple findings and generate their fixes. Daybreak prepares the patches in the background. Open **Fixes** to review them.
 2. Open a proposed fix. Read its summary and diff under **Proposed changes**. Read the **Patch checker** result to see what Daybreak verified. For the export issue shown below, look for a test that rejects a request from another project and one that still allows an authorized export.
 3. If you have questions or want a change, choose **Fix with Codex** from the menu next to **Create PR**. When the patch is ready for your team, select **Create PR** to open a draft pull request on GitHub.
 
@@ -9967,8 +10222,7 @@ finding **Fixed**.
 
 Source: [Run a Codex Security scan](https://learn.chatgpt.com/docs/security/plugin/scans.md)
 
-Use a standard scan to review a repository or a selected folder. This guide
-explains how to set the scope, supply security context, and assess the result.
+Use a standard scan to review a repository or folder.
 If you haven't installed the plugin, start with the [plugin
 quickstart](https://learn.chatgpt.com/docs/security/plugin).
 
@@ -9981,9 +10235,8 @@ scan](https://learn.chatgpt.com/docs/security/plugin/deep-scans). For a pull req
 In the desktop app, open **Security**, select **Scans**, and select **+ Scan**.
 Choose an existing repository or another folder, then select **Codebase**.
 
-Scan the whole repository when you need broad coverage and the repository is a
-reasonable review unit. For a monorepo, choose one folder when a service,
-package, or component has an owner and security boundary.
+Scan the whole repository, or select a folder to review one service or package
+in a monorepo.
 
 You can also start a scan from a Codex conversation:
 
@@ -10028,35 +10281,23 @@ finishes, since findings can change while Codex checks the evidence.
 
 #### Review the completed scan
 
-Review the result in this order:
+Check the target, revision, scan area, and any areas the scan deferred. For each
+finding, review the attack path, failed control, supported impact, validation
+method, and unresolved questions. Source analysis can support a finding without
+a runtime reproduction. If execution could resolve an open question, ask Codex
+to validate that finding.
 
-1. Confirm the target, revision, and scan area.
-2. Read reviewed surfaces and any deferred or follow-up areas.
-3. For each finding, check how an attacker reaches the affected code, which
-   control fails, and what impact the evidence supports. Read the validation
-   method and any unresolved questions.
-4. Investigate findings with missing evidence. Dismiss a finding when you can
-   explain why it doesn't apply, and keep that explanation with the result.
-5. Select one accepted finding before starting a fix.
-
-A completed scan and complete coverage are separate claims. Read deferred
-areas even when the scan finishes successfully. Source-based validation can
-support a finding without a runtime reproduction. To resolve uncertainty
-that depends on execution, ask for validation of the specific finding.
+When dismissing a finding, record why it doesn't apply. To address an accepted
+finding, [generate and verify a fix](https://learn.chatgpt.com/docs/security/plugin/fix-findings).
 
     Review the finding's severity, validation status, root cause, and attack
     path.
 
 #### Use your first scan as a baseline
 
-Before scanning, decide what you want to compare, such as evidence quality
-or false positives. If you
-test against a known finding, record whether you provided it to Codex or
-withheld it from the scan.
-
-Record the repository revision, plugin version, model, and reasoning effort.
-Use this baseline to compare later scans after the code, security controls, or
-scan settings change.
+To compare scans, record the revision, plugin version, model, and reasoning
+effort. If you're testing against a known vulnerability, also record whether
+you supplied it to Codex or withheld it.
 
 #### Reopen a previous scan
 
@@ -10070,8 +10311,7 @@ earlier scan or its artifacts.
 Open `report.md` for a portable report, and keep its scan directory together
 when sharing or archiving it. Use [Export and track
 findings](https://learn.chatgpt.com/docs/security/plugin/export-findings) for other formats or issue
-tracking. After accepting a finding, [generate and verify a
-fix](https://learn.chatgpt.com/docs/security/plugin/fix-findings).
+tracking.
 
 ### Run a deep security scan
 
@@ -10081,19 +10321,10 @@ A deep scan runs multiple independent standard scans over the same repository
 or folder and combines their findings. Use it when you want repeated review
 and can allow for the additional runtime and token use.
 
-Start with a [standard scan](https://learn.chatgpt.com/docs/security/plugin/scans) to check that the
-scope and security context match your goal. Repeated review can find issues
-missed by an earlier pass, but doesn't guarantee complete detection or identical
-results between runs.
-
-#### Choose between standard and deep scans
-
-|            | Standard scan                               | Deep scan                                      |
-| ---------- | ------------------------------------------- | ---------------------------------------------- |
-| Review     | One standard scan                           | Multiple standard scans with combined findings |
-| Use it for | A first scan or a review of a defined scope | Additional independent reviews of that scope   |
-| Scope      | Repository or folder                        | Repository or folder                           |
-| Changes    | Use the change-review workflow              | Not supported                                  |
+Start with a [standard scan](https://learn.chatgpt.com/docs/security/plugin/scans) to check the scope
+and security context. A deep scan can find issues an earlier pass missed, but
+results can still vary and coverage can remain incomplete. For a diff, use
+[Review code changes](https://learn.chatgpt.com/docs/security/plugin/code-changes).
 
 #### Start the deep scan
 
@@ -10137,13 +10368,9 @@ or structural hardening guidance when you request those outputs.
 Keep any linked `findings/` and `hardening/` directories with the report when
 sharing or archiving the result.
 
-Review the coverage summary before the findings. Even a deep scan has limits,
-so check deferred surfaces and remaining proof gaps before drawing a
-conclusion. For a finding you accept, continue with [Fix and verify a
+Check the coverage summary for deferred areas and the findings for unresolved
+questions. For a finding you accept, continue with [Fix and verify a
 finding](https://learn.chatgpt.com/docs/security/plugin/fix-findings).
-
-To review a pull request, commit, branch range, or local patch, use [Review code
-changes](https://learn.chatgpt.com/docs/security/plugin/code-changes). Deep scans don't accept diff targets.
 
 #### Configure deep-scan runtime
 
@@ -10191,6 +10418,8 @@ existing scan.
 - If a wait ends while the scan is still active, return to
   the same scan or conversation and ask Codex to continue it. A response ending
   or a wait timing out doesn't cancel the scan.
+- If Codex blocks a worker request because of a misalignment policy violation,
+  Deep Scan reports the refusal and stops without retrying the request.
 - If the scan reports a terminal failure or was canceled, keep the error and
   saved scan directory. Review saved findings separately from pending
   candidates, which haven't been confirmed. Coverage is incomplete, so an
@@ -10444,9 +10673,13 @@ npx @openai/codex-security bulk-scan repositories.csv \
   --max-attempts 3
 ```
 
-The default is one attempt per repository. Each attempt has its own result
-record and artifact directory. Retries cover checkout errors, scan failures,
-and missing or invalid required artifacts. Completed scans aren't retried
+The default is one attempt per unfinished CSV row each time you run the
+command. In the example above, if a row fails on attempts 1 through 3,
+resuming with the same command gives it up to three more attempts, numbered
+4 through 6. The CLI skips completed rows.
+
+Each attempt has its own result record and artifact directory. Retries cover
+checkout errors, scan failures, and missing or invalid required artifacts. Completed scans aren't retried
 because of coverage gaps or severity-policy violations.
 
 Bulk scans use these exit codes:
@@ -11181,10 +11414,9 @@ You can enable reviews before running a repository scan.
 
 #### Configure Codex Security Review
 
-Repository settings are shared. Changing them affects the pull requests selected
-by the repository's **Review** policy, not just your own pull requests. Personal
-preferences apply to your pull requests when the repository follows personal
-preferences.
+Repository settings apply to all pull requests selected by the **Review** policy.
+Your personal settings apply to your pull requests when the repository follows
+personal preferences.
 
 1. Go to [Codex settings](https://chatgpt.com/settings/code-review) and choose a repository.
 2. Under **Review security vulnerabilities**, turn on **Auto security review**.
@@ -11200,18 +11432,16 @@ preferences.
    - **Whenever code review runs** requires Code Review and runs Codex Security
      Review alongside it.
 
-Connecting GitHub or enabling personal reviews for another contributor doesn't
-request an extra review of your pull requests. Repository and personal settings
-determine whether an automatic review runs; they don't create one review per
-connected user. Later pushes can trigger another review according to **Trigger**,
-and you can request additional reviews manually.
+Connecting another contributor's GitHub account or enabling their personal reviews
+doesn't trigger an extra review of your pull requests. Later pushes can trigger
+another review according to **Trigger**, and you can request reviews manually.
 
 #### Add threat-model context
 
 You can configure a threat model to give Codex context about your application's
 assets, trust boundaries, security assumptions, and repository-specific risks.
 If the repository has an existing Codex Security scan configuration, you can use
-its threat model. Otherwise, provide the path to a threat model file checked
+its [threat model](https://learn.chatgpt.com/docs/security/threat-model). Otherwise, provide the path to a threat model file checked
 into the repository. If you do not specify a source, Codex regenerates the
 threat model for every review.
 
@@ -11244,13 +11474,6 @@ post findings to the pull request. Check the task status and full report
 before interpreting an empty comment result as a completed review with no
 findings.
 
-#### Related docs
-
-- [Review GitHub pull requests with Codex](https://learn.chatgpt.com/docs/third-party/github) explains Code Review and the GitHub integration.
-- [Codex Security](https://learn.chatgpt.com/docs/security) gives the product overview.
-- [Daybreak Defense Factory setup](https://learn.chatgpt.com/docs/security/setup) explains repository scans and findings review.
-- [Improving the threat model](https://learn.chatgpt.com/docs/security/threat-model) explains how to tune repository context.
-
 ### Set up Daybreak Defense Factory
 
 Source: [Set up Daybreak Defense Factory](https://learn.chatgpt.com/docs/security/setup.md)
@@ -11260,9 +11483,8 @@ DaybreakScanScope,
 DaybreakNewScan,
 } from "@components/react/illustrative/DaybreakForms.react";
 
-Daybreak Defense Factory scans code in a connected GitHub repository and shares
-the findings with your team. Start with one repository or folder. Once you’ve
-reviewed the results, you can monitor new commits or set a schedule.
+Use Daybreak Defense Factory to scan a connected GitHub repository or folder and
+share findings with your team. You can also monitor new commits or schedule scans.
 
 #### Open Daybreak and connect GitHub
 
@@ -11298,9 +11520,9 @@ From **New scan**, choose **Cloud**, select the repository, and check the
 | **Continuous monitoring** | Check new commits on the default branch. Choose how far back to start if you also want to review recent history. |
 | **Scheduled scan**        | Repeat a repository scan on a schedule. Use this for a regular review of the default branch.                     |
 
-You can change or pause monitoring in **Continuous scanning settings**. Open
-**Repositories** and select the repository to find these settings. The owner, people with edit access,
-and Daybreak Defense Factory administrators can change these settings for the whole team. You can also
+To change or pause monitoring, open **Repositories**, select the repository, and open
+**Continuous scanning settings**. The owner, people with edit access, and Daybreak Defense Factory
+administrators can change these settings for the whole team. You can also
 [edit the repository’s threat model](https://learn.chatgpt.com/docs/security/threat-model) to update the context for future scans.
 
 You can [enable pull request reviews](https://learn.chatgpt.com/docs/security/security-review) to check
@@ -11332,12 +11554,6 @@ Run this workflow from a Codex project scoped to the repository you want to
 assess. Codex must be able to read the repository's source code. Jira and Linear
 connectors can provide finding data, while GitHub findings require authenticated
 GitHub REST access. Neither replaces access to the source code.
-
-This differs from `$codex-security:validation`, which can build or run code,
-create a test or proof of concept, or exercise a real interface to
-reproduce or disprove a finding. Use triage to classify and rank an
-existing backlog. Use validation when runtime evidence could resolve a finding
-that static evidence leaves uncertain.
 
 Backlog triage starts from existing findings. To search the repository for new
 vulnerabilities, [run a security scan](https://learn.chatgpt.com/docs/security/plugin/scans). Triage
@@ -11400,22 +11616,16 @@ against the claim, along with unresolved questions.
 | `not_actionable` | Repository evidence rules out the claim, such as by showing an unaffected version, unreachable path, effective guard, or non-shipped surface.                 |
 | `needs_review`   | Repository evidence isn't enough to decide because required information is missing, ambiguous, runtime-dependent, environment-dependent, or policy-dependent. |
 
-Use the rankings to decide which `confirmed` findings to fix first and which
-`needs_review` findings to investigate first. Each group is ranked separately.
-
-Read the verdict's rationale alongside the affected code and attacker
-prerequisites. Check the evidence against the claim and any open questions
-before acting on the rank. Here, `confirmed` means supported by static
-repository evidence, not reproduced by executing the application.
-
-Jira, Linear, and other backlog records remain unchanged unless you ask Codex
-to update them after reviewing the triage results.
+Codex ranks `confirmed` and `needs_review` findings separately. Review the
+rationale, affected code, and attacker prerequisites before acting on a rank.
+A `confirmed` verdict is based on static evidence, not runtime reproduction.
+Source tickets remain unchanged unless you ask Codex to update them.
 
 #### Next steps
 
 - `confirmed`: After a person accepts the finding for remediation, use
   [`$codex-security:fix-finding`](https://learn.chatgpt.com/docs/security/plugin/fix-findings) to fix and
-  verify it. Triage prepares a prompt-ready handoff but doesn't invoke the skill
+  verify it. Triage prepares a handoff but doesn't invoke the skill
   automatically.
 - `needs_review`: If running code can resolve the proof gap, use
   `$codex-security:validation` to test the finding against running code. Pass
@@ -11426,8 +11636,8 @@ to update them after reviewing the triage results.
   Use $codex-security:validation to dynamically validate finding [triage item ID or source ID] from the backlog triage result. Reproduce or disprove the finding, record what you tested, and list any remaining uncertainty.
   ```
 
-  Unlike triage, validation may build or run code, create a test or
-  proof of concept, or exercise a real interface. See [Codex approval and
+  Validation may build or run code, create a test or proof of concept, or
+  exercise a real interface. See [Codex approval and
   security policies](https://learn.chatgpt.com/docs/agent-approvals-security) for execution controls.
 
 - `needs_review`: If the finding depends on product policy or deployment
@@ -11528,10 +11738,9 @@ quickstart](https://learn.chatgpt.com/docs/security/cli).
 
 Source: [Write vulnerability reports](https://learn.chatgpt.com/docs/security/plugin/vulnerability-reports.md)
 
-Use `$codex-security:vulnerability-writeup` to create a self-contained report
-for each distinct vulnerability. You can start from Codex Security scan results
-or use supplied findings, disclosure notes, PoCs, and source code directly. A
-Codex Security scan isn't required.
+Use `$codex-security:vulnerability-writeup` to write one report per vulnerability
+from scan results, findings, disclosure notes, PoCs, or source code. You don't
+need to run a Codex Security scan first.
 
 #### Prepare the evidence
 
@@ -11554,10 +11763,9 @@ Send a prompt like:
 Use $codex-security:vulnerability-writeup to create one self-contained report for each distinct vulnerability in [input paths]. Verify the claims against [source path and revision], preserve or improve the supplied PoCs, and write the reports to [output directory]. Use a local test environment for reproductions.
 ```
 
-Codex inventories the supplied material, groups reports that describe the same
-root cause and vulnerable path, and creates one report directory per distinct
-vulnerability. Each directory contains a Markdown report
-and a `poc/` directory when supporting PoC files are available.
+Codex groups reports with the same root cause and vulnerable path into one
+directory per vulnerability. Each directory contains a Markdown report and,
+when available, supporting files in `poc/`.
 
 #### Review each report
 
@@ -11671,7 +11879,7 @@ only after checking that the task can safely continue. If the notice says the
 task has ended or doesn't offer an option to resume, you can't resume from that
 surface.
 
-| Surface and data controls                                                                               | Findings and resume                                       |
+| GPT-6 Astra surface and data controls                                                                   | Findings and resume                                       |
 | ------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
 | Codex and ChatGPT Work clients with the findings and resume flow, without the data controls listed here | Review the findings before resuming.                      |
 | Codex CLI and mobile                                                                                    | Full findings and resume aren't available. The task ends. |
@@ -13494,6 +13702,30 @@ every MCP server and UI component as production software:
 - **Storage:** Decide how long you keep user data and publish a retention policy. Respect deletion requests.
 - **Logging:** Redact PII before writing to logs. Store correlation IDs for debugging but avoid storing raw prompt text unless necessary.
 
+#### Input schemas and task context
+
+- Design the input schema to limit data collection by default, rather than a funnel for optional context.
+
+- Input fields must be directly related to the tool’s stated purpose.
+
+- Do not request the full conversation history, raw chat transcripts, or broad contextual fields “just in case.” A tool may request a brief, task-specific user intent field only when it meaningfully improves execution and does not expand data collection beyond what is reasonably necessary to respond to the user’s request and for the purposes described in your privacy policy.
+
+- Do not request accumulated conversation context or prior-turn arrays.
+
+#### Response payloads
+
+Tool responses must return only data that is directly relevant to the user’s request and the tool’s stated purpose. Do not include diagnostic, telemetry, or internal identifiers—such as session IDs, trace IDs, request IDs, timestamps, or logging metadata—unless they are strictly required to fulfill the user’s query.
+
+#### Chat-context boundaries
+
+Your MCP server must not pull, reconstruct, or infer the full chat log from the client or elsewhere. Operate only on the explicit snippets and resources the client or model chooses to send. This separation can help prevent covert data expansion and keep analysis limited to intentionally shared content.
+
+#### Location
+
+If needed, rely on the coarse geographic location shared by the system. Do not request precise user location data (for example, GPS coordinates or addresses).
+
+Avoid requesting raw location fields (for example, city or coordinates) in your input schema. When location is needed, obtain it through the client’s controlled side channel (such as environment metadata or a referenced resource) so appropriate policy and consent controls can be applied. This reduces accidental PII capture, enforces least-privilege access, and keeps location handling auditable and revocable.
+
 #### Prompt injection and write actions
 
 Custom MCP servers enable full MCP access, including write tools. Mitigate risk by:
@@ -13513,7 +13745,7 @@ standard `fetch` requests. Nested frames are unavailable by default; enable
 specific origins in resource CSP metadata such as
 `_meta.ui.csp.frameDomains`. Plugins can embed pages from their MCP server's
 own registrable domain, including existing editors and admin interfaces. See
-the [iframe policy](https://developers.openai.com/plugins/plugin-guidelines#iframes-and-embedded-pages) for
+the [iframe requirements](https://developers.openai.com/plugins/build/chatgpt-ui#content-security-policy-csp) for
 domain ownership, required justifications, and review requirements.
 
 The widget CSP restricts which iframe destinations can load. An embedded
@@ -13546,9 +13778,9 @@ Security and privacy are foundational to user trust. Bake them into your plannin
 
 Source: [Codex Security](https://learn.chatgpt.com/docs/security/index.md)
 
-Codex Security reviews code for vulnerabilities and reports evidence you can
-use to investigate and fix them. Choose how to run it based on where your code
-lives and how you want to review the results.
+Codex Security scans code for vulnerabilities and reports findings with supporting
+evidence. Run it in Daybreak Defense Factory, in Codex, from a terminal, or through
+the SDK.
 
 The **Overview** in Daybreak Defense Factory shows proposed fixes and tracks [open and fixed findings](https://learn.chatgpt.com/docs/security/findings-and-fixes) across your repositories.
 
@@ -13562,8 +13794,6 @@ The **Overview** in Daybreak Defense Factory shows proposed fixes and tracks [op
 | Codex Security SDK       | Run scans and handle results in an application or developer tool.                             | [SDK guide](https://learn.chatgpt.com/docs/security/sdk)                    |
 
 #### Choose the next task
-
-After a local scan, review its scope and findings before deciding what to do next.
 
 | Task                                                  | Guide                                                               |
 | ----------------------------------------------------- | ------------------------------------------------------------------- |
@@ -13731,7 +13961,7 @@ Remove the setting or choose a supported policy. Project entries with
 for examples and approval tradeoffs.
 
 Set `model` to one available to your signed-in account or workspace. See
-[GPT-6.1 Sol availability](https://learn.chatgpt.com/docs/models#gpt-6.1-sol) before using the example value.
+[model availability by plan](https://learn.chatgpt.com/docs/pricing#feature-availability) before using the example value.
 
 | Key                                                           | Type / Values                                                                                                                                                 | Default | Details                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -13801,6 +14031,7 @@ Set `model` to one available to your signed-in account or workspace. See
 | `features.context_management.experimental_mode`               | `boolean`                                                                                                                                                     |         | Experimental context-management setting. The feature is not currently available.                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `features.enable_request_compression`                         | `boolean`                                                                                                                                                     |         | Compress streaming request bodies with zstd when supported (stable; on by default).                                                                                                                                                                                                                                                                                                                                                                                                         |
 | `features.fast_mode`                                          | `boolean`                                                                                                                                                     |         | Enable Fast mode controls advertised by the active model (stable; on by default), independently of `features.ultrafast_mode`. Availability still depends on the model and account.                                                                                                                                                                                                                                                                                                          |
+| `features.gateway_setup_wizard`                               | `boolean`                                                                                                                                                     |         | Offer custom gateway setup during CLI sign-in when the user can choose a provider. Defaults to `false`. See [Connect to a gateway](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway#configure-the-provider).                                                                                                                                                                                                                                                                                          |
 | `features.goals`                                              | `boolean`                                                                                                                                                     |         | Enable persisted goals and automatic continuation (stable; on by default).                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `features.hooks`                                              | `boolean`                                                                                                                                                     |         | Enable lifecycle hooks loaded from `hooks.json` or inline `[hooks]` config. `features.codex_hooks` is a deprecated alias.                                                                                                                                                                                                                                                                                                                                                                   |
 | `features.memories`                                           | `boolean`                                                                                                                                                     |         | Enable [Memories](https://learn.chatgpt.com/docs/customization/memories) (off by default).                                                                                                                                                                                                                                                                                                                                                                                                                          |
@@ -13927,8 +14158,10 @@ Set `model` to one available to your signed-in account or workspace. See
 | `model_providers..env_key`                                    | `string`                                                                                                                                                      |         | Environment variable supplying the provider API key.                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | `model_providers..env_key_instructions`                       | `string`                                                                                                                                                      |         | Optional setup guidance for the provider API key.                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `model_providers..experimental_bearer_token`                  | `string`                                                                                                                                                      |         | Direct bearer token for the provider (discouraged; use `env_key`).                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `model_providers..gateway_oauth.credential_export`            | `table`                                                                                                                                                       |         | Use a command as the gateway credential source. Set `command` to an executable that prints one access token. Optional fields are `args` and `timeout_ms` (default `30000`). Omit the OAuth client ID and endpoint settings when using this table.                                                                                                                                                                                                                                           |
+| `model_providers..gateway_oauth.device_authorization_url`     | `string`                                                                                                                                                      |         | Optional device authorization endpoint for signing in to the gateway over SSH or from a terminal without a browser.                                                                                                                                                                                                                                                                                                                                                                         |
 | `model_providers..http_headers`                               | `map`                                                                                                                                                         |         | Static HTTP headers added to provider requests.                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `model_providers..model_catalog_url`                          | `string`                                                                                                                                                      |         | Full URL for a Codex-native model catalog. Omit to keep the provider's default model discovery.                                                                                                                                                                                                                                                                                                                                                                                             |
+| `model_providers..model_catalog_url`                          | `string`                                                                                                                                                      |         | Full URL for a Codex-native model catalog. Codex can fetch it with existing gateway OAuth credentials when the URL has the same scheme, host, and port as `base_url`. Omit to keep the provider's default model discovery.                                                                                                                                                                                                                                                                  |
 | `model_providers..name`                                       | `string`                                                                                                                                                      |         | Display name for a custom model provider.                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `model_providers..query_params`                               | `map`                                                                                                                                                         |         | Extra query parameters appended to provider requests.                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `model_providers..request_max_retries`                        | `number`                                                                                                                                                      |         | Retry count for HTTP requests to the provider (default: 4).                                                                                                                                                                                                                                                                                                                                                                                                                                 |
@@ -13966,6 +14199,7 @@ Set `model` to one available to your signed-in account or workspace. See
 | `otel.exporter..tls.client-private-key`                       | `string`                                                                                                                                                      |         | Client private key path for OTEL exporter TLS.                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `otel.log_agent_responses`                                    | `boolean`                                                                                                                                                     |         | Export final response text from the main agent and spawned subagents to the configured OTLP log exporter. Defaults to `false`. Response text can contain sensitive data and is capped at 64 KiB per response.                                                                                                                                                                                                                                                                               |
 | `otel.log_guardian_assessments`                               | `boolean`                                                                                                                                                     |         | Export completed automatic approval reviews to the configured OTLP log exporter. Defaults to `false`. Review rationales can contain sensitive data and are capped at 64 KiB each.                                                                                                                                                                                                                                                                                                           |
+| `otel.log_sse_deltas`                                         | `boolean`                                                                                                                                                     |         | Log successful server-sent events whose names end in `.delta`. Defaults to `true`. Set to `false` to skip those log entries. Codex still records errors, completion events, and metrics.                                                                                                                                                                                                                                                                                                    |
 | `otel.log_user_prompt`                                        | `boolean`                                                                                                                                                     |         | Opt in to exporting raw user prompts with OpenTelemetry logs.                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `otel.metrics_exporter`                                       | `none \| statsig \| otlp-http \| otlp-grpc`                                                                                                                   |         | Select the OpenTelemetry metrics exporter. The default, `statsig`, follows `analytics.enabled`. Explicit OTLP exporters work independently of that setting. Set to `none` to disable metrics export.                                                                                                                                                                                                                                                                                        |
 | `otel.span_attributes`                                        | `map`                                                                                                                                                         |         | Add string attributes to every exported trace span.                                                                                                                                                                                                                                                                                                                                                                                                                                         |
@@ -14046,6 +14280,7 @@ Set `model` to one available to your signed-in account or workspace. See
 | `tui.alternate_screen`                                        | `auto \| always \| never`                                                                                                                                     |         | Control alternate screen usage for the TUI (default: auto; auto skips it in Zellij to preserve scrollback).                                                                                                                                                                                                                                                                                                                                                                                 |
 | `tui.animations`                                              | `boolean`                                                                                                                                                     |         | Enable terminal animations (welcome screen, shimmer, spinner) (default: true).                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `tui.auto_recap`                                              | `boolean`                                                                                                                                                     |         | Generate automatic conversation recaps while the terminal is unfocused (default: true). Set to `false` to disable automatic recaps; `/recap` remains available.                                                                                                                                                                                                                                                                                                                             |
+| `tui.collapse_turn_details`                                   | `boolean`                                                                                                                                                     |         | Summarize tool calls and fold completed activity beneath each prompt in the full-screen transcript. Answers stay visible. Defaults to `false`.                                                                                                                                                                                                                                                                                                                                              |
 | `tui.disable_paste_burst`                                     | `boolean`                                                                                                                                                     |         | Disable burst-paste detection in the TUI (default: false). Takes precedence over the legacy top-level `disable_paste_burst` setting.                                                                                                                                                                                                                                                                                                                                                        |
 | `tui.keymap..`                                                | `string \| array`                                                                                                                                             |         | Keyboard shortcut binding for a TUI action. Supported contexts include `global`, `chat`, `composer`, `editor`, `vim_normal`, `vim_operator`, `vim_text_object`, `pager`, `list`, and `approval`. Selected composer actions fall back to matching `tui.keymap.global` bindings; context-specific bindings take precedence when supported.                                                                                                                                                    |
 | `tui.keymap.. = []`                                           | `empty array`                                                                                                                                                 |         | Unbind the action in that keymap context. Key names use normalized strings such as `ctrl-a`, `shift-enter`, `page-down`, or `minus`.                                                                                                                                                                                                                                                                                                                                                        |
@@ -14300,6 +14535,7 @@ from either one wins.
 | `otel.exporter`                                              | `none \| otlp-http \| otlp-grpc`            |         | Enforce the log exporter, including its endpoint, headers, and TLS settings.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `otel.log_agent_responses`                                   | `boolean`                                   |         | Control whether OTLP logs include final response text from the main agent and spawned subagents.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `otel.log_guardian_assessments`                              | `boolean`                                   |         | Control whether OTLP logs include completed automatic approval assessments and their rationales.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `otel.log_sse_deltas`                                        | `boolean`                                   |         | Control whether logs include successful server-sent events whose names end in `.delta`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `otel.log_user_prompt`                                       | `boolean`                                   |         | Control whether exported logs include user prompt text.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `otel.metrics_exporter`                                      | `none \| statsig \| otlp-http \| otlp-grpc` |         | Enforce the metrics exporter. The Statsig exporter follows `analytics.enabled`. Explicit OTLP metrics exporters run independently of that setting.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `otel.span_attributes`                                       | `map`                                       |         | Enforce individual string attributes on exported spans. Higher-priority requirements win for the same attribute.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
@@ -14656,13 +14892,11 @@ http_headers = { "X-Example-Header" = "example-value" }
 env_http_headers = { "X-Example-Features" = "EXAMPLE_FEATURES" }
 ```
 
-For browser sign-in through your organization's identity provider, use
-[native gateway OAuth](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway#use-native-gateway-oauth).
+To sign in through your organization's identity provider, use
+[native gateway OAuth](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway?gateway-auth=oauth#use-native-gateway-oauth).
 Configure `[model_providers..gateway_oauth]` with the authorization and token
-URLs, public client ID, and token delivery settings. This works with
-`requires_openai_auth = false`; ChatGPT sign-in, PowerShell, the Azure CLI, and
-an external credential helper aren't required. The gateway must accept the OAuth
-token in the configured cookie or custom header.
+URLs and the public client ID. If the gateway supports device-code sign-in,
+set `device_authorization_url` so CLI users can sign in over SSH.
 
 Use command-backed authentication when a provider needs Codex to fetch bearer tokens from an external credential helper:
 
@@ -15114,14 +15348,14 @@ The elevated setup failure metrics include `code` and `message` when Windows set
 
 #### Feedback controls
 
-By default, local clients let users send feedback from `/feedback`. To disable feedback collection across the ChatGPT desktop app, Codex CLI, and IDE extension on a machine, update your config:
+By default, local clients let users send feedback from `/feedback`. To disable feedback uploads across the ChatGPT desktop app, Codex CLI, and IDE extension on a machine, update your config:
 
 ```toml
 [feedback]
 enabled = false
 ```
 
-When disabled, `/feedback` shows a disabled message and Codex rejects feedback submissions.
+If your local app server supports diagnostic archives, press Ctrl+&nbsp;S&nbsp; in the CLI `/feedback` editor to save a ZIP locally, even when uploads are off.
 
 #### Hide or surface reasoning events
 
@@ -15147,7 +15381,34 @@ Use `notify` to trigger an external program whenever Codex emits supported event
 notify = ["python3", "/path/to/notify.py"]
 ```
 
-Example `notify.py` (truncated) that reacts to `agent-turn-complete`:
+These programs react to `agent-turn-complete` on macOS. Install `terminal-notifier` first.
+
+For TypeScript, save the source as `notify.ts` and configure `notify = ["node", "--experimental-strip-types", "/path/to/notify.ts"]`.
+
+```typescript
+import { execFileSync } from "node:child_process";
+
+const argument = process.argv[2];
+if (!argument)
+  throw new Error("Pass the Codex notification JSON as one argument");
+const notification = JSON.parse(argument);
+if (notification.type === "agent-turn-complete") {
+  execFileSync(
+    "terminal-notifier",
+    [
+      "-title",
+      `Codex: ${notification["last-assistant-message"] ?? "Turn Complete!"}`,
+      "-message",
+      (notification["input-messages"] ?? []).join(" "),
+      "-group",
+      `codex-${notification["thread-id"] ?? ""}`,
+      "-activate",
+      "com.googlecode.iterm2",
+    ],
+    { stdio: "inherit" }
+  );
+}
+```
 
 ```python
 #!/usr/bin/env python3
@@ -15913,6 +16174,8 @@ steps](#gpt-55-retirement).
 
 In Work or Codex in the ChatGPT desktop app, use the model and reasoning control
 beneath the composer to choose an available model and adjust its reasoning effort.
+If you see the Power slider, open **Advanced** to choose a specific model,
+such as GPT-6.2 Astra.
 
 **Reasoning effort** guides how much work the model puts into thinking through
 your request. Higher effort can improve results for complex tasks, but it takes
@@ -15946,17 +16209,16 @@ GPT-6.1 Terra requires Codex CLI 0.159.0 or later. To use it, run
 `codex -m gpt-6.1-terra`.
 
 In an interactive CLI session, use `/model` to switch models or adjust
-reasoning effort. You can also choose a model when you launch Codex with
-`--model` or its `-m` alias:
+reasoning effort. To start Codex with Sol, use `--model` or its `-m` alias:
 
 ```bash
-codex --model gpt-6.1-sol
+codex --model gpt-6.2-sol
 ```
 
 The same option works with non-interactive runs. For example:
 
 ```bash
-codex exec -m gpt-6.1-sol "Review the current changes"
+codex exec -m gpt-6.2-sol "Review the current changes"
 ```
 
 **Reasoning effort** guides how much work the model puts into thinking through
@@ -15984,25 +16246,32 @@ beyond a single-agent run. It uses
 [subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents) to accelerate complex work,
 making it useful for larger tasks that can be split across subagents.
 
-In the ChatGPT desktop app and ChatGPT Work on the web, start with the default
-Power setting available to your account. Move toward **Smarter** for deeper
-reasoning or **Faster** for faster, lower-cost work. Open **Advanced** to
-choose a specific model, reasoning effort, or speed. To try GPT-6.1 Terra in
-this example, open **Advanced** and choose it from the model list.
-
-The six Power presets shown are Luna High, GPT-6 Sol Light (selected
-in this example), GPT-6 Sol Medium, Astra Light, Astra Medium, and Astra Extra
-High. Some paid plans omit Astra Extra High. Advanced controls are illustrative;
-available options and defaults vary by plan, client, workspace settings, and rollout.
+This example shows the Power slider for a ChatGPT Work account with access to
+both GPT-6.2 models. New Work chats start with GPT-6.2 Sol at **Light** on
+supported consumer plans or **Medium** in Enterprise workspaces with the model
+enabled. Move the Power slider toward **Smarter** for deeper reasoning or
+**Faster** for faster, lower-cost work. Open **Advanced** to choose a specific
+model or reasoning effort from the options available to your account.
 
 #### Recommended models
 
-Start with the kind of work you want to do. Astra suits the most demanding
-workflows. GPT-6.1 Sol offers near-Astra performance at a lower cost than Astra.
+GPT-6.2 Astra and GPT-6.2 Sol are now available in ChatGPT Work and Codex on
+[supported plans and clients](https://learn.chatgpt.com/docs/pricing#feature-availability). For demanding
+work across code, apps, or research, choose GPT-6.2 Astra. In Codex, try Astra to
+trace a bug across services, fix it, and test the change. See
+[Prompting GPT-6.2 in Codex](https://learn.chatgpt.com/guides/prompting-gpt-6-2-astra).
+
+Choose GPT-6.2 Sol for
+everyday coding, writing, and work across several sources. It costs fewer credits
+per token than GPT-6.2 Astra at [Standard speed](https://learn.chatgpt.com/docs/pricing#token-rates).
 GPT-6.1 Terra is a fast, efficient choice for writing, visual understanding, and
 computer use. Luna suits focused, repeatable tasks.
 
-These recommendations apply to ChatGPT Work and Codex. For Chat, see [models in ChatGPT](https://help.openai.com/en/articles/20001354-gpt-6-and-other-models-in-chatgpt) in the Help Center.
+These recommendations apply to ChatGPT Work and Codex. For Chat availability, see [models in ChatGPT](https://help.openai.com/en/articles/20001354-gpt-6-and-other-models-in-chatgpt) in the Help Center.
+
+To use a longer context window in Codex, set `model_context_window` in
+[`config.toml`](https://learn.chatgpt.com/docs/config-file/config-advanced#model-reasoning-verbosity-and-limits).
+GPT-6.2 Astra and GPT-6.2 Sol each support a context window of up to 1 million tokens.
 
 GPT-6.1 Sol uses a default context window of 500,000 tokens in Codex and
 ChatGPT Work. See [pricing](https://learn.chatgpt.com/docs/pricing) for subscription usage and credit rates.
@@ -16018,14 +16287,12 @@ work changes.
 
 #### Where each model shines
 
-- **Astra, for the hardest end-to-end work.** Choose Astra for complete workflows
-  across code, apps, and research that need sustained reasoning and judgment.
-  Give it the sources, templates, constraints, and checks that define a useful
-  result. Astra is better at asking focused questions and incorporating your
-  guidance while keeping the original goal and constraints in view.
-- **GPT-6.1 Sol, for repeated, long-running work.** Consider GPT-6.1 Sol for
-  work across code, apps, and documents when cost matters. Keep Astra for your
-  most demanding work.
+- **GPT-6.2 Astra or GPT-6 Astra, for the hardest end-to-end work.** Choose an
+  available Astra model for tasks that need sustained reasoning across code,
+  apps, or research. Give it the sources, constraints, and checks that define a
+  useful result.
+- **GPT-6.2 Sol, for everyday work.** Choose Sol to edit code, draft documents,
+  or turn several sources into a plan.
 - **GPT-6.1 Terra, for everyday writing and visual work.** Choose Terra for clear
   communication, interpreting images and screens, and completing tasks across
   supported apps. Try it for drafting proposals, reviewing visual materials,
@@ -16039,12 +16306,12 @@ work changes.
 Use your own materials with these prompts, and tell ChatGPT what a useful
 result should include.
 
-| Model         | Task                                           | Example prompt                                                                                                                                                                        |
-| ------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Astra         | Work through a complex decision.               | "Compare these three vendor proposals against our requirements. Explain the tradeoffs, recommend an option, and list the questions we should resolve before deciding."                |
-| GPT-6.1 Sol   | Bring several sources into a working document. | "Use this project brief, meeting notes, and timeline to draft an implementation plan. Identify dependencies, flag conflicting details, and list the decisions we still need to make." |
-| GPT-6.1 Terra | Make sense of visual information.              | "Review these dashboard screenshots and summarize the main changes. Refer to the chart labels and values, and flag anything you can't read confidently."                              |
-| Luna          | Organize information into a consistent format. | "Turn these meeting notes into a table of action items, owners, and due dates. Mark any missing owner or date as unspecified."                                                        |
+| Model                        | Task                                           | Example prompt                                                                                                                                                                        |
+| ---------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GPT-6.2 Astra or GPT-6 Astra | Work through a complex decision.               | "Compare these three vendor proposals against our requirements. Explain the tradeoffs, recommend an option, and list the questions we should resolve before deciding."                |
+| GPT-6.2 Sol                  | Bring several sources into a working document. | "Use this project brief, meeting notes, and timeline to draft an implementation plan. Identify dependencies, flag conflicting details, and list the decisions we still need to make." |
+| GPT-6.1 Terra                | Make sense of visual information.              | "Review these dashboard screenshots and summarize the main changes. Refer to the chart labels and values, and flag anything you can't read confidently."                              |
+| Luna                         | Organize information into a consistent format. | "Turn these meeting notes into a table of action items, owners, and due dates. Mark any missing owner or date as unspecified."                                                        |
 
 Review the result against your source materials, especially names, numbers,
 and details taken from images. For tasks on websites or in desktop apps, check
@@ -16056,11 +16323,10 @@ requirements first.
 For example, you might use a lower effort to rewrite a short email and a higher
 effort to compare several proposals with competing requirements.
 
-For GPT-6.1 Sol, start with the reasoning effort available by default in your
-client and adjust based on the task. Start with **High** for Luna or **Light**
-for Astra.
-In configuration, Astra's Light setting is `low`. Increase the effort for tasks
-that need more planning, analysis, or checking.
+For GPT-6.2 Astra or GPT-6.2 Sol, start with the effort your client selects
+and adjust it based on the task. For Luna, start with **High**. For GPT-6
+Astra, start with **Light** (`low` in configuration). Increase the effort for
+tasks that need more planning, analysis, or checking.
 
 - **Light** in the ChatGPT desktop app, ChatGPT Work on the web, and IDE extension, or **Low** in the
   CLI, suits quick, well-scoped tasks.
@@ -16068,8 +16334,7 @@ that need more planning, analysis, or checking.
 - **High** and **Extra High** suit difficult work with multiple steps, sources,
   or tradeoffs.
 
-Reasoning efforts don't map exactly between model generations. Try a familiar task
-at a lower setting and adjust based on the result.
+Learn more in our Model selection guide
 
 #### Know when to use Max or Ultra
 
@@ -16156,9 +16421,12 @@ The ChatGPT desktop app, Codex CLI, and IDE extension use the same `config.toml`
 [configuration file](https://learn.chatgpt.com/docs/config-file/config-basic). To specify a model, add a
 `model` entry to your configuration file. If you don't specify a model, the
 ChatGPT desktop app, Codex CLI, or IDE extension uses a recommended model.
+This example selects Sol in the app or CLI. When sharing a configuration with
+the IDE extension, pick a model available in every client you use,
+such as `gpt-6.1-sol`.
 
 ```toml
-model = "gpt-6.1-sol"
+model = "gpt-6.2-sol"
 ```
 
 ### Sample Configuration
@@ -16834,6 +17102,10 @@ show_tooltips = true
 
 # alternate_screen = "auto"
 
+# Fold completed activity in the full-screen transcript. Default: false.
+
+# collapse_turn_details = true
+
 # Working directory for resumed or forked sessions: current | session.
 
 # Leave unset to choose when the current and saved session directories differ.
@@ -17261,6 +17533,22 @@ prefer_mxc = true
 # timeout_ms = 5000
 
 # refresh_interval_ms = 300000
+
+# To use gateway OAuth, replace the [model_providers.proxy.auth] table above with:
+
+# [model_providers.proxy.gateway_oauth]
+
+# authorization_url = "https://login.example.com/oauth/authorize"
+
+# token_url = "https://login.example.com/oauth/token"
+
+# client_id = "codex"
+
+# device_authorization_url = "https://login.example.com/oauth/device" # optional device-code sign-in
+
+# To use a token-export command, replace the four OAuth settings above with:
+
+# credential_export = { command = "/usr/local/bin/export-gateway-token" }
 
 # --- Example: Local OSS (e.g., Ollama-compatible) ---
 
@@ -17797,7 +18085,7 @@ information.
 #### Global flags
 
 Choose a model available to your signed-in account or workspace. See
-[GPT-6.1 Sol availability](https://learn.chatgpt.com/docs/models#gpt-6.1-sol) before using it with `--model`.
+[model availability by plan](https://learn.chatgpt.com/docs/pricing#feature-availability) before using it with `--model`.
 
 | Key                                                  | Type / Values                                                 | Default | Details                                                                                                                                                                                                                                                    |
 | ---------------------------------------------------- | ------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -17812,7 +18100,7 @@ Choose a model available to your signed-in account or workspace. See
 | `--enable`                                           | `feature`                                                     |         | Force-enable a feature flag (translates to `-c features.=true`). Repeatable.                                                                                                                                                                               |
 | `--image, -i`                                        | `path[,path...]`                                              |         | Attach one or more image files to the initial prompt. Separate multiple paths with commas or repeat the flag.                                                                                                                                              |
 | `--local-provider`                                   | `lmstudio \| ollama`                                          |         | Choose the local provider used with `--oss`, overriding `oss_provider` for this run.                                                                                                                                                                       |
-| `--model, -m`                                        | `string`                                                      |         | Override the model set in configuration (for example `gpt-6.1-sol`).                                                                                                                                                                                       |
+| `--model, -m`                                        | `string`                                                      |         | Override the model set in configuration (for example `gpt-6.2-sol`).                                                                                                                                                                                       |
 | `--no-alt-screen`                                    | `boolean`                                                     | `false` | Disable alternate screen mode for the TUI (overrides `tui.alternate_screen` for this run).                                                                                                                                                                 |
 | `--no-daemon`                                        | `boolean`                                                     | `false` | Run the interactive CLI without the shared background server. Can't be combined with `--remote` or `codex agents`.                                                                                                                                         |
 | `--oss`                                              | `boolean`                                                     | `false` | Use a local open source model provider. Codex uses `--local-provider`, your configured `oss_provider`, or prompts you to choose between LM Studio and Ollama.                                                                                              |
@@ -18002,14 +18290,15 @@ Codex prints the patched files and exits non-zero if `git apply` fails (for exam
 Run a code review non-interactively. Choose exactly one review target, or pass
 custom review instructions as a prompt.
 
-| Key               | Type / Values              | Default | Details                                                                         |
-| ----------------- | -------------------------- | ------- | ------------------------------------------------------------------------------- |
-| `--base`          | `branch`                   |         | Review changes against the specified base branch.                               |
-| `--commit`        | `SHA`                      |         | Review the changes introduced by the specified commit.                          |
-| `--strict-config` | `boolean`                  | `false` | Error when `config.toml` contains fields this Codex version does not recognize. |
-| `--title`         | `string`                   |         | Set the commit title shown in the review summary. Requires `--commit`.          |
-| `--uncommitted`   | `boolean`                  | `false` | Review staged, unstaged, and untracked changes.                                 |
-| `PROMPT`          | `string \| - (read stdin)` |         | Custom review instructions. Use `-` to read the instructions from stdin.        |
+| Key               | Type / Values              | Default | Details                                                                                                                                   |
+| ----------------- | -------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `--base`          | `branch`                   |         | Review changes against the specified base branch.                                                                                         |
+| `--commit`        | `SHA`                      |         | Review the changes introduced by the specified commit.                                                                                    |
+| `--strict-config` | `boolean`                  | `false` | Error when `config.toml` contains fields this Codex version does not recognize.                                                           |
+| `--title`         | `string`                   |         | Set the commit title shown in the review summary. Requires `--commit`.                                                                    |
+| `--trust`         | `boolean`                  | `false` | Trust this project for this review and future chats, including its configured MCP servers. Codex refuses an explicitly untrusted project. |
+| `--uncommitted`   | `boolean`                  | `false` | Review staged, unstaged, and untracked changes.                                                                                           |
+| `PROMPT`          | `string \| - (read stdin)` |         | Custom review instructions. Use `-` to read the instructions from stdin.                                                                  |
 
 `--uncommitted`, `--base`, `--commit`, and a custom `PROMPT` conflict with one
 another. Use `--title` only with `--commit`.
@@ -18142,6 +18431,7 @@ Use `codex exec` (or the short form `codex e`) for scripted or CI-style runs tha
 | `--sandbox, -s`                                      | `read-only \| workspace-write \| danger-full-access` |         | Sandbox policy for model-generated commands. Defaults to configuration.                                                                                                                                         |
 | `--skip-git-repo-check`                              | `boolean`                                            | `false` | Allow running outside a Git repository (useful for one-off directories).                                                                                                                                        |
 | `--thread-source`                                    | `SOURCE`                                             | `user`  | Set the source label for a new or forked thread. Resuming a thread keeps its original label.                                                                                                                    |
+| `--trust`                                            | `boolean`                                            | `false` | Save project trust for this run and future chats, even with `--ephemeral`. Conflicts with `--ignore-user-config`.                                                                                               |
 | `--worktree`                                         | `boolean`                                            | `false` | Run a new or forked session in a managed Git worktree. Requires local execution; can't be combined with `resume`, `review`, `--ephemeral`, or `--ignore-user-config`.                                           |
 | `-c, --config`                                       | `key=value`                                          |         | Inline configuration override for the non-interactive run (repeatable).                                                                                                                                         |
 | `PROMPT`                                             | `string \| - (read stdin)`                           |         | Initial instruction for the task. Use `-` to pipe the prompt from stdin.                                                                                                                                        |
@@ -18400,10 +18690,10 @@ on a website, or review a page you're building.
 
 Browser is available in ChatGPT on the web and in the ChatGPT desktop app.
 
-[GPT-6 Astra](https://learn.chatgpt.com/docs/models#gpt-6-astra) improves visual judgment for tasks such
-as checking a page against a screenshot or completing a workflow across sites.
-Choose it when available in your model selector, and describe how to verify the
-finished result.
+For tasks that need visual judgment, choose [GPT-6.2 Astra](https://learn.chatgpt.com/docs/models#recommended-models)
+from the model picker.
+For example, ask ChatGPT to check a page against a screenshot and list any
+differences.
 
 For managed desktop environments, administrators can restrict browser origins,
 uploads, downloads, and developer access. See
@@ -20779,18 +21069,30 @@ directly from Work Louder.
 
 Source: [Composer Predictions](https://learn.chatgpt.com/docs/features/composer-predictions.md)
 
-Composer predictions provides autocomplete-style suggestions for your next message in the Codex desktop app. After Codex responds, it uses the current conversation to suggest a follow-up prompt in the message box. Press **Tab** to accept the suggested message as an editable draft, or type your own message.
+The Composer predictions feature suggests a next message based on the conversation in your current Codex desktop thread. It can help you continue a task, refine a draft, or ask for a useful next step after Codex responds. Review each suggestion to decide whether it matches what you want to do.
 
-To use composer predictions, make sure you've updated the [Codex desktop app](https://help.openai.com/en/articles/11369540-using-codex-with-your-chatgpt-plan) and have signed in to your personal ChatGPT Pro account.
+Before you start, update the Codex desktop app and sign in to an eligible account. Check [Composer predictions in Codex](https://help.openai.com/en/articles/20001601-composer-predictions-in-codex) for current plan, model, and thread requirements.
 
 #### Tab to accept
 
 1. Send a message in a supported thread. When Codex finishes responding, look for a suggestion in the message box.
-2. **Press Tab to accept the prediction.** The suggested text becomes an editable
+2. Press Tab to accept the prediction. The suggested text becomes an editable
    draft in the message box.
-3. Review the text, make any changes, then send it when you’re ready.
+3. Check the suggested action, audience, and details. Edit anything that doesn't match your intent, then send it when you're ready.
 
 To write something else, start typing your own message. You can keep typing without waiting for a prediction. Accepting a prediction adds text to the message box. It does not send the message for you.
+
+A prediction won't appear after every response. You can continue the conversation by typing your own message.
+
+#### Example: Refine a project update
+
+In this example, you've asked Codex to summarize project notes. A prediction suggests turning the summary into a team update. Accept it if that's your next step, or edit it to specify the audience and what to include.
+
+For example, you could edit the accepted suggestion before sending:
+
+> Turn this summary into a short update for the project team. Separate confirmed progress from open questions, and don't describe the launch date as final.
+
+Review the resulting update against your notes before sharing it. Accepting a useful suggestion doesn't verify the facts in the response.
 
 #### How predictions use context
 
@@ -20798,11 +21100,7 @@ Predictions use the conversation in your current thread. If context from past wo
 
 #### Availability and controls
 
-Composer predictions is currently in beta for users aged 18 and older on personal ChatGPT Pro plans in supported regions. It’s available in local and SSH threads in the Codex desktop app with GPT-6 Astra, GPT-6.1 Sol, and GPT-6.1 Terra. Predictions are enabled by default for eligible users. You can turn them on or off using the **Show predictions** toggle in **Settings → General → Composer**.
-
-Generating predictions doesn’t count toward your Codex usage limits or consume credits. When you send a message, including an accepted prediction, normal Codex usage limits and billing apply.
-
-For setup and troubleshooting, see [Composer predictions in Codex](https://help.openai.com/en/articles/20001601-composer-predictions-in-codex).
+For current availability, how to turn predictions on or off, usage limits, billing, and troubleshooting, see [Composer predictions in Codex](https://help.openai.com/en/articles/20001601-composer-predictions-in-codex) in the Help Center.
 
 ### Computer Use
 
@@ -20850,8 +21148,9 @@ On macOS, grant:
 #### When to use Computer Use
 
 For difficult tasks that depend on screenshots or visual judgment, choose
-[GPT-6 Astra](https://learn.chatgpt.com/docs/models#gpt-6-astra) when it is available in your model
-selector. The same operating-system permissions and app access controls apply.
+[GPT-6.2 Astra](https://learn.chatgpt.com/docs/models#recommended-models) from the model picker. For example, ask ChatGPT to reproduce a bug in the app
+and identify the first screen where the result differs from what you expected.
+The same operating-system permissions and app access controls apply.
 
 Choose Computer Use when the task depends on a graphical user interface that's
 hard to verify through files or command output alone.
@@ -21027,6 +21326,157 @@ where applicable. Changes made through desktop apps may not appear in the review
 pane until they're saved to disk and tracked by the project. Your ChatGPT data
 controls apply to content processed through ChatGPT, including screenshots taken
 by Computer Use.
+
+### Developer settings
+
+Source: [Developer settings](https://learn.chatgpt.com/docs/developer-settings.md)
+
+ChatGPT web stores product and workspace preferences in ChatGPT settings. ChatGPT Work
+chats run in a managed environment and don't read local Codex
+configuration files. Use the controls your workspace exposes in ChatGPT
+settings; workspace administrators may manage some settings for you.
+
+The general [Settings](https://learn.chatgpt.com/docs/reference/settings) page covers app preferences,
+including profile, keyboard shortcuts, notifications, appearance,
+personalization, memories, and archived chats.
+
+#### Project and terminal behavior
+
+Choose where files open, how much command output appears in chats, and where
+terminal tabs open by default.
+
+#### Code review
+
+Under **Settings > Git**, use **Review delivery** to choose **Inline** to run
+`/review` in the current chat when possible or **Detached** to start a separate
+review chat.
+
+#### IDE extension sync
+
+When the ChatGPT desktop app and IDE extension are open in the same project,
+they share active chats and editor context. Turn on **IDE context** from the app
+composer to let Codex use files currently open in your editor. Turn it off when
+you want the app prompt to exclude that editor context.
+
+You can open an app chat from the IDE extension and continue an IDE chat in the
+app. Both surfaces use the same project to determine which chats and context to
+share.
+
+#### Agent configuration
+
+Codex agents in the app inherit the same configuration as the IDE extension and
+CLI. Use the in-app controls for common settings, or edit `config.toml` for
+advanced options. See [Agent approvals and security](https://learn.chatgpt.com/docs/agent-approvals-security)
+and [Config basics](https://learn.chatgpt.com/docs/config-file/config-basic) for details.
+
+#### Git
+
+Use Git settings to standardize branch naming and choose whether Codex uses
+force pushes. You can also set prompts that Codex uses to generate commit
+messages and pull request descriptions.
+
+#### Integrations and MCP
+
+Connect external tools through Model Context Protocol (MCP). Enable recommended
+servers or add your own. If a server requires OAuth, the app starts the
+authentication flow. These settings also apply to the Codex CLI and IDE
+extension because MCP configuration lives in `config.toml`. See
+[Model Context Protocol](https://learn.chatgpt.com/docs/extend/mcp) for details.
+
+#### Browser developer mode
+
+Under **Developer mode**, turn on **Enable full CDP access** to let ChatGPT use
+the Chrome DevTools Protocol for performance profiling and deeper browser
+debugging. If your organization has disabled full CDP access, you can't enable
+it locally. See [Developer mode](https://learn.chatgpt.com/docs/browser?surface=app#app-developer-mode) for setup,
+risk, approval, and administrator requirements.
+
+Codex CLI reads your personal defaults from `~/.codex/config.toml`. Add a
+`.codex/config.toml` file to a trusted project or subfolder when you need
+project-specific overrides. The CLI and IDE extension share these configuration
+layers.
+
+#### Inspect your settings
+
+Use these commands to understand the effective settings for the current
+session:
+
+- Run `/status` to see the active model, approval policy, writable roots, and
+  token usage.
+- Run `/debug-config` to see the configuration layers in precedence order and
+  the source of managed policy requirements.
+- Start Codex with `--strict-config` to treat unrecognized `config.toml` keys as
+  errors instead of ignoring them.
+
+See [Developer commands](https://learn.chatgpt.com/docs/developer-commands?surface=cli) for the full
+interactive command reference.
+
+#### Change settings for one run
+
+Use a dedicated flag when one exists. Common examples include `--model`,
+`--sandbox`, `--ask-for-approval`, `--profile`, and `--search`. Use `-c` or
+`--config` to override any supported configuration key for one run.
+
+The model override below requires GPT-6.2 Sol access. If it isn't available to
+your account or workspace, omit `--model` or choose a model listed by `/model`.
+See [model availability by plan](https://learn.chatgpt.com/docs/pricing#feature-availability).
+
+```shell
+codex --model gpt-6.2-sol
+codex --profile deep-review
+codex --config model_reasoning_effort='"medium"'
+```
+
+Command-line flags and `--config` values have the highest precedence. For the
+complete flag list, see [Developer commands](https://learn.chatgpt.com/docs/developer-commands?surface=cli).
+
+#### Configuration layers
+
+The CLI applies command-line flags and `--config` overrides before project,
+profile, user, system, and built-in settings. Use that precedence to keep shared
+defaults in configuration files and one-off changes on the command line.
+
+For the complete order and common options, see [Config basics](https://learn.chatgpt.com/docs/config-file/config-basic).
+
+#### Change settings in the TUI
+
+The interactive terminal UI provides pickers for common session and display
+settings:
+
+| Goal                      | Command                                      | Related configuration                          |
+| ------------------------- | -------------------------------------------- | ---------------------------------------------- |
+| Choose a terminal mode    | `/tui`                                       | `tui.fullscreen_transcript` (restart required) |
+| Choose a model            | `/model`                                     | `model`, `model_reasoning_effort`              |
+| Change permissions        | `/permissions`                               | Approval and sandbox settings                  |
+| Configure optional tools  | `/experimental`, `/memories`                 | Feature-specific `config.toml` keys            |
+| Customize the terminal UI | `/keymap`, `/statusline`, `/title`, `/theme` | Keys under `[tui]`                             |
+| Set editing defaults      | `/vim`, `/raw`                               | `tui.vim_mode_default`, `tui.raw_output_mode`  |
+
+In the full-screen transcript, open `/config`, choose **Sessions**, and turn on
+**Collapse turn details** to fold completed activity under each prompt. Final
+answers stay visible, and transcript search includes folded output. The setting
+is off by default.
+
+Some commands apply only to the current session, while some pickers offer to
+save the choice. Set the related configuration key when you want a default for
+future sessions. For the terminal theme, editor, completions, and shortcut
+workflows, see [CLI customization](https://learn.chatgpt.com/docs/cli-customization).
+
+#### Settings references
+
+- [Advanced configuration](https://learn.chatgpt.com/docs/config-file/config-advanced) covers profiles, one-off overrides, and other advanced workflows.
+- [Configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference) lists the available keys and values.
+- [Sample configuration](https://learn.chatgpt.com/docs/config-file/config-sample) provides a complete example file.
+- [Environment variables](https://learn.chatgpt.com/docs/config-file/environment-variables) documents variables used by the CLI and installer.
+
+The Codex IDE extension has two settings layers:
+
+- **Codex settings** control agent behavior shared with Codex CLI, including the
+  model, reasoning effort, permissions, sandbox, MCP servers, and
+  personalization. Codex reads these settings from `config.toml`.
+- **Editor settings** control how the extension behaves inside VS Code and
+  compatible editors. These settings use `chatgpt.*` keys in the editor's
+  settings system.
 
 ### Integrated terminal
 
@@ -21462,12 +21912,12 @@ completion still works before you queue the command.
 | [`/memories`](#configure-memories-with-memories)                                            | Configure memory use and generation.                            | Turn memory injection or memory generation on or off without leaving the TUI.                       |
 | [`/skills`](#use-skills-with-skills)                                                        | Browse and use skills.                                          | Improve task-specific behavior by selecting a relevant local skill.                                 |
 | [`/import`](#import-claude-code-or-cursor-setup-with-import)                                | Import Claude Code or Cursor setup, projects, and chats.        | Migrate supported external-agent artifacts into Codex configuration and local files.                |
-| [`/feedback`](#send-feedback-with-feedback)                                                 | Send logs to the Codex maintainers.                             | Report issues or share diagnostics with support.                                                    |
+| [`/feedback`](#send-feedback-with-feedback)                                                 | Send feedback or save a diagnostic ZIP.                         | Report issues or share diagnostics with support.                                                    |
 | [`/init`](#generate-agentsmd-with-init)                                                     | Generate an `AGENTS.md` scaffold in the current directory.      | Capture persistent instructions for the repository or subdirectory you're working in.               |
 | [`/logout`](#sign-out-with-logout)                                                          | Sign out of Codex.                                              | Clear local credentials when using a shared machine.                                                |
 | [`/mcp`](#list-mcp-tools-with-mcp)                                                          | List configured Model Context Protocol (MCP) tools.             | Check which external tools Codex can call during the session; add `verbose` for server details.     |
 | [`/mention`](#highlight-files-with-mention)                                                 | Attach a file to the chat.                                      | Point Codex at specific files or folders you want it to inspect next.                               |
-| [`/model`](#set-the-active-model-with-model)                                                | Choose the active model (and reasoning effort, when available). | Use `gpt-6-luna` or `gpt-6.1-sol` if shown.                                                         |
+| [`/model`](#set-the-active-model-with-model)                                                | Choose the active model (and reasoning effort, when available). | Select GPT-6.2 Sol for everyday coding if your workspace has access.                                |
 | [`/presets`](#reuse-prompts-and-commands-with-presets)                                      | Save and run prompts or slash commands.                         | Recall a command or prompt you use frequently.                                                      |
 | [`/fast`](#toggle-fast-mode-with-fast)                                                      | Toggle a Fast service tier when the model catalog exposes one.  | Turn the current model's Fast tier on or off and persist the selection.                             |
 | [`/daybreak`](#toggle-daybreak)                                                             | Toggle Daybreak when your account and model are eligible.       | Use an approved cyber access program for a chat.                                                    |
@@ -21478,7 +21928,7 @@ completion still works before you queue the command.
 | [`/stop`](#stop-background-terminals-with-stop)                                             | Stop all background terminals.                                  | Cancel background terminal work started by the current session.                                     |
 | [`/fork`](#fork-the-current-chat-with-fork)                                                 | Fork the current chat into a new chat.                          | Branch the active session to explore a new approach without losing the current transcript.          |
 | [`/app`](#continue-in-the-desktop-app-with-app)                                             | Continue the current session in the ChatGPT desktop app.        | Move from the TUI to the desktop app on macOS or Windows.                                           |
-| [`/side`, `/btw`](#start-a-side-chat-with-side)                                             | Start an ephemeral side chat.                                   | Ask a focused follow-up without disrupting the main chat's transcript.                              |
+| [`/side`, `/btw`](#start-a-side-chat-with-side)                                             | Open a side chat.                                               | Ask a focused follow-up without disrupting the main chat's transcript.                              |
 | [`/raw`](#toggle-raw-scrollback-with-raw)                                                   | Toggle raw scrollback mode.                                     | Make terminal selection and copying less formatted while reviewing long output.                     |
 | [`/resume`](#resume-a-saved-chat-with-resume)                                               | Resume a saved chat from your session list.                     | Continue work from a previous CLI session without starting over.                                    |
 | [`/new`](#start-a-new-chat-with-new)                                                        | Start a new chat inside the same CLI session.                   | Reset the chat context without leaving the CLI when you want a fresh prompt in the same repo.       |
@@ -21580,12 +22030,12 @@ Expected: Codex shows retained warnings and their diagnostic details.
 
 #### Set the active model with `/model`
 
-The picker only shows models available to your account and workspace. If GPT-6.1
-Sol isn't listed, choose another model. See [GPT-6.1 Sol availability by plan](https://learn.chatgpt.com/docs/models#gpt-6.1-sol).
+The picker shows the models available to your account and workspace. See
+[model availability by plan](https://learn.chatgpt.com/docs/pricing#feature-availability).
 
 1. Start Codex and open the composer.
 2. Type `/model` and press Enter.
-3. Choose a model such as `gpt-6-luna` or `gpt-6.1-sol` from the popup.
+3. Choose a model from the list. For a complex debugging task, select GPT-6.2 Astra. For everyday coding, select GPT-6.2 Sol.
 
 Expected: Codex confirms the new model in the transcript. Run `/status` to verify the change.
 
@@ -21633,6 +22083,9 @@ migration plan for this service`).
 3. You can paste content or attach images while using inline `/plan` arguments.
 
 Expected: Codex enters plan mode and uses your optional inline prompt as the first planning request.
+
+Choose **Yes, clear context and implement** to start a fresh chat with the
+complete plan. If Codex can't transfer the plan, it keeps the current chat open.
 
 While Codex is already working, `/plan` is temporarily unavailable.
 
@@ -21725,7 +22178,7 @@ If a turn is running, confirming `/archive` stops that turn before archiving.
 1. Type `/delete` and press Enter.
 2. Confirm that you want to delete the current session.
 
-Expected: Codex permanently deletes the transcript and spawned descendant
+Expected: Codex permanently deletes the transcript, its saved side chats, and spawned descendant
 sessions. When connected to a local background server or remote server, Codex
 returns to the command center. Without a shared server, Codex exits.
 
@@ -21974,7 +22427,7 @@ Expected: The desktop app opens the same saved chat so you can continue there.
 
 #### Start a side chat with `/side`
 
-Use `/side` to start an ephemeral fork from the current chat without switching away from the main chat.
+Use `/side` to ask a follow-up in a separate chat while the main chat continues.
 
 1. Type `/side` to open a side chat.
 2. Optionally add inline text, for example `/side Check whether this plan has an obvious risk`.
@@ -21983,6 +22436,11 @@ Use `/side` to start an ephemeral fork from the current chat without switching a
 Expected: Codex opens a side chat whose transcript is separate from
 the parent chat. While you are in side mode, the TUI continues to show the
 parent chat's status so you can see whether the main chat is still running.
+
+Side chats are temporary by default. In a local full-screen session with
+`features.tui_workspace` enabled and saved history available, `/side` reopens
+an existing side chat and `/side ` starts a new one. You can reopen
+saved side chats from the sidebar after restarting Codex.
 
 `/side` is unavailable inside another side chat and during review mode.
 
@@ -22042,13 +22500,15 @@ browser.
 
 #### Manage chats with `/agents`
 
-1. Type `/agents` and press Enter.
-2. Select a chat from the command center to open it.
+1. Type `/agents` and press Enter, or run `codex agents` from your terminal.
+2. To find an older chat, press F3 or &nbsp;/&nbsp; and type part of its name, prompt preview, or working directory. Search ignores case.
+3. Select a chat to open it.
 
-Expected: Codex shows an overview of chats on the connected server. You can
-inspect their status and switch between them. To open the command center
-directly from your terminal, run `codex agents`. The command center requires a
-shared local or remote server.
+On macOS and Linux, eligible local sessions signed in with ChatGPT can use an
+experimental Cloud connection. Enable `features.tui_multi_backend`, then use the
+host shortcut shown in a new chat’s composer to switch from Local to Cloud before
+sending your first prompt. In Cloud chats, you can send images, select a model
+and reasoning effort for the next turn, and archive or restore chats.
 
 #### Switch agent threads with `/subagents`
 
@@ -22061,10 +22521,10 @@ agent's work.
 #### Send feedback with `/feedback`
 
 1. Type `/feedback` and press Enter.
-2. Follow the prompts to include logs or diagnostics.
+2. Choose a feedback category and whether to include logs.
+3. In the note editor, press Enter to submit feedback. On a local connection, press Ctrl+&nbsp;S&nbsp; to save a diagnostic ZIP instead.
 
-Expected: Codex collects the requested diagnostics and submits them to the
-maintainers.
+Codex shows the path to the ZIP. You can save it even if your settings block uploads.
 
 #### Sign out with `/logout`
 
@@ -23054,6 +23514,15 @@ When a site needs to remember records or uploaded files, include that in your re
 Add player scores and avatar uploads to this game. Keep the scores and uploaded avatars between visits.
 ```
 
+#### Guided projects
+
+Try a walkthrough for a site you can build with your team.
+
+- [Manage creative requests from brief to delivery](https://developers.openai.com/use-cases/collect-and-schedule-team-requests)
+- [Build an onboarding portal](https://developers.openai.com/use-cases/build-personal-onboarding-plan)
+- [See which campaigns bring in leads](https://developers.openai.com/use-cases/compare-campaign-performance)
+- [Build a hackathon site](https://developers.openai.com/use-cases/build-workshop-practice-site)
+
 ### Data and connections
 
 Source: [Data and connections](https://learn.chatgpt.com/docs/sites/data-and-connections.md)
@@ -24015,34 +24484,17 @@ For current sharing and editor permissions, see [Creating and using ChatGPT Site
 
 Source: [Sites](https://learn.chatgpt.com/docs/sites.md)
 
-import {
-TextPrompt,
-Globe,
-Mcp,
-Folder,
-} from "@components/react/oai/platform/ui/Icon.react";
+Describe a website, web app, or game in ChatGPT or Codex, then use Sites to publish it. You can start with an idea, remix a coworker's site, or bring a compatible project you've already built.
 
-Sites lets you build, host, and share a website by describing it in ChatGPT or Codex. You can get started without writing any code. You can also host web apps, games, or a compatible project you've already built, without a separate deployment setup.
+#### Get started
 
-If you're part of an organization, Sites can give your team a place to find answers, explore results from a spreadsheet, or walk through a project kickoff. Start with the documents and data you already have, and ask for changes as you go.
-
-{
-"For current availability, pricing, plan information, and usage limits, visit our "
-}
-[{"Help Center"}](https://help.openai.com/en/articles/20001339)
-{"."}
+- [Create a site](https://learn.chatgpt.com/docs/sites/creating-a-site) from a prompt or [remix an existing site](https://learn.chatgpt.com/docs/sites/creating-a-site#start-from-an-existing-site-with-remix).
+- [Add data and connections](https://learn.chatgpt.com/docs/sites/data-and-connections) to save records, connect apps, or let visitors sign in.
+- [Publish and share](https://learn.chatgpt.com/docs/sites/publishing-and-sharing) your site with your audience or invite someone to edit.
+- [Manage a site](https://learn.chatgpt.com/docs/sites/managing-a-site) to review analytics, change its domain, or inspect saved versions.
+- Check [Usage and cost](https://learn.chatgpt.com/docs/sites/usage-and-cost) for your hosting allowance, rates, and a monthly cost estimate.
 
 #### Explore ways to use sites
-
-The examples below are just inspiration for what you can build with Sites. Explore a few common patterns, combine their features, or try an idea of your own.
-
-#### Sites use cases
-
-Here are some example use cases you can try with Sites.
-
-To build your first site, follow [Create a site](https://learn.chatgpt.com/docs/sites/creating-a-site) to describe what you need, review the result, and refine it.
-
-You can also use **Remix** to build on a useful site a coworker has already made. Keep the parts that fit your task and adapt the content and experience for your team. Learn how to [start from an existing site with Remix](https://learn.chatgpt.com/docs/sites/creating-a-site#start-from-an-existing-site-with-remix).
 
 #### Understand limits and unsupported uses
 
@@ -24059,17 +24511,21 @@ For current residency coverage and workspace requirements, see [Managing ChatGPT
 
 You can sell goods or services and collect payments through a third-party payment processor. Payment-card data must be collected and processed solely by that provider, not by your site or OpenAI. Other financial transactions remain prohibited. You're responsible for the integration, fulfillment, refunds, customer support, and applicable taxes. See the [Sites Terms](https://openai.com/policies/chatgpt-sites-terms/) for requirements.
 
-Don't use sites to process Protected Health Information; target children under 13 or the applicable age of digital consent; distribute malware; enable phishing; impersonate people or organizations; or otherwise violate OpenAI policies.
+Don't use sites to process Protected Health Information, target children under 13 or the applicable age of digital consent, distribute malware, enable phishing, impersonate people or organizations, or otherwise violate OpenAI policies.
 
-See [Creating and managing ChatGPT sites](https://help.openai.com/en/articles/20001339) for current limits and policy links.
+For availability and usage limits, see [Creating and managing ChatGPT sites](https://help.openai.com/en/articles/20001339) in the Help Center.
 
-#### Pricing
+### Usage and cost
 
-You can create as many Sites as you want. Once a Site is running, its traffic and storage count toward hosting usage. Building and editing a Site count toward your plan’s [Codex usage](https://learn.chatgpt.com/docs/pricing).
+Source: [Usage and cost](https://learn.chatgpt.com/docs/sites/usage-and-cost.md)
 
-#### What will my plan cover?
+Hosting is free through **December 31, 2026**. Starting **January 1, 2027**, Plus, Pro, and Business customers pay for hosting usage above their monthly allowance. Enterprise billing follows your organization’s agreement.
 
-On Plus, Pro, and Business, all your Sites share one monthly hosting allowance. It covers traffic and storage, regardless of how many Sites you publish.
+You can create as many sites as you want. Building and editing them count toward your plan’s [Codex usage](https://learn.chatgpt.com/docs/pricing). Hosting covers the traffic your sites receive and the storage they use.
+
+#### Monthly hosting allowances
+
+On Plus, Pro, and Business, all your sites share one monthly hosting allowance.
 
 | Plan                      | Monthly hosting allowance                             |
 | ------------------------- | ----------------------------------------------------- |
@@ -24078,64 +24534,31 @@ On Plus, Pro, and Business, all your Sites share one monthly hosting allowance. 
 | Business                  | 125 credits per seat                                  |
 | Enterprise (credit-based) | Draws from your organization’s contracted credit pool |
 
-For Enterprise customers with a dollar commitment, the proposed billing model prices Codex tokens and Sites hosting separately. Both charges would draw from the same commitment. For example, $10 of Codex usage and $2 of hosting would use $12 of the commitment.
-
-Traffic and storage contribute to hosting usage in the following ways.
-
-- **Traffic** is measured by the requests your Site handles, such as loading a page, image, or other resource. A page visit can generate multiple requests, typically 30–50, though the number varies by Site.
-- **Database storage** holds saved records, such as form responses. A Site with a database has a monthly base fee, even when the database is empty, plus usage for the data it stores.
-- **File storage** holds uploaded files, such as images or PDFs. Usage depends on how much you store and for how long.
-
-Hosting is free through December 31, 2026. Starting **January 1, 2027**, Plus,
-Pro, and Business customers will pay for hosting usage above their monthly
-allowance. Enterprise billing follows your organization’s agreement.
-
-Starting **December 1, 2026**, you’ll be able to view traffic and storage usage for each Site. Workspace admins will be able to compare usage across their workspace.
+If your Enterprise agreement uses a dollar commitment, Codex tokens and Sites hosting have separate rates. Both draw from the same commitment. For example, $10 of Codex usage and $2 of hosting use $12 of the commitment. Ask your account team for your hosting rates.
 
 #### Hosting usage rates
 
-The following rates are proposed to take effect on January 1, 2027. They show approximate usage in credits. For Enterprise agreements billed in dollars, ask your account team for hosting rates.
+Use these approximate credit rates to estimate hosting costs starting January 1, 2027.
 
-| What you use                                                       | Billing unit             | Approx. credits |
-| ------------------------------------------------------------------ | ------------------------ | --------------- |
-| Site without storage                                               | 1 Site per month         | 0               |
-| Site with storage, including an empty database                     | 1 Site per month         | 25              |
-| Traffic                                                            | 100,000 requests         | 16              |
-| Database storage (saved records, such as form responses)           | 1 GiB stored for a month | 150             |
-| File storage (uploaded files, such as images or PDFs)              | 1 GiB stored for a month | 3.75            |
-| Custom domain (domain registration costs extra)                    | 1 domain per month       | 25              |
-| Private connection (Enterprise only; a tunnel to a private system) | 1 tunnel per month       | 125             |
+| What you use                                             | Billing unit             | Approx. credits |
+| -------------------------------------------------------- | ------------------------ | --------------- |
+| Site without storage                                     | 1 Site per month         | 0               |
+| Site with storage, including an empty database           | 1 Site per month         | 25              |
+| Traffic                                                  | 100,000 requests         | 16              |
+| Database storage (saved records, such as form responses) | 1 GiB stored for a month | 150             |
+| File storage (uploaded files, such as images or PDFs)    | 1 GiB stored for a month | 3.75            |
+| Custom domain (domain registration costs extra)          | 1 domain per month       | 25              |
+| Tunnel to a private system (Enterprise only)             | 1 tunnel per month       | 125             |
 
-For example, a Site with an empty database uses approximately 25 credits per month before traffic. With 1 GiB of saved records for a full month, its base fee and database storage use approximately 175 credits, excluding traffic and files. One GiB is about 1.07 GB.
+A request loads a page, image, or other resource. One page visit typically generates 30–50 requests, depending on the site.
+
+A site with an empty database uses about 25 credits per month before traffic. If it stores 1 GiB of records for the full month, the base fee and database storage together use about 175 credits. One GiB is about 1.07 GB.
 
 #### Estimate your monthly cost
 
-Choose an example Site or adjust monthly requests, saved records, and uploaded files. Select your plan to compare this Site’s estimated hosting usage with your monthly allowance.
+Choose an example site or enter your monthly requests, database storage, and file storage. Select your plan to see how much of your hosting allowance the site would use.
 
-Estimates assume a full month of storage. Select **This Site has a database** to include its base fee even when saved records are zero. Custom domains and private connections cost extra, as listed in [Hosting usage rates](#hosting-usage-rates).
-
-#### Next up
-
-[
-
-      Describe, build, and refine a website in ChatGPT or Codex.
-
-](https://learn.chatgpt.com/docs/sites/creating-a-site)
-[
-
-      Choose storage, add sign-in, and connect apps to your site.
-
-](https://learn.chatgpt.com/docs/sites/data-and-connections)
-[
-
-      Review your site, choose its audience, and collaborate with editors.
-
-](https://learn.chatgpt.com/docs/sites/publishing-and-sharing)
-[
-
-      Review analytics, change domains and settings, and manage site versions.
-
-](https://learn.chatgpt.com/docs/sites/managing-a-site)
+Estimates assume a full month of storage. Select **This Site has a database** to include its base fee even when saved records are zero. For custom domains and private connections, add the charges listed under [Hosting usage rates](#hosting-usage-rates).
 
 ### Visualizations
 
@@ -24927,6 +25350,10 @@ Best practices:
 
 #### Decoupled example
 
+For Go, use `github.com/modelcontextprotocol/go-sdk/mcp` at version `v1.8.0`. Install `esbuild` and `@modelcontextprotocol/ext-apps` with your browser dependencies. Bundle the browser component below with `npm exec -- esbuild dice-widget.ts --bundle --format=esm --outfile=dice-widget.js`, then run the Go server from that directory.
+
+For the Ruby server, install the `mcp` gem at version `1.10.0`. Build the browser component as described below, then run the server from the project directory.
+
 Example (decoupled dice tools):
 
 ```typescript
@@ -25027,6 +25454,140 @@ server.registerTool(
 export default server;
 ```
 
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
+	"log"
+	"math/rand/v2"
+	"os"
+	"regexp"
+)
+
+type rollInput struct {
+	Sides int `json:"sides"`
+}
+type die struct {
+	Sides int `json:"sides"`
+	Value int `json:"value"`
+}
+
+func main() {
+	server := mcp.NewServer(&mcp.Implementation{Name: "Decoupled dice", Version: "1.0.0"}, nil)
+	mcp.AddTool(server, &mcp.Tool{Name: "roll_dice", Description: "Roll a die without opening a widget.", InputSchema: map[string]any{"type": "object", "properties": map[string]any{"sides": map[string]any{"type": "integer", "minimum": 2}}, "required": []string{"sides"}}}, func(_ context.Context, _ *mcp.CallToolRequest, input rollInput) (*mcp.CallToolResult, die, error) {
+		return &mcp.CallToolResult{Content: []mcp.Content{}}, die{Sides: input.Sides, Value: rand.IntN(input.Sides) + 1}, nil
+	})
+	mcp.AddTool(server, &mcp.Tool{Name: "render_dice_widget", Description: "Show a previously rolled die.", Meta: mcp.Meta{"ui": map[string]any{"resourceUri": "ui://widget/dice.html"}}, InputSchema: map[string]any{"type": "object", "properties": map[string]any{"sides": map[string]any{"type": "integer", "minimum": 2}, "value": map[string]any{"type": "integer", "minimum": 1}}, "required": []string{"sides", "value"}}}, func(_ context.Context, _ *mcp.CallToolRequest, input die) (*mcp.CallToolResult, die, error) {
+		if input.Value > input.Sides {
+			return nil, die{}, fmt.Errorf("value exceeds the die's sides")
+		}
+		return &mcp.CallToolResult{Content: []mcp.Content{}}, input, nil
+	})
+	// Build the browser component first, then run from the project root.
+	script, err := os.ReadFile("dice-widget.js")
+	if err != nil {
+		log.Fatal(err)
+	}
+	escaped := regexp.MustCompile(`(?i)</script`).ReplaceAllLiteralString(string(script), `<\/script`)
+	html := `<!doctype html><html lang="en"><meta charset="utf-8"><title>Dice</title><body><div id="root"></div><script type="module">` + escaped + `</script></body></html>`
+	server.AddResource(&mcp.Resource{URI: "ui://widget/dice.html", Name: "widget", MIMEType: "text/html;profile=mcp-app"}, func(context.Context, *mcp.ReadResourceRequest) (*mcp.ReadResourceResult, error) {
+		return &mcp.ReadResourceResult{Contents: []*mcp.ResourceContents{{URI: "ui://widget/dice.html", MIMEType: "text/html;profile=mcp-app", Text: html}}}, nil
+	})
+	if err := server.Run(context.Background(), &mcp.StdioTransport{}); err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+```ruby
+require "mcp"
+
+class RollDice < MCP::Tool
+  tool_name "roll_dice"
+  description "Roll a die without opening a widget."
+  input_schema(
+    properties: {
+      sides: {
+        type: "integer",
+        minimum: 2
+      }
+    }, required: ["sides"]
+  )
+
+  def self.call(sides:, server_context:)
+    MCP::Tool::Response.new(
+      [], structured_content: {
+        sides: sides,
+        value: rand(1..sides)
+      }
+    )
+  end
+end
+
+class RenderDiceWidget < MCP::Tool
+  tool_name "render_dice_widget"
+  description "Show a previously rolled die."
+  input_schema(
+    properties: {
+      sides: {
+        type: "integer",
+        minimum: 2
+      },
+      value: {
+        type: "integer",
+        minimum: 1
+      }
+    },
+    required: ["sides", "value"]
+  )
+  meta(ui: { resourceUri: "ui://widget/dice.html" })
+
+  def self.call(sides:, value:, server_context:)
+    if value > sides
+      return MCP::Tool::Response.new(
+        [
+          {
+            type: "text",
+            text: "Value exceeds the die's sides."
+          }
+        ], error: true
+      )
+    end
+
+    MCP::Tool::Response.new(
+      [], structured_content: {
+        sides: sides,
+        value: value
+      }
+    )
+  end
+end
+
+# Build the browser component first, then run this server from the project root.
+script = File.read("dice-widget.js").gsub(%r{</script}i) { '<\/script' }
+html = '<!doctype html><html lang="en"><meta charset="utf-8">' \
+       '<title>Dice</title><body><div id="root"></div>' \
+       "<script type=\"module\">#{script}</script></body></html>"
+resource = MCP::Resource.define(uri: "ui://widget/dice.html", name: "widget", mime_type: "text/html;profile=mcp-app") do
+  [
+    MCP::Resource::TextContents.new(
+      uri: "ui://widget/dice.html", mime_type: "text/html;profile=mcp-app", text: html
+    )
+  ]
+end
+
+server = MCP::Server.new(
+  name: "Decoupled dice", version: "1.0.0", tools: [RollDice, RenderDiceWidget],
+  resources: [
+    resource
+  ]
+)
+MCP::Server::Transports::StdioTransport.new(server).open
+```
+
 Install `esbuild` with the server dependencies, then save this browser code as
 `dice-widget.ts` beside the server file:
 
@@ -25083,6 +25644,8 @@ rerollButton.onclick = async () => {
 await app.connect();
 rerollButton.disabled = false;
 ```
+
+For Ruby, bundle `dice-widget.ts` into `dice-widget.js` with `npm exec -- esbuild dice-widget.ts --bundle --format=esm --outfile=dice-widget.js`. Install `esbuild` and `@modelcontextprotocol/ext-apps` with your browser dependencies. The Ruby server reads that compiled file.
 
 #### Manage state
 
@@ -25395,6 +25958,94 @@ registerAppResource(
 );
 ```
 
+```go
+package main
+
+import (
+	"context"
+	"log"
+	"os"
+	"regexp"
+
+	"github.com/modelcontextprotocol/go-sdk/mcp"
+)
+
+func main() {
+	server := mcp.NewServer(&mcp.Implementation{Name: "docs-example", Version: "1.0.0"}, nil)
+	mcp.AddTool(server, &mcp.Tool{Name: "open_project_board", Title: "Open project board", Meta: mcp.Meta{"ui": map[string]any{"resourceUri": "ui://project-board/v1.html"}}}, func(context.Context, *mcp.CallToolRequest, struct{}) (*mcp.CallToolResult, any, error) {
+		return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: "Review the tasks in the project board."}}}, nil, nil
+	})
+	// Build the browser component first, then run from the project root.
+	script, err := os.ReadFile("web/dist/component.js")
+	if err != nil {
+		log.Fatal(err)
+	}
+	escaped := regexp.MustCompile(`(?i)</script`).ReplaceAllLiteralString(string(script), `<\/script`)
+	html := `<!doctype html><html lang="en"><meta charset="utf-8"><title>Project board</title><body><div id="root"></div><script type="module">` + escaped + `</script></body></html>`
+	server.AddResource(&mcp.Resource{URI: "ui://project-board/v1.html", Name: "widget", MIMEType: "text/html;profile=mcp-app"}, func(context.Context, *mcp.ReadResourceRequest) (*mcp.ReadResourceResult, error) {
+		return &mcp.ReadResourceResult{Contents: []*mcp.ResourceContents{{URI: "ui://project-board/v1.html", MIMEType: "text/html;profile=mcp-app", Text: html, Meta: mcp.Meta{"ui": map[string]any{"prefersBorder": true, "domain": "https://example.com", "csp": map[string]any{"connectDomains": []string{"https://api.example.com"}, "resourceDomains": []string{"https://static.example.com"}}}}}}}, nil
+	})
+	if err := server.Run(context.Background(), &mcp.StdioTransport{}); err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+```ruby
+require "mcp"
+
+class OpenProjectBoard < MCP::Tool
+  tool_name "open_project_board"
+  title "Open project board"
+  input_schema(properties: {})
+  meta(ui: { resourceUri: "ui://project-board/v1.html" })
+
+  def self.call(server_context:)
+    MCP::Tool::Response.new(
+      [
+        {
+          type: "text",
+          text: "Review the tasks in the project board."
+        }
+      ]
+    )
+  end
+end
+
+# Build the browser component first, then run this server from the project root.
+script = File.read("web/dist/component.js").gsub(%r{</script}i) { '<\/script' }
+html = '<!doctype html><html lang="en"><meta charset="utf-8">' \
+       '<title>Project board</title><body><div id="root"></div>' \
+       "<script type=\"module\">#{script}</script></body></html>"
+resource = MCP::Resource.define(uri: "ui://project-board/v1.html", name: "widget", mime_type: "text/html;profile=mcp-app") do
+  [
+    MCP::Resource::TextContents.new(
+      uri: "ui://project-board/v1.html", mime_type: "text/html;profile=mcp-app", text: html,
+      meta: {
+        ui: {
+          prefersBorder: true,
+
+          domain: "https://example.com",
+          csp: {
+            connectDomains: ["https://api.example.com"],
+            resourceDomains: ["https://static.example.com"]
+          }
+        }
+      }
+    )
+  ]
+end
+
+server = MCP::Server.new(
+  name: "docs-example", version: "1.0.0", tools: [OpenProjectBoard], resources: [resource]
+)
+MCP::Server::Transports::StdioTransport.new(server).open
+```
+
+For Go, use `github.com/modelcontextprotocol/go-sdk/mcp` at version `v1.8.0`. Build `web/dist/component.js` in the preceding steps, then run the Go server from the project root.
+
+For Ruby, install the `mcp` gem at version `1.10.0` and run the server from the project root after building `web/dist/component.js` in the preceding steps.
+
 Associate the resource URI with only the tools that should render the
 component. For broader MCP Apps compatibility, use `_meta.ui.resourceUri`.
 ChatGPT also honors `_meta["openai/outputTemplate"]` as a compatibility alias.
@@ -25414,12 +26065,13 @@ Declare the exact domains the component connects to or loads resources from:
 Nested frames are blocked by default. Keep each allowlist as narrow as possible.
 The plugin review process checks the declared policy against the UI behavior.
 
-You can embed an existing editor or admin interface from your MCP server's own
-registrable domain. For example, a server at `https://api.example.com/mcp` can
-declare `https://app.example.com` in `frameDomains`. Provide the required
-justification at submission and follow the
-[iframe policy](https://developers.openai.com/plugins/plugin-guidelines#iframes-and-embedded-pages), including
-its restrictions on shared hosting and its review requirements.
+Plugins with UI can embed pages from their MCP server’s own registrable domain, including full existing editors and admin interfaces. For example, a server at `https://api.example.com/mcp` can embed `https://app.example.com`: both use the registrable domain `example.com`. Separate tenants on a shared hosting service count as different domains; using the same hosting provider does not establish ownership.
+
+Declare each required iframe origin in the resource CSP using `_meta.ui.csp.frameDomains` (or the legacy `_meta["openai/widgetCSP"].frame_domains`). For third-party domains, iframe embeds should be limited to cases where the embedded experience is essential.
+
+You must still provide a justification [when submitting a plugin that uses iframes](https://developers.openai.com/plugins/deploy/submission#complete-review-information). Explain what each embedded page does, why the plugin embeds it, and who controls its domain. Iframe use can require additional review or escalation and may lead to slower approval or rejection if the content cannot be assessed. Sharing the MCP server’s domain does not guarantee approval.
+
+All other plugin requirements still apply to embedded pages, including the [checkout](https://developers.openai.com/plugins/plugin-guidelines#5.3) and [privacy](https://developers.openai.com/plugins/plugin-guidelines#4) requirements.
 
 Component UI templates are the recommended path for production.
 
@@ -26839,7 +27491,13 @@ Alex — Moonwaffle work:     prf_8d7e4b19
 
 These example IDs do not encode profile labels or internal relationships. They are persisted once per profile and reused across reconnection, token refresh, and changes to email or display name.
 
-**Build the response from the authenticated profile.** This TypeScript example shows handler logic you can connect to your MCP SDK. `loadAuthenticatedProfile` is your application’s integration code: it validates the request credentials, enforces their permissions, and retrieves the corresponding profile’s persisted ID and display metadata. `requestContext` comes from your server’s request handling; it is not a model-supplied tool argument.
+**Build the response from the authenticated profile.** These examples show handler logic you can connect to your MCP SDK.
+
+`loadAuthenticatedProfile` is your application’s integration code: it validates the request credentials, enforces the permissions associated with those credentials, and retrieves the corresponding profile’s persisted ID and display metadata. `requestContext` comes from your server’s request handling; it is not a model-supplied tool argument.
+
+`load_authenticated_profile` is your application’s integration code: it validates the request credentials, enforces the permissions associated with those credentials, and retrieves the corresponding profile’s persisted ID and display metadata. `request_context` comes from your server’s request handling; it is not a model-supplied tool argument.
+
+`loadAuthenticatedProfile` validates the request credentials and loads the corresponding persisted profile. Pass the token from your server's request context, not from model-supplied tool arguments. The complete local example uses `github.com/golang-jwt/jwt/v5` and a temporary profile file; connect your production handler to your auth provider and persistent storage.
 
 ```typescript
 async function getProfile(requestContext: { token: string }) {
@@ -26873,7 +27531,68 @@ async function getProfile(requestContext: { token: string }) {
 }
 ```
 
-Register this handler with the metadata declaration and input/output schemas above. `loadAuthenticatedProfile` must resolve the same stored profile for equivalent credentials and after reconnection. It must not create a fresh profile ID for each OAuth grant or session. All other tools must use the request’s credentials to enforce the same profile’s permissions.
+```go
+func (service profileService) getProfile(token string) (map[string]any, error) {
+	account, err := service.loadAuthenticatedProfile(token)
+	if err != nil {
+		return nil, err
+	}
+	id, ok := account["profileId"].(string)
+	if !ok || strings.TrimSpace(id) == "" {
+		return map[string]any{"isError": true, "content": []map[string]string{{"type": "text", "text": "Profile identity unavailable."}}}, nil
+	}
+	// Return the persisted ID unchanged, including across repeated requests.
+	profile := map[string]string{"id": id}
+	for _, field := range []string{"name", "email", "nickname"} {
+		if value, ok := account[field].(string); ok {
+			profile[field] = value
+		}
+	}
+	text, err := json.Marshal(profile)
+	if err != nil {
+		return nil, err
+	}
+	return map[string]any{"isError": false, "structuredContent": profile, "content": []map[string]string{{"type": "text", "text": string(text)}}}, nil
+}
+```
+
+```ruby
+require "json"
+
+def get_profile(request_context)
+  account = load_authenticated_profile(request_context.fetch(:token))
+  id = account["profileId"]
+  unless id.is_a?(String) && !id.strip.empty?
+    return {
+      isError: true,
+      content: [
+        {
+          type: "text",
+          text: "Profile identity unavailable."
+        }
+      ]
+    }
+  end
+
+  # Return the persisted ID unchanged, including across repeated requests.
+  profile = { id: id }
+  %w[name email nickname].each do |field|
+    profile[field.to_sym] = account[field] if account[field].is_a?(String)
+  end
+  {
+    isError: false,
+    structuredContent: profile,
+    content: [
+      {
+        type: "text",
+        text: JSON.generate(profile)
+      }
+    ]
+  }
+end
+```
+
+Register this handler with the metadata declaration and input/output schemas above. Your profile lookup must resolve the same stored profile for equivalent credentials and after reconnection. It must not create a fresh profile ID for each OAuth grant or session. All other tools must use the request’s credentials to enforce the same profile’s permissions.
 
 **Verify identity behavior:**
 
@@ -26913,7 +27632,7 @@ Triggering the tool-level OAuth flow requires both metadata (`securitySchemes` a
 
    If you omit the array entirely, the tool inherits whatever default the server advertises. Declaring both `noauth` and `oauth2` tells ChatGPT it can start with anonymous calls but that linking unlocks privileged behavior. Regardless of what you signal to the client, your server must still verify the token, scopes, and audience on every invocation.
 
-   Example (public + optional auth)—TypeScript SDK
+   Example: public tool with optional authentication
 
    ```typescript
    import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -26948,7 +27667,7 @@ structuredContent: {},
 
 ````
 
-   Example (auth required)—TypeScript SDK
+   Example: tool that requires authentication
 
    ```typescript
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -27150,6 +27869,10 @@ npm install @modelcontextprotocol/sdk zod
 pip install mcp
 ```
 
+For the Ruby examples, use Ruby 3.3 and install `mcp` version `1.10.0`, `rackup` version `2.3`, and `webrick`. Save one complete server example as `main.rb`, then run `ruby main.rb`. It listens for Streamable HTTP requests at `http://localhost:3000/mcp`.
+
+For the Go examples, use Go 1.26 or later and install `github.com/modelcontextprotocol/go-sdk` version `v1.8.0` in your Go module. Save one complete server example as `main.go`, then run `go run .`. It listens for Streamable HTTP requests at `http://localhost:3000/mcp`.
+
 #### Create the server
 
 Create an MCP server with a stable name and version:
@@ -27161,6 +27884,71 @@ const server = new McpServer({
   name: "acme-projects",
   version: "1.0.0",
 });
+```
+
+```go
+package main
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
+	"log"
+	"net"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+)
+
+func main() {
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel()
+	server := mcp.NewServer(&mcp.Implementation{Name: "acme-projects", Version: "1.0.0"}, nil)
+	handler := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server { return server }, &mcp.StreamableHTTPOptions{Stateless: true, JSONResponse: true})
+	mux := http.NewServeMux()
+	mux.Handle("/mcp", handler)
+	port := "3000"
+	listener, err := net.Listen("tcp", "127.0.0.1:"+port)
+	if err != nil {
+		log.Fatal(err)
+	}
+	httpServer := &http.Server{Handler: mux, ReadHeaderTimeout: 5 * time.Second}
+	fmt.Println("Listening on http://" + listener.Addr().String())
+	shutdownDone := make(chan struct{})
+	go func() {
+		defer close(shutdownDone)
+		<-ctx.Done()
+		shutdownCtx, stop := context.WithTimeout(context.Background(), 5*time.Second)
+		defer stop()
+		if err := httpServer.Shutdown(shutdownCtx); err != nil {
+			log.Print(err)
+		}
+	}()
+	if err := httpServer.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		log.Fatal(err)
+	}
+	<-shutdownDone
+}
+```
+
+```ruby
+require "mcp"
+require "rackup"
+require "rackup/handler/webrick"
+
+server = MCP::Server.new(
+  name: "acme-projects",
+  version: "1.0.0"
+)
+transport = MCP::Server::Transports::StreamableHTTPTransport.new(server, stateless: true, enable_json_response: true)
+app = Rack::URLMap.new("/mcp" => transport)
+Rackup::Handler::WEBrick.run(app, Host: "127.0.0.1", Port: Integer(ENV.fetch("PORT", "3000"))) do |http_server|
+  trap("INT") { http_server.shutdown }
+  trap("TERM") { http_server.shutdown }
+end
 ```
 
 MCP servers can also return an
@@ -27181,6 +27969,72 @@ const server = new McpServer(
       "Before updating a project, call get_project to confirm its ID and current status.",
   }
 );
+```
+
+```go
+package main
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
+	"log"
+	"net"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+)
+
+func main() {
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel()
+	server := mcp.NewServer(&mcp.Implementation{Name: "acme-projects", Version: "1.0.0"}, &mcp.ServerOptions{Instructions: "Before updating a project, call get_project to confirm its ID and current status."})
+	handler := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server { return server }, &mcp.StreamableHTTPOptions{Stateless: true, JSONResponse: true})
+	mux := http.NewServeMux()
+	mux.Handle("/mcp", handler)
+	port := "3000"
+	listener, err := net.Listen("tcp", "127.0.0.1:"+port)
+	if err != nil {
+		log.Fatal(err)
+	}
+	httpServer := &http.Server{Handler: mux, ReadHeaderTimeout: 5 * time.Second}
+	fmt.Println("Listening on http://" + listener.Addr().String())
+	shutdownDone := make(chan struct{})
+	go func() {
+		defer close(shutdownDone)
+		<-ctx.Done()
+		shutdownCtx, stop := context.WithTimeout(context.Background(), 5*time.Second)
+		defer stop()
+		if err := httpServer.Shutdown(shutdownCtx); err != nil {
+			log.Print(err)
+		}
+	}()
+	if err := httpServer.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		log.Fatal(err)
+	}
+	<-shutdownDone
+}
+```
+
+```ruby
+require "mcp"
+require "rackup"
+require "rackup/handler/webrick"
+
+server = MCP::Server.new(
+  name: "acme-projects",
+  version: "1.0.0",
+  instructions: "Before updating a project, call get_project to confirm its ID and current status."
+)
+transport = MCP::Server::Transports::StreamableHTTPTransport.new(server, stateless: true, enable_json_response: true)
+app = Rack::URLMap.new("/mcp" => transport)
+Rackup::Handler::WEBrick.run(app, Host: "127.0.0.1", Port: Integer(ENV.fetch("PORT", "3000"))) do |http_server|
+  trap("INT") { http_server.shutdown }
+  trap("TERM") { http_server.shutdown }
+end
 ```
 
 #### Define tools from user goals
@@ -27252,6 +28106,157 @@ server.registerTool(
     };
   }
 );
+```
+
+```go
+package main
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
+	"log"
+	"net"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+)
+
+type listProjectsInput struct {
+	Status string `json:"status,omitempty"`
+}
+type project struct {
+	ID     string `json:"id"`
+	Name   string `json:"name"`
+	Status string `json:"status"`
+}
+type listProjectsOutput struct {
+	Projects []project `json:"projects"`
+}
+
+func main() {
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel()
+	server := mcp.NewServer(&mcp.Implementation{Name: "docs-example", Version: "1.0.0"}, nil)
+	closed := false
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "list_projects",
+		Description: "Use this when the user wants to find or review projects in their Acme workspace.",
+		InputSchema: map[string]any{"type": "object", "properties": map[string]any{
+			"status": map[string]any{"type": "string", "enum": []string{"active", "archived"}},
+		}},
+		Annotations: &mcp.ToolAnnotations{ReadOnlyHint: true, OpenWorldHint: &closed, DestructiveHint: &closed},
+	}, func(_ context.Context, _ *mcp.CallToolRequest, input listProjectsInput) (*mcp.CallToolResult, listProjectsOutput, error) {
+		// Local example data; replace this with your application data.
+		projects := []project{{ID: "project-1", Name: "Website", Status: "active"}, {ID: "project-2", Name: "Launch", Status: "archived"}}
+		selected := []project{}
+		for _, p := range projects {
+			if input.Status == "" || input.Status == p.Status {
+				selected = append(selected, p)
+			}
+		}
+		result := &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: fmt.Sprintf("Found %d projects.", len(selected))}}}
+		return result, listProjectsOutput{Projects: selected}, nil
+	})
+	handler := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server { return server }, &mcp.StreamableHTTPOptions{Stateless: true, JSONResponse: true})
+	mux := http.NewServeMux()
+	mux.Handle("/mcp", handler)
+	port := "3000"
+	listener, err := net.Listen("tcp", "127.0.0.1:"+port)
+	if err != nil {
+		log.Fatal(err)
+	}
+	httpServer := &http.Server{Handler: mux, ReadHeaderTimeout: 5 * time.Second}
+	fmt.Println("Listening on http://" + listener.Addr().String())
+	shutdownDone := make(chan struct{})
+	go func() {
+		defer close(shutdownDone)
+		<-ctx.Done()
+		shutdownCtx, stop := context.WithTimeout(context.Background(), 5*time.Second)
+		defer stop()
+		if err := httpServer.Shutdown(shutdownCtx); err != nil {
+			log.Print(err)
+		}
+	}()
+	if err := httpServer.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		log.Fatal(err)
+	}
+	<-shutdownDone
+}
+```
+
+```ruby
+require "mcp"
+require "rackup"
+require "rackup/handler/webrick"
+
+class ListProjects < MCP::Tool
+  tool_name "list_projects"
+  description "Use this when the user wants to find or review projects in their Acme workspace."
+  input_schema(
+    properties: {
+      status: {
+        type: "string",
+        enum: ["active", "archived"]
+      }
+    }
+  )
+  output_schema(
+    type: "object",
+    properties: {
+      projects: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            name: { type: "string" },
+            status: { type: "string" }
+          },
+          required: ["id", "name", "status"]
+        }
+      }
+    },
+    required: ["projects"]
+  )
+  annotations(read_only_hint: true, open_world_hint: false, destructive_hint: false, idempotent_hint: nil)
+
+  def self.call(server_context:, status: nil)
+    # Local example data; replace this with your application data.
+    projects = [
+      {
+        id: "project-1",
+        name: "Website",
+        status: "active"
+      },
+      {
+        id: "project-2",
+        name: "Launch",
+        status: "archived"
+      }
+    ].select { |project| status.nil? || project[:status] == status }
+    MCP::Tool::Response.new(
+      [
+        {
+          type: "text",
+          text: "Found #{projects.length} projects."
+        }
+      ],
+      structured_content: { projects: projects }
+    )
+  end
+end
+
+server = MCP::Server.new(name: "docs-example", version: "1.0.0", tools: [ListProjects])
+transport = MCP::Server::Transports::StreamableHTTPTransport.new(server, stateless: true, enable_json_response: true)
+app = Rack::URLMap.new("/mcp" => transport)
+Rackup::Handler::WEBrick.run(app, Host: "127.0.0.1", Port: Integer(ENV.fetch("PORT", "3000"))) do |http_server|
+  trap("INT") { http_server.shutdown }
+  trap("TERM") { http_server.shutdown }
+end
 ```
 
 #### Return useful results without UI
@@ -28935,35 +29940,39 @@ Hooks run at different points in a conversation:
 
 #### Where Codex looks for hooks
 
-Codex discovers hooks next to active config layers in either of these forms:
+Local Codex looks for `hooks.json` in the locations below. In each directory,
+you can also declare hooks inline under `[hooks]` in `config.toml`.
 
-- `hooks.json`
-- inline `[hooks]` tables inside `config.toml`
+| Scope                    | `hooks.json` location                   |
+| ------------------------ | --------------------------------------- |
+| System (macOS and Linux) | `/etc/codex/hooks.json`                 |
+| System (Windows)         | `%ProgramData%\OpenAI\Codex\hooks.json` |
+| User                     | `$CODEX_HOME/hooks.json`                |
+| Trusted project          | `.codex/hooks.json`                     |
 
-Installed plugins can also bundle lifecycle config through their plugin
-manifest or a default `hooks/hooks.json` file. See [Build
+If `CODEX_HOME` is unset, the user file is `~/.codex/hooks.json` on macOS and
+Linux and `%USERPROFILE%\.codex\hooks.json` on Windows.
+
+Codex discovers a standalone `hooks.json` without a sibling `config.toml` or a
+reference in `requirements.toml`. If you move or remove the system file, Codex
+skips that source the next time it loads hooks. Use file and directory
+permissions to control who can edit or move it. Administrators can also declare
+hooks directly in [`requirements.toml`](#managed-hooks-in-local-codex).
+
+Codex checks `.codex` directories from the project root to the working directory
+and loads hooks only from trusted project layers. In a linked Git worktree, a
+project layer can read hooks from the corresponding directory in the main
+checkout. User and system hooks can still load in untrusted projects.
+
+Enabled plugins can also supply [bundled hooks](#plugin-bundled-hooks) through
+their manifest or, by default, `hooks/hooks.json` in the plugin root. See [Build
 plugins](https://developers.openai.com/plugins/build/plugins#bundled-mcp-servers-and-lifecycle-hooks) for the
 plugin packaging rules.
 
-In practice, the four most useful locations are:
-
-- `~/.codex/hooks.json`
-- `~/.codex/config.toml`
-- `/.codex/hooks.json`
-- `/.codex/config.toml`
-
-If more than one hook source exists, Codex loads all matching hooks.
-Higher-precedence config layers don't replace lower-precedence hooks.
-If a single layer contains both `hooks.json` and inline `[hooks]`, Codex
-merges them and warns at startup. Prefer one representation per layer.
-
-Codex can also discover hooks bundled with enabled plugins. Plugin-bundled
-hooks load alongside other hook sources and use the same trust-review flow as
-other non-managed hooks.
-
-Project-local hooks load only when the project `.codex/` layer is trusted. In
-untrusted projects, Codex still loads user and system hooks from their own
-active config layers.
+Codex combines matching hooks across sources. If two files register the same
+command for an event, Codex can run it twice when that event occurs. When a
+layer declares hooks in both `hooks.json` and `config.toml`, Codex loads both
+and warns at startup. Prefer one format per layer.
 
 #### Review and trust hooks
 
@@ -29271,8 +30280,9 @@ statusMessage = "Checking managed Bash command"
 
 Notes for managed hooks:
 
-- `managed_dir` is used on macOS and Linux.
-- `windows_managed_dir` is used on Windows.
+- `managed_dir` (macOS and Linux) and `windows_managed_dir` (Windows) describe
+  where you install scripts for the hooks declared in `requirements.toml`.
+  Setting either directory doesn't add a `hooks.json` search location.
 - Codex doesn't distribute the scripts in `managed_dir`; your enterprise
   tooling must install and update them separately.
 - Managed hook commands should use absolute script paths under the configured
@@ -30327,6 +31337,203 @@ export async function sendEvent(
 }
 ```
 
+```go
+package main
+
+import (
+	"bytes"
+	"context"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"net"
+	"net/http"
+	"net/netip"
+	"net/url"
+	"os"
+	"strconv"
+	"strings"
+	"time"
+)
+
+type Subscription struct{ ID, URL, Secret string }
+type DeliveryResult struct {
+	Accepted bool `json:"accepted"`
+	Status   int  `json:"status"`
+}
+
+func sendEvent(ctx context.Context, subscription Subscription, event map[string]any) (DeliveryResult, error) {
+	body, err := json.Marshal(event)
+	if err != nil {
+		return DeliveryResult{}, err
+	}
+	if len(body) > 256*1024 {
+		return DeliveryResult{}, errors.New("Event payload exceeds 256 KiB")
+	}
+	id, ok := event["eventId"].(string)
+	if !ok || id == "" {
+		return DeliveryResult{}, errors.New("Missing eventId")
+	}
+	target, err := url.Parse(subscription.URL)
+	if err != nil || target.Host == "" || target.Scheme != "https" || target.User != nil || target.Fragment != "" {
+		return DeliveryResult{}, errors.New("Expected an HTTPS subscription URL without credentials or a fragment")
+	}
+	key, err := base64.StdEncoding.Strict().DecodeString(strings.TrimPrefix(subscription.Secret, "whsec_"))
+	if err != nil || len(key) == 0 {
+		return DeliveryResult{}, errors.New("Invalid webhook secret")
+	}
+	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
+	mac := hmac.New(sha256.New, key)
+	mac.Write([]byte(id + "." + timestamp + "."))
+	mac.Write(body)
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, target.String(), bytes.NewReader(body))
+	if err != nil {
+		return DeliveryResult{}, err
+	}
+	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("webhook-id", id)
+	request.Header.Set("webhook-timestamp", timestamp)
+	request.Header.Set("webhook-signature", "v1,"+base64.StdEncoding.EncodeToString(mac.Sum(nil)))
+	request.Header.Set("X-MCP-Subscription-Id", subscription.ID)
+	response, err := webhookClient.Do(request)
+	if err != nil {
+		return DeliveryResult{}, err
+	}
+	defer response.Body.Close()
+	if response.StatusCode >= 300 && response.StatusCode < 400 {
+		return DeliveryResult{}, errors.New("Webhook redirects are not allowed")
+	}
+	return DeliveryResult{Accepted: response.StatusCode >= 200 && response.StatusCode < 300, Status: response.StatusCode}, nil
+}
+
+// Resolve and validate at connection time, then dial that exact IP. TLS still
+// verifies the original URL hostname. Proxies and redirects are not permitted.
+func publicAddress(ip netip.Addr) bool {
+	ip = ip.Unmap()
+	if !ip.IsGlobalUnicast() || ip.IsPrivate() || ip.IsLoopback() || ip.IsLinkLocalUnicast() {
+		return false
+	}
+	for _, cidr := range []string{"0.0.0.0/8", "100.64.0.0/10", "192.0.0.0/24", "192.0.2.0/24", "192.88.99.0/24", "198.18.0.0/15", "198.51.100.0/24", "203.0.113.0/24", "240.0.0.0/4", "2001::/23", "2001:db8::/32", "2002::/16", "3fff::/20"} {
+		if netip.MustParsePrefix(cidr).Contains(ip) {
+			return false
+		}
+	}
+	return ip.Is4() || netip.MustParsePrefix("2000::/3").Contains(ip)
+}
+
+type lookupIPs func(context.Context, string, string) ([]netip.Addr, error)
+type dialIP func(context.Context, string, string) (net.Conn, error)
+
+func validatedDial(lookup lookupIPs, dial dialIP) dialIP {
+	return func(ctx context.Context, network, address string) (net.Conn, error) {
+		host, port, err := net.SplitHostPort(address)
+		if err != nil {
+			return nil, err
+		}
+		ips, err := lookup(ctx, "ip", host)
+		if err != nil {
+			return nil, err
+		}
+		if len(ips) == 0 {
+			return nil, errors.New("Webhook hostname has no addresses")
+		}
+		for _, ip := range ips {
+			if !publicAddress(ip) {
+				return nil, errors.New("Webhook destination is not public")
+			}
+		}
+		// Do not resolve the hostname again in the dialer (DNS rebinding).
+		var failures []error
+		for _, ip := range ips {
+			connection, err := dial(ctx, network, net.JoinHostPort(ip.String(), port))
+			if err == nil {
+				return connection, nil
+			}
+			failures = append(failures, err)
+			if ctx.Err() != nil {
+				break
+			}
+		}
+		return nil, errors.Join(failures...)
+	}
+}
+
+var webhookClient = &http.Client{
+	Timeout:       10 * time.Second,
+	CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
+	Transport: &http.Transport{
+		Proxy:               nil,
+		DialContext:         validatedDial(net.DefaultResolver.LookupNetIP, (&net.Dialer{Timeout: 5 * time.Second}).DialContext),
+		TLSHandshakeTimeout: 5 * time.Second,
+	},
+}
+
+// Supply one JSON object on standard input with subscription (ID, URL, Secret)
+// and event fields. Keep the secret out of command-line arguments and logs.
+func run() error {
+	var input struct {
+		Subscription Subscription   `json:"subscription"`
+		Event        map[string]any `json:"event"`
+	}
+	if err := json.NewDecoder(io.LimitReader(os.Stdin, 2*1024*1024)).Decode(&input); err != nil {
+		return err
+	}
+	result, err := sendEvent(context.Background(), input.Subscription, input.Event)
+	if err != nil {
+		return err
+	}
+	return json.NewEncoder(os.Stdout).Encode(result)
+}
+func main() {
+	if err := run(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+}
+```
+
+```ruby
+require "standardwebhooks"
+require "net/http"
+require "json"
+require "uri"
+
+def send_event(subscription, event)
+  body = JSON.generate(event)
+  raise ArgumentError, "Event payload exceeds 256 KiB" if body.bytesize > 256 * 1024
+
+  signed_at = Time.now
+  event_id = event.fetch(:eventId)
+  signer = StandardWebhooks::Webhook.new(subscription.fetch(:secret))
+  uri = URI.parse(subscription.fetch(:url))
+  raise ArgumentError, "Expected an HTTP or HTTPS subscription URL" unless uri.is_a?(URI::HTTP)
+
+  request = Net::HTTP::Post.new(uri)
+  request["Content-Type"] = "application/json"
+  request["webhook-id"] = event_id
+  request["webhook-timestamp"] = signed_at.to_i.to_s
+  request["webhook-signature"] = signer.sign(event_id, signed_at.to_i, body)
+  request["X-MCP-Subscription-Id"] = subscription.fetch(:id)
+  request.body = body
+  response = Net::HTTP.start(
+    uri.host, uri.port, use_ssl: uri.scheme == "https",
+    open_timeout: 10, read_timeout: 10, write_timeout: 10
+  ) do |http|
+    http.request(request)
+  end
+  raise "Webhook redirects are not allowed" if response.is_a?(Net::HTTPRedirection)
+
+  {
+    accepted: response.is_a?(Net::HTTPSuccess),
+    status: response.code.to_i
+  }
+end
+```
+
 Set `subscription.url` and `subscription.secret` from the subscription request’s `delivery` object.
 
 #### Handle delivery responses
@@ -30815,11 +32022,17 @@ server](https://developers.openai.com/plugins/build/chatgpt-ui#layer-on-chatgpt-
 
 #### Build an MCP server
 
-Install the official Python or TypeScript MCP SDK to create a server and expose a `/mcp` endpoint.
+Use an MCP SDK to create a server and expose a `/mcp` endpoint.
 
-In this quickstart, we'll use the [TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk).
+The server implementations use the same HTML page.
+
+With Go 1.26 or later, initialize a module and add `github.com/modelcontextprotocol/go-sdk/mcp` at version `v1.8.0`. Save the example as `main.go`, keep `public/todo-widget.html` in the same project directory, and run `go run .`. Edit the `port` literal to choose another port.
+
+For Ruby 3.3, install the `mcp` (1.10.0), `rackup` (2.3.1), and `webrick` (1.9.2) gems.
 
 If you're using Python, refer to our [examples repository on GitHub](https://github.com/openai/openai-apps-sdk-examples) to see an example MCP server with the Python SDK.
+
+The TypeScript setup uses the [TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk).
 
 Use Node.js 22.6 or later. Install the TypeScript SDK, MCP Apps helpers, and the `zod` package with:
 
@@ -30831,7 +32044,11 @@ npm install @modelcontextprotocol/sdk @modelcontextprotocol/ext-apps zod
 
 Register a resource for your component bundle and the tools the model can call (for example, `add_todo` and `complete_todo`) so ChatGPT can drive the UI.
 
-Create a file named `server.ts` and paste the following example that uses the TypeScript SDK:
+Save the TypeScript example as `server.ts`.
+
+Save the Ruby example as `server.rb`.
+
+Keep `public/todo-widget.html` in the same project directory:
 
 ```typescript
 import { createServer } from "node:http";
@@ -31012,6 +32229,287 @@ httpServer.listen(port, () => {
 });
 ```
 
+```go
+package main
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
+	"log"
+	"net"
+	"net/http"
+	"os"
+	"os/signal"
+	"strings"
+	"sync"
+	"syscall"
+	"time"
+)
+
+type task struct {
+	ID        string `json:"id"`
+	Title     string `json:"title"`
+	Completed bool   `json:"completed"`
+}
+type todoOutput struct {
+	Tasks []task `json:"tasks"`
+}
+type addInput struct {
+	Title string `json:"title"`
+}
+type completeInput struct {
+	ID string `json:"id"`
+}
+
+func main() {
+	html, err := os.ReadFile("public/todo-widget.html")
+	if err != nil {
+		log.Fatal(err)
+	}
+	server := mcp.NewServer(&mcp.Implementation{Name: "todo-plugin-server", Version: "0.1.0"}, nil)
+	// This local demonstration keeps tasks in memory until the server exits.
+	var mu sync.Mutex
+	tasks := []task{}
+	nextID := 1
+	reply := func(message string) (*mcp.CallToolResult, todoOutput, error) {
+		snapshot := append([]task{}, tasks...)
+		return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: message}}}, todoOutput{Tasks: snapshot}, nil
+	}
+	schema := func(field string) map[string]any {
+		return map[string]any{"type": "object", "properties": map[string]any{field: map[string]any{"type": "string", "minLength": 1}}, "required": []string{field}, "additionalProperties": false}
+	}
+	meta := mcp.Meta{"ui": map[string]any{"resourceUri": "ui://widget/todo.html"}}
+	mcp.AddTool(server, &mcp.Tool{Name: "add_todo", Title: "Add todo", Description: "Creates a todo item with the given title.", InputSchema: schema("title"), Meta: meta}, func(_ context.Context, _ *mcp.CallToolRequest, input addInput) (*mcp.CallToolResult, todoOutput, error) {
+		mu.Lock()
+		defer mu.Unlock()
+		title := strings.TrimSpace(input.Title)
+		if title == "" {
+			return reply("Missing title.")
+		}
+		tasks = append(tasks, task{ID: fmt.Sprintf("todo-%d", nextID), Title: title})
+		nextID++
+		return reply(fmt.Sprintf("Added %q.", title))
+	})
+	mcp.AddTool(server, &mcp.Tool{Name: "complete_todo", Title: "Complete todo", Description: "Marks a todo as done by id.", InputSchema: schema("id"), Meta: meta}, func(_ context.Context, _ *mcp.CallToolRequest, input completeInput) (*mcp.CallToolResult, todoOutput, error) {
+		mu.Lock()
+		defer mu.Unlock()
+		for i := range tasks {
+			if tasks[i].ID == input.ID {
+				tasks[i].Completed = true
+				return reply(fmt.Sprintf("Completed %q.", tasks[i].Title))
+			}
+		}
+		return reply(fmt.Sprintf("Todo %s was not found.", input.ID))
+	})
+	server.AddResource(&mcp.Resource{URI: "ui://widget/todo.html", Name: "todo-widget", MIMEType: "text/html;profile=mcp-app"}, func(context.Context, *mcp.ReadResourceRequest) (*mcp.ReadResourceResult, error) {
+		return &mcp.ReadResourceResult{Contents: []*mcp.ResourceContents{{URI: "ui://widget/todo.html", MIMEType: "text/html;profile=mcp-app", Text: string(html)}}}, nil
+	})
+	transport := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server { return server }, &mcp.StreamableHTTPOptions{Stateless: true, JSONResponse: true})
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/" && r.Method == http.MethodGet {
+			w.Header().Set("Content-Type", "text/plain")
+			fmt.Fprint(w, "Todo MCP server")
+			return
+		}
+		if r.URL.Path != "/mcp" {
+			http.NotFound(w, r)
+			return
+		}
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Expose-Headers", "Mcp-Session-Id")
+		if r.Method == http.MethodOptions {
+			w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "content-type, mcp-session-id, mcp-protocol-version")
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		transport.ServeHTTP(w, r)
+	})
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel()
+	port := "8787"
+	listener, err := net.Listen("tcp", "127.0.0.1:"+port)
+	if err != nil {
+		log.Fatal(err)
+	}
+	httpServer := &http.Server{Handler: handler, ReadHeaderTimeout: 5 * time.Second}
+	fmt.Println("Listening on http://" + listener.Addr().String())
+	shutdownDone := make(chan struct{})
+	go func() {
+		defer close(shutdownDone)
+		<-ctx.Done()
+		shutdownCtx, stop := context.WithTimeout(context.Background(), 5*time.Second)
+		defer stop()
+		if err := httpServer.Shutdown(shutdownCtx); err != nil {
+			log.Print(err)
+		}
+	}()
+	if err := httpServer.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		log.Fatal(err)
+	}
+	<-shutdownDone
+}
+```
+
+```ruby
+require "mcp"
+require "rackup"
+require "rackup/handler/webrick"
+
+todo_html = File.read("public/todo-widget.html")
+TODO_OUTPUT_SCHEMA = {
+  type: "object",
+
+  properties: {
+    tasks: {
+      type: "array",
+
+      items: {
+        type: "object",
+
+        properties: {
+          id: { type: "string" },
+          title: { type: "string" },
+          completed: { type: "boolean" }
+        },
+        required: ["id", "title", "completed"],
+
+        additionalProperties: false
+      }
+    }
+  },
+  required: ["tasks"],
+
+  additionalProperties: false
+}.freeze
+
+class TodoList
+  def initialize
+    @tasks = []
+    @next_id = 1
+    @mutex = Mutex.new
+  end
+
+  def add(title)
+    @mutex.synchronize do
+      title = title.strip
+      next reply("Missing title.") if title.empty?
+
+      @tasks << {
+        id: "todo-#{@next_id}",
+        title: title,
+        completed: false
+      }
+      @next_id += 1
+      reply("Added #{title.inspect}.")
+    end
+  end
+
+  def complete(id)
+    @mutex.synchronize do
+      task = @tasks.find { |item| item[:id] == id }
+      next reply("Todo #{id} was not found.") unless task
+
+      task[:completed] = true
+      reply("Completed #{task[:title].inspect}.")
+    end
+  end
+
+  private
+
+  def reply(message)
+    MCP::Tool::Response.new(
+      [
+        {
+          type: "text",
+          text: message
+        }
+      ],
+      structured_content: { tasks: @tasks.map(&:dup) }
+    )
+  end
+end
+
+class AddTodo < MCP::Tool
+  tool_name "add_todo"
+  title "Add todo"
+  description "Creates a todo item with the given title."
+  input_schema(
+    properties: {
+      title: {
+        type: "string",
+        minLength: 1
+      }
+    }, required: ["title"], additionalProperties: false
+  )
+  output_schema(TODO_OUTPUT_SCHEMA)
+  meta(ui: { resourceUri: "ui://widget/todo.html" })
+
+  def self.call(title:, server_context:)
+    server_context.fetch(:todos).add(title)
+  end
+end
+
+class CompleteTodo < MCP::Tool
+  tool_name "complete_todo"
+  title "Complete todo"
+  description "Marks a todo as done by id."
+  input_schema(
+    properties: {
+      id: {
+        type: "string",
+        minLength: 1
+      }
+    }, required: ["id"], additionalProperties: false
+  )
+  output_schema(TODO_OUTPUT_SCHEMA)
+  meta(ui: { resourceUri: "ui://widget/todo.html" })
+
+  def self.call(id:, server_context:)
+    server_context.fetch(:todos).complete(id)
+  end
+end
+
+widget = MCP::Resource.define(uri: "ui://widget/todo.html", name: "todo-widget", mime_type: "text/html;profile=mcp-app") do
+  [MCP::Resource::TextContents.new(uri: "ui://widget/todo.html", mime_type: "text/html;profile=mcp-app", text: todo_html)]
+end
+server = MCP::Server.new(
+  name: "todo-plugin-server", version: "0.1.0", tools: [AddTodo, CompleteTodo],
+  resources: [widget], server_context: { todos: TodoList.new }
+)
+transport = MCP::Server::Transports::StreamableHTTPTransport.new(server, stateless: true, enable_json_response: true)
+mcp_app = Rack::URLMap.new("/mcp" => transport)
+app = lambda do |environment|
+  path, method = environment.values_at("PATH_INFO", "REQUEST_METHOD")
+  headers = {
+    "access-control-allow-origin" => "*",
+    "access-control-expose-headers" => "Mcp-Session-Id"
+  }
+  if path == "/mcp" && method == "OPTIONS"
+    [
+      204, headers.merge(
+        "access-control-allow-methods" => "POST, GET, OPTIONS",
+        "access-control-allow-headers" => "content-type, mcp-session-id"
+      ), []
+    ]
+  elsif path == "/" && method == "GET"
+    [200, { "content-type" => "text/plain" }, ["Todo MCP server"]]
+  elsif path == "/mcp" && ["POST", "GET", "DELETE"].include?(method)
+    status, response_headers, body = mcp_app.call(environment)
+    [status, response_headers.merge(headers), body]
+  else
+    [404, { "content-type" => "text/plain" }, ["Not Found"]]
+  end
+end
+
+Rackup::Handler::WEBrick.run(app, Host: "127.0.0.1", Port: Integer(ENV.fetch("PORT", "8787"))) do |http_server|
+  trap("INT") { http_server.shutdown }
+  trap("TERM") { http_server.shutdown }
+end
+```
+
 This snippet also responds to `GET /` for health checks, handles CORS preflight for `/mcp`, and returns `404 Not Found` for OAuth discovery routes you are not using yet. That keeps ChatGPT from surfacing 502 errors while you iterate without authentication.
 
 #### Run locally
@@ -31021,9 +32519,9 @@ Usually, you can run a build command such as `npm run build` to produce a `dist`
 
 In this quickstart, since we're using vanilla HTML, no build step is required.
 
-Start the MCP server on `http://localhost:/mcp` from the directory that contains `server.ts`.
+Start the MCP server on `http://localhost:/mcp` from the directory that contains your server file.
 
-Make sure you have `"type": "module"` in your `package.json` file:
+For TypeScript, make sure you have `"type": "module"` in your `package.json` file:
 
 ```json
 {
@@ -31036,13 +32534,17 @@ Make sure you have `"type": "module"` in your `package.json` file:
 }
 ```
 
-Then run the server with the following command:
+Run the TypeScript server with the following command:
 
 ```bash
 node --experimental-strip-types server.ts
 ```
 
-The server should print `Todo MCP server listening on http://localhost:8787/mcp` once it is ready.
+Run the Ruby version with `ruby server.rb`. The Ruby server accepts a `PORT` environment variable and reports startup through WEBrick.
+
+By default, the servers serve `http://localhost:8787/mcp`.
+
+The TypeScript server prints `Todo MCP server listening on http://localhost:8787/mcp` when ready.
 
 #### Test with MCP Inspector
 
@@ -31085,7 +32587,7 @@ From there, you can iterate on the UI/UX, prompts, tool metadata, and the overal
 
 Refresh the plugin connection after each change to the MCP server (tools,
 metadata, and related configuration). You can do this from the detail page at
-[chatgpt.com/plugins](https://chatgpt.com/plugins).
+[ChatGPT plugins](https://chatgpt.com/plugins).
 
 When you're preparing for public distribution, review
 [Submit plugins](https://developers.openai.com/plugins/deploy/submission), the
@@ -33364,6 +34866,28 @@ function partSelectionSchema(parts: OpenAIFormOption[]): OpenAIForm {
 }
 ```
 
+```go
+func partSelectionSchema(parts []map[string]string) map[string]any {
+	return map[string]any{"type": "object", "properties": map[string]any{"part": map[string]any{"type": "string", "title": "Part", "oneOf": parts}}, "required": []string{"part"}}
+}
+```
+
+```ruby
+def part_selection_schema(parts)
+  {
+    type: "object",
+    properties: {
+      part: {
+        type: "string",
+        title: "Part",
+        oneOf: parts
+      }
+    },
+    required: ["part"]
+  }
+end
+```
+
 Pass this schema as `requestedSchema` in your form request. Each option uses
 `const` and `title`, with an optional `x-openai-thumbnail` icon.
 OpenAI-registered MCP servers require
@@ -33398,11 +34922,9 @@ See how plugins you already know are building with extensions.
 
 Source: [Plugin guidelines](https://developers.openai.com/plugins/plugin-guidelines.md)
 
-These guidelines cover all plugins listed in the ChatGPT Directory, including
-MCP and skills-only plugins. Requirements specific to MCP servers, tools, and
-optional UI apply only to plugins that include those components. For the
-complete submission flow, including skills, portal steps, review, approval,
-and publishing, see [Submit plugins](https://developers.openai.com/plugins/deploy/submission).
+import "../../styles/plugin-guidelines.css";
+
+These guidelines cover all plugins listed in the ChatGPT Directory, including MCP and skills-only plugins. For the complete submission flow, including skills, portal steps, review, approval, and publishing, see [Submit plugins](https://developers.openai.com/plugins/deploy/submission).
 
 #### Overview
 
@@ -33410,84 +34932,125 @@ The plugin ecosystem is built on trust. People come to ChatGPT and Codex expecti
 
 You can also read the principles in [what makes a great experience in ChatGPT](https://developers.openai.com/blog/what-makes-a-great-chatgpt-app).
 
-The guidelines below outline the minimum standard a published plugin must meet to remain available in the universal directory shared by ChatGPT and Codex. Plugins that demonstrate strong real-world utility and high user satisfaction may be eligible for enhanced distribution opportunities, such as directory placement or proactive suggestions.
+The guidelines below outline the minimum standard a published plugin must meet to remain available in the universal directory shared by ChatGPT and Codex. Failure to follow these guidelines may result in your plugin being rejected or removed. Plugins that demonstrate strong real-world utility and high user satisfaction may be eligible for enhanced distribution opportunities, such as directory placement or proactive suggestions.
 
-#### How to use these guidelines
+#### Which guidelines apply
 
-Start with [Plugin fundamentals](#plugin-fundamentals), which apply to every plugin. Then read [MCP requirements](#mcp-requirements) for plugins with MCP servers, tools, or optional UI, and [Skills](#skills) for plugins that include skills. If your plugin contains both MCP tools and skills, read both sections.
+Requirements apply according to what your plugin includes:
 
-#### Plugin fundamentals
+- **All plugins** must meet the applicable quality, safety, privacy, commerce, developer verification, and listing requirements.
+- **Plugins with MCP servers, tools, or UI** must also meet the requirements specific to those components.
+- **Plugins with skills** must ensure their skills comply with our security, privacy, and usage policies. Skills are automatically scanned. Skills-only plugins must meet metadata and listing requirements and may be subject to additional Directory eligibility requirements.
 
-#### Purpose and originality
+#### 1. Plugin fundamentals
 
-Plugins should serve a clear purpose and reliably do what they promise. In particular, they should provide functionality or workflows that are not natively supported by the products’ built-in capabilities and that meaningfully help satisfy common user intents expressed in conversation.
+#### 1.1. Purpose and originality
 
-Only use intellectual property that you own or have permission to use. Do not engage in misleading or copycat designs, impersonation, spam, or static frames with no meaningful interaction. Plugins should not imply that they are made or endorsed by OpenAI.
+- a. Plugins should serve a clear purpose and reliably do what they promise. In particular, they should provide functionality or workflows that are not natively supported by the products’ built-in capabilities and that meaningfully help satisfy common user intents expressed in conversation.
 
-#### Quality and reliability
+- b. Only use content or intellectual property that you own or have permission to use. Do not engage in misleading or copycat designs, impersonation, spam, or static frames with no meaningful interaction.
 
-Plugins must behave predictably and reliably. Results should be accurate and relevant to user input. Errors, including unexpected ones, must be handled with clear messaging or fallback behaviors.
+- c. Plugins should not imply that they are made or endorsed by OpenAI.
 
-Plugins should be stable, responsive, and complete. Trial or demo plugins will not be accepted.
+#### 1.2. Quality and reliability
 
-#### Plugin name, description, and prompts
+- a. Plugins must behave predictably and reliably. Results should be accurate and relevant to user input. Errors, including unexpected ones, must be handled with clear messaging or fallback behaviors.
+
+- b. Plugins should be stable, responsive, and complete. Trial or demo plugins will not be accepted.
+
+- c. Plugins must function reliably in ChatGPT on both desktop and mobile, including any UI components.
+
+- d. Tools should behave exactly as their names, descriptions, and inputs indicate.
+  - Side effects should never be hidden or implicit.
+  - Tools should be safe to retry where possible, or explicitly indicate when retries may cause repeated effects.
+
+#### 1.3. Plugin name, description, and prompts
 
 Plugin names and descriptions must be clear, accurate, and straightforward. Provide example prompts that help users get started with your plugin.
 
 - **Names:** Avoid overly generic names, especially single-word dictionary terms that aren’t explicitly tied to your brand. Do not append “MCP,” “MCP Server,” or “Plugin” to a company or product name.
 - **Subtitles and descriptions:** Describe the plugin’s functionality without comparing it with other products, disparaging alternatives, or making unverifiable claims. Do not advertise pricing, subscriptions, free trials, discounts, or promotions.
+- **Category:** Select a category that accurately reflects your plugin’s primary purpose and functionality.
 
-#### Safety
+#### 1.4. Test credentials
 
-#### Usage policies
+When submitting a plugin with an authenticated MCP server, provide a login and password for a fully featured demo account that includes sample data. Plugins that require additional login steps, such as a new account sign-up or 2FA through an inaccessible account, will be rejected.
+
+#### 1.5. Ongoing compliance
+
+Stay current with evolving policy requirements and ensure ongoing compliance. Previously approved plugins may be removed for policy violations or failure to respond promptly to our communications.
+
+#### 2. Developer verification
+
+#### 2.1. Verification
+
+All plugin submissions must come from verified individuals or organizations. Inside the [OpenAI Platform Dashboard general settings](https://platform.openai.com/settings/organization/general), we provide a way to confirm your identity and affiliation with any business you wish to publish on behalf of. Misrepresentation, hidden behavior, or attempts to game the system may result in removal from the program.
+
+#### 2.2. Support contact details
+
+You must provide customer support contact details where end users can reach you for help. Keep this information accurate and up to date.
+
+#### 3. Safety
+
+#### 3.1. Usage policies
 
 Do not engage in or facilitate activities prohibited under [OpenAI usage policies](https://openai.com/policies/usage-policies/). Plugins must avoid high-risk behaviors that could expose users to harm, fraud, or misuse.
 
-Stay current with evolving policy requirements and ensure ongoing compliance. Previously approved plugins that are later found in violation may be removed.
-
-#### Appropriateness
+#### 3.2. Appropriateness
 
 Plugins must be suitable for general audiences, including users aged 13–17. Plugins may not explicitly target children under 13. Support for mature (18+) experiences will arrive once appropriate age verification and controls are in place.
 
-#### Respect user intent
+#### 3.3. Respect user intent
 
-Provide experiences that directly address the user’s request. Do not insert unrelated content, attempt to redirect the interaction, or collect data beyond what is reasonably necessary to fulfill the user’s request and what is consistent with your privacy policy.
+- a. Provide experiences that directly address the user’s request. Do not insert unrelated content, attempt to redirect the interaction, or collect data beyond what is reasonably necessary to fulfill the user’s request and what is consistent with your privacy policy.
 
-Act only within the user-authorized task. Plugin and tool metadata must not seek secrets or protected context, direct unauthorized data transfers or actions, override platform instructions or safeguards, conceal behavior, or impersonate another party. Encoded or obfuscated instructions do not exempt a plugin from these requirements.
+- b. Act only within the user-authorized task. Plugin and tool metadata must not seek secrets or protected context, direct unauthorized data transfers or actions, override platform instructions or safeguards, conceal behavior, or impersonate another party. Encoded or obfuscated instructions do not exempt a plugin from these requirements.
 
-#### Fair play
+#### 3.4. Fair play
 
-Plugins must not include descriptions, titles, tool annotations, or other model-readable fields, at either the tool or plugin level, that manipulate how the model selects or uses other plugins or their tools (for example, instructing the model to prefer one plugin over others) or interfere with fair discovery. All descriptions must accurately reflect the plugin’s value without disparaging alternatives.
+Plugins must not manipulate how the model selects or uses other plugins or their tools (for example, instructing the model to prefer one plugin over others), interfere with fair discovery, or otherwise negatively impact ChatGPT or our users.
 
-#### Third-party content and integrations
+#### 3.5. Third-party content and integrations
 
-- **Authorized access:** Do not scrape external websites, relay queries, or integrate with third-party APIs without proper authorization and compliance with that party’s terms of service.
-- **Unofficial connectors:** We cannot approve plugins that primarily function as unofficial connectors to third-party services, including pass-through intermediary software layers.
-- **Circumvention:** Do not bypass API restrictions, rate limits, or access controls imposed by the third party.
+- a. **Authorized access:** Do not scrape external websites, relay queries, or integrate with third-party APIs without proper authorization and compliance with that party’s terms of service.
 
-#### Privacy
+- b. **Unofficial connectors:** We cannot approve plugins that primarily function as unofficial connectors to third-party services, including pass-through intermediary software layers.
 
-#### Privacy policy
+- c. **Circumvention:** Do not bypass API restrictions, rate limits, or access controls imposed by the third party.
+
+#### 4. Privacy
+
+#### 4.1. Privacy policy
 
 Plugin submissions must include a clear, published privacy policy explaining, at minimum, the categories of personal data collected, the purposes of use, the categories of recipients, data retention timelines, and any controls offered to your users. Follow this policy at all times. Users can review your privacy policy before installing the plugin.
 
-#### Data collection
+#### 4.2. Data collection
 
-- **Collection minimization:** Gather only the minimum data required to perform the plugin’s function. Inputs should be specific, narrowly scoped, and explicitly linked to the task. Avoid “just in case” fields or broad profile data.
-- **Restricted data:** Do not collect, solicit, or process the following categories of Restricted Data:
+- a. **Collection minimization:** Gather only the minimum data required to perform the plugin’s function. Inputs should be specific, narrowly scoped, and explicitly linked to the task. Avoid “just in case” fields or broad profile data.
+
+- b. **Restricted data:** Do not collect, solicit, or process the following categories of Restricted Data:
   - Information subject to Payment Card Information Data Security Standards (PCI DSS)
   - Protected health information (PHI)
   - Government identifiers (such as social security numbers)
   - Access credentials and authentication secrets (such as API keys, MFA/OTP codes, or passwords).
-- **Regulated Sensitive Data:** Do not collect personal data considered “sensitive” or “special category” in the jurisdiction in which the data is collected unless collection is strictly necessary to perform the plugin’s stated function; the user has provided legally adequate consent; and the collection and use is explicitly and prominently disclosed at or before the point of collection.
 
-#### Transparency and user control
+- c. **Regulated Sensitive Data:** Do not collect personal data considered “sensitive” or “special category” in the jurisdiction in which the data is collected unless collection is strictly necessary to perform the plugin’s stated function; the user has provided legally adequate consent; and the collection and use is explicitly and prominently disclosed at or before the point of collection.
 
-- **Data practices:** Do not engage in surveillance, tracking, or behavioral profiling—including metadata collection such as timestamps, IP addresses, or query patterns—unless explicitly disclosed, narrowly scoped, subject to meaningful user control, and aligned with [OpenAI’s usage policies](https://openai.com/policies/usage-policies/).
+#### 4.3. Transparency and user control
 
-#### Commerce and monetization
+**Data practices:** Do not engage in surveillance, tracking, or behavioral profiling—including metadata collection such as timestamps, IP addresses, or query patterns—unless explicitly disclosed, narrowly scoped, subject to meaningful user control, and aligned with [OpenAI’s usage policies](https://openai.com/policies/usage-policies/).
 
-{/_ vale off _/}
+#### 4.4. Authentication and permissions
+
+If your MCP server requires authentication, the flow must be transparent and explicit. Users must be informed of all requested permissions, and those requests must be limited to what is necessary for the plugin to function.
+
+#### 5. Commerce and monetization
+
+#### 5.1. Commerce and monetization
+
+{/_ vale Vale.Spelling = NO _/}
+{/_ vale Vale.Terms = NO _/}
+{/_ vale Microsoft.Foreign = NO _/}
 
 Currently, plugins may conduct commerce only for physical goods. Selling digital products or services—including subscriptions, digital content, tokens, or credits—is not allowed, whether offered directly or indirectly (for example, through freemium upsells).
 
@@ -33507,59 +35070,61 @@ Plugins may not:
 
 Plugins should provide a high quality experience in ChatGPT. If the same feature in your plugin is also available through your external website or application, you must not provide a worse version through your plugin. Plugins must not apply ChatGPT-specific fees, surcharges, or other pricing that penalizes users for accessing a service through ChatGPT. Temporary discounts and promotional offers on other platforms are permitted.
 
+#### 5.2. Prohibited goods and services
+
 In addition, plugins may not be used to sell, promote, facilitate, or meaningfully enable the following goods or services:
 
-#### Prohibited goods
+- a. Prohibited goods
+  1. Adult content & sexual services
+     1. Pornography, explicit sexual media, live-cam services, adult subscriptions
+     2. Sex toys, sex dolls, BDSM gear, fetish products
+  2. Gambling
+     1. Real-money gambling services, casino credits, sportsbook wagers, crypto-casino tokens
+  3. Illegal or regulated drugs
+     1. Marijuana/THC products, psilocybin, illegal substances
+     2. CBD products exceeding legal THC limits
+  4. Drug paraphernalia
+     1. Bongs, dab rigs, drug-use scales, cannabis grow equipment marketed for drugs
+  5. Prescription & age-restricted medications
+     1. Prescription-only drugs (for example, insulin, antibiotics, Ozempic, opioids)
+     2. Age-restricted Rx products (for example, testosterone, HGH, fertility hormones)
+  6. Illicit goods
+     1. Counterfeit or replica products
+     2. Stolen goods or items without clear provenance
+     3. Financial-fraud tools (skimmers, fake POS devices)
+     4. Piracy tools or cracked software
+     5. Wildlife or environmental contraband (ivory, endangered species products)
+  7. Malware, spyware & surveillance
+     1. Malware, ransomware, keyloggers, stalkerware
+     2. Covert surveillance devices (spy cameras, IMSI catchers, hidden trackers)
+  8. Tobacco & nicotine
+     1. Tobacco products
+     2. Nicotine products (vapes, e-liquids, nicotine pouches)
+  9. Weapons & harmful materials
+     1. Firearms, ammunition, firearm parts
+     2. Explosives, fireworks, bomb-making materials
+     3. Illegal or age-restricted weapons (switchblades, brass knuckles, crossbows where banned)
+     4. Self-defense weapons (pepper spray, stun guns, tasers)
+     5. Extremist merchandise or propaganda
 
-- Adult content & sexual services
-  - Pornography, explicit sexual media, live-cam services, adult subscriptions
-  - Sex toys, sex dolls, BDSM gear, fetish products
-- Gambling
-  - Real-money gambling services, casino credits, sportsbook wagers, crypto-casino tokens
-- Illegal or regulated drugs
-  - Marijuana/THC products, psilocybin, illegal substances
-  - CBD products exceeding legal THC limits
-- Drug paraphernalia
-  - Bongs, dab rigs, drug-use scales, cannabis grow equipment marketed for drugs
-- Prescription & age-restricted medications
-  - Prescription-only drugs (for example, insulin, antibiotics, Ozempic, opioids)
-  - Age-restricted Rx products (for example, testosterone, HGH, fertility hormones)
-- Illicit goods
-  - Counterfeit or replica products
-  - Stolen goods or items without clear provenance
-  - Financial-fraud tools (skimmers, fake POS devices)
-  - Piracy tools or cracked software
-  - Wildlife or environmental contraband (ivory, endangered species products)
-- Malware, spyware & surveillance
-  - Malware, ransomware, keyloggers, stalkerware
-  - Covert surveillance devices (spy cameras, IMSI catchers, hidden trackers)
-- Tobacco & nicotine
-  - Tobacco products
-  - Nicotine products (vapes, e-liquids, nicotine pouches)
-- Weapons & harmful materials
-  - Firearms, ammunition, firearm parts
-  - Explosives, fireworks, bomb-making materials
-  - Illegal or age-restricted weapons (switchblades, brass knuckles, crossbows where banned)
-  - Self-defense weapons (pepper spray, stun guns, tasers)
-  - Extremist merchandise or propaganda
+- b. Prohibited fraudulent, deceptive, or high-risk services
+  1. Fake IDs, forged documents, or document falsification services
+  2. Debt relief, credit repair, or credit-score manipulation schemes
+  3. Unregulated, deceptive, or abusive financial services
+  4. Lending, advance-fee, or credit-building schemes designed to exploit users
+  5. Crypto or NFT offerings involving speculation, consumer deception, or financial abuse
+  6. Execution of money transfers, crypto transfers, or investment trades
+  7. Government-service abuse, impersonation, or benefit manipulation
+  8. Identity theft, impersonation, or identity-monitoring services that enable misuse
+  9. Certain legal or quasi-legal services that facilitate fraud, evasion, or misrepresentation
+  10. Negative-option billing, telemarketing, or consent-bypass schemes
+  11. High-chargeback, fraud-prone, or abusive travel services
 
-#### Prohibited fraudulent, deceptive, or high-risk services
+{/_ vale Vale.Spelling = YES _/}
+{/_ vale Vale.Terms = YES _/}
+{/_ vale Microsoft.Foreign = YES _/}
 
-- Fake IDs, forged documents, or document falsification services
-- Debt relief, credit repair, or credit-score manipulation schemes
-- Unregulated, deceptive, or abusive financial services
-- Lending, advance-fee, or credit-building schemes designed to exploit users
-- Crypto or NFT offerings involving speculation, consumer deception, or financial abuse
-- Execution of money transfers, crypto transfers, or investment trades
-- Government-service abuse, impersonation, or benefit manipulation
-- Identity theft, impersonation, or identity-monitoring services that enable misuse
-- Certain legal or quasi-legal services that facilitate fraud, evasion, or misrepresentation
-- Negative-option billing, telemarketing, or consent-bypass schemes
-- High-chargeback, fraud-prone, or abusive travel services
-
-{/_ vale on _/}
-
-#### Checkout
+#### 5.3. Checkout
 
 Plugins should use external checkout, directing users to complete purchases on your own domain.
 
@@ -33567,29 +35132,17 @@ Instant Checkout, which is currently in beta, is currently available only to sel
 
 Until then, standard external checkout is the required approach. No other third-party checkout solutions may be embedded or hosted within the plugin UI. To learn more, see our [docs on agentic commerce](https://developers.openai.com/commerce).
 
-#### Advertising
+#### 5.4. Advertising
 
 Plugins must not serve advertisements and must not exist primarily as an advertising vehicle. Every plugin must deliver clear, legitimate functionality that provides standalone value to users.
 
-#### Developer verification
-
-#### Verification
-
-All plugin submissions must come from verified individuals or organizations. Inside the [OpenAI Platform Dashboard general settings](https://platform.openai.com/settings/organization/general), we provide a way to confirm your identity and affiliation with any business you wish to publish on behalf of. Misrepresentation, hidden behavior, or attempts to game the system may result in removal from the program.
-
-#### Support contact details
-
-You must provide customer support contact details where end users can reach you for help. Keep this information accurate and up to date.
-
-#### MCP requirements
-
-These requirements apply to plugins that include MCP servers, tools, or optional UI.
-
-#### Tools
+#### 6. Tools
 
 MCP tools tell ChatGPT and Codex how to use your server’s capabilities. Clear, accurate tool definitions make the plugin safer, easier for the model to understand, and easier for users to trust.
 
-#### Clear and accurate tool names
+Carefully designed tools help reduce surprises, protect users, and speed up the review process.
+
+#### 6.1. Clear and accurate tool names and descriptions
 
 Tool names should be human-readable, specific, and descriptive of what the tool actually does.
 
@@ -33598,21 +35151,19 @@ Tool names should be human-readable, specific, and descriptive of what the tool 
 - Avoid misleading, overly promotional, or comparative language (for example, `pick_me`, `best`, `official`).
 - Avoid internal jargon, unexplained acronyms, and opaque identifiers.
 
-#### Descriptions that match behavior
-
-Each tool must have a nonempty description that explicitly and accurately explains its purpose and behavior, when to use it, and any relevant limitations or side effects. Descriptions must match the tool’s schema and actual behavior. If a tool’s behavior is unclear or incomplete from its description, the plugin may be rejected.
+Each tool must have a nonempty description that explicitly and accurately explains its purpose and behavior, when to use it, and any relevant limitations or side effects. Descriptions must match the tool’s schema and actual behavior.
 
 Descriptions must not favor or disparage other plugins or services or attempt to influence the model to select them over another plugin’s tools. They must not recommend overly broad triggering beyond the explicit user intent and purpose the plugin fulfills.
 
-#### Tool independence and exposure
+#### 6.2. Tool independence and exposure
 
-Each public tool must operate independently. Do not instruct the model to invoke another plugin or connector to complete its operation; implement required dependencies within your plugin.
+- a. Each public tool must operate independently. Do not instruct the model to invoke another plugin or connector to complete its operation; implement required dependencies within your plugin.
 
-Expose each model-callable operation as a separate tool with a clear description, input schema, and annotations. Do not use discovery, operation selection, or schema fetching with a generic executor to enable operations not individually exposed for review.
+- b. Expose each model-callable operation as a separate tool with a clear description, input schema, and annotations. Do not use discovery, operation selection, or schema fetching with a generic executor to enable operations not individually exposed for review.
 
-#### Correct annotation
+#### 6.3. Correct annotation
 
-Set `readOnlyHint`, `destructiveHint`, and `openWorldHint` to [explicit boolean values](https://developers.openai.com/plugins/reference) (`true` or `false`) in each tool’s `annotations` object. Annotation justifications are no longer required. If our automated review flags an annotation issue, you can submit an appeal with clarification or additional information.
+Set `readOnlyHint`, `destructiveHint`, and `openWorldHint` to the appropriate [explicit boolean values](https://developers.openai.com/plugins/reference) (`true` or `false`) in each tool’s `annotations` object. Annotation justifications are no longer required.
 
 - `readOnlyHint`**:** Use `true` for retrieval, computation, or previews that do not modify the environment. Use `false` for external-state changes, persisting artifacts, starting stateful jobs or workflows, queuing work, or write-style outbound actions such as posting messages, sending emails, or uploading files.
 - `destructiveHint`**:** Use `false` for read-only tools. For writes, use `true` for potentially destructive or irreversible effects, such as deletion, overwriting, cancellation, access revocation, or [irreversible sends or transactions](https://developers.openai.com/plugins/guides/security-privacy#prompt-injection-and-write-actions). Use `false` only for additive writes without destructive or irreversible effects. Being able to undo an action does not, by itself, justify setting `destructiveHint` to `false`.
@@ -33620,65 +35171,21 @@ Set `readOnlyHint`, `destructiveHint`, and `openWorldHint` to [explicit boolean 
 
 Annotations inform client safeguards; they do not grant permission or replace authentication, authorization and scope checks, input validation, or [human confirmation for irreversible operations](https://developers.openai.com/plugins/guides/security-privacy).
 
-#### Minimal and purpose-driven inputs
+#### 6.4. Minimal and purpose-driven data handling
 
-Tools should request the minimum information necessary to complete their task.
+Tools should request only information necessary for their task. Tool responses must contain only data directly relevant to the user’s request and the tool’s stated purpose.
 
-- Input fields must be directly related to the tool’s stated purpose.
-- Do not request the full conversation history, raw chat transcripts, or broad contextual fields “just in case.” A tool may request a brief, task-specific user intent field only when it meaningfully improves execution and does not expand data collection beyond what is reasonably necessary to respond to the user’s request and for the purposes described in your privacy policy.
-- Do not request accumulated conversation context or prior-turn arrays.
-- If needed, rely on the coarse geographic location shared by the system. Do not request precise user location data (for example, GPS coordinates or addresses).
+Do not request or reconstruct full conversation histories or collect broad context “just in case.” Use only chat context explicitly supplied by the client or model.
 
-#### Predictable, auditable behavior
+When location is needed, rely on system-shared coarse location. Do not request precise user location.
 
-Tools should behave exactly as their names, descriptions, and inputs indicate.
+Follow the implementation guidance in [Security & Privacy—Data handling](https://developers.openai.com/plugins/guides/security-privacy#data-handling).
 
-- Side effects should never be hidden or implicit.
-- Tools should be safe to retry where possible, or explicitly indicate when retries may cause repeated effects.
+#### 6.5. UI
 
-Carefully designed tools help reduce surprises, protect users, and speed up the review process.
+Plugins with UI should follow the [UI guidelines](https://developers.openai.com/plugins/concepts/ui-guidelines). Configure a content security policy (CSP) with domain allowlists limited to what your plugin needs.
 
-#### Tool data handling
-
-Design the input schema to limit data collection by default, rather than a funnel for optional context.
-
-- **Response minimization:** Tool responses must return only data that is directly relevant to the user’s request and the tool’s stated purpose. Do not include diagnostic, telemetry, or internal identifiers—such as session IDs, trace IDs, request IDs, timestamps, or logging metadata—unless they are strictly required to fulfill the user’s query.
-- **Data boundaries:**
-  - Avoid requesting raw location fields (for example, city or coordinates) in your input schema. When location is needed, obtain it through the client’s controlled side channel (such as environment metadata or a referenced resource) so appropriate policy and consent controls can be applied. This reduces accidental PII capture, enforces least-privilege access, and keeps location handling auditable and revocable.
-  - Your MCP server must not pull, reconstruct, or infer the full chat log from the client or elsewhere. Operate only on the explicit snippets and resources the client or model chooses to send. This separation can help prevent covert data expansion and keep analysis limited to intentionally shared content.
-- **Action safeguards:** Follow [Correct annotation](#correct-annotation) for write and destructive-action labels, confirmations, and outbound-data safeguards.
-
-#### Authentication and permissions
-
-If your MCP server requires authentication, the flow must be transparent and explicit. Users must be informed of all requested permissions, and those requests must be limited to what is necessary for the plugin to function.
-
-#### UI
-
-Before getting into specifics, review the [optional UI guidelines](https://developers.openai.com/plugins/concepts/ui-guidelines) for interaction, layout, and design patterns that help plugin UI feel intuitive, trustworthy, and consistent within ChatGPT.
-
-#### Iframes and embedded pages
-
-Plugins with UI can embed pages from their MCP server’s own registrable domain, including full existing editors and admin interfaces. For example, a server at `https://api.example.com/mcp` can embed `https://app.example.com`: both use the registrable domain `example.com`. Separate tenants on a shared hosting service count as different domains; using the same hosting provider does not establish ownership.
-
-Declare each required iframe origin in the resource CSP using `_meta.ui.csp.frameDomains` (or the legacy `_meta["openai/widgetCSP"].frame_domains`). For third-party domains, iframe embeds should be limited to cases where the embedded experience is essential.
-
-You must still provide a justification when submitting a plugin that uses iframes. Explain what each embedded page does, why the plugin embeds it, and who controls its domain. Iframe use can require additional review or escalation and may lead to slower approval or rejection if the content cannot be assessed. Sharing the MCP server’s domain does not guarantee approval.
-
-All other plugin requirements still apply to embedded pages, including the [checkout](#checkout) and [privacy](#privacy) requirements.
-
-#### Testing
-
-Before submitting a plugin, thoroughly test its MCP server, tools, and optional UI across a wide range of scenarios.
-
-Plugins must function reliably in ChatGPT on both desktop and mobile, including any UI components.
-
-#### Test credentials
-
-When submitting a plugin with an authenticated MCP server, provide a login and password for a fully featured demo account that includes sample data. Plugins that require additional login steps, such as a new account sign-up or 2FA through an inaccessible account, will be rejected.
-
-#### Skills
-
-Skills are automatically scanned and must comply with our security, privacy, and usage policies. Plugins that contain only skills must meet all metadata and listing requirements above. Skills-only plugins may be subject to additional eligibility requirements for listing in the Directory.
+- **Iframes and embedded pages:** Third-party iframe embeds should be limited to cases where the embedded experience is essential. Plugins using iframes must provide a justification at submission. See the [iframe requirements](https://developers.openai.com/plugins/build/chatgpt-ui#content-security-policy-csp) and [submission instructions](https://developers.openai.com/plugins/deploy/submission#complete-review-information).
 
 ### Plugin submission errors
 
@@ -34303,11 +35810,9 @@ If your organization manages Codex with `requirements.toml`, the
 
 Source: [Reference](https://developers.openai.com/plugins/reference.md)
 
-Start with the open standard. Use the
-[MCP Apps specification](https://modelcontextprotocol.io/docs/extensions/apps)
-for shared UI fields and bridge methods.
-OpenAI extensions are optional and live in `window.openai`
-when you want ChatGPT-specific capabilities.
+**For new MCP apps, follow the [MCP Apps UI](https://modelcontextprotocol.io/docs/extensions/apps) and [OpenAI MCP extensions](https://github.com/openai/mcp-extensions/blob/main/docs/spec.md) specifications.** ChatGPT supports and endorses both specifications as the official way to add UI to your MCP server.
+
+This page documents the legacy `window.openai` API, which predates these specifications. Use these APIs only for capabilities these specifications don't cover.
 
 #### `window.openai` component bridge
 
@@ -34641,6 +36146,10 @@ OpenAI-specific metadata for compatibility and optional extensions.
 | `_meta["openai/toolInvocation/invoked"]`  | Tool descriptor | string       | ≤ 64 chars                                      | Short status text after the tool completes.                                                                                                                                                                                                                                                 |
 | `_meta["openai/fileParams"]`              | Tool descriptor | string[]     | None                                            | List of top-level input fields that represent files. Each field receives `{ download_url, file_id, mime_type?, file_name? }`.                                                                                                                                                               |
 
+The Go resource examples use `github.com/modelcontextprotocol/go-sdk/mcp` at version `v1.8.0`. Save your bundled MCP Apps browser component as `widget.js` in the project directory, then run the Go server from that directory.
+
+The Ruby resource examples require the `mcp` gem at version `1.10.0` and your bundled MCP Apps browser component saved as `widget.js` in the project directory. Run the Ruby server from that directory.
+
 Example:
 
 ```typescript
@@ -34703,6 +36212,143 @@ registerAppTool(
 );
 ```
 
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
+	"log"
+	"os"
+	"regexp"
+	"strings"
+)
+
+type searchInput struct {
+	Q string `json:"q"`
+}
+type document struct {
+	ID    string `json:"id"`
+	Title string `json:"title"`
+	URL   string `json:"url"`
+}
+type searchOutput struct {
+	Results []document `json:"results"`
+}
+
+func main() {
+	server := mcp.NewServer(&mcp.Implementation{Name: "docs-example", Version: "1.0.0"}, nil)
+	mcp.AddTool(server, &mcp.Tool{Name: "search", Title: "Public Search", Description: "Search public documents.", Meta: mcp.Meta{
+		"securitySchemes": []map[string]any{{"type": "noauth"}, {"type": "oauth2", "scopes": []string{"search.read"}}},
+		"ui":              map[string]any{"resourceUri": "ui://widget/story.html"}, "openai/toolInvocation/invoking": "Searching…", "openai/toolInvocation/invoked": "Results ready",
+	}}, func(_ context.Context, _ *mcp.CallToolRequest, input searchInput) (*mcp.CallToolResult, searchOutput, error) {
+		// Local example data; replace this with your application data.
+		documents := []document{{ID: "intro", Title: "Introduction to Acme", URL: "https://example.com/intro"}}
+		found := []document{}
+		for _, item := range documents {
+			if strings.Contains(strings.ToLower(item.Title), strings.ToLower(input.Q)) {
+				found = append(found, item)
+			}
+		}
+		return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: fmt.Sprintf("Found %d results.", len(found))}}}, searchOutput{Results: found}, nil
+	})
+	// Build the browser component first, then run from the project root.
+	script, err := os.ReadFile("widget.js")
+	if err != nil {
+		log.Fatal(err)
+	}
+	escaped := regexp.MustCompile(`(?i)</script`).ReplaceAllLiteralString(string(script), `<\/script`)
+	html := `<!doctype html><html lang="en"><meta charset="utf-8"><title>Tool result</title><body><div id="root"></div><script type="module">` + escaped + `</script></body></html>`
+	server.AddResource(&mcp.Resource{URI: "ui://widget/story.html", Name: "widget", MIMEType: "text/html;profile=mcp-app"}, func(context.Context, *mcp.ReadResourceRequest) (*mcp.ReadResourceResult, error) {
+		return &mcp.ReadResourceResult{Contents: []*mcp.ResourceContents{{URI: "ui://widget/story.html", MIMEType: "text/html;profile=mcp-app", Text: html}}}, nil
+	})
+	if err := server.Run(context.Background(), &mcp.StdioTransport{}); err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+```ruby
+require "mcp"
+
+class PublicSearch < MCP::Tool
+  tool_name "search"
+  title "Public Search"
+  description "Search public documents."
+  input_schema(properties: { q: { type: "string" } }, required: ["q"])
+  output_schema(
+    type: "object", properties: {
+      results: {
+        type: "array",
+
+        items: {
+          type: "object",
+
+          properties: {
+            id: { type: "string" },
+            title: { type: "string" },
+            url: { type: "string" }
+          },
+          required: ["id", "title", "url"]
+        }
+      }
+    }, required: ["results"]
+  )
+  meta(
+    securitySchemes: [
+      { type: "noauth" }, {
+        type: "oauth2",
+        scopes: ["search.read"]
+      }
+    ],
+    ui: { resourceUri: "ui://widget/story.html" },
+    "openai/toolInvocation/invoking": "Searching…",
+    "openai/toolInvocation/invoked": "Results ready"
+  )
+
+  def self.call(q:, server_context:)
+    # Local example data; replace this with your application data.
+    documents = [
+      {
+        id: "intro",
+        title: "Introduction to Acme",
+        url: "https://example.com/intro"
+      }
+    ]
+    results = documents.select { |document| document.fetch(:title).downcase.include?(q.downcase) }
+    MCP::Tool::Response.new(
+      [
+        {
+          type: "text",
+          text: "Found #{results.length} results."
+        }
+      ],
+      structured_content: { results: results }
+    )
+  end
+end
+
+# Build the browser component first, then run this server from the project root.
+script = File.read("widget.js").gsub(%r{</script}i) { '<\/script' }
+html = '<!doctype html><html lang="en"><meta charset="utf-8">' \
+       '<title>Tool result</title><body><div id="root"></div>' \
+       "<script type=\"module\">#{script}</script></body></html>"
+resource = MCP::Resource.define(uri: "ui://widget/story.html", name: "widget", mime_type: "text/html;profile=mcp-app") do
+  [
+    MCP::Resource::TextContents.new(
+      uri: "ui://widget/story.html", mime_type: "text/html;profile=mcp-app", text: html
+    )
+  ]
+end
+
+server = MCP::Server.new(
+  name: "docs-example", version: "1.0.0", tools: [PublicSearch],
+  resources: [resource]
+)
+MCP::Server::Transports::StdioTransport.new(server).open
+```
+
 #### Annotations
 
 To label a tool as "read-only," use the following
@@ -34754,6 +36400,80 @@ server.registerTool(
     structuredContent: { recipes: await fetchSavedRecipes() },
   })
 );
+```
+
+```go
+package main
+
+import (
+	"context"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
+	"log"
+)
+
+type recipe struct {
+	ID    string `json:"id"`
+	Title string `json:"title"`
+}
+type recipeOutput struct {
+	Recipes []recipe `json:"recipes"`
+}
+
+func main() {
+	server := mcp.NewServer(&mcp.Implementation{Name: "docs-example", Version: "1.0.0"}, nil)
+	mcp.AddTool(server, &mcp.Tool{Name: "list_saved_recipes", Description: "Returns the user's saved recipes without modifying them.", Annotations: &mcp.ToolAnnotations{ReadOnlyHint: true}}, func(context.Context, *mcp.CallToolRequest, struct{}) (*mcp.CallToolResult, recipeOutput, error) {
+		// Local example data; replace this with your application data.
+		return nil, recipeOutput{Recipes: []recipe{{ID: "pasta", Title: "Tomato pasta"}}}, nil
+	})
+	if err := server.Run(context.Background(), &mcp.StdioTransport{}); err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+```ruby
+require "mcp"
+
+class ListSavedRecipes < MCP::Tool
+  tool_name "list_saved_recipes"
+  description "Returns the user's saved recipes without modifying them."
+  input_schema(properties: {})
+  output_schema(
+    type: "object",
+    properties: {
+      recipes: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            title: { type: "string" }
+          },
+          required: ["id", "title"]
+        }
+      }
+    },
+    required: ["recipes"]
+  )
+  annotations(read_only_hint: true, destructive_hint: nil, idempotent_hint: nil, open_world_hint: nil)
+
+  def self.call(server_context:)
+    # Local example data; replace this with your application data.
+    MCP::Tool::Response.new(
+      [], structured_content: {
+        recipes: [
+          {
+            id: "pasta",
+            title: "Tomato pasta"
+          }
+        ]
+      }
+    )
+  end
+end
+
+server = MCP::Server.new(name: "docs-example", version: "1.0.0", tools: [ListSavedRecipes])
+MCP::Server::Transports::StdioTransport.new(server).open
 ```
 
 #### Component resource `_meta` fields
@@ -34882,6 +36602,140 @@ registerAppTool(
 );
 ```
 
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"os"
+	"regexp"
+
+	"github.com/modelcontextprotocol/go-sdk/mcp"
+)
+
+type zooInput struct {
+	Count *int `json:"count,omitempty"`
+}
+type animal struct {
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	Species string `json:"species"`
+}
+type zooOutput struct {
+	Animals []animal `json:"animals"`
+}
+
+func main() {
+	server := mcp.NewServer(&mcp.Implementation{Name: "docs-example", Version: "1.0.0"}, nil)
+	mcp.AddTool(server, &mcp.Tool{Name: "get_zoo_animals", Meta: mcp.Meta{"ui": map[string]any{"resourceUri": "ui://widget/widget.html"}}, InputSchema: map[string]any{"type": "object", "properties": map[string]any{"count": map[string]any{"type": "integer", "minimum": 1, "maximum": 20}}}}, func(_ context.Context, _ *mcp.CallToolRequest, input zooInput) (*mcp.CallToolResult, zooOutput, error) {
+		count := 10
+		if input.Count != nil {
+			count = *input.Count
+		}
+		// Local example data; replace this with your application data.
+		animals := []animal{}
+		byID := map[string]animal{}
+		for i := 1; i <= count; i++ {
+			value := animal{ID: fmt.Sprintf("animal-%d", i), Name: fmt.Sprintf("Penguin %d", i), Species: "Penguin"}
+			animals = append(animals, value)
+			byID[value.ID] = value
+		}
+		return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: fmt.Sprintf("Here are %d animals.", count)}}, Meta: mcp.Meta{"allAnimalsById": byID}}, zooOutput{Animals: animals}, nil
+	})
+	// Build the browser component first, then run from the project root.
+	script, err := os.ReadFile("widget.js")
+	if err != nil {
+		log.Fatal(err)
+	}
+	escaped := regexp.MustCompile(`(?i)</script`).ReplaceAllLiteralString(string(script), `<\/script`)
+	html := `<!doctype html><html lang="en"><meta charset="utf-8"><title>Tool result</title><body><div id="root"></div><script type="module">` + escaped + `</script></body></html>`
+	server.AddResource(&mcp.Resource{URI: "ui://widget/widget.html", Name: "widget", MIMEType: "text/html;profile=mcp-app"}, func(context.Context, *mcp.ReadResourceRequest) (*mcp.ReadResourceResult, error) {
+		return &mcp.ReadResourceResult{Contents: []*mcp.ResourceContents{{URI: "ui://widget/widget.html", MIMEType: "text/html;profile=mcp-app", Text: html}}}, nil
+	})
+	if err := server.Run(context.Background(), &mcp.StdioTransport{}); err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+```ruby
+require "mcp"
+
+class ZooAnimals < MCP::Tool
+  tool_name "get_zoo_animals"
+  input_schema(
+    properties: {
+      count: {
+        type: "integer",
+        minimum: 1,
+        maximum: 20
+      }
+    }
+  )
+  output_schema(
+    type: "object", properties: {
+      animals: {
+        type: "array",
+
+        items: {
+          type: "object",
+
+          properties: {
+            id: { type: "string" },
+            name: { type: "string" },
+            species: { type: "string" }
+          },
+          required: ["id", "name", "species"]
+        }
+      }
+    }, required: ["animals"]
+  )
+  meta(ui: { resourceUri: "ui://widget/widget.html" })
+
+  def self.call(server_context:, count: 10)
+    # Local example data; replace this with your application data.
+    animals = Array.new(count) do |index|
+      {
+        id: "animal-#{index + 1}",
+        name: "Penguin #{index + 1}",
+        species: "Penguin"
+      }
+    end
+    MCP::Tool::Response.new(
+      [
+        {
+          type: "text",
+          text: "Here are #{animals.length} animals."
+        }
+      ],
+      structured_content: { animals: animals },
+      meta: { allAnimalsById: animals.to_h { |animal| [animal.fetch(:id), animal] } }
+    )
+  end
+end
+
+# Build the browser component first, then run this server from the project root.
+script = File.read("widget.js").gsub(%r{</script}i) { '<\/script' }
+html = '<!doctype html><html lang="en"><meta charset="utf-8">' \
+       '<title>Tool result</title><body><div id="root"></div>' \
+       "<script type=\"module\">#{script}</script></body></html>"
+resource = MCP::Resource.define(uri: "ui://widget/widget.html", name: "widget", mime_type: "text/html;profile=mcp-app") do
+  [
+    MCP::Resource::TextContents.new(
+      uri: "ui://widget/widget.html", mime_type: "text/html;profile=mcp-app", text: html
+    )
+  ]
+end
+
+server = MCP::Server.new(
+  name: "docs-example", version: "1.0.0", tools: [ZooAnimals],
+  resources: [resource]
+)
+MCP::Server::Transports::StdioTransport.new(server).open
+```
+
 #### Error tool result
 
 To return an error on the tool result, use the following `_meta` key:
@@ -34954,6 +36808,104 @@ server.registerTool(
     };
   }
 );
+```
+
+```go
+package main
+
+import (
+	"context"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
+	"log"
+)
+
+type cafe struct {
+	Name    string `json:"name"`
+	Address string `json:"address"`
+}
+type cafeOutput struct {
+	Cafes []cafe `json:"cafes"`
+}
+
+func main() {
+	server := mcp.NewServer(&mcp.Implementation{Name: "docs-example", Version: "1.0.0"}, nil)
+	mcp.AddTool(server, &mcp.Tool{Name: "recommend_cafe"}, func(_ context.Context, request *mcp.CallToolRequest, _ struct{}) (*mcp.CallToolResult, cafeOutput, error) {
+		meta := request.Params.Meta
+		locale, _ := meta["openai/locale"].(string)
+		city := "your area"
+		if location, ok := meta["openai/userLocation"].(map[string]any); ok {
+			if value, ok := location["city"].(string); ok {
+				city = value
+			}
+		}
+		// Local example data; replace this with your application data.
+		cafes := []cafe{}
+		if city == "San Francisco" {
+			cafes = append(cafes, cafe{Name: "Example Cafe", Address: "123 Example Street, San Francisco"})
+		}
+		text := "Cafes in " + city
+		if locale == "es" {
+			text = "Cafés en " + city
+		}
+		return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: text}}}, cafeOutput{Cafes: cafes}, nil
+	})
+	if err := server.Run(context.Background(), &mcp.StdioTransport{}); err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+```ruby
+require "mcp"
+
+class RecommendCafe < MCP::Tool
+  tool_name "recommend_cafe"
+  input_schema(properties: {})
+  output_schema(
+    type: "object",
+    properties: {
+      cafes: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            name: { type: "string" },
+            address: { type: "string" }
+          },
+          required: ["name", "address"]
+        }
+      }
+    },
+    required: ["cafes"]
+  )
+
+  def self.call(server_context:)
+    metadata = server_context[:_meta] || {}
+    locale = metadata[:"openai/locale"] || "en"
+    location = metadata[:"openai/userLocation"]
+    city = location[:city] if location.is_a?(Hash)
+    city = "your area" unless city.is_a?(String)
+    # Local example data; replace this with your application data.
+    cafes = (city == "San Francisco") ? [
+      {
+        name: "Example Cafe",
+        address: "123 Example Street, San Francisco"
+      }
+    ] : []
+    text = (locale == "es") ? "Cafés en #{city}" : "Cafes in #{city}"
+    MCP::Tool::Response.new(
+      [
+        {
+          type: "text",
+          text: text
+        }
+      ], structured_content: { cafes: cafes }
+    )
+  end
+end
+
+server = MCP::Server.new(name: "docs-example", version: "1.0.0", tools: [RecommendCafe], server_context: {})
+MCP::Server::Transports::StdioTransport.new(server).open
 ```
 
 ### Remote MCP server review requirements
@@ -36181,7 +38133,7 @@ Immersive experiences that expand beyond the inline card, giving users space for
 **Rules of thumb**
 
 - **Design your UX to work with the system composer**. The composer is always present in fullscreen, so make sure your experience supports conversational prompts that can trigger tool calls and feel natural for users.
-- **Use fullscreen for work that benefits from more space.** Existing editors and admin interfaces can be embedded when they meet the [iframe policy](https://developers.openai.com/plugins/plugin-guidelines#iframes-and-embedded-pages).
+- **Use fullscreen for work that benefits from more space.** Existing editors and admin interfaces can be embedded when they meet the [iframe requirements](https://developers.openai.com/plugins/build/chatgpt-ui#content-security-policy-csp).
 
 #### Picture-in-picture (PiP)
 
@@ -36272,6 +38224,10 @@ Accessibility should be a core consideration when you are building apps for Chat
 - Text and background must maintain a minimum contrast ratio (WCAG AA).
 - Provide alt text for all images.
 - Support text resizing without breaking layouts.
+
+#### Content security policy (CSP)
+
+Configure a content security policy (CSP) covering the domains your component uses for network requests, loaded resources, and embedded frames. Keep each allowlist as narrow as possible for your plugin’s functionality, and avoid broadly permissive sources that introduce material security risk. Follow the [CSP configuration guidance](https://developers.openai.com/plugins/build/chatgpt-ui#content-security-policy-csp) for implementation details.
 
 ### Upload and submit your plugin
 
@@ -36437,6 +38393,10 @@ In **Metadata &amp; Skills**, open **Review information → Review details** to 
 
 Credentials stay outside the public package. Keep the test account and sample data available for subsequent reviews. If credentials or sign-in steps change, submit an updated draft with the new details.
 
+If your plugin uses iframes, explain what each embedded page does, why it is needed, and who controls its domain. See the [iframe requirements](https://developers.openai.com/plugins/build/chatgpt-ui#content-security-policy-csp) for technical details.
+
+Before submitting a plugin, thoroughly test its MCP server, tools, and optional UI across a wide range of scenarios.
+
 #### Submit the draft
 
 Select the draft, choose **Submit for review**, and complete the required policy attestations. After submitting, track progress under **Review status** on the Plugins page. Feedback from the review team is sent by email.
@@ -36494,6 +38454,8 @@ Tool changes are evaluated independently. A flagged change does not necessarily 
 Keep your MCP server compatible with the currently approved tool schemas until the updated metadata is live.
 
 #### Appeal an automated finding
+
+If our automated review flags an annotation issue, you can submit an appeal with clarification or additional information.
 
 If you believe a tool finding is incorrect, select **Appeal** and explain why the review team should reconsider the findings. The review team considers the held tool changes from that scan together. If the finding is valid, correcting it on the server and rescanning is usually faster.
 
@@ -37514,6 +39476,7 @@ Extend what ChatGPT and Codex can do, for example:
 - Install the Google Drive plugin to work across Drive, Docs, Sheets, and
   Slides.
 - Install the Slack plugin to summarize channels or draft replies.
+- Use the SVG & 3D Design plugin to [create editable SVG graphics and 3D scenes](https://learn.chatgpt.com/guides/svg-3d-design).
 
 A plugin can contain one or more of these parts:
 
@@ -37958,7 +39921,7 @@ increasing delay and jitter.
 
 Requests include `method`, `params`, and `id`.
 
-The examples use [GPT-6.1 Sol](https://learn.chatgpt.com/docs/models#gpt-6.1-sol), which requires access
+The request examples use [GPT-6.1 Sol](https://learn.chatgpt.com/docs/models#gpt-6.1-sol), which requires access
 for the signed-in account or workspace. Use [`model/list`](#list-models-modellist)
 to select an available model if needed.
 
@@ -37997,9 +39960,9 @@ codex app-server generate-json-schema --out ./schemas
 2. Connect a client over the selected transport, then send `initialize` followed by the `initialized` notification.
 3. Start a thread and a turn, then keep reading notifications from the active transport stream.
 
-Example (Node.js / TypeScript):
+The following examples use the `stdio` transport:
 
-```ts
+```typescript
 import { spawn } from "node:child_process";
 import readline from "node:readline";
 const proc = spawn("codex", ["app-server"], {
@@ -38066,6 +40029,225 @@ proc.on("error", (error) => {
 proc.on("exit", (code) => {
   if (code !== 0) process.exitCode = code ?? 1;
 });
+```
+
+```go
+package main
+
+import (
+	"bufio"
+	"context"
+	"encoding/json"
+	"fmt"
+	"log"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"time"
+)
+
+func run() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+	directory, err := os.MkdirTemp("", "codex-app-server-")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(directory)
+	for name, content := range map[string]string{"README.md": "A small Go project with a greeting program.\n", "hello.go": "package main\nimport \"fmt\"\nfunc main(){fmt.Println(\"Hello, world!\")}\n"} {
+		if err := os.WriteFile(filepath.Join(directory, name), []byte(content), 0600); err != nil {
+			return err
+		}
+	}
+	if output, err := exec.CommandContext(ctx, "git", "init", "--quiet", directory).CombinedOutput(); err != nil {
+		return fmt.Errorf("git init: %w: %s", err, output)
+	}
+	command := exec.CommandContext(ctx, "codex", "app-server")
+	command.Dir = directory
+	command.Stderr = os.Stderr
+	stdin, err := command.StdinPipe()
+	if err != nil {
+		return err
+	}
+	stdout, err := command.StdoutPipe()
+	if err != nil {
+		return err
+	}
+	if err := command.Start(); err != nil {
+		return err
+	}
+	defer func() {
+		stdin.Close()
+		if command.ProcessState == nil {
+			command.Process.Kill()
+			command.Wait()
+		}
+	}()
+	encoder := json.NewEncoder(stdin)
+	send := func(message map[string]any) error { return encoder.Encode(message) }
+	if err := send(map[string]any{"method": "initialize", "id": 0, "params": map[string]any{"clientInfo": map[string]string{"name": "my_product", "title": "My Product", "version": "0.1.0"}}}); err != nil {
+		return err
+	}
+	scanner := bufio.NewScanner(stdout)
+	scanner.Buffer(make([]byte, 4096), 8<<20)
+	var threadID, turnID string
+	completed := false
+	for scanner.Scan() {
+		line := scanner.Bytes()
+		var message struct {
+			ID     *int            `json:"id"`
+			Method string          `json:"method"`
+			Error  json.RawMessage `json:"error"`
+			Result struct {
+				Thread struct {
+					ID string `json:"id"`
+				} `json:"thread"`
+				Turn struct {
+					ID string `json:"id"`
+				} `json:"turn"`
+			} `json:"result"`
+			Params struct {
+				ThreadID string `json:"threadId"`
+				Turn     struct {
+					ID     string          `json:"id"`
+					Status string          `json:"status"`
+					Error  json.RawMessage `json:"error"`
+				} `json:"turn"`
+			} `json:"params"`
+		}
+		if err := json.Unmarshal(line, &message); err != nil {
+			return err
+		}
+		fmt.Println(string(line))
+		if len(message.Error) > 0 && string(message.Error) != "null" {
+			return fmt.Errorf("app-server error: %s", message.Error)
+		}
+		switch {
+		case message.Method != "" && message.ID != nil:
+			return fmt.Errorf("this minimal client cannot handle server request %q", message.Method)
+		case message.ID != nil && *message.ID == 0:
+			if err := send(map[string]any{"method": "initialized", "params": map[string]any{}}); err != nil {
+				return err
+			}
+			if err := send(map[string]any{"method": "thread/start", "id": 1, "params": map[string]any{"model": "gpt-6.1-sol"}}); err != nil {
+				return err
+			}
+		case message.ID != nil && *message.ID == 1:
+			threadID = message.Result.Thread.ID
+			if threadID == "" {
+				return fmt.Errorf("missing thread ID")
+			}
+			if err := send(map[string]any{"method": "turn/start", "id": 2, "params": map[string]any{"threadId": threadID, "effort": "low", "input": []map[string]string{{"type": "text", "text": "Summarize this repo."}}}}); err != nil {
+				return err
+			}
+		case message.ID != nil && *message.ID == 2:
+			turnID = message.Result.Turn.ID
+			if turnID == "" {
+				return fmt.Errorf("missing turn ID")
+			}
+		case message.Method == "turn/completed":
+			if message.Params.ThreadID != threadID || turnID == "" || message.Params.Turn.ID != turnID {
+				return fmt.Errorf("expected matching completed turn")
+			}
+			if message.Params.Turn.Status != "completed" {
+				return fmt.Errorf("app-server turn %s: %s", message.Params.Turn.Status, message.Params.Turn.Error)
+			}
+			completed = true
+		}
+		if completed {
+			break
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		return err
+	}
+	if err := stdin.Close(); err != nil {
+		return err
+	}
+	if err := command.Wait(); err != nil {
+		return err
+	}
+	if !completed {
+		return fmt.Errorf("app-server closed before the turn completed")
+	}
+	return nil
+}
+func main() {
+	if err := run(); err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+```ruby
+require "json"
+require "open3"
+require "tmpdir"
+
+# Use an owned repository for this runnable example.
+Dir.mktmpdir("codex-app-server-") do |directory|
+  File.write(File.join(directory, "README.md"), "A small Ruby project with a greeting program.\n")
+  File.write(File.join(directory, "hello.rb"), 'puts "Hello, world!"' + "\n")
+  system("git", "init", "--quiet", directory, exception: true)
+  Dir.chdir(directory) do
+    Open3.popen3("codex", "app-server") do |stdin, stdout, stderr, process|
+      errors = Thread.new { IO.copy_stream(stderr, $stderr) }
+      state = {}
+      state[:failed] = false
+      state[:completed] = false
+      send_message = lambda do |message|
+        stdin.puts(JSON.generate(message))
+        stdin.flush
+      end
+      send_message.call(
+        method: "initialize", id: 0,
+        params: {
+          clientInfo: {
+            name: "my_product",
+            title: "My Product",
+            version: "0.1.0"
+          }
+        }
+      )
+      stdout.each_line do |line|
+        message = JSON.parse(line)
+        puts JSON.generate(message)
+        if message["error"]
+          warn JSON.generate(message["error"])
+          state[:failed] = true
+          break
+        elsif message["id"] == 0
+          send_message.call(method: "initialized", params: {})
+          send_message.call(method: "thread/start", id: 1, params: { model: "gpt-6.1-sol" })
+        elsif message["id"] == 1 && state[:thread_id].nil?
+          state[:thread_id] = message.fetch("result").fetch("thread").fetch("id")
+          send_message.call(
+            method: "turn/start", id: 2,
+            params: {
+              threadId: state[:thread_id],
+              input: [
+                {
+                  type: "text",
+                  text: "Summarize this repo."
+                }
+              ]
+            }
+          )
+        elsif message["method"] == "turn/completed"
+          state[:completed] = message.fetch("params").fetch("turn").fetch("status") == "completed"
+          state[:failed] = !state[:completed]
+          break
+        end
+      end
+      stdin.close
+      errors.join
+      status = process.value
+      raise "App-server turn did not complete" if state[:failed] || !state[:completed] || !status.success?
+    ensure
+      stdin.close unless stdin.closed?
+    end
+  end
+end
 ```
 
 #### Core primitives
@@ -38266,6 +40448,7 @@ those plugins.
 #### List models (`model/list`)
 
 Call `model/list` to populate a model picker with the available models and reasoning efforts.
+Pass `modelProvider` to list models for a specific configured provider. Omit it to use the default provider selected at server startup.
 
 The response below illustrates the structure. Available models, reasoning
 efforts, and defaults depend on the client and account; use the returned
@@ -38303,7 +40486,8 @@ Each model entry can include:
 - `supportsPersonality` - deprecated compatibility field; always `false`. Models no longer support personality selection.
 - `isDefault` - whether the model is the recommended default.
 
-If the startup provider no longer satisfies managed requirements, `model/list`
+An unknown `modelProvider` returns `-32600` with `data.type` set to
+`modelProviderNotConfigured`. If the selected provider no longer satisfies managed requirements, `model/list`
 returns `-32600` and asks the client to restart Codex.
 
 By default, `model/list` returns picker-visible models only. Set `includeHidden: true` if you need the full list and want to filter on the client side using `hidden`.
@@ -39899,6 +42083,20 @@ Codex supports these authentication modes. `account/updated.authMode` shows the 
 - `mcpServer/oauthLogin/completed` (notify) - emitted after a `mcpServer/oauth/login` flow finishes; payload includes `{ name, threadId, loginId?, success, error? }`. Older servers omit `loginId`. `threadId` can be `null` for app-scoped or plugin OAuth flows.
 - `mcpServer/startupStatus/updated` (notify) - emitted when a configured MCP server's startup status changes; payload includes `{ threadId, name, status, error, failureReason }`. `threadId` is `null` for app-scoped startup. On failed startup, `failureReason: "reauthenticationRequired"` means stored OAuth credentials expired and couldn't be refreshed, so the client should offer to reconnect the server.
 
+#### Sign in to a configured gateway
+
+If your client handles gateway sign-in, set `capabilities.explicitGatewayOauth` to
+`true` during initialization. On each connection, call `account/gatewayOAuth/read`
+successfully before sending authenticated requests. Pass `modelProvider` to check
+or sign in to a specific gateway. Omit it to use the current provider.
+
+For device-code sign-in, check that `account/gatewayOAuth/read` returns
+`supportsDeviceAuth: true`. Call `account/gatewayOAuth/login` with the same
+`modelProvider` and `deviceAuth: true`. A `null` prompt means the server reused
+or refreshed the credential. Otherwise, show `prompt.verificationUrl` and
+`prompt.userCode`, then wait for `account/gatewayOAuth/changed` with the
+matching `loginId` to report whether sign-in succeeded.
+
 #### 1) Check auth state
 
 Request:
@@ -40503,6 +42701,64 @@ To identify threads created by your integration, set `threadSource` when you cre
 For example, `codex.startThread({ threadSource: "ci" })` labels the thread
 as `ci`. Resuming a thread preserves its original source.
 
+Set the model and sandbox when creating a thread:
+
+```typescript
+import { Codex } from "@openai/codex-sdk";
+
+const codex = new Codex();
+const thread = codex.startThread({
+  model: "gpt-6.1-sol",
+  modelReasoningEffort: "low",
+  sandboxMode: "workspace-write",
+});
+const result = await thread.run(
+  "Make a plan to diagnose and fix the CI failures"
+);
+console.log(result.finalResponse);
+```
+
+```python
+from openai_codex import Codex, Sandbox
+
+with Codex() as codex:
+    thread = codex.thread_start(
+        model="gpt-6.1-sol",
+        sandbox=Sandbox.workspace_write,
+    )
+    result = thread.run("Make a plan to diagnose and fix the CI failures")
+    print(result.final_response)
+```
+
+The TypeScript SDK is asynchronous. Await the result inside your application's async function:
+
+```typescript
+import { Codex } from "@openai/codex-sdk";
+
+async function main(): Promise<void> {
+  const codex = new Codex();
+  const thread = codex.startThread();
+  const result = await thread.run("Implement the plan");
+  console.log(result.finalResponse);
+}
+await main();
+```
+
+```python
+import asyncio
+from openai_codex import AsyncCodex
+
+
+async def main() -> None:
+    async with AsyncCodex() as codex:
+        thread = await codex.thread_start(model="gpt-6.1-sol")
+        result = await thread.run("Implement the plan")
+        print(result.final_response)
+
+
+asyncio.run(main())
+```
+
 #### Configuration overrides
 
 Pass `config` to set structured Codex configuration. For keys that can't be
@@ -40547,7 +42803,22 @@ in to newer prerelease builds.
 
 Start Codex, create a thread, and run a prompt. The examples use GPT-6.1 Sol,
 which must be available to your signed-in account. Otherwise, omit `model` to
-use your configured default. See [GPT-6.1 Sol availability by plan](https://learn.chatgpt.com/docs/models#gpt-6.1-sol).
+use your configured default. See [model availability by plan](https://learn.chatgpt.com/docs/pricing#feature-availability).
+
+```typescript
+import { Codex } from "@openai/codex-sdk";
+
+const codex = new Codex();
+const thread = codex.startThread({
+  model: "gpt-6.1-sol",
+  modelReasoningEffort: "low",
+  sandboxMode: "workspace-write",
+});
+const result = await thread.run(
+  "Make a plan to diagnose and fix the CI failures"
+);
+console.log(result.finalResponse);
+```
 
 ```python
 from openai_codex import Codex, Sandbox
@@ -40562,6 +42833,18 @@ with Codex() as codex:
 ```
 
 Use `AsyncCodex` when your application is already asynchronous:
+
+```typescript
+import { Codex } from "@openai/codex-sdk";
+
+async function main(): Promise<void> {
+  const codex = new Codex();
+  const thread = codex.startThread();
+  const result = await thread.run("Implement the plan");
+  console.log(result.finalResponse);
+}
+await main();
+```
 
 ```python
 import asyncio
@@ -40697,6 +42980,10 @@ Use `danger-full-access` only in a controlled environment (for example, an isola
 `--full-auto` is no longer supported. Update scripts to use
 `--sandbox workspace-write`, or use `--approve-for-me` to route approval
 requests through automatic review with the workspace-write sandbox.
+
+Local `codex exec` and `codex review` runs load project configuration and project-defined MCP servers only for trusted projects, even in a writable sandbox. Pass `--trust` to save trust for this and future chats. Project-defined MCP servers can run commands outside the sandbox.
+
+Trust persists with `--ephemeral`. If you marked the project untrusted, change that setting first. You can't combine `--trust` with `--ignore-user-config`.
 
 Use `--ignore-user-config` when you need a run that doesn't load `$CODEX_HOME/config.toml`, and `--ignore-rules` when you need to skip user and project execpolicy `.rules` files for a controlled automation environment.
 
@@ -41575,7 +43862,7 @@ Check compatibility before enabling sync:
 
 - **Enterprise hooks.** If your rollout depends on hooks, check [which handlers run with cloud orchestration](https://learn.chatgpt.com/docs/hooks#hooks-with-cloud-orchestration). Test the events and failure cases you rely on before enabling access. Review [audit coverage](https://learn.chatgpt.com/docs/enterprise/compliance-api#audit-records-for-local-computer-access-with-work-cloud) separately.
 
-- Data requirements. Local computer access with Work Cloud does not provide strict zero data retention. Data residency and inference residency cover only eligible content and supported workloads, regions, and configurations. Enterprise Key Management (EKM) covers supported stored content in eligible workspaces. Work is not supported with UAE inference residency. If `enforce_residency` is enabled in any cloud policy, **Allow local computer access** is disabled for both Work and dots. This safeguard does not configure workspace residency or, by itself, disable Work Cloud or dots. If your organization requires ZDR, do not enable this feature.
+- Data requirements. Local computer access with Work Cloud does not provide strict zero data retention. For current regional availability and coverage requirements, consult the Help Center’s [Data residency and inference residency for ChatGPT](https://help.openai.com/en/articles/9903489-data-residency-and-inference-residency-for-chatgpt). If `enforce_residency` is enabled in any cloud policy, **Allow local computer access** is disabled for both Work and dots. This safeguard does not configure workspace residency or, by itself, disable Work Cloud or dots. If your organization requires ZDR, do not enable this feature.
 
 As a workspace owner, review Work permissions for the intended users or groups. Enable Work Cloud, then turn on **Allow local computer access**. Use supported role assignments to grant access. See [Roles and workspace permissions](https://learn.chatgpt.com/docs/enterprise/roles-and-workspace-permissions).
 
@@ -42422,7 +44709,7 @@ No. Local computer access with Work Cloud does not change Codex's existing confi
 
 #### Is sync suitable for a ZDR deployment?
 
-No. Local computer access with Work Cloud does not provide strict zero data retention. Data residency and inference residency cover only eligible content and supported workloads, regions, and configurations. Enterprise Key Management (EKM) covers supported stored content in eligible workspaces. Work is not supported with UAE inference residency. Running a step on a connected computer does not make the workflow a ZDR deployment.
+No. Local computer access with Work Cloud does not provide strict zero data retention. For current regional availability and coverage requirements, consult the Help Center’s [Data residency and inference residency for ChatGPT](https://help.openai.com/en/articles/9903489-data-residency-and-inference-residency-for-chatgpt). Running a step on a connected computer does not make the workflow a ZDR deployment.
 
 #### Overview
 
@@ -42573,7 +44860,7 @@ permissions and security controls.
 
 ChatGPT Work uses the privacy, security, and data commitments applicable to the customer's ChatGPT workspace, subject to plan, configuration, surface, feature, and region. For ChatGPT Enterprise, this includes [no training on business data by default](https://help.openai.com/en/articles/8983130-what-if-i-want-to-keep-my-history-on-but-disable-model-training), encryption in transit and at rest, workspace-level access controls, and supported audit logging.
 
-For Work with local access, residency applies only to eligible content and supported workloads, regions, and configurations; EKM covers supported stored content in eligible workspaces. Work is not supported with UAE inference residency. This experience does not provide strict zero data retention. Dots have separate beta exclusions and do not support data or inference residency. See [compatibility and data requirements](https://learn.chatgpt.com/docs/enterprise/cloud-local-access#check-compatibility-and-data-requirements). HIPAA and Business Associate Agreement coverage depend on the features and agreement in use.
+For current regional availability and data requirements, use the Help Center as the source of truth: [Data residency and inference residency for ChatGPT](https://help.openai.com/en/articles/9903489-data-residency-and-inference-residency-for-chatgpt) and [Getting started with your dot](https://help.openai.com/en/articles/20001530-getting-started-with-your-dot). Work with local access does not provide strict zero data retention. Review [compatibility and data requirements](https://learn.chatgpt.com/docs/enterprise/cloud-local-access#check-compatibility-and-data-requirements) before enabling local access. Confirm that the features and agreement in use meet your organization’s requirements.
 
 Connected services have their own retention, logging, access, residency, and compliance requirements. When ChatGPT Work uses plugins, repositories, or third-party systems, evaluate both the ChatGPT workspace controls and the connected system's controls.
 
@@ -42598,6 +44885,16 @@ classes, retention periods, and deletion paths.
 Review retention requirements across both the ChatGPT workspace and connected
 enterprise systems so your organization's data governance, compliance, and
 record-retention policies apply to each system.
+
+#### How do locked chats affect workspace administration?
+
+Admins can't disable locked chats through settings or RBAC, unlock them, or reset
+a user's account PIN. Workspace policies and retention still apply. Enterprise
+and Edu conversation message logs remain available through the Compliance
+Platform.
+
+Share the [locked chat steps](https://learn.chatgpt.com/docs/projects?surface=web#web-use-locked-chats) with users, and check [Help Center](https://help.openai.com/en/articles/20001411-using-locked-chats-in-chatgpt)
+for availability and details.
 
 #### Observability
 
@@ -43022,7 +45319,7 @@ See [Code and shell sandboxing](https://learn.chatgpt.com/docs/sandboxing?surfac
 
 A conversation using Local computer access with Work Cloud uses cloud coordination even when a tool runs on a connected computer. Review the data sent to the orchestrating service separately from files remaining on the device. Confirm the applicable storage, retention, residency, and audit coverage for the workflow before rollout.
 
-Local computer access with Work Cloud does not provide strict zero data retention. Data residency and inference residency cover only eligible content and supported workloads, regions, and configurations. Enterprise Key Management (EKM) covers supported stored content in eligible workspaces. Work is not supported with UAE inference residency. If your organization requires ZDR, do not enable this feature.
+Local computer access with Work Cloud does not provide strict zero data retention. For current regional availability and coverage requirements, consult the Help Center’s [Data residency and inference residency for ChatGPT](https://help.openai.com/en/articles/9903489-data-residency-and-inference-residency-for-chatgpt). If your organization requires ZDR, do not enable this feature.
 
 Work Cloud follows the applicable ChatGPT workspace privacy and security protections. See [Enterprise privacy](https://openai.com/enterprise-privacy/).
 
@@ -43046,7 +45343,7 @@ Retained conversation and execution context can help Work resume interrupted tas
 
 Eligible Enterprise and Edu workspaces can use Enterprise Key Management for supported stored content, including supported hosted execution snapshots when customer-managed encryption is required. Coverage varies by data category and deployment. Rotating a key doesn't delete existing data or, by itself, deny access to earlier encrypted content. Revoking or disabling key access is a separate action that can disrupt supported workflows. Neither replaces a retention or deletion policy.
 
-Data residency and inference residency apply only to eligible content and supported workloads, subject to the organization's agreement, region, and configuration. Connected apps, external providers, and some processing or synced indexes can follow separate location rules. Verify support for the product, integration, and region. See [Data residency and inference residency](https://help.openai.com/en/articles/9903489-data-residency-and-inference-residency-for-chatgpt).
+For current regional availability, supported content, and processing coverage, consult the Help Center’s [Data residency and inference residency for ChatGPT](https://help.openai.com/en/articles/9903489-data-residency-and-inference-residency-for-chatgpt). Review connected services separately before rollout.
 
 OpenAI API [Zero Data Retention](https://developers.openai.com/api/docs/guides/your-data#zero-data-retention) is an API-specific control and doesn't define retention for ChatGPT Work.
 
@@ -43261,7 +45558,7 @@ Review the connection, signed-in account, destination, and action required by th
 
 For Local computer access with Work Cloud, cloud coordination is part of the workflow even when a step runs on the computer. Review conversation data and task context separately from the local files used by a tool. Do not infer that local execution means device-only storage or that every file in a folder is uploaded.
 
-Local computer access with Work Cloud does not provide strict zero data retention. Data residency and inference residency cover only eligible content and supported workloads, regions, and configurations. Enterprise Key Management (EKM) covers supported stored content in eligible workspaces. Work is not supported with UAE inference residency. Confirm the workspace's storage, retention, and audit coverage before rollout. If your organization requires ZDR, do not enable this feature. If `enforce_residency` is enabled in any cloud policy, **Allow local computer access** is disabled for both Work and dots. This safeguard does not configure workspace residency or, by itself, disable Work Cloud or dots.
+Local computer access with Work Cloud does not provide strict zero data retention. For current regional availability and coverage requirements, consult the Help Center’s [Data residency and inference residency for ChatGPT](https://help.openai.com/en/articles/9903489-data-residency-and-inference-residency-for-chatgpt). Confirm the workspace's storage, retention, and audit coverage before rollout. If your organization requires ZDR, do not enable this feature. If `enforce_residency` is enabled in any cloud policy, **Allow local computer access** is disabled for both Work and dots. This safeguard does not configure workspace residency or, by itself, disable Work Cloud or dots.
 
 Apply your organization's endpoint, file-access, proxy, and data-loss-prevention controls to the specific device and workflow. Confirm whether those controls can prevent sensitive information from entering the task before processing. Audit logs and compliance exports help with monitoring and investigation but do not block processing on their own.
 
@@ -43478,7 +45775,7 @@ See
 
 #### Privacy and data handling
 
-ChatGPT Work follows the privacy, security, and data-handling policies applicable to your ChatGPT workspace. Local computer access with Work Cloud does not provide strict zero data retention. Data residency and inference residency cover only eligible content and supported workloads, regions, and configurations. Enterprise Key Management (EKM) covers supported stored content in eligible workspaces. Work is not supported with UAE inference residency. Conversations, uploaded files, generated files, connected applications, and browser data can have different retention and deletion rules. If `enforce_residency` is enabled in any cloud policy, **Allow local computer access** is disabled for both Work and dots. This safeguard does not configure workspace residency or, by itself, disable Work Cloud or dots.
+ChatGPT Work follows the privacy, security, and data-handling policies applicable to your ChatGPT workspace. Local computer access with Work Cloud does not provide strict zero data retention. For current regional availability and coverage requirements, consult the Help Center’s [Data residency and inference residency for ChatGPT](https://help.openai.com/en/articles/9903489-data-residency-and-inference-residency-for-chatgpt). Conversations, uploaded files, generated files, connected applications, and browser data can have different retention and deletion rules. If `enforce_residency` is enabled in any cloud policy, **Allow local computer access** is disabled for both Work and dots. This safeguard does not configure workspace residency or, by itself, disable Work Cloud or dots.
 
 For details, see [Enterprise privacy](https://openai.com/enterprise-privacy/),
 [Chat and file retention policies](https://help.openai.com/en/articles/8983778-chat-and-file-retention-policies-in-chatgpt),
@@ -44770,9 +47067,36 @@ timeout = 30
 statusMessage = "Checking managed Bash command"
 ```
 
-The requirement registers the hook but does not install it. For a local macOS integration test, save the following as `pre_tool_use_policy.py` and have an administrator install it with the commands below.
+The requirement registers the hook but does not install it. Have an administrator install the selected file with the commands below.
 
-It blocks only the synthetic marker; replace it with a reviewed organization-specific policy before relying on it. Confirm that `/usr/bin/python3` exists on the target and adjust the interpreter path if necessary:
+For a local macOS integration test, save the Python version as `pre_tool_use_policy.py`.
+
+Save the Go version as `main.go` in a Go module and build it with `go build -o pre_tool_use_policy .`. Have an administrator install the executable as `/etc/codex/hooks/pre_tool_use_policy` with root ownership and mode `755`, and set the hook `command` to that absolute path. It uses only the standard library and does not need an interpreter.
+
+For a local macOS integration test, save the Ruby version as `pre_tool_use_policy.rb`. Set the hook `command` to `/usr/bin/ruby /etc/codex/hooks/pre_tool_use_policy.rb`, replacing `/usr/bin/ruby` with the absolute path to your Ruby interpreter if needed. The Ruby hook uses only the standard library.
+
+Save the TypeScript version as `pre_tool_use_policy.ts`. Set the hook `command` to `/absolute/path/to/node --experimental-strip-types /etc/codex/hooks/pre_tool_use_policy.ts`, replacing the interpreter path with the path to your installed Node executable. In the installation commands below, replace both `pre_tool_use_policy.py` paths with `pre_tool_use_policy.ts`; retain root ownership and permissions. The hook uses only Node's standard library.
+
+It blocks only the synthetic marker; replace it with a reviewed organization-specific policy before relying on it. Confirm that the configured executable and any required interpreter exist on the target. The command must match the selected language:
+
+```typescript
+import { readFileSync } from "node:fs";
+
+try {
+  const event = JSON.parse(readFileSync(0, "utf8")) as {
+    tool_input?: { command?: unknown };
+  };
+  const command = event.tool_input?.command ?? "";
+  if (typeof command !== "string") throw new Error("Invalid command");
+  if (command.includes("CODEX_HOOK_TEST_DENY")) {
+    console.error("Synthetic test command blocked by managed hook.");
+    process.exit(2);
+  }
+} catch {
+  console.error("Invalid hook event.");
+  process.exit(2);
+}
+```
 
 ```python
 import json
@@ -44785,10 +47109,52 @@ if "CODEX_HOOK_TEST_DENY" in command:
     sys.exit(2)
 ```
 
+```go
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"os"
+	"strings"
+)
+
+func main() {
+	var event struct {
+		ToolInput struct {
+			Command string `json:"command"`
+		} `json:"tool_input"`
+	}
+	decoder := json.NewDecoder(io.LimitReader(os.Stdin, 1<<20))
+	if err := decoder.Decode(&event); err != nil {
+		fmt.Fprintln(os.Stderr, "Invalid hook event.")
+		os.Exit(2)
+	}
+	if strings.Contains(event.ToolInput.Command, "CODEX_HOOK_TEST_DENY") {
+		fmt.Fprintln(os.Stderr, "Synthetic test command blocked by managed hook.")
+		os.Exit(2)
+	}
+}
+```
+
+```ruby
+require "json"
+
+event = JSON.parse($stdin.read)
+command = event.fetch("tool_input", {}).fetch("command", "")
+if command.include?("CODEX_HOOK_TEST_DENY")
+  warn "Synthetic test command blocked by managed hook."
+  exit 2
+end
+```
+
 ```bash
 sudo install -d -o root -g wheel -m 755 /etc/codex/hooks
 sudo install -o root -g wheel -m 644 ./pre_tool_use_policy.py /etc/codex/hooks/pre_tool_use_policy.py
 ```
+
+For Ruby, replace both `pre_tool_use_policy.py` paths in the installation commands with `pre_tool_use_policy.rb`; keep the same root ownership and permissions.
 
 Restart the local client, then:
 
@@ -44967,6 +47333,79 @@ This page doesn't duplicate that contract.
 - [Governance](https://learn.chatgpt.com/docs/enterprise/governance)
 - [Analytics API](https://learn.chatgpt.com/docs/enterprise/analytics-api)
 
+### Connect Codex to Google Cloud Vertex AI
+
+Source: [Connect Codex to Google Cloud Vertex AI](https://learn.chatgpt.com/docs/enterprise/connect-to-vertex-ai.md)
+
+{"OpenAI models on Google Cloud are in "}
+private preview
+{". To use them in your project, "}
+[{"request access"}](https://openai.com/form/openai-on-google-cloud/)
+{"."}
+
+#### Before you begin
+
+Ask your administrator for the project ID, model name, and Vertex AI location to use with Codex. Your user or service account needs permission to invoke the model in that project. For help setting up billing, accepting a Marketplace private offer, and enabling the model, see the [Google Cloud prerequisites](https://developers.openai.com/api/docs/guides/google-cloud#before-you-begin).
+
+With the default location, `global`, Google Cloud can process model requests in more than one region. If your organization requires regional processing, confirm which supported location to use with your administrator before you send a request.
+
+#### Authenticate on the Codex host
+
+Install the Google Cloud CLI on the machine where Codex runs. For local development, run this command to sign in and set up Application Default Credentials (ADC).
+
+```sh
+gcloud auth application-default login
+```
+
+If your administrator has provided an ADC file, skip the interactive sign-in and use the file during setup. Codex runs `gcloud auth application-default print-access-token` to get an access token.
+
+#### Set up Google Cloud in Codex
+
+Use Codex CLI 0.167.0 or later, or Codex desktop app 26.1103.32239 or later.
+
+If you’re already signed in to Codex or don’t see Google Cloud in the sign-in options, [authenticate on the Codex host](#authenticate-on-the-codex-host), then [configure the provider manually](#configure-the-provider). Start a new CLI session or desktop task and [verify a model request](#verify-a-model-request).
+
+1. Start `codex`. Select **Sign in another way**, then **Use Google Cloud Vertex AI**.
+
+2. Enter the Google Cloud project ID from your administrator.
+
+3. Enter the Vertex AI location, or press Enter to use `global`.
+4. Enter the absolute path to your credential JSON file, or press Enter to use ADC on this computer. Codex checks that it can get a token before it saves your settings.
+5. [Verify a model request](#verify-a-model-request).
+
+6. On **Sign in another way**, select **Use Google Cloud**.
+
+7. On **Set up Google Cloud**, enter the **Project ID** from your administrator.
+
+8. Enter a **Location**, or leave it blank to use `global`.
+9. In **Credential file**, enter the absolute path to your credential JSON file or select **Browse…** to choose it. Leave the field blank to use ADC on this computer.
+10. Select **Continue**, then [verify a model request](#verify-a-model-request).
+
+#### Configure the provider manually
+
+In `~/.codex/config.toml`, set `model_provider` to `"gcp"` above any table headers. Set your project ID and location under `[model_providers.gcp]`.
+
+```toml
+model_provider = "gcp"
+
+[model_providers.gcp]
+project_id = "my-project"
+location = "global"
+```
+
+If you use an ADC file, add `credential_file = "/absolute/path/to/credentials.json"` under `[model_providers.gcp]`. Codex sets `GOOGLE_APPLICATION_CREDENTIALS` for the authentication command.
+
+You can omit `project_id` if you set `GOOGLE_CLOUD_PROJECT` on the Codex host. If you omit `location`, Codex uses `GOOGLE_CLOUD_LOCATION` when set and otherwise uses `global`.
+
+#### Verify a model request
+
+1. Start a new session with `codex` and enter `/model`, or start a new task in the desktop app and open the model picker.
+2. Select a model your administrator has enabled for your project and ask it to reply with a short greeting. A reply confirms that Codex can authenticate and call that model.
+
+If credential validation fails, check that the machine running Codex can run `gcloud` and read your credential file, if you specified one. To sign in again with local user credentials, run `gcloud auth application-default login` on that machine.
+
+If authentication succeeds but the model request fails, check that your project ID and location match the model deployment. Ask your administrator to confirm that your user or group has access to the project and that the account running Codex can invoke the model.
+
 ### Connect to a gateway
 
 Source: [Connect to a gateway](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway.md)
@@ -45007,7 +47446,35 @@ To configure Codex yourself, get these values from your gateway team:
 
 #### Configure the provider
 
-Open `config.toml` at `~/.codex/config.toml` on macOS or Linux, or
+1. Run `/config` and open **Sessions** > **Model providers**.
+
+2. If you don't see your gateway, select **Create a custom provider or gateway**. Enter its **Name** and **Base URL**. If the gateway uses an API key, enter the environment variable name in **API key variable**. Select **Save**.
+
+3. If your organization lets you change the default, highlight your gateway and press Space.
+4. Start a chat with `/new` and [verify the connection](#verify-the-connection).
+
+To edit a saved gateway, open its details and select **Edit configuration** if available.
+
+To set up a gateway during CLI sign-in, start `codex --enable gateway_setup_wizard`
+and choose **Sign in another way** > **Use a custom provider or gateway**.
+This optional sign-in flow is off by default. It appears in a signed-out CLI
+using the embedded app server when the default provider is OpenAI, API-key
+sign-in is allowed, and no managed setting or launch override selects a provider.
+
+Open **Settings** and select **Model Providers**. If your gateway is listed, open its menu and select **Switch provider** if available. Skip this step if the gateway is already your current provider. Then start a new chat and [verify the connection](#verify-the-connection).
+
+If you don't see your gateway and you can add providers, follow these steps.
+
+1. On **Model Providers & Gateways**, select **Add** > **Gateway or custom provider**.
+
+2. Enter a **Name** for the gateway and the **Base URL** from your administrator, including the API path.
+3. Under **Authentication**, choose the method your administrator specified. For **Environment variable**, enter the variable name (for example, `COMPANY_GATEWAY_API_KEY`) in **API key environment variable**.
+4. To use the gateway for new chats, turn on **Set as current provider** if available. Select **Save**.
+
+5. Start a new chat with the gateway and [verify the connection](#verify-the-connection).
+
+For manual setup or additional authentication settings, open
+`config.toml` at `~/.codex/config.toml` on macOS or Linux, or
 `%USERPROFILE%\.codex\config.toml` on Windows.
 
 Merge this example into your existing configuration, replacing the URL and model
@@ -45047,15 +47514,18 @@ Confirm with your gateway team how Codex gets the capabilities and instructions 
 
 - **Built-in name:** If the gateway accepts the exact model name bundled with your Codex version and routes it to the matching model, set `model` to that name. Codex already has its metadata.
 - **Catalog endpoint:** If the gateway serves Codex-compatible metadata, use its full catalog URL. This can be a `/v1/models` endpoint that implements the [Codex catalog response](https://learn.chatgpt.com/docs/enterprise/roll-out-a-gateway#implement-the-catalog-endpoint). A response that only lists model IDs is insufficient for custom aliases.
-- **Catalog file:** If your gateway uses custom aliases and your administrator distributes a file, use the [local models.json example](https://learn.chatgpt.com/docs/enterprise/roll-out-a-gateway#start-with-a-local-modelsjson-file). Use a local file when native gateway OAuth is your only credential and you need custom metadata.
+- **Catalog file:** If your gateway uses custom aliases and your administrator distributes a file, use the [local models.json example](https://learn.chatgpt.com/docs/enterprise/roll-out-a-gateway#start-with-a-local-modelsjson-file).
 
-For API-key or helper authentication, if your administrator supplies a catalog
-URL, add it to the existing
+If your administrator supplies a catalog URL, add it to the existing
 `[model_providers.enterprise-gateway]` table:
 
 ```toml
 model_catalog_url = "https://gateway.example.com/codex/models.json"
 ```
+
+If gateway OAuth is your only credential, the catalog URL must use the same
+scheme, host, and port as `base_url`. Sign in to the gateway first. Codex uses
+your existing gateway session to fetch the catalog.
 
 Remove any effective `model_catalog_json` setting; it takes precedence over the
 URL. Administrators can find endpoint requirements in
@@ -45074,7 +47544,7 @@ add a catalog path unless the file exists at that location.
 
 #### Choose an authentication method
 
-Use native gateway OAuth for browser sign-in, an API key for a scoped credential, or a credential helper if your organization supplies a command.
+Use native gateway OAuth for browser or device-code sign-in, an API key for a scoped credential, or a credential helper if your organization supplies a command.
 
 {/_ prettier-ignore _/}
 
@@ -45097,6 +47567,7 @@ authorization_url = "https://login.example.com/oauth/authorize"
 token_url = "https://login.example.com/oauth/token"
 client_id = "YOUR_PUBLIC_CLIENT_ID"
 # redirect_port = 43127
+# device_authorization_url = "https://login.example.com/oauth/device"
 ```
 
 Add `scopes` and, if required, `resource` to this table using the values your
@@ -45124,27 +47595,30 @@ manage its own upstream credentials, such as its AWS credentials for Bedrock.
 
 When OAuth is your only credential, keep `requires_openai_auth = false` and remove the
 previous `env_key`, `experimental_bearer_token`, or `auth` settings used for the
-gateway credential. Use a [local model catalog](https://learn.chatgpt.com/docs/enterprise/roll-out-a-gateway#start-with-a-local-modelsjson-file) if you need custom model
-metadata; OAuth alone doesn't enable remote catalog discovery.
+gateway credential.
 
 Restart the desktop app and follow its gateway sign-in prompt to open the browser.
-In the CLI, start `codex` and follow the browser sign-in when Codex first accesses
-the gateway. Complete your organization's sign-in and MFA, then return to the
-client. If the grant expires or Codex can't refresh it, sign in again when prompted.
+In the CLI, start `codex` and follow its sign-in prompt. Complete your
+organization's sign-in and MFA, then return to Codex. If the grant expires or
+Codex can't refresh it, sign in again when prompted.
 
-Native gateway OAuth requires a browser and a reachable loopback callback. It has
-no device-code fallback. If the CLI runs over SSH, set `redirect_port = 43127` in
-the OAuth table and register the matching redirect URI described above. From the
-machine with your browser, forward that port before starting Codex:
+For SSH or a terminal without a browser, set `device_authorization_url` to the
+device authorization endpoint your identity provider supplies. When you need to
+sign in, the interactive CLI shows a verification URL and a one-time code. Open
+the URL in a browser and enter the code. This flow doesn't require port forwarding.
+
+If your provider only supports browser sign-in and the CLI runs over SSH, set
+`redirect_port = 43127` and register the matching redirect URI. From the machine
+with your browser, forward the port before starting Codex:
 
 ```shell
 ssh -L 43127:127.0.0.1:43127 user@remote
 ```
 
 In that SSH session, start `codex` and open the gateway sign-in URL in your local
-browser. A CLI inside a container also needs a callback reachable from the
-browser. If you can't make the callback reachable, use an API key or credential
-helper instead.
+browser. For browser sign-in inside a container, the callback must also be
+reachable from the browser. If you can't reach it, use device authorization,
+an API key, or a credential helper.
 
 #### Use an API key
 
@@ -45183,8 +47657,8 @@ If the custom header is your only authentication mechanism, use
 
 #### Use an organization credential helper
 
-If your administrator provides command-backed authentication, use their installed
-helper and configuration instead of `env_key`. Don't configure both mechanisms.
+If the helper supplies your primary provider credential, use your administrator's
+installed helper and configuration instead of `env_key`. Don't configure both mechanisms.
 The helper must exist on your machine; Codex doesn't install it. For example,
 add this table without `env_key`, using the resolver path and
 arguments your administrator supplies:
@@ -45202,7 +47676,27 @@ defines the command, arguments, timeout, refresh interval, and token output
 contract. Ask your administrator how to renew your sign-in if the helper can no
 longer retrieve a token.
 
-With ChatGPT sign-in, run the helper before launching Codex and pass its output through a [custom gateway header](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway?gateway-auth=api-key#use-a-custom-authentication-header) instead of configuring the `auth` table. When the key expires, get a new key and relaunch Codex.
+If your helper supplies a gateway token alongside ChatGPT sign-in, omit the
+provider's `auth` table and set `requires_openai_auth = true`. Configure a
+gateway credential export command and the header or cookie your gateway accepts:
+
+```toml
+[model_providers.enterprise-gateway.gateway_oauth]
+delivery = { kind = "cookie", name = "gateway_session" }
+
+[model_providers.enterprise-gateway.gateway_oauth.credential_export]
+command = "/usr/local/bin/fetch-codex-gateway-token"
+args = ["print-token"]
+```
+
+The command must print one access token to standard output. Codex runs it on
+first use and caches the token in memory. If the gateway rejects an inference
+request with HTTP 401, Codex runs the command again and retries once.
+When using `credential_export`, omit the OAuth client ID and endpoint settings.
+
+You can also run the helper before starting Codex and pass the token in a
+[custom gateway header](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway?gateway-auth=api-key#use-a-custom-authentication-header).
+Renew the token and restart Codex when it expires.
 
 Use resolved absolute paths for helper executables and catalog files.
 
@@ -45213,7 +47707,7 @@ If your organization uses a ChatGPT workspace, signing in gives users access to 
 For manual setup, update the existing `[model_providers.enterprise-gateway]` table before signing in:
 
 1. Set `requires_openai_auth = true` and keep `base_url` pointing to your gateway. Remove any `env_key`, `experimental_bearer_token`, and provider `auth` settings so Codex uses your OpenAI credential for primary authentication.
-2. Send the gateway credential separately. For [native gateway OAuth](#use-native-gateway-oauth), configure `gateway_oauth.delivery` to use the cookie or custom header your gateway accepts. For an API key or credential helper, use a [custom authentication header](#use-a-custom-authentication-header). Reserve `Authorization` for the OpenAI credential.
+2. Send the gateway credential separately. For [native gateway OAuth](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway?gateway-auth=oauth#use-native-gateway-oauth) or a [gateway credential export command](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway?gateway-auth=helper#use-an-organization-credential-helper), configure `gateway_oauth.delivery` to use the cookie or custom header your gateway accepts. For a static API key, use a [custom authentication header](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway?gateway-auth=api-key#use-a-custom-authentication-header). Reserve `Authorization` for the OpenAI credential.
 
 Sign in to the ChatGPT workspace your administrator named. Complete the gateway sign-in if prompted, then [verify your connection](#verify-the-connection).
 
@@ -45251,7 +47745,7 @@ Only model-provider requests use this gateway route. [Voice sessions](https://le
 
 With ChatGPT sign-in, start the client and sign in to the workspace that provides the managed configuration. If you use native gateway OAuth, also complete your organization's gateway sign-in when prompted. Then [verify the connection](#verify-the-connection).
 
-For a locally configured provider, follow the instructions for your client.
+If you edited `config.toml` manually, follow the instructions for your client.
 
 #### Configure the CLI
 
@@ -45291,8 +47785,7 @@ authorize access to your tools or connected systems.
 
 Use the provider ID and model alias in your administrator's handoff. The provider identifies the configured connection; the model alias identifies a model routed through that connection. ChatGPT sign-in and gateway authentication control access and may both be required.
 
-Restart the client after changing the configuration. In the CLI, start `codex`
-and use `/status` to inspect the active model and provider. In the desktop app,
+In the CLI, use `/status` to inspect the active model and provider. In the desktop app,
 check the selected model and configuration.
 
 Send this prompt in a new task:
@@ -47035,17 +49528,18 @@ Review eligibility, data coverage, and the controls your organization relies on 
 
 #### Review Work and dots eligibility
 
-- **Work:** Residency applies only to eligible content and supported workloads, regions, and configurations. EKM covers supported stored content in eligible workspaces. Confirm coverage for your workflow rather than assuming every local-access step or connected integration is covered. Work is not supported with UAE inference residency. See [Data residency and inference residency](https://help.openai.com/en/articles/9903489-data-residency-and-inference-residency-for-chatgpt) and [Work cloud security](https://learn.chatgpt.com/docs/enterprise/chatgpt-work-cloud-security#data-handling-and-retention).
+Use the Help Center as the source of truth for current eligibility, regional availability, and data requirements:
 
-- **Dots residency:** During the Enterprise beta, dots do not support data residency or inference residency. Eligible workspaces can opt in after acknowledging those limitations; enabling dots does not make their data or processing residency-compliant.
+- **Work:** Review [Data residency and inference residency for ChatGPT](https://help.openai.com/en/articles/9903489-data-residency-and-inference-residency-for-chatgpt) and [Work cloud security](https://learn.chatgpt.com/docs/enterprise/chatgpt-work-cloud-security#data-handling-and-retention).
+- **Dots:** Review [Getting started with your dot](https://help.openai.com/en/articles/20001530-getting-started-with-your-dot) and [Data residency and inference residency for ChatGPT](https://help.openai.com/en/articles/9903489-data-residency-and-inference-residency-for-chatgpt), along with the workspace notices shown during setup.
 
-- **Dots exclusions:** Dots are unavailable for FedRAMP workspaces, workspaces with EKM, and workspaces with inference residency set to AE (UAE). HIPAA workspaces can participate if they meet the other eligibility requirements.
+Confirm that your workspace configuration, agreement, and intended workflow meet your organization’s requirements before enabling access.
 
 #### Check data handling and the local-access safeguard
 
 - **Cloud processing:** Work with local access and dots still use cloud coordination. Conversations, tool results, and other task context do not stay exclusively on the connected computer.
 
-- **Residency safeguard:** If any cloud policy enables `enforce_residency`, **Allow local computer access** is unavailable for both Work and dots. This safeguard does not set workspace residency or, by itself, disable Work Cloud or dots. Eligible workspaces can still opt in to dots after acknowledging the beta residency limitations; local access remains blocked.
+- **Residency safeguard:** If any cloud policy enables `enforce_residency`, **Allow local computer access** is unavailable for both Work and dots. This safeguard does not set workspace residency or, by itself, disable Work Cloud or dots.
 
 - **Retention and access to data:** Neither experience provides strict zero data retention. API Zero Data Retention is a separate API control. “Eyes-off” commitments and abuse-monitoring controls are also distinct from zero retention. If a workflow requires no retained data, do not enable it for these experiences.
 
@@ -47387,7 +49881,7 @@ For current availability, supported plans, and workspace settings, see [Manage d
 
 During the preview, admins in eligible ChatGPT Enterprise, Edu, and Healthcare workspaces can enable dots for selected roles. Starting November 18, 2026, members have access by default unless the workspace opts out. Each member chooses whether to create a personal dot.
 
-Eligible Enterprise workspaces can pay a flat rate based on the type of work a dot does or pay based on consumption. The preview is free. Billing for enabled dots begins November 18, 2026. Tasks a dot delegates to ChatGPT Work or Codex threads incur separate charges at the standard rates. See [Dots pricing in the Help Center](https://help.openai.com/en/articles/20001530-getting-started-with-your-dot).
+Workspace access and billing are separate. Eligible Enterprise workspaces can pay a flat rate based on the type of work a dot does or pay based on consumption. The preview is free. Tasks a dot delegates to ChatGPT Work or Codex threads incur separate charges at the standard rates. For billing details, see [Getting started with your dot](https://help.openai.com/en/articles/20001530-getting-started-with-your-dot) in the Help Center.
 
 #### Set up dots for work
 
@@ -47399,7 +49893,7 @@ Review these permissions in **Permissions**:
 
 - **Use dots**: Allow members to use dots.
 
-- **Add dots to Slack and Microsoft Teams**: Allow members to connect their dots to supported messaging channels where available.
+- Allow members to connect their dots to Slack where available.
 
 - **Allow local computer access**: Allow dots to use a member’s local computer.
 
@@ -47417,7 +49911,9 @@ For role creation, assignment, and access checks, see the [role-based access con
 
 5. Under Workspace capabilities, set Use password manager according to your workspace policy.
 
-6. Save, then check access for an intended member.
+6. Wallet is off by default for Enterprise workspaces. Once the setting is available, go to **Admin Console → Permissions → Workspace capabilities → Use Wallet** to give eligible members access. Members must review and approve each Wallet payment using biometrics.
+
+7. Save, then check access for an intended member.
 
 When you enable dots, you may be asked to turn on cloud computer capabilities that are still off. Dots, Work Cloud, and team automations share these permissions. Choose the capabilities your organization's policies allow.
 
@@ -47450,7 +49946,7 @@ Turning off a dot's Slack identity doesn't remove its access through the member'
 
 **Before members connect their dots to Slack**
 
-- **ChatGPT workspace owner:** Enable Use dots and Add dots to Slack and Microsoft Teams for the intended members through workspace defaults or custom roles.
+- **ChatGPT workspace owner:** Enable **Use dots** and the permission to connect dots to Slack for the intended members through workspace defaults or custom roles.
 
 - **Slack workspace owner or app manager:** Ensure the ChatGPT app is installed in Slack. Approve app requests if required by your workspace. See [Slack’s app approval guidance](https://slack.com/help/articles/360024269514-Manage-app-requests-for-your-workspace).
 
@@ -47475,6 +49971,7 @@ Compare the result with the requirements approved by your security team. Resolve
 | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | Access to dots                      | Grant or revoke dots access through workspace permissions.                                                             |
 | Cloud and connected local computers | Control Use a browser, Allow network access, Allow computer use, Use password manager, and local-computer access.      |
+| Wallet                              | Give eligible members access to Wallet. Off by default for Enterprise workspaces.                                      |
 | Messaging and participation         | Enable or disable Slack participation.                                                                                 |
 | Connected apps                      | Set available apps and allowed actions through [Plugin controls](https://learn.chatgpt.com/docs/enterprise/apps-and-connectors).               |
 | Custom dot rules                    | When disabled, members cannot add or edit custom rules, and saved rules do not apply.                                  |
@@ -47484,7 +49981,7 @@ For cloud-browser site rules and controls still in development, see [browser, ne
 
 #### Review availability and data requirements
 
-Before enabling dots, review current availability in [Getting started with your dot](https://help.openai.com/en/articles/20001530-getting-started-with-your-dot) and the workspace notices shown during setup. Review the security guide's [eligibility and data requirements](https://learn.chatgpt.com/docs/enterprise/dots-security#confirm-eligibility-and-data-requirements) for regional, residency, Enterprise Key Management, and HIPAA coverage. Confirm that your workspace configuration, any applicable business associate agreement (BAA), and the intended workflow meet your organization's requirements before enabling access.
+Before enabling dots, review current availability in [Getting started with your dot](https://help.openai.com/en/articles/20001530-getting-started-with-your-dot) and the workspace notices shown during setup. Use the Help Center’s [Data residency and inference residency for ChatGPT](https://help.openai.com/en/articles/9903489-data-residency-and-inference-residency-for-chatgpt) for current regional availability and coverage; review the security guide’s [eligibility and data requirements](https://learn.chatgpt.com/docs/enterprise/dots-security#confirm-eligibility-and-data-requirements) for additional rollout considerations. Confirm that your workspace configuration, any applicable business associate agreement (BAA), and the intended workflow meet your organization's requirements before enabling access.
 
 Check requirements for the dot itself, tasks it delegates to Work or Codex, and any connected computer. For cloud browser, network, and computer use, see [cloud security](https://learn.chatgpt.com/docs/enterprise/chatgpt-work-cloud-security). For work on employee devices, see [local computer access](https://learn.chatgpt.com/docs/enterprise/cloud-local-access).
 
@@ -47494,7 +49991,7 @@ Open **Admin Console** > **Dots** to see the personal dots created in your works
 
 #### Review a dot's details
 
-The details include the member who created the dot, its active or paused status, its identity, and its Slack or Microsoft Teams connection status. The identity is the dot's service account, or its dot ID when a service account isn't available. Connection status shows whether a messaging service is connected; the [messaging permission](#3-configure-communication-channels) controls who can set up that connection.
+The details include the member who created the dot, its active or paused status, its identity, and its Slack connection status. The identity is the dot's service account, or its dot ID when a service account isn't available. Connection status shows whether Slack is connected; the [messaging permission](#3-configure-communication-channels) controls who can set up that connection.
 
 #### Pause and resume a dot
 
@@ -48828,9 +51325,12 @@ exports. This example sends logs to an OTLP/HTTP collector and limits the
 text logged for each tool result to 256 UTF-8 bytes. It omits prompt text, final response
 text, and automatic approval assessments.
 
-The macOS desktop app 26.1027.30824 bundles CLI `0.166.0-alpha.5.1`.
-That build doesn't support `[otel]` in `requirements.toml`, so it can't
-enforce `log_user_prompt = false` through this policy.
+The macOS desktop app 26.1111.21308 bundles CLI `0.169.0-alpha.11.1` and
+supports managed `[otel]` settings. Set `otel.log_sse_deltas` to `false` to
+skip successful streaming events whose names end in `.delta`. Codex still
+records errors, completion events, and metrics.
+The older desktop build 26.1027.30824 bundles CLI `0.166.0-alpha.5.1` and
+can't enforce `[otel]` settings through `requirements.toml`.
 
 ```toml
 [otel]
@@ -49658,7 +52158,7 @@ For a local catalog, start with the [models.json example](#start-with-a-local-mo
 
 Supply a model catalog when your gateway uses a model name Codex does not recognize. The catalog supplies the instructions, reasoning options, context limits, and tool capabilities Codex uses for that name. Without a matching entry, a request can reach the intended upstream model while Codex uses generic settings.
 
-Host a remote catalog with `model_providers..model_catalog_url` to update model metadata centrally, or distribute a local file with `model_catalog_json`. Use a local catalog when native gateway OAuth is the only credential; OAuth alone doesn't enable remote catalog discovery. See the [configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference) for both settings.
+Host a remote catalog with `model_providers..model_catalog_url` to update model metadata centrally, or distribute a local file with `model_catalog_json`. See the [configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference) for both settings.
 
 Get a catalog endpoint or file compatible with your Codex version from your cloud
 or gateway provider. Make sure it includes each approved alias and its model
@@ -49687,8 +52187,9 @@ Make `CODEX_GATEWAY_API_KEY` available to the Codex process. Set `base_url`
 separately to route inference through the gateway. If you omit it, Codex uses the
 default OpenAI endpoint for the current authentication mode.
 
-Discovery requires API-key, command-backed, or Codex-backend authentication.
-Native gateway OAuth or custom headers alone don't trigger it.
+When gateway OAuth is the only credential, set an explicit catalog URL with
+the same scheme, host, and port as `base_url`. Codex uses the existing gateway
+session without prompting for sign-in or requiring API-key discovery.
 
 Coordinate catalog updates with your provider when your approved models change. Restart the client after
 changing its configuration.
@@ -49732,10 +52233,11 @@ MCP connections, plugin distribution, and their policies separately.
    OAuth](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway#use-native-gateway-oauth) to collect
    the authorization and token URLs, public client ID, scopes, optional resource,
    token delivery settings, and any fixed redirect port. Register the matching
-   loopback redirect URI with your identity provider.
+   loopback redirect URI with your identity provider. If it supports device
+   authorization, also distribute `device_authorization_url` for remote CLI users.
 4. Test browser sign-in, token refresh, and access revocation with a test user on
-   the CLI or desktop app you plan to deploy. Confirm that the browser can reach
-   the callback, including for remote CLI users.
+   the CLI or desktop app you plan to deploy. For remote CLI users, test
+   device-code sign-in or confirm the browser can reach the loopback callback.
 
 Users sign in individually. You distribute OAuth configuration, not a client
 secret, gateway API key, or helper executable. Keep upstream provider credentials
@@ -49750,9 +52252,11 @@ on the gateway.
 3. Deliver credentials through your secret manager or an installed credential
    helper. Keep upstream provider and gateway administrator credentials off
    developer machines.
-4. If you use a helper, follow the
-   [command-backed authentication contract](https://learn.chatgpt.com/docs/config-file/config-advanced#custom-model-providers)
-   and test token retrieval and refresh before distribution.
+4. If a helper supplies the primary provider credential, follow the
+   [command-backed authentication contract](https://learn.chatgpt.com/docs/config-file/config-advanced#custom-model-providers).
+   If it supplies a gateway credential alongside ChatGPT sign-in, configure a
+   [gateway credential export command](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway?gateway-auth=helper#use-an-organization-credential-helper).
+   Test token retrieval and refresh before distribution.
 5. Tell developers how to renew their credentials and whom to contact for help.
 
 #### Test Codex through the gateway
@@ -49792,7 +52296,7 @@ registration values collected above. Keep `requires_openai_auth = false` and omi
 `env_key`, `experimental_bearer_token`, and the command-backed `auth` table when
 OAuth is the only gateway credential.
 
-For a credential helper, distribute the following `config.toml` block through the
+For a helper that supplies the primary provider credential, distribute the following `config.toml` block through the
 configuration layer you chose. Use a model recognized by your Codex version, or
 supply the matching catalog described above. Install your token resolver at the
 configured command path:
@@ -50051,7 +52555,7 @@ service authorized to receive those credentials.
 Authenticate the caller, fetch the corresponding upstream defaults, apply your
 overrides, and return the complete `ModelsResponse` JSON directly. Give every
 entry a unique, nonempty `slug`. For an explicit `model_catalog_url`, Codex rejects
-redirects and responses larger than 1 MiB. Continue enforcing model access on
+redirects. Continue enforcing model access on
 inference requests.
 
 Remove any effective `model_catalog_json` setting from clients using the endpoint:
@@ -50173,7 +52677,7 @@ Dots can provide value even if you turn off access to the cloud browser, cloud c
 
 Proactive research is one way dots differ from a typical user-directed ChatGPT Work task. A dot can look for useful information in permitted connected apps without waiting for a new request from its user. For example, it might review connected information for an update relevant to ongoing work.
 
-During proactive research, a dot can read permitted information and save private notes. Its research tools can’t directly send messages to other people, change content through connected apps, or control a browser or computer. Other dot activities, such as tasks a user explicitly schedules, follow their applicable permissions and action rules.
+During proactive research, a dot can read permitted information and save private notes. Its research tools can’t directly send messages to other people, change content through connected apps, or control a browser or computer. Personal dots will not perform write actions proactively without the user’s instructions. Other dot activities, such as tasks a user explicitly schedules, follow their applicable permissions and action rules.
 
 We’re developing additional rules in Agent Security so admins can choose which sites a dot’s cloud browser can visit.
 
@@ -50195,18 +52699,18 @@ We’re developing additional rules in Agent Security so admins can choose which
 
 #### Confirm eligibility and data requirements
 
-| **Category**                                                                                                                                                               | **Eligibility and data requirements**                                                                                                                                                                                                                   |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Data and inference residency**                                                                                                                                           | Data storage residency in Australia, Canada, Europe (EEA and Switzerland), India, Japan, Singapore, South Korea, the UK, and the US is supported. UAE is not included.                                                                                  |
-| Dots inference residency is supported for the US and Europe but not UAE. Inference residency covers model inference, not every processing step or third-party integration. |
-| **Enterprise Key Management (EKM)**                                                                                                                                        | Enterprise Key Management (EKM) supported for eligible workspaces. Customer-managed keys protect supported customer content at rest and allow customers to rotate or revoke their keys. Identify which data your agreement requires the key to protect. |
-| **HIPAA**                                                                                                                                                                  | HIPAA supported for eligible workspaces. Confirm that your business associate agreement (BAA) and configuration cover the intended workflow.                                                                                                            |
-| **Zero data retention**                                                                                                                                                    | Neither dots nor Work with local computer access provides strict zero data retention.                                                                                                                                                                   |
-| **FedRAMP**                                                                                                                                                                | Dots are unavailable in FedRAMP workspaces.                                                                                                                                                                                                             |
+| **Category**                                                                                                                                                          | **Eligibility and data requirements**                                                                                                                                                                                                                                                                                                                         |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Data and inference residency**                                                                                                                                      | Personal dots support data storage residency in Australia, Canada, Europe (EEA and Switzerland), India, Japan, Singapore, South Korea, the United Arab Emirates (UAE), the UK, and the US. Dots created during beta in workspaces with data residency will be migrated to the workspace’s designated region within 30 days of the GA date (November 4, 2026). |
+| Dots inference residency is supported for the US and Europe but not UAE. Inference calls made by dots adhere to your workspace’s inference residency setting, if any. |
+| **Enterprise Key Management (EKM)**                                                                                                                                   | Enterprise Key Management (EKM) is supported for eligible workspaces.                                                                                                                                                                                                                                                                                         |
+| **HIPAA**                                                                                                                                                             | HIPAA supported for eligible workspaces. Confirm that your business associate agreement (BAA) and configuration cover the intended workflow.                                                                                                                                                                                                                  |
+| **Zero data retention**                                                                                                                                               | Neither dots nor Work with local computer access provides strict zero data retention.                                                                                                                                                                                                                                                                         |
+| **FedRAMP**                                                                                                                                                           | Dots are unavailable in FedRAMP workspaces.                                                                                                                                                                                                                                                                                                                   |
 
-#### EKM coverage for the dot’s cloud computer
+#### Data residency and EKM
 
-For eligible workspaces with EKM enabled, your workspace’s customer-managed key protects saved cloud computer snapshots and saved browser cookies at rest.
+Customer data at rest is stored in accordance with the workspace’s [data residency](https://help.openai.com/en/articles/9903489-data-residency-and-inference-residency-for-chatgpt) and [Enterprise Key Management (EKM)](https://help.openai.com/en/articles/20000943-openai-enterprise-key-management-ekm-overview) settings.
 
 The same access controls that protect other OpenAI services handling customer data also apply to the running cloud computer.
 
@@ -50281,6 +52785,8 @@ When authorizing a recurring task, name the action, recipients, trigger, and sch
 | Distinguish member-editable rules from enterprise requirements in [Agent Security](https://learn.chatgpt.com/docs/enterprise/agent-security) and from the permissions enforced by the connected service. See [Manage dots in ChatGPT workspaces](https://help.openai.com/en/articles/20001554-manage-dots-in-chatgpt-workspaces) for custom-rule settings. |
 
 - **Delegated work on a local computer.** The delegated thread uses the member’s connected computer. When Computer Use is enabled and the app is approved, selecting “Always allow” lets ChatGPT use the app without asking for access again.
+
+- **Wallet payments.** Even when an admin enables Wallet and a member gives their dot an ongoing instruction, the member must review and approve each Wallet payment using biometrics.
 
 #### Example: Sending the same external email through three routes
 
@@ -50357,7 +52863,7 @@ The cloud browser keeps its own cookies, separate from the browser on your devic
 | Space files                                            | Saved files follow the Enterprise workspace retention policy. Opening, downloading or reattaching an existing Space file [does not restart its retention period](https://help.openai.com/en/articles/20001052-using-library-to-manage-files-in-chatgpt).                                                                            | The member deletes the file in Space. Compliance admins can delete it through the Space API. The file can also expire under workspace policy.                                                                                                                                                                                                                                         | The Space file survives dot deletion. After Space deletion, permanent removal is scheduled within 30 days, with exceptions for data already de-identified and disassociated, or retained for security or legal obligations. See Backups below.                                                                                                                                                                                                              |
 | Cached files and Outputs                               | The dot chat can keep a separate copy of a Space file. Space’s retention and deletion controls apply to the Space copy.                                                                                                                                                                                                             | Deleting the Space file, even from Trash, does not trigger deletion of the dot-chat cache. No separate self-service removal procedure is confirmed.                                                                                                                                                                                                                                   | A file may remain listed in Outputs after the Space copy is deleted. The dot-owned cached copy is deleted within 30 days of dot deletion. A separate way to clear the listing remains unconfirmed.                                                                                                                                                                                                                                                          |
 | Cloud computer files and browser state                 | The dot’s cloud disk can retain files and browser state. Snapshot expiry depends on workspace configuration.                                                                                                                                                                                                                        | Deleting a dot deletes its cloud browser and computer.                                                                                                                                                                                                                                                                                                                                | The dot’s cloud-computer data, disk, browser state, snapshots, and backups are deleted within 30 days of dot deletion. Copies saved elsewhere follow their destination’s policy.                                                                                                                                                                                                                                                                            |
-| Cloud computer snapshots                               | For eligible workspaces with data residency, Enterprise Key Management (EKM), or both, the enabled control wipes snapshots on a five-day cycle, with a seven-day maximum.                                                                                                                                                           | The platform expires snapshots automatically. Deleting the dot separately starts the cloud-computer deletion process.                                                                                                                                                                                                                                                                 | For workspaces without data residency or EKM, there is no maximum age for an active dot’s snapshots. They may remain for as long as the dot exists, and customers cannot currently request an early purge. Snapshots are deleted within 30 days after the dot is deleted.                                                                                                                                                                                   |
+| Cloud computer snapshots                               | In eligible workspaces with data residency or Enterprise Key Management (EKM), snapshots are short-lived. In other workspaces, snapshots may remain for as long as the dot exists.                                                                                                                                                  | OpenAI automatically expires snapshots in eligible workspaces. Deleting the dot also starts deletion of its cloud computer and snapshots.                                                                                                                                                                                                                                             | In workspaces without automatic expiry, customers can’t request an early purge. Snapshots are deleted within 30 days after the dot is deleted.                                                                                                                                                                                                                                                                                                              |
 | Backups                                                | Space backups have a separate documented window. Dot-owned backups are deleted within 30 days of dot deletion.                                                                                                                                                                                                                      | When a Space file is deleted, expires or becomes inactive, the active Compliance API stops returning it. The platform manages backup expiry.                                                                                                                                                                                                                                          | A Space backup may remain for up to 30 additional days, or longer for security or legal obligations. Dot-owned backups are deleted within 30 days of dot deletion.                                                                                                                                                                                                                                                                                          |
 | Delegated Work and Codex threads                       | Hosted [Work](https://learn.chatgpt.com/docs/enterprise/chatgpt-work-cloud-security#data-handling-and-retention) and [Codex](https://learn.chatgpt.com/docs/auth#openai-authentication) threads follow the workspace’s retention policy. [Device-only records](https://learn.chatgpt.com/docs/enterprise/chatgpt-work-local-security#data-handling-and-retention) follow local storage and backup policies. | The workspace policy governs when hosted threads expire. For Codex Cloud, see the [workspace retention guidance](https://learn.chatgpt.com/docs/auth#openai-authentication). Deleting a dot leaves its delegated Codex and Work threads intact.                                                                                                                                                               | When a Codex chat is deleted in the desktop app, OpenAI schedules it for permanent deletion from its systems within 30 days, subject to [published exceptions](https://help.openai.com/en/articles/20001333-archiving-and-deleting-codex-chats-in-the-chatgpt-app). Work Cloud schedules deleted chats for permanent deletion within 30 days, subject to [published exceptions](https://learn.chatgpt.com/docs/enterprise/chatgpt-work-cloud-security#data-handling-and-retention). |
 | Pages in Spaces                                        | Space pages persist until someone deletes them; the workspace chat retention period does not expire them.                                                                                                                                                                                                                           | A page’s [creator or owner](https://help.openai.com/en/articles/20001544-chatgpt-space-sharing-data-and-controls) can move it and its subpages to Trash. Delete separately saved attachments in their own location. Members can delete their own saved Space files. Compliance admins with the [required API permissions](https://learn.chatgpt.com/docs/enterprise/chatgpt-space) can delete eligible files. | Space purges a page on permanent deletion or after 30 days in Trash. Pages trashed before the October 1 rollout require manual deletion. Deleting the page leaves separately stored attachments in place.                                                                                                                                                                                                                                                   |
@@ -52436,6 +54942,14 @@ If the page reports that it couldn't save all changes, some changes may
 already be saved. Follow the on-screen guidance to review and save the
 remaining changes.
 
+#### GPT-6.2 Astra and GPT-6.2 Sol in Enterprise and Edu
+
+Both models are off by default at launch. To give members access, enable the
+models in your [workspace model settings](https://help.openai.com/en/articles/8411955).
+Members also need access to ChatGPT Work or Codex to select a model there.
+Eligible workspaces can separately enable
+[Ultrafast](https://learn.chatgpt.com/docs/agent-configuration/speed#gpt-62-speed-options).
+
 #### GPT-6 Sol and Luna in Enterprise
 
 GPT-6 Sol and GPT-6 Luna are off by default in Enterprise workspaces at
@@ -52551,7 +55065,7 @@ Source: [Administration](https://learn.chatgpt.com/docs/administration.md)
 
 Set access and policy boundaries for ChatGPT, Codex developer tools, APIs, plugins, and connected systems.
 
-Start with the rollout guide, then set up identity and access. Use Configuration for app installation, updates, and workspace policies. Use Advanced deployment for Amazon Bedrock, Bedrock in GovCloud, or an organization gateway. Browse the sections for feature controls, usage, and security.
+Start with the rollout guide, then set up identity and access. Use Configuration for app installation, updates, and workspace policies. Use Advanced deployment to connect through a cloud provider or an organization gateway. Browse the sections for feature controls, usage, and security.
 
 [Start your rollout](https://learn.chatgpt.com/docs/enterprise/admin-setup)
 
@@ -52623,9 +55137,11 @@ Manage app installation, updates, runtime settings, remote connections, and work
 
 #### Advanced deployment
 
-Connect directly to Amazon Bedrock, configure Bedrock in GovCloud, or deploy an organizational gateway that routes requests to your inference provider.
+Configure a direct cloud connection or an organization gateway, then choose which models your users can access.
 
 - [Amazon Bedrock](https://learn.chatgpt.com/docs/amazon-bedrock): Configure supported local clients to use models available through Bedrock.
+
+- [Google Cloud](https://learn.chatgpt.com/docs/enterprise/connect-to-vertex-ai): Configure Codex CLI for the Vertex AI preview using your Google Cloud project and credentials.
 
 - [GovCloud deployment](https://learn.chatgpt.com/docs/enterprise/govcloud-configuration): Configure local Codex workflows with Amazon Bedrock in AWS GovCloud.
 

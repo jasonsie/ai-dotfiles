@@ -1414,6 +1414,11 @@ doSomething(
 }
 ```
 
+The
+[rectangle rule](https://github.com/google/google-java-format/wiki/The-Rectangle-Rule)
+asks that each part of a wrapped expression fit in its own bounding rectangle,
+which contains all of that part's text and none of any other part's.
+
 <a id="formatting-grouping-parentheses"></a>
 
 ### 4.7 Grouping parentheses: recommended
@@ -1556,13 +1561,33 @@ the first JsDoc and the inline annotations will be lost.
 const /** !Array<number> */ data = [];
 ```
 
-> Tip: There are many cases where the compiler can infer a templatized type but
-> not its parameters. This is particularly the case when the initializing
-> literal or constructor call does not include any values of the template
-> parameter type (e.g., empty arrays, objects, `Map`s, or `Set`s), or if the
-> variable is modified in a closure. Local variable type annotations are
-> particularly helpful in these cases since otherwise the compiler will infer
-> the template parameter as unknown.
+There are many cases where the compiler can infer a templatized type but not
+its parameters. This is particularly the case when the initializing literal or
+constructor call does not include any values of the template parameter type
+(e.g., empty arrays, objects, `Map`s, or `Set`s), or if the variable is modified
+in a closure. Local variable type annotations are particularly helpful in these
+cases since otherwise the compiler will infer the template parameter as unknown.
+
+<div class='goodcode'></div>
+
+```js
+/** @param {!Array<string>} ids */
+function process(ids) {
+  // Inferred as !Set<string> from the argument, so no annotation is needed.
+  const uniqueIds = new Set(ids);
+}
+
+// Empty collections need an annotation.
+const /** !Map<string, number> */ wordCounts = new Map();
+const /** !Set<string> */ seenIds = new Set();
+```
+
+<div class='badcode'></div>
+
+```js
+// The key and value types of the Map are inferred as unknown.
+const wordCounts = new Map();
+```
 
 <a id="features-array-literals"></a>
 
@@ -1666,9 +1691,29 @@ Disallowed:
 function badDestructuring([a, b] = [4, 2]) { … };
 ```
 
-> Tip: For (un)packing multiple values into a function’s parameter or return,
-> prefer object destructuring to array destructuring when possible, as it allows
-> naming the individual elements and specifying a different type for each.
+For (un)packing multiple values into a function’s parameter or return, prefer
+object destructuring to array destructuring when possible, as it allows naming
+the individual elements and specifying a different type for each.
+
+<div class='goodcode'></div>
+
+```js
+/** @return {{name: string, age: number}} */
+function getUser() {
+  return {name: 'Alice', age: 30};
+}
+const {name, age} = getUser();
+```
+
+<div class='badcode'></div>
+
+```js
+/** @return {!Array<string|number>} */
+function getUser() {
+  return ['Alice', 30];
+}
+const [name, age] = getUser();
+```
 
 <a id="features-arrays-spread-operator"></a>
 
@@ -2134,7 +2179,7 @@ defined on the prototype of the constructor.
 
 Defining constructor prototype hierarchies correctly is harder than it first
 appears! For that reason, it is best to use `goog.inherits` from
-[the Closure Library](http://code.google.com/closure/library/).
+[the Closure Library](https://github.com/google/closure-library).
 
 <a id="features-classes-prototypes"></a>
 
@@ -2669,6 +2714,16 @@ const longString = 'This is a very long string that far exceeds the 80 ' +
     'the concatenated strings are cleaner.';
 ```
 
+The same applies to template literals:
+
+<div class='goodcode'></div>
+
+```js
+const longString = `Hello ${name}, this is a very long string that far ` +
+    `exceeds the 80 column limit, so it is split into concatenated ` +
+    `template literals.`;
+```
+
 <a id="features-number-literals"></a>
 
 ### 5.7 Number literals
@@ -2843,8 +2898,9 @@ been banned in strict mode since ES5.
 #### 5.11.2 Dynamic code evaluation
 
 Do not use `eval` or the `Function(...string)` constructor (except for code
-loaders). These features are potentially dangerous and simply do not work in CSP
-environments.
+loaders). These features are potentially dangerous and simply do not work in
+environments with a
+[Content Security Policy (CSP)](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP).
 
 <a id="disallowed-features-automatic-semicolon-insertion"></a>
 
@@ -3143,6 +3199,20 @@ variable holds a constructor.
 
 Template parameter names should be concise, single-word or single-letter
 identifiers, and must be all-caps, such as `TYPE` or `THIS`.
+
+<div class='goodcode'></div>
+
+```js
+/** @template T */
+/** @template KEY, VALUE */
+```
+
+<div class='badcode'></div>
+
+```js
+/** @template ElementType */
+/** @template KEY_TYPE */
+```
 
 <a id="naming-module-local-names"></a>
 
@@ -4321,6 +4391,13 @@ function sillyFunction() {
 For global declarations where the `const` keyword would be used, if it were
 available, annotate the `var` declaration with `@const` instead (this is
 optional for local variables).
+
+<div class='goodcode'></div>
+
+```js
+/** @const */
+var MAX_RETRIES = 3;
+```
 
 <a id="appendices-legacy-exceptions-function"></a>
 

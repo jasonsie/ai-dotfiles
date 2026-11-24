@@ -56,7 +56,7 @@ Below the summary grid, the `/context` panel lists active session state:
 Use the following keyboard shortcuts inside the **Context Usage** panel:
 
 | Key | Action |
-| :-- | :-- |
+| --- | --- |
 | ↑ / ↓ (or k / j) | Scroll up or down by one line. |
 | PgUp / PgDn | Scroll up or down by one page. |
 | Ctrl + U / Ctrl + D | Scroll up or down by half a page. |
@@ -69,7 +69,8 @@ As a conversation grows, Antigravity automatically compacts older turns into che
 
 To keep your context window lean and responsive during long sessions, consider these practices:
 
-*   **Ask side questions with `/btw`**: use [`/btw`](/docs/cli/commands/btw) for quick tangential questions so the question and answer aren’t added to your main conversation history.
+*   **Compact on demand with `/compact`**: run [`/compact`](/docs/commands/compact) (or `/compact <message>`) right after finishing research or completing a milestone to summarize earlier turns into a checkpoint on your schedule.
+*   **Ask side questions with `/btw`**: use [`/btw`](/docs/commands/btw) for quick tangential questions so the question and answer aren’t added to your main conversation history.
 *   **Reset between unrelated tasks**: run `/clear` (alias `/new`) when switching to a new task that doesn’t require prior conversation context.
 *   **Branch conversations**: run `/fork` (alias `/branch`) or `/rewind` to explore an alternative approach from an earlier checkpoint.
 *   **Disable unused MCP servers**: if `MCP tools` consumes a large share of your context window, open `/mcp` to disable servers you don’t need for the current project.
@@ -78,6 +79,7 @@ To keep your context window lean and responsive during long sessions, consider t
 
 Explore related commands for managing conversation history and workspace state:
 
-*   **[Side question command (`/btw`)](/docs/cli/commands/btw)**: ask background questions without adding tokens to your active trajectory.
+*   **[Compact command (`/compact`)](/docs/commands/compact)**: summarize earlier turns into a checkpoint to free up space in the context window.
+*   **[Side question command (`/btw`)](/docs/commands/btw)**: ask background questions without adding tokens to your active trajectory.
 *   **[Resume command (`/resume`)](/docs/cli/commands/resume)**: switch between saved conversation threads.
 *   **[CLI reference](/docs/cli/reference)**: view all available slash commands and keyboard shortcuts.

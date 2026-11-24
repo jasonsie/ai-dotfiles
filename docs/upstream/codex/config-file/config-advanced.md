@@ -234,13 +234,11 @@ http_headers = { "X-Example-Header" = "example-value" }
 env_http_headers = { "X-Example-Features" = "EXAMPLE_FEATURES" }
 ```
 
-For browser sign-in through your organization's identity provider, use
-[native gateway OAuth](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway#use-native-gateway-oauth).
+To sign in through your organization's identity provider, use
+[native gateway OAuth](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway?gateway-auth=oauth#use-native-gateway-oauth).
 Configure `[model_providers.<id>.gateway_oauth]` with the authorization and token
-URLs, public client ID, and token delivery settings. This works with
-`requires_openai_auth = false`; ChatGPT sign-in, PowerShell, the Azure CLI, and
-an external credential helper aren't required. The gateway must accept the OAuth
-token in the configured cookie or custom header.
+URLs and the public client ID. If the gateway supports device-code sign-in,
+set `device_authorization_url` so CLI users can sign in over SSH.
 
 Use command-backed authentication when a provider needs Codex to fetch bearer tokens from an external credential helper:
 
@@ -692,14 +690,14 @@ The elevated setup failure metrics include `code` and `message` when Windows set
 
 ### Feedback controls
 
-By default, local clients let users send feedback from `/feedback`. To disable feedback collection across the ChatGPT desktop app, Codex CLI, and IDE extension on a machine, update your config:
+By default, local clients let users send feedback from `/feedback`. To disable feedback uploads across the ChatGPT desktop app, Codex CLI, and IDE extension on a machine, update your config:
 
 ```toml
 [feedback]
 enabled = false
 ```
 
-When disabled, `/feedback` shows a disabled message and Codex rejects feedback submissions.
+If your local app server supports diagnostic archives, press <kbd>Ctrl</kbd>+<kbd>&nbsp;S&nbsp;</kbd> in the CLI `/feedback` editor to save a ZIP locally, even when uploads are off.
 
 ### Hide or surface reasoning events
 
@@ -721,11 +719,46 @@ Enable raw reasoning only if it's acceptable for your workflow. Some models/prov
 
 Use `notify` to trigger an external program whenever Codex emits supported events (currently only `agent-turn-complete`). This is handy for desktop toasts, chat webhooks, CI updates, or any side-channel alerting that the built-in TUI notifications don't cover.
 
+<CodeSampleNote client:load language="python" languages={Object.keys(samples.all.codexConfigAdvanced.notifications())}>
+
 ```toml
 notify = ["python3", "/path/to/notify.py"]
 ```
 
-Example `notify.py` (truncated) that reacts to `agent-turn-complete`:
+</CodeSampleNote>
+
+These programs react to `agent-turn-complete` on macOS. Install `terminal-notifier` first.
+
+<CodeSampleNote client:load language="typescript" languages={Object.keys(samples.all.codexConfigAdvanced.notifications())}>
+
+For TypeScript, save the source as `notify.ts` and configure `notify = ["node", "--experimental-strip-types", "/path/to/notify.ts"]`.
+
+</CodeSampleNote>
+
+```typescript
+import { execFileSync } from "node:child_process";
+
+const argument = process.argv[2];
+if (!argument)
+  throw new Error("Pass the Codex notification JSON as one argument");
+const notification = JSON.parse(argument);
+if (notification.type === "agent-turn-complete") {
+  execFileSync(
+    "terminal-notifier",
+    [
+      "-title",
+      `Codex: ${notification["last-assistant-message"] ?? "Turn Complete!"}`,
+      "-message",
+      (notification["input-messages"] ?? []).join(" "),
+      "-group",
+      `codex-${notification["thread-id"] ?? ""}`,
+      "-activate",
+      "com.googlecode.iterm2",
+    ],
+    { stdio: "inherit" }
+  );
+}
+```
 
 ```python
 #!/usr/bin/env python3

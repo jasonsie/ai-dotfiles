@@ -56,7 +56,7 @@ From the GitHub App page on your GHES instance, install the app on the repositor
 
 **5. Enable Code Review**
 
-Go to [claude.ai/admin-settings/claude-code](https://claude.ai/admin-settings/claude-code) and enable [Code Review](https://code.claude.com/docs/en/code-review-setup.md) for your GHES repositories using the same configuration as github.com.
+Go to [**Organization settings > Claude Ship**](https://claude.ai/admin-settings/claude-code#code-review) and enable [Code Review](https://code.claude.com/docs/en/code-review-setup.md) for your GHES repositories using the same configuration as github.com.
 
 ### GitHub App permissions
 
@@ -94,7 +94,7 @@ Hosted pre-session flows, such as the repository picker, run on Anthropic's side
 
 Claude Code detects your GHES hostname automatically from the git remote in your working directory.
 
-Clone a repository from your GHES instance as you normally would, replacing `github.example.com` and the repository path with your GHES hostname and repository:
+Clone a repository from your GHES instance, replacing `github.example.com` and the repository path with your GHES hostname and repository:
 
 ```bash theme={null}
 git clone git@github.example.com:platform/api-service.git
@@ -111,7 +111,7 @@ The session clones your repository from GHES and pushes changes back to a branch
 
 ### Teleport sessions to your terminal
 
-Pull a cloud session into your local terminal with `claude --teleport`. Teleport verifies you're in a checkout of the same GHES repository before fetching the branch and loading the session history. See [teleport requirements](https://code.claude.com/docs/en/claude-code-on-the-web.md#teleport-requirements) for details.
+Pull a cloud session into your local terminal with `claude --teleport`. Teleport verifies you're in a checkout of the same GHES repository before loading the session history. See [teleport requirements](https://code.claude.com/docs/en/claude-code-on-the-web.md#teleport-requirements) for details.
 
 ## Plugin marketplaces on GHES
 
@@ -168,7 +168,7 @@ Claude Code installs these marketplaces locally: it registers each entry and clo
 
 * **Use a full git URL.** The `owner/repo` shorthand always resolves to github.com and cannot reference a GHES host.
 * **Prefer HTTPS URLs.** SSH clones fail on machines that do not already trust your GHES host key. An HTTPS URL with your organization's standard git credential helper works on any machine with credentials configured.
-* **Confirm each machine can clone from your GHES host.** If a machine lacks credentials, the marketplace is registered but never installed, and its plugins report as not found instead of prompting for credentials.
+* **Confirm each machine can clone from your GHES host.** If a machine lacks credentials, the clone fails without prompting for them, and the `/plugin` **Errors** tab shows why.
 * **Confirm the setting reaches each machine.** A managed settings file only takes effect on machines it's deployed to, for example through your device management system. See [Deploy managed settings](https://code.claude.com/docs/en/managed-settings.md#delivery-mechanisms) for file locations.
 
 ### Allowlist GHES marketplaces in managed settings

@@ -13,9 +13,6 @@ A dot is a personal agent in ChatGPT that can take on ongoing work, use connecte
 
 
 
-
-
-
 **[dots security guide](https://learn.chatgpt.com/docs/enterprise/dots-security)**
 
 Use the dots security guide for a detailed review with your security team. This admin guide covers workspace setup, access, and day-to-day management.
@@ -40,10 +37,7 @@ For current availability, supported plans, and workspace settings, see [Manage d
 
 During the preview, admins in eligible ChatGPT Enterprise, Edu, and Healthcare workspaces can enable dots for selected roles. Starting November 18, 2026, members have access by default unless the workspace opts out. Each member chooses whether to create a personal dot.
 
-Eligible Enterprise workspaces can pay a flat rate based on the type of work a dot does or pay based on consumption. The preview is free. Billing for enabled dots begins November 18, 2026. Tasks a dot delegates to ChatGPT Work or Codex threads incur separate charges at the standard rates. See [Dots pricing in the Help Center](https://help.openai.com/en/articles/20001530-getting-started-with-your-dot).
-
-
-
+Workspace access and billing are separate. Eligible Enterprise workspaces can pay a flat rate based on the type of work a dot does or pay based on consumption. The preview is free. Tasks a dot delegates to ChatGPT Work or Codex threads incur separate charges at the standard rates. For billing details, see [Getting started with your dot](https://help.openai.com/en/articles/20001530-getting-started-with-your-dot) in the Help Center.
 
 
 
@@ -67,7 +61,7 @@ Review these permissions in **Permissions**:
 
 - **Use dots**: Allow members to use dots.
 
-- **Add dots to Slack and Microsoft Teams**: Allow members to connect their dots to supported messaging channels where available.
+- Allow members to connect their dots to Slack where available.
 
 - **Allow local computer access**: Allow dots to use a member’s local computer.
 
@@ -85,7 +79,9 @@ For role creation, assignment, and access checks, see the [role-based access con
 
 5. Under Workspace capabilities, set Use password manager according to your workspace policy.
 
-6. Save, then check access for an intended member.
+6. Wallet is off by default for Enterprise workspaces. Once the setting is available, go to **Admin Console → Permissions → Workspace capabilities → Use Wallet** to give eligible members access. Members must review and approve each Wallet payment using biometrics.
+
+7. Save, then check access for an intended member.
 
 When you enable dots, you may be asked to turn on cloud computer capabilities that are still off. Dots, Work Cloud, and team automations share these permissions. Choose the capabilities your organization's policies allow.
 
@@ -130,7 +126,7 @@ Turning off a dot's Slack identity doesn't remove its access through the member'
 
 **Before members connect their dots to Slack**
 
-- **ChatGPT workspace owner:** Enable Use dots and Add dots to Slack and Microsoft Teams for the intended members through workspace defaults or custom roles.
+- **ChatGPT workspace owner:** Enable **Use dots** and the permission to connect dots to Slack for the intended members through workspace defaults or custom roles.
 
 - **Slack workspace owner or app manager:** Ensure the ChatGPT app is installed in Slack. Approve app requests if required by your workspace. See [Slack’s app approval guidance](https://slack.com/help/articles/360024269514-Manage-app-requests-for-your-workspace).
 
@@ -173,6 +169,7 @@ Compare the result with the requirements approved by your security team. Resolve
 | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | Access to dots                      | Grant or revoke dots access through workspace permissions.                                                             |
 | Cloud and connected local computers | Control Use a browser, Allow network access, Allow computer use, Use password manager, and local-computer access.      |
+| Wallet                              | Give eligible members access to Wallet. Off by default for Enterprise workspaces.                                      |
 | Messaging and participation         | Enable or disable Slack participation.                                                                                 |
 | Connected apps                      | Set available apps and allowed actions through [Plugin controls](https://learn.chatgpt.com/docs/enterprise/apps-and-connectors).               |
 | Custom dot rules                    | When disabled, members cannot add or edit custom rules, and saved rules do not apply.                                  |
@@ -186,15 +183,9 @@ For cloud-browser site rules and controls still in development, see [browser, ne
 
 
 
-
-
-
-
-
-
 ## Review availability and data requirements
 
-Before enabling dots, review current availability in [Getting started with your dot](https://help.openai.com/en/articles/20001530-getting-started-with-your-dot) and the workspace notices shown during setup. Review the security guide's [eligibility and data requirements](https://learn.chatgpt.com/docs/enterprise/dots-security#confirm-eligibility-and-data-requirements) for regional, residency, Enterprise Key Management, and HIPAA coverage. Confirm that your workspace configuration, any applicable business associate agreement (BAA), and the intended workflow meet your organization's requirements before enabling access.
+Before enabling dots, review current availability in [Getting started with your dot](https://help.openai.com/en/articles/20001530-getting-started-with-your-dot) and the workspace notices shown during setup. Use the Help Center’s [Data residency and inference residency for ChatGPT](https://help.openai.com/en/articles/9903489-data-residency-and-inference-residency-for-chatgpt) for current regional availability and coverage; review the security guide’s [eligibility and data requirements](https://learn.chatgpt.com/docs/enterprise/dots-security#confirm-eligibility-and-data-requirements) for additional rollout considerations. Confirm that your workspace configuration, any applicable business associate agreement (BAA), and the intended workflow meet your organization's requirements before enabling access.
 
 Check requirements for the dot itself, tasks it delegates to Work or Codex, and any connected computer. For cloud browser, network, and computer use, see [cloud security](https://learn.chatgpt.com/docs/enterprise/chatgpt-work-cloud-security). For work on employee devices, see [local computer access](https://learn.chatgpt.com/docs/enterprise/cloud-local-access).
 
@@ -204,7 +195,7 @@ Open **Admin Console** > **Dots** to see the personal dots created in your works
 
 ### Review a dot's details
 
-The details include the member who created the dot, its active or paused status, its identity, and its Slack or Microsoft Teams connection status. The identity is the dot's service account, or its dot ID when a service account isn't available. Connection status shows whether a messaging service is connected; the [messaging permission](#3-configure-communication-channels) controls who can set up that connection.
+The details include the member who created the dot, its active or paused status, its identity, and its Slack connection status. The identity is the dot's service account, or its dot ID when a service account isn't available. Connection status shows whether Slack is connected; the [messaging permission](#3-configure-communication-channels) controls who can set up that connection.
 
 ### Pause and resume a dot
 
@@ -245,12 +236,6 @@ Workspace analytics includes enabled-dot counts and total active users of dots. 
 For daily reporting by member or workspace, use the [Analytics API](https://learn.chatgpt.com/docs/enterprise/analytics-api). The daily usage endpoint `/v1/analytics/workspaces/{workspace_id}/usage` identifies dots with `client_id = DOTS`.
 
 Tasks a dot starts or manages in Work or Codex count toward those products' usage limits and appear in their reporting. Include those tasks when reviewing usage. See [Work usage and cost](https://learn.chatgpt.com/docs/enterprise/chatgpt-work-usage-and-cost) for the available controls, and check the current terms for your plan when setting budgets.
-
-
-
-
-
-
 
 
 

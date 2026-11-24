@@ -42,7 +42,7 @@ Claude Code is designed to work with most development environments, but may cons
 1. Use `/compact` regularly to reduce context size. If it returns `Not enough messages to compact.`, the conversation has too few turns to summarize; that can happen even with a full context when a single large paste filled it
 2. Close and restart Claude Code between major tasks
 3. Consider adding large build directories to your `.gitignore` file
-4. Restart with [`claude --safe-mode`](https://code.claude.com/docs/en/cli-reference#cli-flags) to check whether a plugin, MCP server, or hook is the source. It disables all customizations for the session; if usage drops, see [Debug your configuration](https://code.claude.com/docs/en/debug-your-config.md#test-against-a-clean-configuration) to find which one
+4. Restart with [`claude --safe-mode`](https://code.claude.com/docs/en/cli-reference#cli-flags) to check whether a plugin, MCP server, or hook is the source. If usage drops, see [Debug your configuration](https://code.claude.com/docs/en/debug-your-config.md#test-against-a-clean-configuration) to find which one
 
 If a session's heap memory passes 2.5GB, a critical memory usage warning appears. To free the memory, restart Claude Code and run [`claude --continue`](https://code.claude.com/docs/en/cli-reference#cli-flags) to resume the conversation in a fresh process.
 
@@ -90,7 +90,7 @@ If Claude Code seems unresponsive:
 1. Press Ctrl+C to attempt to cancel the current operation
 2. If unresponsive, you may need to close the terminal and restart
 
-Restarting doesn't lose your conversation. Run `claude --resume` in the same directory to pick the session back up.
+Run `claude --resume` in the same directory to pick the session back up.
 
 ### Garbled or corrupted text in an editor's integrated terminal
 
@@ -124,9 +124,9 @@ When Claude pipes text to one of these tools, adding `pbcopy *`, `wl-copy *`, or
 
 ### Copied text doesn't reach your local clipboard over SSH
 
-When Claude Code runs on a remote machine over SSH, it can't run a clipboard tool on your local machine. Outside tmux, when you select text in [fullscreen rendering](https://code.claude.com/docs/en/fullscreen.md) or run `/copy`, Claude Code sends the text to your terminal as an OSC 52 escape sequence instead. Your terminal decides whether to put it on your clipboard. `/copy` reports `Copied to clipboard` whether or not the text arrived, and outside tmux the selection notice reads `sent N chars via OSC 52`.
+When Claude Code runs on a remote machine over SSH, it can't run a clipboard tool on your local machine. Outside tmux, when you select text in [fullscreen rendering](https://code.claude.com/docs/en/fullscreen.md) or run `/copy`, Claude Code sends the text to your terminal as an OSC 52 escape sequence instead. Your terminal decides whether to put it on your clipboard.
 
-Some terminals don't act on OSC 52. iTerm2 ignores it until you turn on **Settings > General > Selection > Applications in terminal may access clipboard**, and macOS Terminal.app doesn't support it.
+Some terminals don't act on OSC 52. iTerm2 ignores it until you turn on **Settings > General > Selection > Applications in terminal may access clipboard**, and macOS Terminal.app doesn't support it. Neither the `/copy` message nor the `sent N chars via OSC 52` notice confirms that the text arrived.
 
 To get the text without OSC 52:
 
@@ -183,7 +183,7 @@ To confirm the switch took effect, run `claude doctor` in your terminal and chec
 
 ### Slow or incomplete search results on WSL
 
-Disk read performance penalties when [working across file systems on WSL](https://learn.microsoft.com/en-us/windows/wsl/filesystems) may result in fewer-than-expected matches when using Claude Code on WSL. Search still functions, but returns fewer results than on a native filesystem.
+Disk read performance penalties when [working across file systems on WSL](https://learn.microsoft.com/en-us/windows/wsl/filesystems) may result in fewer-than-expected matches when using Claude Code on WSL.
 
 > [!NOTE]
 >

@@ -13,24 +13,24 @@ Pages: 82
 |---|---|---|
 | finding which Google style guide applies | [styleguide/README.md](styleguide/README.md) | 5 |
 | writing R | [styleguide/Rguide.md](styleguide/Rguide.md) | 4 |
-| writing C++ | [styleguide/cppguide.md](styleguide/cppguide.md) | 210 |
+| writing C++ | [styleguide/cppguide.md](styleguide/cppguide.md) | 222 |
 | writing C# | [styleguide/csharpguide.md](styleguide/csharpguide.md) | 23 |
 | writing Markdown docs or READMEs | [styleguide/docguide/README.md](styleguide/docguide/README.md) | 1 |
 | writing Markdown docs or READMEs | [styleguide/docguide/READMEs.md](styleguide/docguide/READMEs.md) | 2 |
 | writing Markdown docs or READMEs | [styleguide/docguide/best_practices.md](styleguide/docguide/best_practices.md) | 6 |
 | writing Markdown docs or READMEs | [styleguide/docguide/philosophy.md](styleguide/docguide/philosophy.md) | 3 |
-| writing Markdown docs or READMEs | [styleguide/docguide/style.md](styleguide/docguide/style.md) | 23 |
+| writing Markdown docs or READMEs | [styleguide/docguide/style.md](styleguide/docguide/style.md) | 28 |
 | configuring Eclipse CDT for the C++ guide | [styleguide/eclipse-cpp-google-style.xml](styleguide/eclipse-cpp-google-style.xml) | 17 |
-| writing Go: style guide, decisions, best practices | [styleguide/go/best-practices.md](styleguide/go/best-practices.md) | 136 |
-| writing Go: style guide, decisions, best practices | [styleguide/go/decisions.md](styleguide/go/decisions.md) | 123 |
-| writing Go: style guide, decisions, best practices | [styleguide/go/guide.md](styleguide/go/guide.md) | 19 |
+| writing Go: style guide, decisions, best practices | [styleguide/go/best-practices.md](styleguide/go/best-practices.md) | 140 |
+| writing Go: style guide, decisions, best practices | [styleguide/go/decisions.md](styleguide/go/decisions.md) | 128 |
+| writing Go: style guide, decisions, best practices | [styleguide/go/guide.md](styleguide/go/guide.md) | 20 |
 | writing Go: style guide, decisions, best practices | [styleguide/go/index.md](styleguide/go/index.md) | 9 |
 | configuring Emacs c-style for the C++ guide | [styleguide/google-c-style.el](styleguide/google-c-style.el) | 6 |
 | configuring Vim indentation for the Python guide | [styleguide/google_python_style.vim](styleguide/google_python_style.vim) | 2 |
 | writing Haskell | [styleguide/haskellguide.md](styleguide/haskellguide.md) | 25 |
-| writing HTML or CSS | [styleguide/htmlcssguide.md](styleguide/htmlcssguide.md) | 29 |
-| writing Java | [styleguide/javaguide.md](styleguide/javaguide.md) | 44 |
-| writing JavaScript | [styleguide/jsguide.md](styleguide/jsguide.md) | 133 |
+| writing HTML or CSS | [styleguide/htmlcssguide.md](styleguide/htmlcssguide.md) | 30 |
+| writing Java | [styleguide/javaguide.md](styleguide/javaguide.md) | 48 |
+| writing JavaScript | [styleguide/jsguide.md](styleguide/jsguide.md) | 134 |
 | writing JSON with comments (JSONC) | [styleguide/jsoncguide.md](styleguide/jsoncguide.md) | 38 |
 | writing Common Lisp: style | [styleguide/lispguide.md](styleguide/lispguide.md) | 75 |
 | writing Common Lisp: programming guide | [styleguide/lispprogrammingguide.md](styleguide/lispprogrammingguide.md) | 29 |
@@ -39,7 +39,7 @@ Pages: 82
 | configuring pylint for the Python guide | [styleguide/pylintrc](styleguide/pylintrc) | 13 |
 | writing Rust | [styleguide/rustguide.md](styleguide/rustguide.md) | 59 |
 | writing shell scripts (bash) | [styleguide/shellguide.md](styleguide/shellguide.md) | 41 |
-| writing TypeScript | [styleguide/tsguide.md](styleguide/tsguide.md) | 112 |
+| writing TypeScript | [styleguide/tsguide.md](styleguide/tsguide.md) | 132 |
 | writing Verilog | [styleguide/verilogguide.md](styleguide/verilogguide.md) | 172 |
 | writing Vim script: full guide | [styleguide/vimscriptfull.md](styleguide/vimscriptfull.md) | 29 |
 | writing Vim script: style | [styleguide/vimscriptguide.md](styleguide/vimscriptguide.md) | 8 |

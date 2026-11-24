@@ -23,7 +23,7 @@ The difference is most noticeable in terminal emulators where rendering throughp
 
 ## Enable fullscreen rendering
 
-Run `/tui fullscreen` inside any Claude Code conversation. The CLI saves the [`tui` setting](https://code.claude.com/docs/en/settings-reference#tui) and relaunches into fullscreen with your conversation intact, so you can switch mid-session without losing context. Run `/tui default` to switch back to the classic renderer, or `/tui` with no argument to print which renderer is active.
+Run `/tui fullscreen` inside any Claude Code conversation. The CLI saves the [`tui` setting](https://code.claude.com/docs/en/settings-reference#tui) and relaunches into fullscreen. Run `/tui default` to switch back to the classic renderer, or `/tui` with no argument to print which renderer is active.
 
 In [screen reader mode](https://code.claude.com/docs/en/accessibility.md), Claude Code always uses the classic renderer except in attached [background sessions](https://code.claude.com/docs/en/agent-view.md), which still render fullscreen. If you run `/tui fullscreen` in any other session, Claude Code prints an explanation instead of switching and doesn't change the saved `tui` setting.
 
@@ -96,7 +96,7 @@ Fullscreen rendering captures mouse events and handles them inside Claude Code:
 
 * **Click in the prompt input** to position your cursor anywhere in the text you're typing.
 * **Click a suggestion in the `/` command or `@` file list** to accept it. Hovering highlights the row under your cursor.
-* **Click an option in a select menu** to choose it. This covers permission prompts, `/model`, `/config`, and other dialogs that show a list of options.
+* **Click an option in a select menu** to choose it, such as in `/model` or a permission prompt. If a click doesn't choose the option, click again or use the keyboard.
 * **Click an option in a multi-select menu** to toggle it, and click the submit button to confirm your choices. Clicking a free-text row, such as the `Other` row in a multiple-choice question, focuses its input field so you can type an answer.
 * **Click a setting's value in the `/config` panel** to change it, and scroll the settings list with the mouse wheel. Requires Claude Code v2.1.271 or later.
 * **Scroll a select or multi-select menu with the mouse wheel** when it has more options than it shows at once, such as the `/model` list in a short terminal window. The wheel scrolls the list while the pointer is over its options. Requires Claude Code v2.1.280 or later.
@@ -162,7 +162,9 @@ The button's keyboard hint reflects what your keyboard can send. On macOS it sug
 
 On a terminal too narrow for the full label, the button shortens the hint instead of wrapping onto the transcript row underneath.
 
-To turn auto-follow off entirely so the view stays where you leave it, open `/config` and set Auto-scroll to off. With auto-scroll disabled, the view never jumps to the bottom on its own. Permission prompts and other dialogs that need a response still scroll into view regardless of this setting.
+#### Turn off Auto-scroll
+
+To keep auto-follow paused after you send a message or scroll to the bottom, open `/config` and set [Auto-scroll](https://code.claude.com/docs/en/settings-reference.md#autoscrollenabled) to off.
 
 ### Mouse wheel scrolling
 
@@ -188,7 +190,7 @@ Separately from the base speed, Claude Code accelerates the scroll rate when you
 
 In the JetBrains IDE terminal, Claude Code applies its own scroll handling and ignores `CLAUDE_CODE_SCROLL_SPEED`. The terminal sends scroll events at a much higher rate than other emulators, so a multiplier tuned elsewhere overshoots here.
 
-In 2025.2, the terminal also has scroll-wheel bugs that produce spurious arrow keys and wrong-direction events. Claude Code detects these at runtime and mitigates them automatically, so trackpad and mouse wheel scrolling work without configuration. For the best scroll experience, upgrade to 2025.3 or later. Claude Code shows a hint the first time you scroll if it detects the bug.
+In 2025.2, the terminal also has scroll-wheel bugs that produce spurious arrow keys and wrong-direction events. Claude Code detects these at runtime and mitigates them automatically. For the best scroll experience, upgrade to 2025.3 or later. Claude Code shows a hint the first time you scroll if it detects the bug.
 
 ## Search and review the conversation
 
@@ -224,19 +226,17 @@ Run `/clear` to start a new conversation.
 
 If the display looks garbled or partially blank, press `Ctrl+L` to redraw the screen. The redraw keeps the conversation and your input in place.
 
-`Cmd+K` does the same as `Ctrl+L` when your terminal passes it through to Claude Code. iTerm2 and Terminal.app handle `Cmd+K` themselves and clear their own screen, and Claude Code detects the cleared screen and repaints the conversation. Before v2.1.280, starting with v2.1.260, pressing `Ctrl+L`, or `Cmd+K` where it reaches Claude Code, cleared the screen in fullscreen rendering. Before v2.1.238, pressing `Ctrl+L` twice within two seconds ran `/clear`.
+`Cmd+K` does the same as `Ctrl+L` when your terminal passes it through to Claude Code. iTerm2 handles `Cmd+K` itself and clears its own screen, and Claude Code detects the cleared screen and repaints the conversation. Before v2.1.280, starting with v2.1.260, pressing `Ctrl+L`, or `Cmd+K` where it reaches Claude Code, cleared the screen in fullscreen rendering. Before v2.1.238, pressing `Ctrl+L` twice within two seconds ran `/clear`.
 
 ## Use with tmux
 
 Fullscreen rendering works inside tmux, with three caveats.
 
-Mouse wheel scrolling requires tmux's mouse mode. If your `~/.tmux.conf` doesn't already enable it, add this line and reload your config:
+To scroll Claude Code with the mouse wheel while another tmux pane is active, turn on tmux's mouse mode in `~/.tmux.conf` and reload your config:
 
 ```bash theme={null}
 set -g mouse on
 ```
-
-Without mouse mode, wheel events go to tmux instead of Claude Code. Keyboard scrolling with `PgUp` and `PgDn` works either way. Claude Code prints a one-time hint at startup if it detects tmux with mouse mode off.
 
 Fullscreen rendering is incompatible with iTerm2's tmux integration mode, which is the mode you enter with `tmux -CC`. In integration mode, iTerm2 renders each tmux pane as a native split rather than letting tmux draw to the terminal. The alternate screen buffer and mouse tracking don't work correctly there: the mouse wheel does nothing, and double-click can corrupt the terminal state. Don't enable fullscreen rendering in `tmux -CC` sessions. Regular tmux inside iTerm2, without `-CC`, works fine.
 

@@ -5,7 +5,11 @@
 
 To deploy Google Antigravity using models hosted directly within your organization’s Google Cloud infrastructure, you can integrate with Gemini Enterprise. Every session runs under Google Cloud’s enterprise security controls, data residency guarantees, and the Google Cloud Terms of Service.
 
-Supported products: [Antigravity App](/product/antigravity-2) [Antigravity CLI](/product/antigravity-cli) [Visual Studio Code](/docs/ide/extensions/vscode) [Visual Studio](/docs/ide/extensions/visual-studio) [JetBrains (Preview)](/docs/ide/extensions/jetbrains) [Zed (Preview)](/docs/ide/extensions/zed) [Xcode (Preview)](/docs/ide/extensions/xcode) [Eclipse (Preview)](/docs/ide/extensions/eclipse)
+Using a Google Workspace account without Gemini Enterprise?
+
+You don’t need Gemini Enterprise to use Antigravity with a Workspace account. To compare other options, such as a personal Google Account or paying as you go with your own Google Cloud project, refer to [Google Workspace accounts](/docs/workspace).
+
+Supported products: [Antigravity App](/product/antigravity-2) [Antigravity CLI](/product/antigravity-cli) [Visual Studio Code](/docs/ide/extensions/vscode) [Visual Studio](/docs/ide/extensions/visual-studio) [JetBrains](/docs/ide/extensions/jetbrains) [Zed](/docs/ide/extensions/zed) [Xcode](/docs/ide/extensions/xcode) [Eclipse](/docs/ide/extensions/eclipse)
 
 Note
 
@@ -19,8 +23,8 @@ Enterprise integration is supported for the Antigravity App, Antigravity CLI, an
 
 You can connect Antigravity to Gemini Enterprise in two ways:
 
-*   **Google Cloud project and API**: Connect directly using a Google Cloud project with an invoiced Cloud Billing account and the `roles/discoveryengine.agentspaceUser` Identity and Access Management (IAM) role for consumption-based billing.
-*   **Gemini Enterprise license**: Connect with your **Gemini Enterprise Standard** or **Gemini Enterprise Plus** seat license to get access to included first-party quotas, managed overages, and centralized administrative controls across the Antigravity App, Antigravity CLI (`agy`), and Antigravity IDE extensions. No separate per-user Antigravity license is required.
+*   **Gemini Enterprise Pay-as-you-go**: No seat license. Usage is billed to an eligible Cloud Billing account linked to your Google Cloud project (an invoiced account, or a self-serve account with prepaid credits), and each user needs the `roles/discoveryengine.agentspaceUser` Identity and Access Management (IAM) role. When you sign in, select it as your license under **Subscription**. It’s separate from the **Pay As You Go** billing model, which doesn’t need a Gemini Enterprise license.
+*   **Gemini Enterprise Standard or Plus license**: Connect with your **Gemini Enterprise Standard** or **Gemini Enterprise Plus** seat license to get access to included first-party quotas, managed overages, and centralized administrative controls across the Antigravity App, Antigravity CLI (`agy`), and Antigravity IDE extensions. No separate per-user Antigravity license is required.
 
 By connecting Google Antigravity to your Google Cloud project, your organization gains:
 
@@ -43,10 +47,14 @@ After installing the [Antigravity App](/docs/getting-started), the [Antigravity 
 Google Antigravity uses a single sign-on (SSO) flow that automatically detects your assigned license tier:
 
 1.  Launch the **Antigravity App**, run `agy` (or run `/logout` inside `agy` to switch accounts) in the **Antigravity CLI**, or open your **[IDE extension](/docs/ide/extensions)**.
-2.  Select **Sign in** to open the browser authentication flow.
-3.  Choose **Business account** _(subject to the Google Cloud Terms of Service)_.
-4.  Select **Continue with Google Cloud** and complete authentication in your browser.
-5.  In the **License Selector**, confirm the Google Cloud project linked to your license and select it. Alternatively, select **Other** (**Other License** in the App, or **Can’t find your subscription? Enter a Google Cloud project** in the CLI) to self-assign a license by entering your project ID and selecting a location (`global`, `us`, or `eu`). In the CLI, your project and location are saved under [`gcp`](/docs/settings?tab=cli#custommodelsconfig-and-gcp) in `~/.gemini/antigravity-cli/settings.json` to pre-fill future sign-ins.
+2.  Start a business sign-in _(subject to the Google Cloud Terms of Service)_: select **Use Business Account** in the App, or **Use a Google Cloud project** in the CLI. In an IDE extension, use its Gemini Enterprise sign-in option instead, as described in [IDE extensions](/docs/ide/extensions#enterprise-teams-and-organizations).
+3.  Select **Continue with Google Cloud** and complete authentication in your browser.
+4.  In **Select Billing Model**, select **Subscription** (**Subscriptions** in the CLI).
+5.  Select the license linked to your Google Cloud project. If your license isn’t listed, select **Other License** in the App, or **Can’t find your subscription? Enter a Google Cloud project** in the CLI, to self-assign a license by entering your project ID and selecting a location (`global`, `us`, or `eu`). In the CLI, your project and location are saved under [`gcp`](/docs/settings?tab=cli#custommodelsconfig-and-gcp) in `~/.gemini/antigravity-cli/settings.json` to pre-fill future sign-ins.
+
+No Gemini Enterprise license?
+
+To pay per token with your own Google Cloud project instead, select **Pay As You Go** in step 4. Refer to [Pay As You Go](/docs/pay-as-you-go).
 
 Note
 
@@ -58,11 +66,11 @@ Note
 
 Bring Your Own Identity (BYOID) uses Workforce Identity Federation (WIF) to let your organization authenticate through an external identity provider, such as Okta, instead of a standard Google Account:
 
-1.  In Antigravity, select **Business account**.
-2.  Select **Advanced WIF Configuration**.
+1.  In Antigravity, start a business sign-in: select **Use Business Account** in the App, or **Use a Google Cloud project** in the CLI.
+2.  Select **Use Advanced SSO Config** (**Use advanced SSO config** in the CLI).
 3.  Enter the **WIF Configuration String** (for example, `locations/global/workforcePools/POOL_ID/providers/PROVIDER_ID`) provided by your organization’s administrator.
 4.  Complete sign-in through your federated identity provider.
-5.  Select or self-assign a license from the **License Selector**.
+5.  Select a billing model and a license, as described in the Google Cloud SSO steps.
 
 Note
 
@@ -117,11 +125,11 @@ Antigravity in Gemini Enterprise supports included first-party Gemini models and
 
 | Model | CLI / API Identifier | Enterprise |
 | --- | --- | --- |
+| [Gemini 4 Neon](/blog/gemini-4-neon-in-google-antigravity) | `gemini-4-neon` | ✅ |
 | [Gemini 4 Carbon](/blog/gemini-4-carbon-in-google-antigravity) | `gemini-4-carbon` | ✅ |
 | [Gemini 4 Argon](/blog/gemini-4-argon-in-google-antigravity) | `gemini-4-argon` | ✅ |
 | [Gemini 4 Hydrogen](/blog/gemini-4-hydrogen-in-google-antigravity) | `gemini-4-hydrogen` | ✅ |
-| [Orchestrator (Carbon)](/docs/models#orchestrator) | — | ❌ |
-| [Orchestrator (Argon)](/docs/models#orchestrator) | — | ❌ |
+| [Orchestrator](/docs/models#orchestrator) | `gemini-pro-orchestrator` | ✅† |
 | [Gemini 3.8 Flash](/blog/gemini-3-8-flash-in-google-antigravity) | `gemini-3.8-flash` | ✅ |
 | [Gemini 3.7 Flash](/blog/gemini-3-7-flash-in-google-antigravity) | `gemini-3.7-flash` | ✅ |
 | [Gemini 3.6 Flash](/blog/gemini-3-6-flash-in-google-antigravity) | `gemini-3.6-flash` | ✅ |
@@ -135,6 +143,8 @@ Antigravity in Gemini Enterprise supports included first-party Gemini models and
 \* Available at four thinking levels (<level>): low, medium (default), high, and max (for example, claude-opus-5-5-high or claude-sonnet-5-5-max).
 
 \*\* Third-party partner models require [administrator opt-in](https://cloud.google.com/gemini/enterprise/docs/ai-developer-tools-settings#enable-third-party-models) in the Google Cloud Console and are billed by token consumption. First-party Gemini models are enabled by default and draw from pooled edition seat credits ($10/month Standard, $15/month Plus).
+
+† In Gemini Enterprise, Orchestrator only runs Gemini 4 Carbon (High) as the planner paired with Gemini 4 Hydrogen (High) as the executor (requires both models to be available); custom planner and executor selection (such as Gemini 4 Neon, Gemini 4 Argon, or Claude models) is available on Google AI Pro and Google AI Ultra only.
 
 ### Selecting models and thinking levels
 
@@ -155,6 +165,7 @@ Once enabled for your project, models appear in your client shortly after your a
     agy --model claude-sonnet-5-5 --effort high
     ```
     
+*   **[Orchestrator](/docs/models#orchestrator) (`gemini-pro-orchestrator`, Carbon + Hydrogen only)**: When both **Gemini 4 Carbon** and **Gemini 4 Hydrogen** are available to your account (including with [Application Default Credentials](#application-default-credentials-adc)), **Orchestrator** appears as a single option in the model picker (or run `agy --model gemini-pro-orchestrator` in the CLI). In Gemini Enterprise, Orchestrator only runs **Gemini 4 Carbon** (`High`) for planning and review paired with **Gemini 4 Hydrogen** (`High`) for implementation—custom planner and executor selection (such as Gemini 4 Neon, Gemini 4 Argon, or Claude models), **Orchestrator Settings**, and `--effort` aren’t available in Gemini Enterprise.
 
 ### Architectural transparency: Hybrid execution
 
@@ -216,7 +227,7 @@ Complete the following steps to provision your Google Cloud project and enable A
 Antigravity CLI, the Antigravity App, and IDE extensions support multi-region deployment endpoints to satisfy regional data residency requirements:
 
 | Region | Location ID | Supported capabilities |
-| :-- | :-- | :-- |
+| --- | --- | --- |
 | **Global** | `global` | Text generation, code inference, multimodal, image generation |
 | **US** (Multi-region) | `us` | Text generation, code inference, multimodal |
 | **EU** (Multi-region) | `eu` | Text generation, code inference, multimodal |
@@ -232,7 +243,7 @@ For full endpoint specifications, consult the [Deployment endpoints documentatio
 If your organization restricts outbound developer traffic using corporate firewalls, proxies, or context-aware access rules, allowlist the following endpoints over TCP port `443` for the Antigravity App, Antigravity CLI (`agy`), and Antigravity for IDEs:
 
 | Service and protocol | Allowed hostnames (TCP port 443) |
-| :-- | :-- |
+| --- | --- |
 | **AI Developer Tools Orchestration — Global, US, EU** (Standard HTTPS) | `businessaicode.googleapis.com`  
 `businessaicode.us.rep.googleapis.com`  
 `businessaicode.eu.rep.googleapis.com` |
@@ -279,7 +290,7 @@ Enforce private networking security perimeters by adding the Business AI Code AP
 
 Review the following solutions for common sign-in and license issues:
 
-*   **No licenses appear during setup**: Licenses are assigned by your organization’s Google Cloud administrator. If the License Selector is empty, contact your administrator to ensure your account has been granted access to a Gemini Enterprise Standard or Plus license and that [AI developer tools are enabled](https://docs.cloud.google.com/gemini/enterprise/docs/ai-developer-tools-settings#enable-ai-developer-tools) for your region (`global`, `us`, or `eu`).
+*   **No licenses appear during setup**: Licenses are assigned by your organization’s Google Cloud administrator. If no licenses appear when you sign in, contact your administrator to ensure your account has been granted access to a Gemini Enterprise Standard or Plus license and that [AI developer tools are enabled](https://docs.cloud.google.com/gemini/enterprise/docs/ai-developer-tools-settings#enable-ai-developer-tools) for your region (`global`, `us`, or `eu`).
 *   **Missing BYOID sign-in option**: Ensure you are running the latest release of the **[Antigravity App](/download)**, the **[Antigravity CLI](/docs/cli/install)**, or your **[IDE extension](/docs/ide/extensions)**, as enterprise authentication and BYOID support are included natively in all recent releases.
 *   **TLS certificate or connection errors in `us` or `eu` regions**: Global Private Google Access VIPs (`private.googleapis.com` and `restricted.googleapis.com`) serve a single-level `*.googleapis.com` wildcard certificate that does not match `*.<location>.rep.googleapis.com` subdomains. If connecting to `us` or `eu` fails with an `x509` certificate mismatch or connection error, ensure `businessaicode.googleapis.com` and the regional `*.rep.googleapis.com` domains are allowlisted, and that the regional domains are routed through a Private Service Connect regional endpoint (with `businessaicode.googleapis.com` routed through your global endpoint). See [Private Service Connect (PSC) for regional endpoints](#private-service-connect-psc-for-regional-endpoints).
 

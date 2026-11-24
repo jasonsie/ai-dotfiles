@@ -23,12 +23,12 @@ This page covers Claude Code usage only: how to [track your costs](#track-your-c
 >
 > The Session block in `/usage` shows API token usage and is intended for API users. Claude Pro, Max, and Ultra subscribers have usage included in their subscription, so the session cost figure isn't relevant for billing purposes. Subscribers see plan usage bars, activity stats, and a usage breakdown on the same screen.
 
-The Session block at the top of `/usage` shows detailed token usage statistics for your current session.
+Run `/usage` at the Claude Code prompt and look under the **Session** heading for your current session's token usage.
 
-Claude Code computes the dollar figure locally from token counts at list price, unless a [`modelPricing`](https://code.claude.com/docs/en/settings-reference#modelpricing) table is in effect. An administrator sets one in your organization's managed settings so the figure uses your contracted rates, and while a table is in effect the `Total cost` line carries the note `at your organization's configured rates`. The figure is an estimate, so for authoritative billing see [Manage costs for your organization](#manage-costs-for-your-organization).
+Claude Code computes the dollar figure locally from token counts at list price, unless a [`modelPricing`](https://code.claude.com/docs/en/settings-reference#modelpricing) table is in effect. An administrator sets one in your organization's managed settings so the figure uses your contracted rates, and while a table is in effect the `Estimated cost` line carries the note `at your organization's configured rates`. The figure is an estimate, so for authoritative billing see [Manage costs for your organization](#manage-costs-for-your-organization).
 
 ```text theme={null}
-Total cost:            $0.55
+Estimated cost:        $0.55
 Total duration (API):  6m 20s
 Total duration (wall): 6h 33m 10s
 Total code changes:    0 lines added, 0 lines removed
@@ -175,7 +175,7 @@ Set `multiplier` below 1 for a flat discount or above 1 for a markup, list each 
 
 Deliver it as [managed settings](https://code.claude.com/docs/en/managed-settings.md): server-managed settings, an MDM policy, `managed-settings.json`, or a [policy helper](https://code.claude.com/docs/en/managed-settings.md#compute-the-policy-with-a-helper-program). Claude Code ignores the key in user, project, and local settings and in `--settings`.
 
-To confirm the rates are in effect, run `/usage` in a session that has [received the managed settings](https://code.claude.com/docs/en/managed-settings.md#read-the-source-in-%2Fstatus): the Session block's `Total cost` line carries the note `at your organization's configured rates`. The figures are still estimates, not an invoice. The per-million-token prices in the `/model` picker stay at list price.
+To confirm the rates are in effect, run `/usage` in a session that has [received the managed settings](https://code.claude.com/docs/en/managed-settings.md#read-the-source-in-%2Fstatus): the Session block's `Estimated cost` line carries the note `at your organization's configured rates`. The figures are still estimates, not an invoice. The per-million-token prices in the `/model` picker stay at list price.
 
 ### Claude for Teams and Enterprise
 
@@ -186,17 +186,17 @@ On Claude for Teams and Enterprise plans, each member's Claude Code usage draws 
 * **Cap spend**: the seat allowance is the default ceiling. To let members continue past it, turn on [usage credits](https://support.claude.com/en/articles/12429409-extra-usage-for-paid-claude-plans) and set spend limits at the organization, group, or individual member level.
 * **Pull per-user numbers**: on the Enterprise plan, the [Enterprise Analytics API](https://platform.claude.com/docs/en/api/admin/analytics) returns per-user usage and cost reports across Claude surfaces, including Claude Code. A Primary Owner creates a key with the `read:analytics` scope at [claude.ai/analytics/api-keys](https://claude.ai/analytics/api-keys). On the Teams plan, export the [spend report CSV](https://support.claude.com/en/articles/12883420-view-usage-analytics-for-team-and-enterprise-plans), which lists token usage and estimated spend per user and per model.
 
-The [Claude Enterprise consumption guide](https://support.claude.com/en/articles/14782391-claude-enterprise-consumption-guide) is the planning reference for admins. It explains how consumption differs across Claude chat, Claude Code, and Cowork, and gives per-user dollar starting points for budgeting. Budget more for a coding seat than a chat seat: each Claude Code turn carries file contents, tool calls, and multi-step reasoning, so one debugging session can consume more than a day of chat.
+The [Claude Enterprise consumption guide](https://support.claude.com/en/articles/14782391-claude-enterprise-consumption-guide) is the planning reference for admins. It explains how consumption differs across Claude chat, Claude Code, and Cowork. Budget more for a coding seat than a chat seat: each Claude Code turn carries file contents, tool calls, and multi-step reasoning, so one debugging session can consume more than a day of chat.
 
 ### Claude Console
 
-API organizations manage Claude Code spend through [workspaces](https://platform.claude.com/docs/en/build-with-claude/workspaces). You can [set workspace spend limits](https://platform.claude.com/docs/en/build-with-claude/workspaces#workspace-limits) on total Claude Code spend and [view cost and usage reporting](https://platform.claude.com/docs/en/build-with-claude/workspaces#usage-and-cost-tracking) in the Console.
+API organizations manage Claude Code spend through [workspaces](https://platform.claude.com/docs/en/build-with-claude/workspaces). You can [set workspace spend limits](https://platform.claude.com/docs/en/build-with-claude/workspaces#workspace-limits) and [view cost and usage reporting](https://platform.claude.com/docs/en/build-with-claude/workspaces#usage-and-cost-tracking) in the Console.
 
 > [!NOTE]
 >
-> When you first authenticate Claude Code with your Claude Console account, a workspace called "Claude Code" is automatically created for you. This workspace provides centralized cost tracking and management for all Claude Code usage in your organization. You cannot create API keys for this workspace; it is exclusively for Claude Code authentication and usage.
+> The first time a member signs in and Claude Code [creates an API key](https://code.claude.com/docs/en/authentication.md#sign-in-without-an-api-key) for them, a workspace called "Claude Code" is automatically created in your Console organization. You can't create API keys for this workspace yourself; it is exclusively for Claude Code authentication and usage.
 >
-> For organizations with custom rate limits, Claude Code traffic in this workspace counts toward your organization's overall API rate limits. You can set a [workspace rate limit](https://platform.claude.com/docs/en/api/rate-limits#setting-lower-limits-for-workspaces) on this workspace's Limits page in the Claude Console to cap Claude Code's share and protect other production workloads.
+> For organizations with custom rate limits, Claude Code traffic in this workspace counts toward your organization's overall API rate limits. You can set a [rate limit for this workspace](https://platform.claude.com/docs/en/api/rate-limits#setting-lower-limits-for-workspaces) on the [Rate limits page](https://platform.claude.com/usage/limits) in the Claude Console to cap the workspace's share and protect other production workloads.
 
 For per-user reporting, the [Console dashboard](https://platform.claude.com/claude-code) shows spend and lines accepted per member, and the [Claude Code Analytics API](https://platform.claude.com/docs/en/build-with-claude/claude-code-analytics-api) returns daily per-user metrics programmatically with an [Admin API key](https://platform.claude.com/settings/admin-keys). See [analytics for API customers](https://code.claude.com/docs/en/analytics.md#access-analytics-for-api-customers).
 

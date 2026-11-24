@@ -15,19 +15,19 @@ Welcome to Google Antigravity! Follow the instructions in this guide to get star
     
     macOSmacOS 13 (Ventura) or later (Apple Silicon or 64-bit Intel)
     
-    [Download for Apple Silicon](https://storage.googleapis.com/antigravity-public/antigravity-hub/2.32.0-6141816156848128/darwin-arm/Antigravity.dmg)[Download for Intel](https://storage.googleapis.com/antigravity-public/antigravity-hub/2.32.0-6141816156848128/darwin-x64/Antigravity.dmg)
+    [Download for Apple Silicon](https://storage.googleapis.com/antigravity-public/antigravity-hub/2.35.0-6394266482769920/darwin-arm/Antigravity.dmg)[Download for Intel](https://storage.googleapis.com/antigravity-public/antigravity-hub/2.35.0-6394266482769920/darwin-x64/Antigravity.dmg)
     
     Open the downloaded `Antigravity.dmg` disk image and drag **Antigravity** into your **Applications** folder. If you are upgrading an existing installation, select **Replace** when prompted instead of **Keep Both**.
     
     WindowsWindows 10 (64-bit) or Windows 11
     
-    [Download for x64](https://storage.googleapis.com/antigravity-public/antigravity-hub/2.32.0-6141816156848128/windows-x64/Antigravity-x64.exe)[Download for ARM64](https://storage.googleapis.com/antigravity-public/antigravity-hub/2.32.0-6141816156848128/windows-arm/Antigravity-arm64.exe)
+    [Download for x64](https://storage.googleapis.com/antigravity-public/antigravity-hub/2.35.0-6394266482769920/windows-x64/Antigravity-x64.exe)[Download for ARM64](https://storage.googleapis.com/antigravity-public/antigravity-hub/2.35.0-6394266482769920/windows-arm/Antigravity-arm64.exe)
     
     Run the downloaded `.exe` installer and follow the guided setup wizard.
     
     Linuxglibc >= 2.28, glibcxx >= 3.4.25 (Ubuntu 20+, Debian 10+, Fedora 36+, RHEL 8+)
     
-    [Download for x64](https://storage.googleapis.com/antigravity-public/antigravity-hub/2.32.0-6141816156848128/linux-x64/Antigravity.tar.gz)[Download for ARM64](https://storage.googleapis.com/antigravity-public/antigravity-hub/2.32.0-6141816156848128/linux-arm/Antigravity.tar.gz)
+    [Download for x64](https://storage.googleapis.com/antigravity-public/antigravity-hub/2.35.0-6394266482769920/linux-x64/Antigravity.tar.gz)[Download for ARM64](https://storage.googleapis.com/antigravity-public/antigravity-hub/2.35.0-6394266482769920/linux-arm/Antigravity.tar.gz)
     
     Extract the archive with `tar -xzf Antigravity.tar.gz` and launch `./Antigravity`.
     
@@ -51,7 +51,7 @@ Welcome to Google Antigravity! Follow the instructions in this guide to get star
         
         No plugins are installed when you pick a role—clicking a starter prompt installs its paired [Marketplace](/docs/marketplace) plugin in the background if needed, prefills `@<Plugin>` and the prompt without sending it, and selects the first `<...>` placeholder so you can edit it first (connected services such as Google Calendar, Drive, Slides, or Figma prompt you to sign in when you run the prompt). Selecting **Software Engineering** also includes **Bring over my setup from other Agentic Developer Tools** to import MCP servers, skills, rules, and instructions from Claude Code, Codex, Cursor, and Gemini CLI. You can dismiss any suggestion or switch layouts anytime in **Settings** > **General** > **[Interface Layout](/docs/settings#interface-layout)**.
         
-    *   **Gemini Enterprise & Google Cloud accounts**: Choose **Business account** during [sign-in](/docs/install) and select your assigned license and Google Cloud project.
+    *   **Gemini Enterprise & Google Cloud accounts**: Choose **Use Business Account** during [sign-in](/docs/install) and select your assigned license and Google Cloud project, or pay as you go with your own project. Using a Google Workspace account? Refer to [Google Workspace accounts](/docs/workspace).
 
 ### Antigravity CLI
 
@@ -115,6 +115,12 @@ For authentication options or enterprise configurations, consult the **[Authenti
     
     Open **JetBrains AI** > **Settings** > **Agents**, search for **Antigravity**, and click **Install**. See the [IntelliJ-based IDEs guide](/docs/ide/extensions/jetbrains).
     
+    **Android Studio:**
+    
+    **Requirements:** An Android Studio release with [Bring Your Own Agent](https://developer.android.com/studio/releases#bring-your-own-agent) (ACP) support.
+    
+    Open the **Agent** tool window, click the agent picker at the top of the panel, and choose **Google Antigravity** (or install it from **Settings** > **Tools** > **AI** > **Agents** on the **Marketplace** tab). See the [Android Studio guide](/docs/ide/extensions/android-studio).
+    
     **Visual Studio:**
     
     [Download from Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=Google.GoogleAntigravity)
@@ -139,7 +145,7 @@ For authentication options or enterprise configurations, consult the **[Authenti
     
     [Install from Eclipse Marketplace](https://marketplace.eclipse.org/content/google-antigravity)
     
-    **Requirements:** Eclipse 2026-06 or later on macOS, Linux, or Windows (Public Preview).
+    **Requirements:** Eclipse 2026-06 or later on macOS, Linux, or Windows.
     
     Select **Help** > **Eclipse Marketplace…**, search for **Google Antigravity**, click **Install**, and restart Eclipse when prompted. Check out the [Eclipse guide](/docs/ide/extensions/eclipse).
     
@@ -157,7 +163,7 @@ For authentication options or enterprise configurations, consult the **[Authenti
     
     ![The Antigravity IDE editor with the Agent side panel open on the right, showing a new conversation with Gemini 4 Argon Medium selected in the model picker](/assets/image/docs/editor-open-agent-manager.png)
     
-2.  Sign in with your personal Google Account or **Gemini Enterprise** credentials (Enterprise support is available in IDE extensions—GA in VS Code and Visual Studio, and in **Preview** for JetBrains, Zed, Xcode, and Eclipse) when prompted in the Antigravity panel or settings.
+2.  Sign in with your personal Google Account or **Gemini Enterprise** credentials (Enterprise support is available in IDE extensions—GA in VS Code, Visual Studio, JetBrains, Zed, Xcode, and Eclipse, and in **Preview** for Android Studio) when prompted in the Antigravity panel or settings.
 
 ### Antigravity SDK
 
@@ -303,7 +309,7 @@ Navigate to any codebase directory in your terminal and start a session:
 #### Navigation shortcuts
 
 | Action | macOS | Windows / Linux | Description |
-| :-- | :-- | :-- | :-- |
+| --- | --- | --- | --- |
 | **Conversation picker** | Cmd + K | Ctrl + K | Search past conversations by title or full text and switch to one |
 | **File search** | Cmd + P | Ctrl + P | Search files in the current project by name and open one |
 | **Commands** | Cmd + Shift + P | Ctrl + Shift + P | Search and run app commands |
@@ -317,7 +323,7 @@ For more about searching conversations, files, and commands, see [Search and com
 #### Core slash commands
 
 | Command | Description |
-| :-- | :-- |
+| --- | --- |
 | [`/goal`](/docs/commands/goal) | Runs the task autonomously until completion without pausing for intermediate input. |
 | [`/grill-me`](/docs/commands/grill-me) | Prompts the agent to interview you about requirements before beginning implementation. |
 | [`/schedule`](/docs/commands/schedule) | Runs an instruction as a one-time delayed task or recurring cron schedule. |
@@ -329,7 +335,7 @@ For more about searching conversations, files, and commands, see [Search and com
 #### Common CLI commands
 
 | Command | Description |
-| :-- | :-- |
+| --- | --- |
 | `agy` | Launches the interactive TUI in the current directory. |
 | `agy -i "prompt"` | Launches an interactive session with an initial prompt. |
 | `agy -p "prompt"` | Runs a single prompt non-interactively and prints the response. |
@@ -341,7 +347,7 @@ For more about searching conversations, files, and commands, see [Search and com
 #### Keyboard shortcuts
 
 | Shortcut | Action |
-| :-- | :-- |
+| --- | --- |
 | Ctrl + R | Open the **Artifact Review** screen to inspect plans and diffs |
 | Tab | Inspect file diffs and tool execution details |
 | Ctrl + C | Interrupt current agent generation |
@@ -354,7 +360,7 @@ For more about searching conversations, files, and commands, see [Search and com
 #### Editor commands and shortcuts
 
 | IDE | Shortcut / Command | Action |
-| :-- | :-- | :-- |
+| --- | --- | --- |
 | **VS Code** | Cmd + Shift + X / Ctrl + Shift + X | Open Extensions sidebar to install or manage **Google Antigravity** |
 | **Visual Studio** | Ctrl + \\, Ctrl + Alt + L | Open the Antigravity tool window |
 | **Zed** | Cmd + Shift + P / Ctrl + Shift + P → `agent: open settings` | Open Agent settings to configure **External Agents** |
@@ -365,7 +371,7 @@ For more about searching conversations, files, and commands, see [Search and com
 #### Authentication configuration
 
 | Auth type (`auth.type`) | Account tier | Description |
-| :-- | :-- | :-- |
+| --- | --- | --- |
 | `"oauth-personal"` | Individual Google Accounts | Authenticates personal Free, Pro, and Ultra plans. |
 | `"oauth-business"` | Gemini Enterprise (Preview) | Authenticates corporate identity with `gcp.project` and `gcp.location`. |
 | `"gemini-api-key"` | Gemini API | Authenticates using a Gemini API key. |
@@ -376,7 +382,7 @@ For more about searching conversations, files, and commands, see [Search and com
 #### Common SDK methods and configuration
 
 | Method / Command | Description |
-| :-- | :-- |
+| --- | --- |
 | `await agent.chat(prompt)` | Sends a user prompt to the agent and returns the turn response. |
 | `LocalAgentConfig(policies=...)` | Configures declarative tool execution policies (`allow`, `deny`, `ask_user`). |
 | `LocalAgentConfig(system_instructions=...)` | Customizes the agent persona and system instructions. |

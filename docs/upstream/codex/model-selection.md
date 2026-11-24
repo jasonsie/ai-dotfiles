@@ -13,33 +13,12 @@ Availability, tools, reasoning settings, and usage limits differ by product and
 model version. Check the [models available in ChatGPT](https://learn.chatgpt.com/docs/models) or the
 [API model catalog](https://developers.openai.com/api/docs/models).
 
-## Find the right model for your workflow
 
-Choose your work and task and get a recommendation.
 
-<ModelRecommender client:load />
 
-### When to consider GPT-6.1 Terra
 
-Try [GPT-6.1 Terra](https://developers.openai.com/api/docs/models/gpt-6.1-terra) for concise writing based on
-supplied material, computer-use tasks with a defined outcome, and scoped code
-fixes. Provide clear inputs, requirements, and a way to verify the result, such as
-checking saved records or running regression tests.
 
-Compare it with GPT-6.1 Sol on the same inputs and reasoning effort. For writing,
-judge audience fit, voice, and useful detail as well as accuracy and length. For
-computer use, check the saved result and the accuracy of the completion report.
 
-### When to consider GPT-6.1 Sol
-
-Consider GPT-6.1 Sol for complex projects where cost matters, such as
-creating a board presentation from financial results or building a website
-from a product brief. Compare it with Astra on the same task to assess the
-tradeoff between quality and cost.
-
-See the [API model page](https://developers.openai.com/api/docs/models/gpt-6.1-sol) for specifications
-and API pricing, or [Codex and ChatGPT Work availability](https://learn.chatgpt.com/docs/models#gpt-6.1-sol)
-for access through your ChatGPT plan.
 
 ## How to think about models and reasoning effort
 
@@ -47,42 +26,71 @@ for access through your ChatGPT plan.
 
 
 
-  Luna is our most efficient model, while Astra is our state-of-the-art, most
-  powerful model. If you don't need to think about usage or how long it takes to
-  complete a task, you can default to Astra. To optimize usage, use the guidance
-  below to choose a model and reasoning effort for your needs.
+
+- For most tasks in ChatGPT Work or Codex, start with **GPT-6.2 Sol**.
+- Choose **GPT-6.2 Astra** for complex projects.
+- Use **GPT-6 Luna** for small, repeatable tasks, especially simple automations that run frequently.
+- Choose **GPT-6.1 Terra** when the task requires visual reasoning, such as navigating browser or desktop apps.
 
 
 
-1. **Luna · Low**
 
-   Fine-grained edits, well-scoped problem-solving, and simple data extraction.
+You can find more details on recommended tasks per model and reasoning effort below.
 
-2. **Luna · Extra high**
+1. **GPT-6 Luna · Low**
 
-   Finding current context across multiple apps, prioritizing work, and solving problems with clear constraints.
+   Making small edits to files and extracting fields when the expected result is clear.
 
-3. **GPT-6.1 Sol · Medium**
+2. **GPT-6 Luna · Extra high**
 
-   Complex technical work and coordinated deliverables you expect to revise.
+   Finding updates across apps, prioritizing follow-ups, and solving problems with clear constraints.
 
-4. **GPT-6.1 Sol · Extra high**
+3. **GPT-6.1 Terra · Medium**
 
-   Polished deliverables, connected visual systems, and decisions built from conflicting evidence.
+   Navigating desktop apps, updating records, and making focused fixes you can verify.
 
-5. **Astra · Low**
+4. **GPT-6.2 Sol · Medium**
 
-   Concise writing and content adaptation that preserve facts and nuance.
+   Fixing bugs and adding features in an existing codebase, or drafting documents for review.
 
-6. **Astra · Medium**
+5. **GPT-6.2 Sol · Extra high**
 
-   Ambitious projects that need broad context, reliable interactions, and complete results.
+   Working through multistep tasks that need testing and revision along the way.
 
-7. **Astra · Extra high**
+6. **GPT-6.2 Astra · Low**
 
-   Demanding analysis and complex deliverables with exacting requirements.
+   Turning a clear brief into polished work that's ready to use.
 
-### Experiment
+7. **GPT-6.2 Astra · Medium**
+
+   Planning and carrying out complex projects, adjusting the approach as new information comes in.
+
+8. **GPT-6.2 Astra · Extra high**
+
+   Solving open-ended problems that require weighing trade-offs and testing assumptions.
+
+**Model strengths**
+
+Farther from the center means a stronger fit for that type of work. The ratings are high-level estimates based on benchmarks, independently run task examples, and user feedback.
+
+Models ordered by estimated fit for each type of work
+
+| Type of work | Models from strongest fit to weakest fit |
+| --- | --- |
+| 3D and design | GPT-6.2 Astra, GPT-6.2 Sol, GPT-6.1 Terra, GPT-6 Luna |
+| Software engineering | GPT-6.2 Astra, GPT-6.2 Sol, GPT-6.1 Terra, GPT-6 Luna |
+| Data analysis | GPT-6.2 Astra, GPT-6.2 Sol, GPT-6.1 Terra, GPT-6 Luna |
+| Creating deliverables | GPT-6.2 Astra, GPT-6.2 Sol, GPT-6.1 Terra, GPT-6 Luna |
+| Computer use | GPT-6.2 Astra, GPT-6.2 Sol, GPT-6.1 Terra, GPT-6 Luna |
+| Research decisions | GPT-6.2 Astra, GPT-6.2 Sol, GPT-6.1 Terra, GPT-6 Luna |
+
+## Find the right model for your workflow
+
+Choose a task and a priority to see a suggested model and reasoning effort.
+
+<ModelRecommender client:load />
+
+## Experiment
 
 Treat the guidance on this page as a starting point. The best way to find the right
 model for your workflow is to experiment with different models and reasoning
@@ -102,16 +110,8 @@ Start by considering:
 If you can, experiment using the same inputs to compare results and keep the
 lightest setting that meets your quality bar.
 
-Choose acceptance criteria before comparing models:
+Try the same model at two reasoning settings on a few tasks you do often.
+Which setting gets you to a usable result sooner, including the time you spend
+checking and editing it?
 
-- **Writing:** check required facts, qualifications, audience, and voice. Review
-  both outputs before deciding whether the shorter one is more useful.
-- **Computer use:** reopen the affected record or page to verify saved changes,
-  confirm that the workflow preserved unrelated data, and compare the completion
-  report with the actual result.
-- **Code and interfaces:** run regression tests. For an interactive application,
-  also inspect the rendered result on desktop and mobile.
-
-Repeat the comparison across representative tasks. Measure completion time
-alongside quality, including time spent reviewing or repairing the result. Then
-vary reasoning effort while keeping the model and inputs fixed.
+Whenever a new model comes out, try revisiting your previous settings.

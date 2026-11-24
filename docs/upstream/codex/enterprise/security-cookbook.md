@@ -1182,9 +1182,54 @@ timeout = 30
 statusMessage = "Checking managed Bash command"
 ```
 
-The requirement registers the hook but does not install it. For a local macOS integration test, save the following as `pre_tool_use_policy.py` and have an administrator install it with the commands below.
+The requirement registers the hook but does not install it. Have an administrator install the selected file with the commands below.
 
-It blocks only the synthetic marker; replace it with a reviewed organization-specific policy before relying on it. Confirm that `/usr/bin/python3` exists on the target and adjust the interpreter path if necessary:
+<CodeSampleNote client:load language="python" languages={Object.keys(samples.all.codexSecurityCookbook.installAndEnforceAdministratorManagedHooks())}>
+
+For a local macOS integration test, save the Python version as `pre_tool_use_policy.py`.
+
+</CodeSampleNote>
+
+<CodeSampleNote client:load language="go" languages={Object.keys(samples.all.codexSecurityCookbook.installAndEnforceAdministratorManagedHooks())}>
+
+Save the Go version as `main.go` in a Go module and build it with `go build -o pre_tool_use_policy .`. Have an administrator install the executable as `/etc/codex/hooks/pre_tool_use_policy` with root ownership and mode `755`, and set the hook `command` to that absolute path. It uses only the standard library and does not need an interpreter.
+
+</CodeSampleNote>
+
+<CodeSampleNote client:load language="ruby" languages={Object.keys(samples.all.codexSecurityCookbook.installAndEnforceAdministratorManagedHooks())}>
+
+For a local macOS integration test, save the Ruby version as `pre_tool_use_policy.rb`. Set the hook `command` to `/usr/bin/ruby /etc/codex/hooks/pre_tool_use_policy.rb`, replacing `/usr/bin/ruby` with the absolute path to your Ruby interpreter if needed. The Ruby hook uses only the standard library.
+
+</CodeSampleNote>
+
+<CodeSampleNote client:load language="typescript" languages={Object.keys(samples.all.codexSecurityCookbook.installAndEnforceAdministratorManagedHooks())}>
+
+Save the TypeScript version as `pre_tool_use_policy.ts`. Set the hook `command` to `/absolute/path/to/node --experimental-strip-types /etc/codex/hooks/pre_tool_use_policy.ts`, replacing the interpreter path with the path to your installed Node executable. In the installation commands below, replace both `pre_tool_use_policy.py` paths with `pre_tool_use_policy.ts`; retain root ownership and permissions. The hook uses only Node's standard library.
+
+</CodeSampleNote>
+
+It blocks only the synthetic marker; replace it with a reviewed organization-specific policy before relying on it. Confirm that the configured executable and any required interpreter exist on the target. The command must match the selected language:
+
+Define a managed hook policy
+
+```typescript
+import { readFileSync } from "node:fs";
+
+try {
+  const event = JSON.parse(readFileSync(0, "utf8")) as {
+    tool_input?: { command?: unknown };
+  };
+  const command = event.tool_input?.command ?? "";
+  if (typeof command !== "string") throw new Error("Invalid command");
+  if (command.includes("CODEX_HOOK_TEST_DENY")) {
+    console.error("Synthetic test command blocked by managed hook.");
+    process.exit(2);
+  }
+} catch {
+  console.error("Invalid hook event.");
+  process.exit(2);
+}
+```
 
 ```python
 import json
@@ -1197,11 +1242,57 @@ if "CODEX_HOOK_TEST_DENY" in command:
     sys.exit(2)
 ```
 
+```go
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"os"
+	"strings"
+)
+
+func main() {
+	var event struct {
+		ToolInput struct {
+			Command string `json:"command"`
+		} `json:"tool_input"`
+	}
+	decoder := json.NewDecoder(io.LimitReader(os.Stdin, 1<<20))
+	if err := decoder.Decode(&event); err != nil {
+		fmt.Fprintln(os.Stderr, "Invalid hook event.")
+		os.Exit(2)
+	}
+	if strings.Contains(event.ToolInput.Command, "CODEX_HOOK_TEST_DENY") {
+		fmt.Fprintln(os.Stderr, "Synthetic test command blocked by managed hook.")
+		os.Exit(2)
+	}
+}
+```
+
+```ruby
+require "json"
+
+event = JSON.parse($stdin.read)
+command = event.fetch("tool_input", {}).fetch("command", "")
+if command.include?("CODEX_HOOK_TEST_DENY")
+  warn "Synthetic test command blocked by managed hook."
+  exit 2
+end
+```
+
 
 ```bash
 sudo install -d -o root -g wheel -m 755 /etc/codex/hooks
 sudo install -o root -g wheel -m 644 ./pre_tool_use_policy.py /etc/codex/hooks/pre_tool_use_policy.py
 ```
+
+<CodeSampleNote client:load language="ruby" languages={Object.keys(samples.all.codexSecurityCookbook.installAndEnforceAdministratorManagedHooks())}>
+
+For Ruby, replace both `pre_tool_use_policy.py` paths in the installation commands with `pre_tool_use_policy.rb`; keep the same root ownership and permissions.
+
+</CodeSampleNote>
 
 Restart the local client, then:
 

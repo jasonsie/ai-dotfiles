@@ -125,7 +125,17 @@ If the run does what you wanted, you can [save it as a command](#save-the-workfl
 
 #### Dismiss or turn off the keyword
 
-If you didn't mean to start a workflow, press `Option+W` on macOS or `Alt+W` on Windows and Linux to dismiss the highlight for this prompt, or press backspace while the cursor is right after the highlighted keyword. To stop the keyword from triggering at all, turn off Ultracode keyword trigger in `/config`.
+To use the word `ultracode` without asking for a workflow, skip the keyword for one prompt or turn the keyword off for every prompt:
+
+* **One prompt, as you type**: put the word in backticks.
+
+  For example, this prompt is a regular request to search your files:
+
+  ```text wrap theme={null}
+  find every file that mentions `ultracode`
+  ```
+* **One prompt, already highlighted in your terminal**: press Backspace right after the word, or press `Alt+W`. On macOS, that key is `Option+W` with [Option as Meta](https://code.claude.com/docs/en/terminal-config.md#enable-option-key-shortcuts-on-macos).
+* **Every prompt**: turn off [**Ultracode keyword trigger**](https://code.claude.com/docs/en/settings-reference.md#workflowkeywordtriggerenabled) in `/config`.
 
 #### Where the keyword works
 
@@ -178,7 +188,7 @@ Whether you see this prompt depends on your [permission mode](https://code.claud
 | Bypass permissions | Claude Code doesn't prompt you. The run starts immediately |
 | `claude -p`, Agent SDK | Claude Code doesn't prompt you |
 
-In `claude -p` and the Agent SDK, Claude Code never shows this prompt. It runs the Workflow tool call through the same [permission evaluation](https://code.claude.com/docs/en/agent-sdk/permissions.md#how-permissions-are-evaluated) as the rest of the session, so deny rules, ask rules, and `dontAsk` mode apply to the launch as they apply to every tool call. To let the workflow start in these runs, use one of these:
+In `claude -p` and the Agent SDK, the Workflow tool call goes through the same [permission evaluation](https://code.claude.com/docs/en/agent-sdk/permissions.md#how-permissions-are-evaluated) as the rest of the session. Deny rules, ask rules, and `dontAsk` mode apply to the call. To let the workflow start in these runs, use one of these:
 
 * **Permission rule**: add `Workflow` to your allow rules to approve every workflow, or `Workflow(<name>)` to approve one saved workflow by name.
 * **Auto permission mode**: run in [auto mode](https://code.claude.com/docs/en/permission-modes.md#eliminate-prompts-with-auto-mode), where the classifier reviews the call and can approve it.
@@ -226,7 +236,7 @@ The following prompt runs a saved workflow with a list of issue numbers:
 Run /triage-issues on issues 1024, 1025, and 1030
 ```
 
-Claude passes the list as structured data, so the script can call array and object methods on `args` directly without parsing it first. If `args` is omitted, the global is `undefined` inside the script.
+Claude passes the list as structured data, so the script can call array and object methods on `args` directly. If `args` is omitted, the global is `undefined` inside the script.
 
 ## Example workflow prompts
 
@@ -282,7 +292,9 @@ use a workflow to find flaky tests in this repo: run the suite repeatedly, recor
 
 ### What the saved script looks like
 
-When you [save a workflow](#save-the-workflow-for-reuse), the file in `.claude/workflows/` holds a `meta` block followed by a script body that orchestrates subagents. You usually don't need to edit it, but here is the shape of a small one so you can recognize what Claude generated:
+When you [save a workflow](#save-the-workflow-for-reuse), the file in `.claude/workflows/` holds a `meta` block followed by a script body that orchestrates subagents.
+
+Here is the shape of a small one so you can recognize what Claude generated:
 
 ```javascript theme={null}
 export const meta = {
@@ -492,7 +504,7 @@ To turn workflows off for your whole organization, set `"disableWorkflows": true
 
 When workflows are disabled:
 
-* `/workflows`, the workflow commands, and the `/workflow-authoring` skill are unavailable
+* The `/workflows` progress view, the workflow commands, and the `/workflow-authoring` skill are unavailable
 * The `ultracode` keyword no longer triggers a run, and the **Ultracode** toggle is removed from `/effort`
 
 A run that was already in progress keeps going.
