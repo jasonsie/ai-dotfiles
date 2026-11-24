@@ -44,12 +44,15 @@ The message names the step, e.g. `ship stopped at checks: ...`; nothing is undon
 - **checks**: the message names the failing command. Fix it in the worktree, commit, rerun.
   Nothing was pushed. "No Verify block": the repo has no checks to run; ask the user whether to
   add one or ship with `--no-checks`.
-- **push, origin has the branch** (PR fix): it moved on, or origin refused the push (a protected
-  branch). Nothing is deleted; fix the cause and rerun.
-- **push, origin already has the branch**: the name is taken. Start the work under another name
-  (`worktree new`), moving the commits there.
+- **push (a PR fix), the branch moved on or origin refused**: origin's branch holds a commit this
+  worktree lacks, or it is protected. Nothing is deleted; fix the cause and rerun.
+- **push (new work), "origin already has" the branch**: the name is taken. Run `ai-dotfiles
+  worktree new` with another `<type>/<slug>`, `git cherry-pick` this worktree's commits there and
+  ship from there. This worktree stays: ask the user before removing it (`worktree rm`
+  archive-tags it).
 - **pr**: see `open-pr`; the branch is pushed, rerun once fixed.
 - **worktree, kept**: the PR is open but the worktree holds uncommitted files or a commit on no
-  remote. Deal with it, then `ai-dotfiles worktree rm <folder>`.
+  remote. Deal with it, then `ai-dotfiles worktree shipped <folder>`, which deletes it with no
+  archive tag (`rm` would add one before `approve` makes its own).
 
 The archive tag is not made here; `approve <n>` makes it at the PR's head.

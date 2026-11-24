@@ -47,8 +47,9 @@ to the main checkout it names). A stop is resumed as below.
 
 ## When it stops
 
-The message names the step, e.g. `approve stopped at merge: …`. Open that step's skill for
-the fix, then rerun the same command; the steps already done are skipped. Nothing is undone.
+The message names the step, then the command when one failed, e.g. `approve stopped at merge:
+gh pr: …`. Open that step's skill for the fix, then rerun the same command; the steps already
+done are skipped. Nothing is undone. The run needs `git` and an authenticated `gh`.
 
 | Step | Skill | Alone |
 |---|---|---|

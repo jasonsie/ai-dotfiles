@@ -10,5 +10,7 @@ merge commit keeps each small commit in the base's history.
 
 - **"PR #n is dirty"**: conflicts. Merge the base into the branch, resolve with the user, push
   (`push-branch`), rerun.
-- **"blocked"**: checks or required reviews are missing; `gh pr checks <n>` says which.
+- **"blocked"**: a check or a required review is missing. `gh pr checks <n>` lists the checks,
+  `gh pr view <n> --json reviewDecision` the review. Fix or wait for the check, or get the review
+  (`approve-pr`), then rerun.
 - **"behind"**: the base requires an up-to-date branch; merge the base in, push, rerun.

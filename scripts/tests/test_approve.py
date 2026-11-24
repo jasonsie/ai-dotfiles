@@ -41,6 +41,20 @@ class RunTest(unittest.TestCase):
         self.assertTrue(fake.ran('gh pr merge 7 --merge'))
         self.assertTrue(fake.ran('git push -q origin --delete feat/x'))
 
+    def test_a_stop_names_the_step_whose_command_failed(self):
+        """git push runs in push, tag and prune; gh pr in review and merge: the command alone names none."""
+        for step, answer in (('push', {'git push -q -u': FAIL}), ('tag', {'git push -q origin refs/tags': FAIL}),
+                             ('prune', {'git push -q origin --delete': FAIL})):
+            with self.subTest(step):
+                code, _, err, _ = run(**answer)
+                self.assertEqual(code, 1)
+                self.assertIn(f'approve stopped at {step}: git push: no', err)
+        code, _, err, _ = run(**{'gh pr merge': (1, '', 'not mergeable')})
+        self.assertIn('approve stopped at merge: gh pr: not mergeable', err)
+        code, _, err, _ = run(**{'gh pr list': '[]'})
+        self.assertIn('approve stopped at pr: no ', err)   # a step's own stop is not named twice
+        self.assertNotIn('pr: pr:', err)
+
     def test_dry_run_changes_nothing(self):
         code, output, _, fake = run(['--dry-run'])
         self.assertEqual(code, 0, output)
@@ -52,7 +66,7 @@ class RunTest(unittest.TestCase):
     def test_skips_what_is_done_already(self):
         merged = dict(PR, state='MERGED')
         code, output, _, fake = run(**{
-            'git rev-parse --verify -q refs/remotes/origin/feat/x': TIP,
+            'git ls-remote --heads origin refs/heads/feat/x': TIP + '\trefs/heads/feat/x',
             'gh pr list': json.dumps([merged]),
             'git rev-list -n 1 archive/x': TIP,
             'git ls-remote --exit-code --tags origin archive/x': OK,
@@ -62,7 +76,7 @@ class RunTest(unittest.TestCase):
         })
         self.assertEqual(code, 1, output)  # on main: preflight refuses
         code, output, _, fake = run(**{
-            'git rev-parse --verify -q refs/remotes/origin/feat/x': TIP,
+            'git ls-remote --heads origin refs/heads/feat/x': TIP + '\trefs/heads/feat/x',
             'gh pr list': json.dumps([merged]),
             'git rev-list -n 1 archive/x': TIP,
             'git ls-remote --exit-code --tags origin archive/x': OK,

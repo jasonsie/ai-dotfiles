@@ -68,7 +68,7 @@ DEFAULTS = {
     'git config --local approve.reviewer second': OK,  # the set, as opposed to the read
     'git config --local --unset': OK,
     'gh auth token --user second': 'tok-second',
-    'git rev-parse --verify -q refs/remotes/origin/feat/x': FAIL,
+    'git ls-remote --heads origin refs/heads/feat/x': '',   # origin has no such branch yet
     'git push': OK,
     'gh pr list': json.dumps([PR]),
     'gh pr view 7 --json reviews': '',
@@ -264,10 +264,13 @@ class StepTest(unittest.TestCase):
         self.assertEqual(fake.ran('git checkout') + fake.ran('git branch -q -D') + fake.ran('git push'), [])
 
     def test_a_diverged_remote_branch_stops_before_push(self):
-        code, _, err, _ = land([], push_branch.main, **{'git rev-parse --verify -q refs/remotes/origin/feat/x': OLD,
-                                                    'git merge-base --is-ancestor': FAIL})
+        code, _, err, fake = land([], push_branch.main, **{
+            'git ls-remote --heads origin refs/heads/feat/x': OLD + '\trefs/heads/feat/x',
+            'git merge-base --is-ancestor': FAIL})
         self.assertEqual(code, 1)
         self.assertIn('push: origin/feat/x is at bbbbbbb', err)
+        self.assertEqual(fake.ran('git rev-parse --verify -q refs/remotes'), [], 'origin is asked, not the last fetch')
+        self.assertEqual(fake.ran('git push'), [])
 
 
 class ApprovePrTest(unittest.TestCase):
