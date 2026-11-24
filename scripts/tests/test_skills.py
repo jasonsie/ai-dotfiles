@@ -47,15 +47,7 @@ NOTICE_FILES = ('CREDITS.md',)  # an author's notices beside LICENSE: not refere
 # Reference files of skills pinned in skills.lock that miss a packaging rule. Fixing one is a local
 # edit to re-apply at every upstream refresh, so each waits here for that call; the test fails when
 # an entry stops being true.
-KNOWN_UPSTREAM_GAPS = {
-    'unpointed': {'teach/GLOSSARY-FORMAT.md'},
-    'no contents': {
-        'improve-codebase-architecture/HTML-REPORT.md',
-        'prototype/UI.md',
-        'triage/AGENT-BRIEF.md',
-        'triage/OUT-OF-SCOPE.md',
-    },
-}
+KNOWN_UPSTREAM_GAPS = {'unpointed': set(), 'no contents': set()}  # none waiting: the five were fixed here
 
 
 def parse_frontmatter(text):

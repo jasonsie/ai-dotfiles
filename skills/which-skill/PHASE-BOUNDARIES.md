@@ -34,7 +34,7 @@ Work top to bottom at the boundary. The first **yes** wins.
 
 **1. Can you continue in this session?** Two things make the answer yes: the next phase
 needs this phase as a **primary source**, or there is enough of the window left (the part
-where the model still reasons sharply, roughly 150k tokens on current models) for the
+where the model still reasons sharply) for the
 next phase to fit. Grilling, then implementation, is the standard yes: the implementation
 wants the reasoning verbatim, not a summary of it. Continue costs nothing and loses
 nothing, so rule it out before anything else.

@@ -1,6 +1,6 @@
 ---
 name: pr
-description: "Use when writing a PR body."
+description: "Writes a pull request body from a template: a Summary visual, Before/After evidence, and Merge Danger (door, blast radius). Use when writing or updating a PR body."
 metadata:
   credits:
     skill: show-me

@@ -51,7 +51,7 @@
       ],
       "commit": "abeeaf95660ba9e8b7c753eb38f441ca707a8823",
       "license": "MIT",
-      "local_edits": "none beyond the attribution line"
+      "local_edits": "the HITL script is copied, edited and run by the user in their own terminal (an agent's shell has no keyboard)"
     },
     "domain-modeling": {
       "repo": "mattpocock/skills",
@@ -104,7 +104,7 @@
       ],
       "commit": "abeeaf95660ba9e8b7c753eb38f441ca707a8823",
       "license": "MIT",
-      "local_edits": "Skill-tool calls reworded; slash mention made a skill name; explores in-session where the CLI has no sub-agents"
+      "local_edits": "Skill-tool calls reworded; slash mention made a skill name; explores in-session where the CLI has no sub-agents; contents list in HTML-REPORT.md; its examples say \"shallow modules\", the term the file requires"
     },
     "pr": {
       "repo": "mattpocock/skills",
@@ -115,7 +115,7 @@
       ],
       "commit": "abeeaf95660ba9e8b7c753eb38f441ca707a8823",
       "license": "MIT",
-      "local_edits": "none beyond the attribution line (CREDITS.md and the show-me credit in the frontmatter kept)"
+      "local_edits": "none beyond the attribution line (CREDITS.md and the show-me credit in the frontmatter kept); description says what the skill does as well as when"
     },
     "prototype": {
       "repo": "mattpocock/skills",
@@ -127,7 +127,7 @@
       ],
       "commit": "abeeaf95660ba9e8b7c753eb38f441ca707a8823",
       "license": "MIT",
-      "local_edits": "none beyond the attribution line"
+      "local_edits": "contents list in UI.md"
     },
     "research": {
       "repo": "mattpocock/skills",
@@ -162,7 +162,7 @@
       ],
       "commit": "abeeaf95660ba9e8b7c753eb38f441ca707a8823",
       "license": "MIT",
-      "local_edits": "renamed from setup-matt-pocock-skills; edits AGENTS.md first, else CLAUDE.md, else creates AGENTS.md; triage-labels column renamed; slash mentions made skill names"
+      "local_edits": "renamed from setup-matt-pocock-skills; edits AGENTS.md first, else CLAUDE.md, else creates AGENTS.md; triage-labels column renamed; slash mentions made skill names; creates wayfinder's five labels; the tracker templates name the map body as wayfinder's"
     },
     "tdd": {
       "repo": "mattpocock/skills",
@@ -174,7 +174,7 @@
       ],
       "commit": "abeeaf95660ba9e8b7c753eb38f441ca707a8823",
       "license": "MIT",
-      "local_edits": "Skill-tool call reworded; the review stage points at spec-review"
+      "local_edits": "Skill-tool call reworded; the review stage points at spec-review; seams from the ticket or spec count as confirmed where no user can be asked (a sub-agent)"
     },
     "to-spec": {
       "repo": "mattpocock/skills",
@@ -184,7 +184,7 @@
       ],
       "commit": "abeeaf95660ba9e8b7c753eb38f441ca707a8823",
       "license": "MIT",
-      "local_edits": "setup pointer names setup-agent-skills"
+      "local_edits": "setup pointer names setup-agent-skills; the seam check named as the one question beside \"do not interview\""
     },
     "to-tickets": {
       "repo": "mattpocock/skills",
@@ -206,7 +206,7 @@
       ],
       "commit": "abeeaf95660ba9e8b7c753eb38f441ca707a8823",
       "license": "MIT",
-      "local_edits": "setup pointer names setup-agent-skills; Skill-tool call reworded; grills one question at a time, like the local grilling; slash mentions made skill names"
+      "local_edits": "setup pointer names setup-agent-skills; Skill-tool call reworded; grills one question at a time, like the local grilling; slash mentions made skill names; contents lists in AGENT-BRIEF.md and OUT-OF-SCOPE.md"
     },
     "wayfinder": {
       "repo": "mattpocock/skills",
@@ -216,7 +216,7 @@
       ],
       "commit": "abeeaf95660ba9e8b7c753eb38f441ca707a8823",
       "license": "MIT",
-      "local_edits": "setup pointer and Skill-tool calls reworded; research tickets resolved in-session where the CLI has no sub-agents"
+      "local_edits": "setup pointer and Skill-tool calls reworded; research tickets resolved in-session where the CLI has no sub-agents; one instruction when no tracker is provided (local-markdown, with its file named); ticket size given without a token count"
     },
     "wizard": {
       "repo": "mattpocock/skills",
@@ -251,7 +251,7 @@
       ],
       "commit": "abeeaf95660ba9e8b7c753eb38f441ca707a8823",
       "license": "MIT",
-      "local_edits": "slash mention made a skill name"
+      "local_edits": "slash mention made a skill name; GLOSSARY.md in the workspace list, pointing at GLOSSARY-FORMAT.md; an \"Each session\" list of ordered steps; \"explainers\" made \"lessons\" in the format files"
     },
     "to-questionnaire": {
       "repo": "mattpocock/skills",
@@ -302,7 +302,7 @@
       ],
       "commit": "abeeaf95660ba9e8b7c753eb38f441ca707a8823",
       "license": "MIT",
-      "local_edits": "none beyond the attribution line"
+      "local_edits": "detects bun.lock as well as bun.lockb; stages only its own files, asks before the commit and follows the repo's commit rules; a failing hook is fixed, never skipped; repeated notes dropped"
     },
     "which-skill": {
       "repo": "mattpocock/skills",
@@ -313,7 +313,7 @@
       ],
       "commit": "abeeaf95660ba9e8b7c753eb38f441ca707a8823",
       "license": "MIT",
-      "local_edits": "rewritten as which-skill: routes every skill this repo installs (local names, an onboard on-ramp, a repository-setup group); grilling asks one question at a time; PHASE-BOUNDARIES.md made CLI-neutral, with each CLI's commands from its docs; a unit test keeps the routes in step with skills/"
+      "local_edits": "rewritten as which-skill: routes every skill this repo installs (local names, an onboard on-ramp, a repository-setup group); grilling asks one question at a time; PHASE-BOUNDARIES.md made CLI-neutral, with each CLI's commands from its docs; a unit test keeps the routes in step with skills/; the token count dropped from PHASE-BOUNDARIES.md"
     }
   }
 }

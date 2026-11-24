@@ -16,7 +16,7 @@ description: Set up Husky pre-commit hooks with lint-staged (Prettier), type che
 
 ### 1. Detect package manager
 
-Check for `package-lock.json` (npm), `pnpm-lock.yaml` (pnpm), `yarn.lock` (yarn), `bun.lockb` (bun). Use whichever is present. Default to npm if unclear.
+Check for `package-lock.json` (npm), `pnpm-lock.yaml` (pnpm), `yarn.lock` (yarn), `bun.lock` or `bun.lockb` (bun). Use whichever is present. Default to npm if unclear.
 
 ### 2. Install dependencies
 
@@ -76,18 +76,17 @@ Only create if no Prettier config exists. Use these defaults:
 - [ ] `.lintstagedrc` exists
 - [ ] `prepare` script in package.json is `"husky"`
 - [ ] `prettier` config exists
-- [ ] Run `npx lint-staged` to verify it works
+- [ ] Stage the files these steps wrote or changed (`package.json`, the lockfile, `.husky/`, `.lintstagedrc`, `.prettierrc`), and only those
+- [ ] Run `npx lint-staged`: it formats the staged files and exits 0
 
 ### 8. Commit
 
-Stage all changed/created files and commit with message: `Add pre-commit hooks (husky + lint-staged + prettier)`
+Ask the user, then commit the staged files by the repo's commit rules; where it has none, with the message `Add pre-commit hooks (husky + lint-staged + prettier)`.
 
-This will run through the new pre-commit hooks: a good smoke test that everything works.
+The commit runs the new hook. If the hook fails, fix what it reports and commit again; `--no-verify` is not the fix.
 
 ## Notes
 
-- Husky v9+ doesn't need shebangs in hook files
 - `prettier --ignore-unknown` skips files Prettier can't parse (images, etc.)
-- The pre-commit runs lint-staged first (fast, staged-only), then full typecheck and tests
 
 Adapted from `setup-pre-commit` in mattpocock/skills (MIT License; see LICENSE here).
