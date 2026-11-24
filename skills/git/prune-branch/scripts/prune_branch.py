@@ -5,7 +5,9 @@
 
 Run on the merged branch: checks out the base, pulls it fast-forward, deletes the branch
 locally and on origin. In a linked worktree whose base is checked out in another worktree,
-HEAD is detached at origin/<base> instead (git lets one worktree hold a branch). Tag it first (archive-tag): the deleted branch is kept nowhere else.
+HEAD is detached at origin/<base> instead (git lets one worktree hold a branch). Tag it first
+(archive-tag): the deleted branch is kept nowhere else. A branch, here or on origin, whose tip is
+neither in origin/<base> nor under an archive tag stops the run before anything is deleted.
 
 Run in a linked worktree, it then fast-forwards the main checkout when git can without touching
 uncommitted files, and deletes the worktree, last: only the archive tag is left. worktree-guard
@@ -41,12 +43,36 @@ def held_elsewhere(base):
     return False
 
 
+def remote_tip(branch):
+    """The branch's commit on origin, asked of origin itself; '' when origin has no such branch."""
+    code, listed, _ = git_run.sh(['git', 'ls-remote', '--exit-code', '--heads', 'origin', branch])
+    return listed.split()[0] if code == 0 and listed else ''
+
+
 def delete_remote(branch, dry):
     """Delete the branch on origin; False when it is gone already."""
     if git_run.sh(['git', 'ls-remote', '--exit-code', '--heads', 'origin', branch])[0] != 0:
         return False
     git_run.act(['git', 'push', '-q', 'origin', '--delete', branch], dry)
     return True
+
+
+def kept(sha, base):
+    """What still holds the commit once its branch is gone: 'origin/<base>' (merged), an archive
+    tag's name, or '' for nothing. A commit this clone has not fetched is held by nothing it knows."""
+    if git_run.sh(['git', 'merge-base', '--is-ancestor', sha, f'origin/{base}'])[0] == 0:
+        return f'origin/{base}'
+    code, tags, _ = git_run.sh(['git', 'tag', '--list', 'archive/*', '--contains', sha])
+    return tags.split()[0] if code == 0 and tags else ''
+
+
+def refuse_a_loss(repo, tips):
+    """Stop before the first delete when a tip to be deleted is merged nowhere and tagged nowhere."""
+    for what, sha, first in tips:
+        if sha and not kept(sha, repo.base):
+            raise Stop(f'prune: {what} is at {sha[:7]}, which is neither in origin/{repo.base} nor under an archive '
+                       f'tag; deleting it would lose its commits. Nothing was deleted. {first}Tag the branch '
+                       '(`ai-dotfiles git tag`, with --unmerged when it never merged), then rerun')
 
 
 def main_checkout():
@@ -103,9 +129,17 @@ def fast_forward(base, dry):
 
 
 def prune(repo, dry):
+    """Delete the branch here and on origin, after the base is checked out; Stop, with nothing
+    changed, when a delete would lose commits. A dry run fetches nothing, so it cannot tell a
+    merged branch from an unmerged one and does not check."""
     done = []
+    git_run.act(['git', 'fetch', '-q', 'origin', repo.base], dry)  # the merge: origin/<base> vouches for the branch
+    code, local, _ = git_run.sh(['git', 'rev-parse', '--verify', '-q', f'refs/heads/{repo.branch}'])
+    local = local if code == 0 else ''
+    if not dry:
+        refuse_a_loss(repo, ((repo.branch, local, ''),
+                             (f"origin's {repo.branch}", remote_tip(repo.branch), 'Pull it into the branch first. ')))
     if held_elsewhere(repo.base):
-        git_run.act(['git', 'fetch', '-q', 'origin', repo.base], dry)
         if git_run.out(['git', 'branch', '--show-current']) == repo.branch:
             git_run.act(['git', 'checkout', '-q', '--detach', f'origin/{repo.base}'], dry)
             done.append(f'detached at origin/{repo.base} ({repo.base} is checked out in another worktree)')
@@ -114,7 +148,7 @@ def prune(repo, dry):
             git_run.act(['git', 'checkout', '-q', repo.base], dry)
             done.append(f'on {repo.base}')
         git_run.act(['git', 'pull', '-q', '--ff-only', 'origin', repo.base], dry)
-    if git_run.sh(['git', 'rev-parse', '--verify', '-q', f'refs/heads/{repo.branch}'])[0] == 0:
+    if local:
         git_run.act(['git', 'branch', '-q', '-D', repo.branch], dry)
         done.append('local branch deleted')
     if delete_remote(repo.branch, dry):

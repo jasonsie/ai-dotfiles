@@ -84,7 +84,8 @@ DEFAULTS = {
     'git pull': OK,
     'git rev-parse --verify -q refs/heads/feat/x': TIP,
     'git branch -q -D': OK,
-    'git ls-remote --exit-code --heads origin feat/x': OK,
+    'git ls-remote --exit-code --heads origin feat/x': TIP + '\trefs/heads/feat/x',
+    'git merge-base --is-ancestor ' + TIP + ' origin/main': OK,   # the branch is merged: prune may delete it
     'gh pr view 7 --json number': json.dumps(dict(PR, headRefName='feat/x', baseRefName='main', headRefOid=TIP,
                                                   author={'login': 'owner'})),
     'git rev-parse --verify -q ' + TIP + '^{commit}': TIP,
@@ -244,6 +245,24 @@ class StepTest(unittest.TestCase):
         self.assertEqual([line.split()[0] for line in output.splitlines()], ['prune'])
         self.assertEqual(deletions, [])
 
+    def test_prune_stops_before_any_delete_when_the_branch_is_merged_and_tagged_nowhere(self):
+        unmerged = {f'git merge-base --is-ancestor {TIP} origin/main': FAIL}
+        code, _, err, fake = land([], prune_branch.main, **unmerged, **{'git tag --list': ''})
+        self.assertEqual(code, 1)
+        self.assertIn('prune stopped at prune: feat/x is at aaaaaaa, which is neither in origin/main nor under an '
+                      'archive tag', err)
+        self.assertEqual(fake.ran('git checkout') + fake.ran('git branch -q -D') + fake.ran('git push'), [])
+        code, _, err, fake = land([], prune_branch.main, **unmerged, **{'git tag --list': 'archive/x'})
+        self.assertEqual(code, 0, err)
+        self.assertTrue(fake.ran('git branch -q -D feat/x') and fake.ran('git push -q origin --delete feat/x'))
+
+    def test_prune_stops_when_origins_branch_holds_a_commit_kept_nowhere(self):
+        code, _, err, fake = land([], prune_branch.main, **{
+            'git ls-remote --exit-code --heads origin feat/x': OLD + '\trefs/heads/feat/x', 'git tag --list': ''})
+        self.assertEqual(code, 1)
+        self.assertIn("prune stopped at prune: origin's feat/x is at bbbbbbb", err)
+        self.assertEqual(fake.ran('git checkout') + fake.ran('git branch -q -D') + fake.ran('git push'), [])
+
     def test_a_diverged_remote_branch_stops_before_push(self):
         code, _, err, _ = land([], push_branch.main, **{'git rev-parse --verify -q refs/remotes/origin/feat/x': OLD,
                                                     'git merge-base --is-ancestor': FAIL})
@@ -344,6 +363,36 @@ class FinishRealGitTest(unittest.TestCase):
         self.assertEqual(self.git(self.main, 'branch', '--list'), '* main')
         self.assertEqual(self.git(self.main, 'ls-remote', '--heads', 'origin'), f'{self.tip}\trefs/heads/main')
         self.assertEqual(self.git(self.main, 'rev-parse', 'HEAD'), self.tip, 'the main checkout has the merge')
+
+    def test_a_commit_made_after_the_merge_stops_the_prune_until_it_is_tagged(self):
+        (self.wt / 'b.txt').write_text('later\n')
+        self.git(self.wt, 'add', 'b.txt')
+        self.git(self.wt, 'commit', '-q', '-m', 'after the merge')
+        later = self.git(self.wt, 'rev-parse', 'HEAD')
+        repo = git_run.Repo('main', 'feat/x', later, 'o/r', 'me')
+        with self.assertRaisesRegex(git_run.Stop, 'feat/x is at .* neither in origin/main nor under an archive tag'):
+            prune_branch.finish(repo, False)
+        self.assertEqual(self.git(self.wt, 'branch', '--show-current'), 'feat/x', 'still on the branch')
+        self.assertEqual(self.git(self.wt, 'rev-parse', 'feat/x'), later)
+        self.assertIn('refs/heads/feat/x', self.git(self.main, 'ls-remote', '--heads', 'origin'))
+        self.git(self.wt, 'tag', '-a', 'archive/x', '-m', 'kept', later)
+        out = io.StringIO()
+        with redirect_stdout(out):
+            prune_branch.finish(repo, False)
+        os.chdir(self.main)
+        self.assertIn('local branch deleted, remote branch deleted', out.getvalue())
+        self.assertEqual(self.git(self.main, 'rev-parse', 'archive/x^{commit}'), later, 'the tag holds the commit')
+
+    def test_a_commit_only_origins_branch_has_stops_the_prune(self):
+        (self.wt / 'b.txt').write_text('later\n')
+        self.git(self.wt, 'add', 'b.txt')
+        self.git(self.wt, 'commit', '-q', '-m', 'pushed after the merge')
+        self.git(self.wt, 'push', '-q', 'origin', 'feat/x')
+        self.git(self.wt, 'reset', '-q', '--hard', self.tip)   # the local branch is back at the merged commit
+        with self.assertRaisesRegex(git_run.Stop, "origin's feat/x is at .* neither in origin/main"):
+            prune_branch.finish(git_run.Repo('main', 'feat/x', self.tip, 'o/r', 'me'), False)
+        self.assertEqual(self.git(self.wt, 'branch', '--show-current'), 'feat/x')
+        self.assertIn('refs/heads/feat/x', self.git(self.main, 'ls-remote', '--heads', 'origin'))
 
     def test_by_number_a_commit_the_pr_lacks_keeps_the_branch_and_the_folder(self):
         (self.wt / 'b.txt').write_text('later\n')
