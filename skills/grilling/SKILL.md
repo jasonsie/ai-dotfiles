@@ -1,6 +1,6 @@
 ---
 name: grilling
-description: Interview the user relentlessly about a plan, decision, or design until you reach a shared understanding, one question at a time, each with a recommended answer. Use when the user wants to stress-test their thinking or says "grill me", "grilling", or a similar trigger.
+description: Interview the user relentlessly about a plan, decision, or design until both share an understanding, one question at a time, each with a recommended answer. Use when the user wants to stress-test their thinking or says "grill me", "grilling", or a similar trigger.
 ---
 
 Interview the user relentlessly until you reach a shared understanding. Map the

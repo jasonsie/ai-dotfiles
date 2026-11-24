@@ -4,6 +4,15 @@ The grammar of the daily logger, one journal for hand-written entries, the `dail
 command, and the learning-tutor engine. Every writer follows it; the engine's parser
 reads by it.
 
+## Contents
+
+- Files: the root, the week file and its layout
+- Day block
+- Entry
+- Work entry
+- Study item line
+- Parser-inert lines
+
 ## Files
 
 - Root: `--root`, else `$DAILY_LOGGER_ROOT`, else `~/Documents/Claude/Projects/daily-logger`.

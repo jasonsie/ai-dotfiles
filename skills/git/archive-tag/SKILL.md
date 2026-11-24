@@ -1,6 +1,6 @@
 ---
 name: archive-tag
-description: "Keep a branch's record as an annotated archive/<name> tag at its tip, pushed, before the branch is deleted. Use when a branch is about to be deleted, merged or not, or when an approve run stopped at tag."
+description: "Keep a branch's record as an annotated tag, archive/ plus the branch's name, at its tip, pushed, before the branch is deleted. Use when a branch is about to be deleted, merged or not, or when an approve run stopped at tag."
 ---
 
 # Archive tag

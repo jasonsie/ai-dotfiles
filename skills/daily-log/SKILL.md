@@ -1,6 +1,6 @@
 ---
 name: daily-log
-description: Record what was done in the daily logger (the journal at ~/Documents/Claude/Projects/daily-logger) in its house grammar, through the `daily-log` command. Use when the user says "log it" or "add this to the daily", asks what was done today, or runs the day pass (`/daily-log day`, the morning job that writes yesterday's entries from the CLIs' sessions); also the output rules every <subject>-tutor-daily task follows.
+description: Record what was done in the daily logger (the journal at ~/Documents/Claude/Projects/daily-logger) in its house grammar, through the `daily-log` command. Use when the user says "log it" or "add this to the daily", asks what was done today, or runs the day pass (`/daily-log day`, the morning job that writes yesterday's entries from the CLIs' sessions); also the output rules each subject's tutor-daily task follows.
 ---
 
 # Daily log

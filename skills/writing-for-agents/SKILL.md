@@ -5,7 +5,7 @@ description: Writing documents for agents. Use when creating or editing skills, 
 
 Reference for writing any document an agent consumes: a skill, an `AGENTS.md` / `CLAUDE.md`, a doc reached by a pointer. The packaging differs; the writing does not: the same levers make each one predictable, since the agent takes the same _process_ every run rather than producing the same output.
 
-When the document you're writing is a skill, read [`SKILL-MECHANICS.md`](SKILL-MECHANICS.md) for frontmatter, invocation choice, router skills, packaging limits, and testing.
+When the document you're writing is a skill, read [`SKILL-MECHANICS.md`](SKILL-MECHANICS.md) for invocation choice, router skills, frontmatter and packaging limits, instruction patterns, scripts, and testing.
 
 ## Context pointers
 
@@ -98,4 +98,4 @@ Two rules apply to whichever form you pick:
 - Check every line for **relevance**: does it still bear on what the document does? A line loses relevance by never bearing on the task (mere exposition, or a branch that should be disclosed) or by going stale as the behaviour or world it describes changes. Shorter documents are easier to keep relevant. Without a pruning discipline the default fate is **sediment**: stale layers that settle because adding feels safe and removing feels risky, until you must core down through them to find what is still live.
 - Hunt **no-ops** sentence by sentence: an instruction the model already obeys by default pays load to say nothing. The test (does it change behaviour versus the default?) is model-relative, not reader-relative: two people disagreeing about a no-op disagree about the default, and settle it by running the document, not by debate. When a sentence fails, delete the whole sentence rather than trim words from it. The test also grades leading words: a word too weak to beat the default (_be thorough_ when the agent is already thorough-ish) is a no-op, and the fix is a stronger word (_relentless_), not a different technique.
 
-Adapted from `writing-for-agents` in mattpocock/skills (MIT License; see LICENSE here); "Match the form to the failure" and the pressure-testing note in `SKILL-MECHANICS.md` adapted from `writing-skills` in obra/superpowers (MIT License; see `THIRD-PARTY-NOTICES.md`).
+Adapted from `writing-for-agents` in mattpocock/skills (MIT License; see LICENSE here); "Match the form to the failure" and the pressure-testing note in `SKILL-MECHANICS.md` adapted from `writing-skills` in obra/superpowers (MIT License; see `THIRD-PARTY-NOTICES.md`). The frontmatter limits, the packaging rules past the size cap, the instruction patterns, the script rules and scenario testing in `SKILL-MECHANICS.md` restate Anthropic's [Skill authoring best practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices), which has a worked example of each.
