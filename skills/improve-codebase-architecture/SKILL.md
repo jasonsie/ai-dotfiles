@@ -40,14 +40,7 @@ Write a self-contained HTML file to the OS temp directory so nothing lands in th
 
 The report uses **Tailwind via CDN** for layout and styling, and **Mermaid via CDN** for diagrams where a graph/flow/sequence reliably communicates the structure. Mix Mermaid with hand-crafted CSS/SVG visuals: use Mermaid when relationships are graph-shaped (call graphs, dependencies, sequences), and hand-built divs/SVG when you want something more editorial (mass diagrams, cross-sections, collapse animations). Each candidate gets a **before/after visualisation**. Be visual.
 
-For each candidate, render a card with:
-
-- **Files**: which files/modules are involved
-- **Problem**: why the current architecture is causing friction
-- **Solution**: plain English description of what would change
-- **Benefits**: explained in terms of locality and leverage, and how tests would improve
-- **Before / After diagram**: side-by-side, custom-drawn, illustrating the shallowness and the deepening
-- **Recommendation strength**: one of `Strong`, `Worth exploring`, `Speculative`, rendered as a badge
+Render each candidate as a card, by the one card spec: "Candidate card" in [HTML-REPORT.md](HTML-REPORT.md) (title, badge row with the recommendation strength `Strong`, `Worth exploring` or `Speculative`, files, before/after diagram, problem, solution, wins in terms of locality and leverage, ADR callout).
 
 End the report with a **Top recommendation** section: which candidate you'd tackle first and why.
 

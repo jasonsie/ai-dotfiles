@@ -1,6 +1,6 @@
 ---
 name: approve
-description: "Land work the user has reviewed and said 'approve' to. With a PR number ('approve 57') it lands that PR from any session (reviewer approval, archive tag, merge commit, remote branch deleted, main checkout fast-forwarded when safe); plain 'approve' commits and runs the git steps (push, PR, approval, archive tag, merge, prune) for the branch checked out. Run in the work's own linked worktree, either form deletes it last: only the archive tag is left. Use when the user says 'approve', 'approve 57', 'land it' or 'ship it', or when an `ai-dotfiles approve` run stopped and has to be resumed."
+description: "Land work the user has reviewed and said 'approve' to. With a PR number ('approve 57') it lands that PR from any session; plain 'approve' commits and lands the branch checked out. Run in the work's own linked worktree, either form deletes it last. Use when the user says 'approve', 'approve 57', 'land it' or 'ship it', or when an `ai-dotfiles approve` run stopped and has to be resumed."
 ---
 
 # Approve

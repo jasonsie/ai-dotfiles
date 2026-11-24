@@ -19,8 +19,10 @@ Problems with `as` in tests:
 
 ## Install
 
+A devDependency, with the repo's package manager:
+
 ```bash
-npm i @total-typescript/shoehorn
+npm i -D @total-typescript/shoehorn   # or: pnpm add -D, yarn add -D, bun add -d
 ```
 
 ## Migration patterns
@@ -104,17 +106,13 @@ getUser(fromAny({ body: { id: 123 } }));
 
 ## Workflow
 
-1. **Gather requirements** - ask user:
-   - What test files have `as` assertions causing problems?
-   - Are they dealing with large objects where only some properties matter?
-   - Do they need to pass intentionally wrong data for error testing?
+1. **Find the assertions**: `grep -rn " as [A-Z]" --include="*.test.ts" --include="*.test.tsx" --include="*.spec.ts" --include="*.spec.tsx" . | grep -v "import \* as"`. Ask the user only what the search cannot show: which files to leave alone, and where wrong data is intended.
 
 2. **Install and migrate**:
-   - [ ] Install: `npm i @total-typescript/shoehorn`
-   - [ ] Find test files with `as` assertions: `grep -r " as [A-Z]" --include="*.test.ts" --include="*.spec.ts"`
+   - [ ] Install as a devDependency (see Install)
    - [ ] Replace `as Type` with `fromPartial()`
    - [ ] Replace `as unknown as Type` with `fromAny()`
    - [ ] Add imports from `@total-typescript/shoehorn`
-   - [ ] Run type check to verify
+   - [ ] Run the repo's type check and the migrated tests; fix and rerun until both pass
 
 Adapted from `migrate-to-shoehorn` in mattpocock/skills (MIT License; see LICENSE here).
