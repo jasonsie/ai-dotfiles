@@ -24,20 +24,20 @@ Communication to and from subagents should be sparse. Communicate primarily thro
 
 2. (optional) Use an **exploration subagent** to conduct any exploration required by the tickets - relevant codebase files or external documentation. Ensure the exploration subagent can save files - it should save its markdown notes in a directory outside the repo, accessible by all future subagents. This lets **implementer subagents** focus on implementation rather than exploration.
 
-3. Create the integration branch. If the issue tracker closes work through PRs, or the user asks for one, open a draft PR after the first merge in step 5 (a branch with no commits ahead of main can't open one), marked as closing the spec and tickets.
+3. Create the integration branch.
 
 4. Use a fresh **implementer subagent** for each ticket, each in its own worktree on its own branch. Each implementer subagent:
    - confirms its worktree is based on the integration branch before starting, and resets onto it if not;
    - loads the `tdd` skill (the Skill tool, where the CLI has one) to build the ticket;
    - merges the integration branch tip into its own branch before reporting done
 
-5. Once an **implementer subagent** completes, merge its work to the integration branch with a **merger subagent**.
+5. Once an **implementer subagent** completes, merge its work to the integration branch with a **merger subagent**. After the first merge, if the issue tracker closes work through PRs, or the user asks for one, open a draft PR marked as closing the spec and tickets (a branch with no commits ahead of main can't open one earlier).
 
 6. If this changes the **frontier** of available tickets, kick off more **implementer subagents** to work on the new tickets. This allows for maximum concurrency.
 
 7. Once all tickets are complete, load the `spec-review` skill (the Skill tool, where the CLI has one) on the integration branch and run a bounded fix loop (3 rounds max). Keep a **ledger** for it: a text file outside the repo (beside step 2's notes, if that step ran), one line per ruling and per round, shown to the user with step 8's result.
    - **Verify first.** Check each finding against the codebase and spec before dispatching a fix. Push back with technical reasoning on findings that contradict the spec, break existing behavior, or add unused scope (YAGNI), and record the ruling in the ledger.
-   - **Fix.** Dispatch a fresh **implementer subagent** with the confirmed open findings (where the CLI has no subagents, fix in-session). It fixes each item, runs the covering tests, and reports the command and output. Never fix findings in the controller session when subagents are available.
+   - **Fix.** Dispatch a fresh **implementer subagent** with the confirmed open findings (where the CLI has no subagents, fix in-session). It fixes each item, runs the covering tests, and reports the command and output. Never fix findings in this session when subagents are available.
    - **Re-review.** Re-run `spec-review` on the integration branch (scoped to the open findings and fix diff), then record a one-line ledger entry: `Review round <R>/3: <X> fixed, <Y> open (<one-liners>)`.
    - **Breaker (after round 3).** Stop dispatching if findings remain. Adjudicate each remaining item yourself against the spec: park contestable or non-blocking items with a ruling (`Parked: <finding> — <reason>`), or stop and ask the user if a remaining defect is load-bearing or ambiguous. Never silently discard a finding.
 

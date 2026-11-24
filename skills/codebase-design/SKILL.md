@@ -23,6 +23,8 @@ Use these terms exactly: don't substitute "component," "service," "API," or "bou
 
 **Adapter**: a concrete thing that satisfies an interface at a seam. Describes *role* (what slot it fills), not substance (what's inside).
 
+**Port**: an interface at a seam that two or more adapters satisfy.
+
 **Leverage**: what callers get from depth. More capability per unit of interface they learn. One implementation pays back across N call sites and M tests.
 
 **Locality**: what maintainers get from depth. Change, bugs, knowledge, and verification concentrate in one place rather than spreading across callers. Fix once, fixed everywhere.

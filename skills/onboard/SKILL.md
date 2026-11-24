@@ -176,6 +176,9 @@ cart page ──cart JSON──▶ API client ──▶ router ──▶ checkou
 - Common tasks: the commands as the manifests, Makefile or CI run them, unchanged.
 - Length: taken in at a glance; when it grows, group folders and merge workflows.
 
+Before writing the file, reopen every `file:line` the report cites and fix a line that
+does not show what the report says; measure the diagram lines against the 80 columns.
+
 If `docs/onboarding.md` starts with the generated header, rewrite it. If it exists
 without the header, it is not yours: never edit, rename, or delete it; ask where to
 write. If no one can answer (a non-interactive run), write nothing.

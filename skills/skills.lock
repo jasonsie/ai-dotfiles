@@ -18,7 +18,7 @@
       ],
       "commit": "db7f2a6fd5b013d56ec0ba0cfc547ba77baddbce",
       "license": "MIT",
-      "local_edits": "skill, command, agent and script merged into the onboard skill (repo renamed upstream from everything-claude-code); generator rewritten in Python as a read-only facts script with tooling (runtime pins, package manager, frameworks, build, lint, tests, CI, containers, deploy, env files, data/API, hardware) and git sections; one GFM report at docs/onboarding.md: goal (what, how), system design (shape line, tech stack table, annotated folder tree with read-first marks, a layer map of the whole app with its components, workflow graphs of concepts, each concept listed with its layer and where it lives), conventions (files, code, errors, git), common tasks, where to look; starter AGENTS.md only when the repo has neither AGENTS.md nor CLAUDE.md, else suggestions in chat; chat prints the file unchanged; generated header and no overwrite of a hand-written report"
+      "local_edits": "skill, command, agent and script merged into the onboard skill (repo renamed upstream from everything-claude-code); generator rewritten in Python as a read-only facts script with tooling (runtime pins, package manager, frameworks, build, lint, tests, CI, containers, deploy, env files, data/API, hardware) and git sections; one GFM report at docs/onboarding.md: goal (what, how), system design (shape line, tech stack table, annotated folder tree with read-first marks, a layer map of the whole app with its components, workflow graphs of concepts, each concept listed with its layer and where it lives), conventions (files, code, errors, git), common tasks, where to look; starter AGENTS.md only when the repo has neither AGENTS.md nor CLAUDE.md, else suggestions in chat; chat prints the file unchanged; generated header and no overwrite of a hand-written report; cited file:line references reopened and diagram widths measured before the report is written"
     },
     "spec-review": {
       "repo": "mattpocock/skills",
@@ -28,7 +28,7 @@
       ],
       "commit": "abeeaf95660ba9e8b7c753eb38f441ca707a8823",
       "license": "MIT",
-      "local_edits": "renamed from code-review (Claude Code bundles a /code-review); setup pointer names setup-agent-skills; the two axes run in turn where the CLI has no sub-agents"
+      "local_edits": "renamed from code-review (Claude Code bundles a /code-review); setup pointer names setup-agent-skills; the two axes run in turn where the CLI has no sub-agents; the tracker doc named"
     },
     "codebase-design": {
       "repo": "mattpocock/skills",
@@ -40,7 +40,7 @@
       ],
       "commit": "abeeaf95660ba9e8b7c753eb38f441ca707a8823",
       "license": "MIT",
-      "local_edits": "design-it-twice draws the designs in turn where the CLI has no sub-agents"
+      "local_edits": "design-it-twice draws the designs in turn where the CLI has no sub-agents; Port added to the glossary; DEEPENING.md points at the principles it repeated and says \"network\" for \"network boundary\""
     },
     "diagnosing-bugs": {
       "repo": "mattpocock/skills",
@@ -63,7 +63,7 @@
       ],
       "commit": "abeeaf95660ba9e8b7c753eb38f441ca707a8823",
       "license": "MIT",
-      "local_edits": "none beyond the attribution line"
+      "local_edits": "the ADR tests and the context inference stated once, in SKILL.md"
     },
     "grill-with-docs": {
       "repo": "mattpocock/skills",
@@ -93,7 +93,7 @@
       ],
       "commit": "abeeaf95660ba9e8b7c753eb38f441ca707a8823",
       "license": "MIT",
-      "local_edits": "setup pointer names setup-agent-skills; Skill-tool calls reworded; review step uses spec-review; one ticket at a time where the CLI has no sub-agents; slashes dropped from skill names in the description; step 7 adds bounded 3-round verify/fix/re-review loop with breaker and a ledger (one line per ruling and per round, in a text file outside the repo, shown to the user with step 8's result) (adapted from obra/superpowers@22f0b46 skills/subagent-driven-development/references/fix-loop.md and skills/receiving-code-review/SKILL.md, MIT)"
+      "local_edits": "setup pointer names setup-agent-skills; Skill-tool calls reworded; review step uses spec-review; one ticket at a time where the CLI has no sub-agents; slashes dropped from skill names in the description; step 7 adds bounded 3-round verify/fix/re-review loop with breaker and a ledger (one line per ruling and per round, in a text file outside the repo, shown to the user with step 8's result) (adapted from obra/superpowers@22f0b46 skills/subagent-driven-development/references/fix-loop.md and skills/receiving-code-review/SKILL.md, MIT); the draft-PR sentence moved to step 5, where it happens; \"controller session\" made \"this session\""
     },
     "improve-codebase-architecture": {
       "repo": "mattpocock/skills",
@@ -104,7 +104,7 @@
       ],
       "commit": "abeeaf95660ba9e8b7c753eb38f441ca707a8823",
       "license": "MIT",
-      "local_edits": "Skill-tool calls reworded; slash mention made a skill name; explores in-session where the CLI has no sub-agents; contents list in HTML-REPORT.md; its examples say \"shallow modules\", the term the file requires"
+      "local_edits": "Skill-tool calls reworded; slash mention made a skill name; explores in-session where the CLI has no sub-agents; contents list in HTML-REPORT.md; its examples say \"shallow modules\", the term the file requires; the candidate card has one spec, in HTML-REPORT.md; SKILL.md points at it"
     },
     "pr": {
       "repo": "mattpocock/skills",
@@ -127,7 +127,7 @@
       ],
       "commit": "abeeaf95660ba9e8b7c753eb38f441ca707a8823",
       "license": "MIT",
-      "local_edits": "contents list in UI.md"
+      "local_edits": "contents list in UI.md; sub-shape B's route follows the project's routing convention"
     },
     "research": {
       "repo": "mattpocock/skills",
@@ -216,7 +216,7 @@
       ],
       "commit": "abeeaf95660ba9e8b7c753eb38f441ca707a8823",
       "license": "MIT",
-      "local_edits": "setup pointer and Skill-tool calls reworded; research tickets resolved in-session where the CLI has no sub-agents; one instruction when no tracker is provided (local-markdown, with its file named); ticket size given without a token count"
+      "local_edits": "setup pointer and Skill-tool calls reworded; research tickets resolved in-session where the CLI has no sub-agents; one instruction when no tracker is provided (local-markdown, with its file named); ticket size given without a token count; the out-of-scope rule stated once"
     },
     "wizard": {
       "repo": "mattpocock/skills",
@@ -261,7 +261,7 @@
       ],
       "commit": "abeeaf95660ba9e8b7c753eb38f441ca707a8823",
       "license": "MIT",
-      "local_edits": "none beyond the attribution line"
+      "local_edits": "step 2 asks the deadline and how the answers will be used, which the template needs"
     },
     "wait-what": {
       "repo": "mattpocock/skills",
@@ -282,7 +282,7 @@
       ],
       "commit": "abeeaf95660ba9e8b7c753eb38f441ca707a8823",
       "license": "MIT",
-      "local_edits": "\"Match the form to the failure\" table and no-nuance/exemption rules in SKILL.md, plus 20k size cap, layout hygiene, and optional RED->GREEN pressure-testing note in SKILL-MECHANICS.md (adapted from obra/superpowers@22f0b46 skills/writing-skills/SKILL.md, MIT); a sentence ties the table's prohibition row to Negation; the pressure test falls back to a fresh session where the CLI has no subagents; both pointers to SKILL-MECHANICS.md name its sections; frontmatter limits, body under 500 lines, one-level-deep references, contents lists, instruction patterns, script rules and scenario testing in SKILL-MECHANICS.md (restated from Anthropic's Skill authoring best practices, platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices), with the pressure test under its own optional heading"
+      "local_edits": "\"Match the form to the failure\" table and no-nuance/exemption rules in SKILL.md, plus 20k size cap, layout hygiene, and optional RED->GREEN pressure-testing note in SKILL-MECHANICS.md (adapted from obra/superpowers@22f0b46 skills/writing-skills/SKILL.md, MIT); a sentence ties the table's prohibition row to Negation; the pressure test falls back to a fresh session where the CLI has no subagents; both pointers to SKILL-MECHANICS.md name its sections; frontmatter limits, body under 500 lines, one-level-deep references, contents lists, instruction patterns, script rules and scenario testing in SKILL-MECHANICS.md (restated from Anthropic's Skill authoring best practices, platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices), with the pressure test under its own optional heading; description says what the skill gives and covers a doc reached by pointer"
     },
     "migrate-to-shoehorn": {
       "repo": "mattpocock/skills",
@@ -292,7 +292,7 @@
       ],
       "commit": "abeeaf95660ba9e8b7c753eb38f441ca707a8823",
       "license": "MIT",
-      "local_edits": "none beyond the attribution line"
+      "local_edits": "installed as a devDependency with the repo's package manager; the search runs first, covers .tsx and skips import lines; the type check and the migrated tests close the loop"
     },
     "setup-pre-commit": {
       "repo": "mattpocock/skills",
