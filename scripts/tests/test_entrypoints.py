@@ -174,7 +174,7 @@ class EntrypointsTest(unittest.TestCase):
         self.assertEqual(Path(os.readlink(self.home / '.local/bin/ai-dotfiles')), work / 'scripts/ai-dotfiles')
 
     def test_a_linked_worktree_installs_into_its_main_checkout(self):
-        """ship runs the Verify block in a worktree it then deletes, so nothing live may name the worktree."""
+        """ship-pr runs the Verify block in a worktree it then deletes, so nothing live may name the worktree."""
         git = lambda repo, *a: subprocess.run(['git', '-C', str(repo), *a], check=True, capture_output=True)  # noqa: E731
         main = Path(self.temp.name).resolve() / 'main'
         subprocess.run(['git', 'clone', '-q', str(ROOT), str(main)], check=True)

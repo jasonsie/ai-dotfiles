@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""ship: finish the work of a worktree: checks, push as <type>/<slug>, PR, worktree deleted.
+"""ship-pr: finish the work of a worktree: checks, push as <type>/<slug>, PR, worktree deleted.
 
-  ai-dotfiles ship --title T --body-file F [--work <type>/<slug>] [--no-checks] [--dry-run]     run from inside the worktree
+  ai-dotfiles ship-pr --title T --body-file F [--work <type>/<slug>] [--no-checks] [--dry-run]     run from inside the worktree
 
 For an agent that worked in a worktree made by `ai-dotfiles worktree new <type>/<slug>` (no
 branch) and has committed. In order, each skipped when already done, so a stopped run can be
@@ -24,7 +24,7 @@ the run), no PR is opened, and the worktree is deleted the same way. Another wor
 push to a branch already on origin.
 
 A worktree whose name is not <type>/<slug> (made by `claude -w foo` or a subagent) is never pushed
-as that name: --work <type>/<slug> says what to ship it as, and ship stops without it.
+as that name: --work <type>/<slug> says what to ship it as, and ship-pr stops without it.
 
 Prints the PR's URL, then where the session is: the main checkout. The archive tag is not made
 here: approve makes it at the PR's head. Nothing is undone on failure. Python 3.11+, stdlib
@@ -126,18 +126,18 @@ def where(chosen=None):
     main = guard.main_of(top)
     meta = guard.read_meta(main, top.name) if top != main else None
     if not meta or not meta.get('work'):
-        raise Stop(f'ship: {top.name} was not made by `ai-dotfiles worktree new`; run ship from the worktree it made')
+        raise Stop(f'ship-pr: {top.name} was not made by `ai-dotfiles worktree new`; run ship-pr from the worktree it made')
     work = meta['work']
     if meta.get('pr') or guard.WORK_NAME.fullmatch(work):
         if chosen and chosen != work:
-            raise Stop(f"ship: this worktree's work is already {work}; --work is only for a name that is not "
+            raise Stop(f"ship-pr: this worktree's work is already {work}; --work is only for a name that is not "
                        f"<type>/<slug>")
         return top, main, meta, work
     if not chosen:
-        raise Stop(f'ship: the work name {work!r} is not <type>/<slug>; pass --work <type>/<slug> '
+        raise Stop(f'ship-pr: the work name {work!r} is not <type>/<slug>; pass --work <type>/<slug> '
                    f'(for example fix/prune-worktrees) to name the branch')
     if not guard.WORK_NAME.fullmatch(chosen):
-        raise Stop(f'ship: --work {chosen!r} is not <type>/<slug> (lowercase letters, digits and hyphens)')
+        raise Stop(f'ship-pr: --work {chosen!r} is not <type>/<slug> (lowercase letters, digits and hyphens)')
     return top, main, meta, chosen
 
 
@@ -150,17 +150,17 @@ def run(args):
     if number:
         pr = open_pr.find_pr(repo)
         if not pr or pr['state'] != 'OPEN' or pr['number'] != number:
-            raise Stop(f'ship: PR #{number} is not open any more; nothing to update (remove the worktree, or '
+            raise Stop(f'ship-pr: PR #{number} is not open any more; nothing to update (remove the worktree, or '
                        f'start again with worktree new)')
         if repo.tip == meta.get('base'):
-            raise Stop(f'ship: nothing to ship: no commit on top of origin/{work}')
+            raise Stop(f'ship-pr: nothing to ship: no commit on top of origin/{work}')
     elif not open_pr.find_pr(repo):
         if not repo.ahead:
-            raise Stop(f'ship: nothing to ship: no commits ahead of origin/{repo.base} and no PR for {work}')
+            raise Stop(f'ship-pr: nothing to ship: no commits ahead of origin/{repo.base} and no PR for {work}')
         if not (args.title and args.body_file):
-            raise Stop(f'ship: no PR for {work} yet; pass --title and --body-file (pr skill)')
+            raise Stop(f'ship-pr: no PR for {work} yet; pass --title and --body-file (pr skill)')
         if not os.path.isfile(args.body_file):
-            raise Stop(f'ship: body file not found: {args.body_file}')
+            raise Stop(f'ship-pr: body file not found: {args.body_file}')
     step('checks', checks(top, dry, args.no_checks))
     step('push', (update if number else push)(repo, dry))
     if number:
@@ -184,7 +184,7 @@ def run(args):
 
 
 def configure(parser):
-    parser.prog = 'ai-dotfiles ship'
+    parser.prog = 'ai-dotfiles ship-pr'
     parser.add_argument('--no-checks', action='store_true',
                         help="ship without running checks; needed when the repo's AGENTS.md has no Verify block")
     parser.add_argument('--work', metavar='<type>/<slug>',
@@ -194,7 +194,7 @@ def configure(parser):
 
 
 def main(argv=None):
-    return git_run.cli('ship', __doc__, run, configure, argv)
+    return git_run.cli('ship-pr', __doc__, run, configure, argv)
 
 
 if __name__ == '__main__':

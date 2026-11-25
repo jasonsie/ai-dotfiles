@@ -14,7 +14,7 @@ does the gating; this skill is what a session does.
 ## Commands
 
 `ai-dotfiles worktree new | pr | shipped | list | done | rm | prune | release | share`; `--help`
-describes each. `shipped` is what `ship` runs; `approve`, run inside a worktree, deletes it the
+describes each. `shipped` is what `ship-pr` runs; `approve`, run inside a worktree, deletes it the
 same way once its PR is merged. `release` (clear a stale owner) and `share` (let every session
 edit a worktree) are the person's, run in a terminal; the guard refuses them from an agent,
 so ask the user.
@@ -49,7 +49,7 @@ or claimed; a linked worktree elsewhere (Codex's or Antigravity's app makes them
    are moved into the worktree for you; name files by their paths there.
 3. **Work there only.** Edit, test and commit in the worktree, on its detached HEAD. The
    main checkout is never edited by an agent, and another session's worktree is refused.
-4. **Finish.** Done and committed: run the `ship` skill (`ai-dotfiles ship`). It runs the
+4. **Finish.** Done and committed: run the `ship-pr` skill (`ai-dotfiles ship-pr`). It runs the
    repo's checks, pushes the work as the branch `<type>/<slug>`, opens the PR and deletes
    the worktree; your session is then back in the main checkout, and your next first edit
    starts a new task.
@@ -63,7 +63,7 @@ A first edit with no PR named is a new task. To change a PR that is open, run `a
 worktree pr <n>` instead of `new`: it fetches origin and makes `.claude/worktrees/<branch>`
 (slashes become hyphens) detached at the PR's remote branch, with no local branch, bound to your
 session as `new` does (enter it the same way). A PR that is not open or comes from a fork is
-refused. Commit there, then run the `ship` skill: it pushes to the PR's branch, so the PR
+refused. Commit there, then run the `ship-pr` skill: it pushes to the PR's branch, so the PR
 updates, and deletes the worktree. A push that origin refuses, or a branch that moved on, stops
 the run and deletes nothing.
 

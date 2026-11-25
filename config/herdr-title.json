@@ -40,7 +40,7 @@
     "implement-spec": "execute",
     "tdd": "execute",
     "prototype": "execute",
-    "ship": "execute",
+    "ship-pr": "execute",
     "wizard": "execute",
     "setup-agent-skills": "execute",
     "setup-pre-commit": "execute",

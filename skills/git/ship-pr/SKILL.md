@@ -1,6 +1,6 @@
 ---
-name: ship
-description: "Finish the agent's own work in a worktree made by `worktree new` or `worktree pr`: run the repo's checks, push it as a new branch named type/slug (or onto the open PR's branch), open the PR (or update it), delete the worktree. Use when the task in such a worktree is done and committed, or when an `ai-dotfiles ship` run stopped. Not for the user's 'approve', 'land it' or 'ship it' (those are the approve skill)."
+name: ship-pr
+description: "Finish the agent's own work in a worktree made by `worktree new` or `worktree pr`: run the repo's checks, push it as a new branch named type/slug (or onto the open PR's branch), open the PR (or update it), delete the worktree. Use when the task in such a worktree is done and committed, or when an `ai-dotfiles ship-pr` run stopped. Not for the user's 'approve', 'land it' or 'ship it' (those are the approve skill)."
 ---
 
 # Ship
@@ -11,13 +11,13 @@ For the agent, once its task is done and committed in the worktree `ai-dotfiles 
 1. **Commit** per the `small-commits` skill. Nothing tracked may be left uncommitted.
 2. **Write the PR body** per the `pr` skill to a file in the scratchpad; pick a
    `type(scope): outcome` title.
-3. **Run, from inside the worktree**, `ai-dotfiles ship --dry-run --title "<title>" --body-file
+3. **Run, from inside the worktree**, `ai-dotfiles ship-pr --dry-run --title "<title>" --body-file
    <file>`, read the plan, then the same without `--dry-run`.
 4. **Report** its link line (`shipped <url>`). Then go back: Claude Code, call `ExitWorktree`
    with action `keep` (or `cd` to the main checkout the last line names); the other CLIs need
    nothing. Your next first edit starts a new task: name it with `worktree new`.
 
-`ship` runs, in order, each step skipped when already done:
+`ship-pr` runs, in order, each step skipped when already done:
 
 | Step | What |
 |---|---|
@@ -30,14 +30,14 @@ For the agent, once its task is done and committed in the worktree `ai-dotfiles 
 ## Fixing an open PR
 
 In a worktree `ai-dotfiles worktree pr <n>` made, the same command, with no `--title` or
-`--body-file`: `ship` pushes to the PR's own branch, so the PR updates and no new PR opens, then
+`--body-file`: `ship-pr` pushes to the PR's own branch, so the PR updates and no new PR opens, then
 deletes the worktree. Only this worktree may push to a branch already on origin, and only as a
 fast-forward of it: if the branch moved on, fetch it, merge or rebase it in, commit and rerun. A
 PR no longer open, or no commit on top of the branch, stops the run.
 
 ## When it stops
 
-The message names the step, e.g. `ship stopped at checks: ...`; nothing is undone.
+The message names the step, e.g. `ship-pr stopped at checks: ...`; nothing is undone.
 
 - **preflight, the work name is not `<type>/<slug>`**: the worktree was made by `claude -w foo` or
   by a subagent, so its name is Claude's, never a branch. Rerun with `--work <type>/<slug>`.
