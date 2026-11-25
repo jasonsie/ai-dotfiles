@@ -7,7 +7,7 @@
   worktree-guard prune  [--repo DIR]                  rm every merged, clean, unowned one
   worktree-guard new    <type>/<slug> [--repo DIR]    a detached worktree from origin's default branch
   worktree-guard pr     <n> [--repo DIR]              a detached worktree on open PR <n>'s branch, to fix it
-  worktree-guard shipped NAME [--repo DIR]            delete a pushed worktree whose PR is open (ship runs it)
+  worktree-guard shipped NAME [--repo DIR]            delete a pushed worktree whose PR is open (ship-pr runs it)
   worktree-guard release [PATH]                       clear a worktree's owner (people only)
   worktree-guard share   [PATH]                       let any session edit it (people only)
 
@@ -969,7 +969,7 @@ def left_behind(risk):
 
 
 def shipped(main, name):
-    """Delete a worktree whose work is shipped (ship has pushed it and opened the PR): (done, lines
+    """Delete a worktree whose work is shipped (ship-pr has pushed it and opened the PR): (done, lines
     to print). Refused while it has uncommitted changes or a commit on no remote. The owner's
     claim goes, and the session's `moved` with it, so its next first edit starts a new task. No
     archive tag: the branch is on origin, and approve tags it at the PR's head."""
@@ -1214,7 +1214,7 @@ def cmd_pr(args):
     except RuntimeError as error:
         return refuse(error)
     print(bind(main, linked, folder, branch, f'origin/{branch}', base, default_ref(main) or base, me, note,
-               f'PR #{number} is fixed in {linked} (origin/{branch} at {base[:7]}, no branch); ship pushes it back '
+               f'PR #{number} is fixed in {linked} (origin/{branch} at {base[:7]}, no branch); ship-pr pushes it back '
                'to the PR.'))
     return 0
 
@@ -1352,11 +1352,11 @@ def parser():
     new.add_argument('name', help='<type>/<slug>, for example fix/prune-worktrees')
     new.add_argument('--repo', help='a folder in the repository (default: here)')
     new.set_defaults(run=cmd_new)
-    fix = sub.add_parser('pr', help="fix an open PR: a worktree on its remote branch, named after it (ship updates the PR)")
+    fix = sub.add_parser('pr', help="fix an open PR: a worktree on its remote branch, named after it (ship-pr updates the PR)")
     fix.add_argument('number', type=int, help='the PR number')
     fix.add_argument('--repo', help='a folder in the repository (default: here)')
     fix.set_defaults(run=cmd_pr)
-    done_ = sub.add_parser('shipped', help='delete a worktree whose work is pushed and has its PR (what ship runs)')
+    done_ = sub.add_parser('shipped', help='delete a worktree whose work is pushed and has its PR (what ship-pr runs)')
     done_.add_argument('name', help="the worktree's folder name, e.g. fix-prune-worktrees")
     done_.add_argument('--repo', help='a folder in the repository (default: here)')
     done_.set_defaults(run=cmd_shipped)

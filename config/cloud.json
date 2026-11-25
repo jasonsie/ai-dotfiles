@@ -13,7 +13,7 @@
     "portable-plugin": "trial-installs in codex, pi and agy, which the cloud lacks, and releases by a tag push",
     "prune-branch": "deletes the branch on origin, which the cloud's GitHub proxy refuses",
     "push-branch": "its preflight runs gh repo view (GraphQL), which the cloud refuses; a cloud session pushes its own branch",
-    "ship": "opens its PR through gh pr and finishes a worktree that ai-dotfiles worktree new made on the Mac",
+    "ship-pr": "opens its PR through gh pr and finishes a worktree that ai-dotfiles worktree new made on the Mac",
     "worktree-flow": "asks the person in a macOS dialog; a cloud session has no Mac and no guard",
     "worktree-guard": "a cloud session already works alone on its own claude/ branch; the guard's records live on the Mac"
   }

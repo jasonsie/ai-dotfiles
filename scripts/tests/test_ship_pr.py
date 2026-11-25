@@ -1,7 +1,7 @@
-"""ship: checks, push as <type>/<slug>, PR, worktree deleted; git, gh and the checks faked as in test_git_skills.
+"""ship-pr: checks, push as <type>/<slug>, PR, worktree deleted; git, gh and the checks faked as in test_git_skills.
 
 The worktree-side cleanup (`worktree shipped`) is tested for real in test_worktree_guard.py.
-Run: python3 -m unittest discover -s scripts/tests -p 'test_ship.py' -v
+Run: python3 -m unittest discover -s scripts/tests -p 'test_ship_pr.py' -v
 """
 import importlib.util
 import json
@@ -14,11 +14,11 @@ from unittest.mock import Mock, patch
 from support import ROOT
 from test_git_skills import FAIL, OK, OLD, PR, TIP, land  # also loads the step skills
 
-SCRIPT = ROOT / 'skills/git/ship/scripts/ship.py'
-SPEC = importlib.util.spec_from_file_location('ship', SCRIPT)
+SCRIPT = ROOT / 'skills/git/ship-pr/scripts/ship_pr.py'
+SPEC = importlib.util.spec_from_file_location('ship_pr', SCRIPT)
 assert SPEC is not None and SPEC.loader is not None
 ship = importlib.util.module_from_spec(SPEC)
-sys.modules['ship'] = ship
+sys.modules['ship_pr'] = ship
 SPEC.loader.exec_module(ship)
 
 VERIFY = '''# Notes
@@ -134,7 +134,7 @@ class ShipTest(unittest.TestCase):
     def test_no_pr_and_no_title_or_body_stops_before_the_checks(self):
         code, _, err, fake = self.ship([])
         self.assertEqual(code, 1)
-        self.assertIn('ship: no PR for fix/x yet; pass --title and --body-file', err)
+        self.assertIn('ship-pr: no PR for fix/x yet; pass --title and --body-file', err)
         self.assertEqual(fake.ran('bash -c'), [])
         code, _, err, fake = self.ship(['--title', 't', '--body-file', str(self.main / 'missing.md')])
         self.assertEqual(code, 1)
@@ -170,7 +170,7 @@ class ShipTest(unittest.TestCase):
         (self.main / '.claude/worktrees/fix-x.json').unlink()
         code, _, err, fake = self.ship()
         self.assertEqual(code, 1)
-        self.assertIn('ship: fix-x was not made by `ai-dotfiles worktree new`', err)
+        self.assertIn('ship-pr: fix-x was not made by `ai-dotfiles worktree new`', err)
         self.assertEqual(fake.ran('bash -c') + fake.ran('git push'), [])
 
     def name_it(self, work):
@@ -181,7 +181,7 @@ class ShipTest(unittest.TestCase):
         self.name_it('foo')
         code, _, err, fake = self.ship()
         self.assertEqual(code, 1)
-        self.assertIn("ship: the work name 'foo' is not <type>/<slug>; pass --work <type>/<slug>", err)
+        self.assertIn("ship-pr: the work name 'foo' is not <type>/<slug>; pass --work <type>/<slug>", err)
         self.assertEqual(fake.ran('bash -c') + fake.ran('git push') + fake.ran('gh pr create'), [])
         self.shipped.assert_not_called()
 
@@ -197,12 +197,12 @@ class ShipTest(unittest.TestCase):
         self.name_it('foo')
         code, _, err, fake = self.ship(['--work', 'Bar', '--title', 't', '--body-file', str(self.body)])
         self.assertEqual(code, 1)
-        self.assertIn("ship: --work 'Bar' is not <type>/<slug>", err)
+        self.assertIn("ship-pr: --work 'Bar' is not <type>/<slug>", err)
         self.assertEqual(fake.ran('git push'), [])
         self.name_it('fix/x')
         code, _, err, fake = self.ship(['--work', 'fix/y', '--title', 't', '--body-file', str(self.body)])
         self.assertEqual(code, 1)
-        self.assertIn("ship: this worktree's work is already fix/x; --work is only for a name that is not <type>/<slug>", err)
+        self.assertIn("ship-pr: this worktree's work is already fix/x; --work is only for a name that is not <type>/<slug>", err)
         self.assertEqual(fake.ran('git push'), [])
 
     def test_dry_run_changes_nothing(self):
@@ -303,7 +303,7 @@ class FixShipTest(unittest.TestCase):
         for listing in ('[]', json.dumps([dict(PR, state='MERGED')]), json.dumps([dict(PR, number=9)])):
             code, _, err, fake = self.ship(**{'gh pr list': listing})
             self.assertEqual(code, 1, listing)
-            self.assertIn('ship: PR #7 is not open', err)
+            self.assertIn('ship-pr: PR #7 is not open', err)
             self.assertEqual(fake.ran('bash -c') + fake.ran('git push'), [])
 
     def test_nothing_on_top_of_the_branch_has_nothing_to_ship(self):

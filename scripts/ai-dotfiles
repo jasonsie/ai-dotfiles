@@ -8,7 +8,7 @@
 #   ai-dotfiles check               verify live state (scripts/healthcheck.sh)
 #   ai-dotfiles worktree <command>  agents' linked worktrees: new, pr, shipped, list, done, rm, prune, release, share
 #   ai-dotfiles commit check [args]  the size and message `git commit [args]` would get past the hook
-#   ai-dotfiles ship [flags]        checks, push as <type>/<slug>, PR, delete the worktree (run in it)
+#   ai-dotfiles ship-pr [flags]     checks, push as <type>/<slug>, PR, delete the worktree (run in it)
 #   ai-dotfiles approve [n] [flags] land PR n from any session, or the branch checked out here
 #   ai-dotfiles git <step> [flags]  one step: push, pr, review, reviewer, tag, merge, prune
 #   ai-dotfiles statusline          the status line Claude Code and Antigravity run: session JSON in, lines out
@@ -42,7 +42,7 @@ case "$COMMAND" in
   check) exec bash "$SCRIPTS/healthcheck.sh" "$@" ;;
   worktree) exec python3 "$SCRIPTS/../skills/worktree-guard/scripts/worktree_guard.py" "$@" ;;
   commit) exec python3 "$SCRIPTS/../skills/small-commits/scripts/small_commits.py" "$@" ;;
-  ship) exec python3 "$SCRIPTS/../skills/git/ship/scripts/ship.py" "$@" ;;
+  ship-pr) exec python3 "$SCRIPTS/../skills/git/ship-pr/scripts/ship_pr.py" "$@" ;;
   approve) exec python3 "$SCRIPTS/../skills/git/approve/scripts/approve.py" "$@" ;;
   statusline) exec "${PYTHON:-python3}" "$SCRIPTS/statusline.py" "$@" ;;
   hook)

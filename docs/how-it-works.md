@@ -67,7 +67,7 @@ changes. `ai-dotfiles` (linked on the first run) wraps the entry points from any
 `install`, `update` (fast-forward pull of `main` on a clean tree, then install),
 `uninstall`, `check`.
 
-Run in a linked worktree (`.claude/worktrees/<name>`, which `ship` deletes), the steps read
+Run in a linked worktree (`.claude/worktrees/<name>`, which `ship-pr` deletes), the steps read
 what they install from the worktree but name the main checkout in every link
 (`installer.live_root()`); hook entries name no checkout, since each runs the door. So
 `--dry-run` there previews what installing will change once the work merges, and the
@@ -299,7 +299,7 @@ session as JSON on stdin and shows what it prints.
   a one-line notice (a `systemMessage`, Codex's own channel for a line to the person: native, not a
   shim): `fix/x works in <path>`, then `fix/x is deleted; the
   session is back in <repo>`. The notice comes with the next call, not the moment the worktree
-  changes, so a deletion by `ship` is told only if the session makes another call.
+  changes, so a deletion by `ship-pr` is told only if the session makes another call.
   The two limit items are the share left of the account's primary and secondary usage limit,
   each omitted when there is none (a free plan has one 30-day window, shown by the first); they
   fill in behind a gateway too, since Codex reads them from its own responses.
@@ -487,7 +487,7 @@ skills/git/                          a bundle; the installer links each skill by
   merge-pr/      ai-dotfiles git merge     a merge commit
   prune-branch/  ai-dotfiles git prune     base pulled; branch deleted here and on origin; then its worktree
   approve/       ai-dotfiles approve       preflight, then the six above, in that order
-  ship/          ai-dotfiles ship          an agent's finish: checks, push as <type>/<slug>, PR, worktree deleted
+  ship-pr/       ai-dotfiles ship-pr       an agent's finish: checks, push as <type>/<slug>, PR, worktree deleted
 ```
 
 - **Steps:** preflight (a branch other than the base, no tracked changes), then the six.
@@ -505,7 +505,7 @@ skills/git/                          a bundle; the installer links each skill by
   flow is off, when the guard did not make it, while another live session owns it, or while it
   holds uncommitted files or a commit on no remote. A worktree holding other work is untouched;
   by number, so is the PR's own while it holds uncommitted files or commits the PR lacks.
-- **Ship:** `ai-dotfiles ship` is the agent's own finish, before the person reviews: in the worktree
+- **Ship:** `ai-dotfiles ship-pr` is the agent's own finish, before the person reviews: in the worktree
   `worktree new` made (no branch) it runs the checks (the commands of the repo's `AGENTS.md`
   Verify block), pushes HEAD as `<type>/<slug>`, opens the PR and deletes the worktree. It stops
   with no Verify block unless `--no-checks`, and, for a worktree whose name is not
@@ -686,7 +686,7 @@ gets its setup from the committed `.claude/settings.json`:
 - **First-edit gate:** in a repo that is on, a session's first edit in the main checkout is
   stopped with "name this work"; `ai-dotfiles worktree new <type>/<slug>` makes the worktree, and
   the edits go there. Only the main checkout and `.claude/worktrees/` are gated or claimed.
-- **Ship:** an agent's finish in its worktree (`ai-dotfiles ship`): checks, push, PR, worktree
+- **Ship:** an agent's finish in its worktree (`ai-dotfiles ship-pr`): checks, push, PR, worktree
   deleted. The person's `approve <n>` follows.
 - **Leftover:** a linked worktree whose owner is gone. One with nothing to lose is deleted when a
   worktree is made or a session ends; one holding uncommitted files or unpushed commits stays,
