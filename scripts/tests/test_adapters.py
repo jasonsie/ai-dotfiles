@@ -3,7 +3,9 @@
 Run: python3 -m unittest discover -s scripts/tests -p 'test_adapters.py' -v
 """
 import json
+from pathlib import Path
 import sys
+import tempfile
 import unittest
 
 from support import ROOT
@@ -164,6 +166,33 @@ class CapabilityTest(unittest.TestCase):
     def test_only_codex_opens_a_typed_prompt_undecided(self):
         self.assertEqual({cli: adapters.get(cli).prompt_starts_open for cli in adapters.CLIS},
                          {'claude': False, 'codex': True, 'agy': False, 'pi': False})
+
+
+class SessionStoreTest(unittest.TestCase):
+    def test_a_cli_names_where_its_transcripts_sit_under_home(self):
+        self.assertEqual(adapters.get('claude').session_store, '.claude/projects')
+
+    def test_claude_keeps_a_file_per_session_in_a_folder_per_project_and_its_subagents_deeper(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            store = Path(tmp)
+            for name in ('proj/a.jsonl', 'proj/a/subagents/agent-1.jsonl', 'other/b.jsonl', 'proj/notes.txt'):
+                (store / name).parent.mkdir(parents=True, exist_ok=True)
+                (store / name).write_text('')
+            found = [path.relative_to(store).as_posix() for path in adapters.get('claude').transcripts(store)]
+        self.assertEqual(found, ['other/b.jsonl', 'proj/a.jsonl'])
+        self.assertEqual(adapters.get('claude').session_id('abc'), 'abc')
+
+    def test_a_cli_with_no_store_has_no_transcripts_and_no_notes(self):
+        self.assertIsNone(adapters.get('agy').session_store)
+        self.assertEqual(adapters.get('agy').transcripts(Path('/nowhere')), [])
+        self.assertFalse(adapters.get('agy').note_since_prompt(['{}'], 'x'))
+
+    def test_claude_s_meta_rows_after_the_last_prompt_are_its_notes(self):
+        def row(content, **flags):
+            return json.dumps({'type': 'user', 'message': {'content': content}, **flags})
+        lines = [row('go'), row('[Usage limit reached', isMeta=True)]
+        self.assertTrue(adapters.get('claude').note_since_prompt(lines, '[Usage'))
+        self.assertFalse(adapters.get('claude').note_since_prompt(lines + [row('again')], '[Usage'))
 
 
 if __name__ == '__main__':

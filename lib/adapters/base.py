@@ -40,6 +40,25 @@ class Adapter:
                 return action
         return 'other'
 
+    # Its session store, read by scripts/agent_sessions.py: transcripts under `session_store` (relative to home),
+    # each line told to read_row, which says what it holds to the reader (user, assistant, edited, id, cwd, ...).
+    session_store: str | None = None
+
+    def transcripts(self, store):
+        """The transcript files under `store`: every one (a file's age rules the old ones out, not its folder's)."""
+        return []
+
+    def session_id(self, stem):
+        """A session's id from its transcript's file name, until the transcript says it itself."""
+        return stem
+
+    def read_row(self, reader, row):
+        """Tell `reader` what one line of a transcript (a dict) says."""
+
+    def note_since_prompt(self, lines, prefix):
+        """Whether the harness left a note starting with `prefix` after the last prompt in these transcript lines."""
+        return False
+
     def session_survives_end(self, reason):
         """Whether a session that ends for `reason` goes on (the CLI reloads it in place)."""
         return False

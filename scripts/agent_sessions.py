@@ -28,18 +28,19 @@ import json
 import os
 from pathlib import Path
 import re
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'lib'))
+import adapters  # noqa: E402  (each CLI's session store: where it keeps transcripts and how its lines read)
 
 CLIS = ('claude', 'codex', 'pi')
 TEMP_PREFIXES = ('/tmp/', '/private/tmp/', '/var/folders/', '/private/var/folders/')
 STORES = {  # relative to home
-    'claude': '.claude/projects',        # <store>/<cwd-slug>/<session-id>.jsonl
     'codex': '.codex/sessions',          # <store>/YYYY/MM/DD/rollout-<ts>-<id>.jsonl, a folder per local day
     'pi': '.pi/agent/sessions',          # <store>/<cwd-slug>/<ts>_<id>.jsonl
 }
 TITLE_MAX = 80
-EDIT_TOOLS = {'claude': {'Edit', 'Write', 'NotebookEdit'}, 'pi': {'edit', 'write'}}
-# Claude Code lines that look like turns but are not: injected, a subagent's, a summary, an API error.
-NOT_A_TURN = ('isMeta', 'isSidechain', 'isCompactSummary', 'isApiErrorMessage')
+EDIT_TOOLS = {'pi': {'edit', 'write'}}
 ALWAYS = (datetime.min.replace(tzinfo=timezone.utc), datetime.max.replace(tzinfo=timezone.utc))  # a window with no edges
 ROLLOUT = re.compile(r'rollout-\d{4}-\d\d-\d\dT\d\d-\d\d-\d\d-(.+)')
 PATCH_FILE = re.compile(r'^\*\*\* (?:Add File|Update File|Delete File|Move to): (.+)$', re.MULTILINE)
@@ -91,7 +92,7 @@ def sessions(start: datetime, end: datetime, home: Path | None = None) -> list[S
     home = Path(home) if home is not None else Path.home()
     found = []
     for cli in CLIS:
-        for path in _transcripts(cli, home / STORES[cli]):
+        for path in _transcripts(cli, home / _store_of(cli)):
             session = read(cli, path, start, end) if _written_since(path, start) else None
             if session and not is_temp(session.cwd):
                 found.append(session)
@@ -102,7 +103,7 @@ def read(cli: str, path: Path, start: datetime, end: datetime) -> Session | None
     """The Session in one transcript, or None: nothing in [start, end), a subagent's thread, an
     unknown `cli`, or a file that cannot be read. A line that is not JSON, or not shaped like
     the store's lines, is skipped."""
-    handle = READERS.get(cli)
+    handle = _row_reader(cli)
     if handle is None:
         return None
     path = Path(path)
@@ -120,7 +121,7 @@ def last_reply(cli: str, path, tail: int = 256 * 1024) -> str:
     """The agent's last message to the user in one transcript: the text of its last assistant
     turn, found in the file's last `tail` bytes so that a long session stays cheap. '' when
     that tail holds none, the file cannot be read, or `cli` is unknown."""
-    handle = READERS.get(cli)
+    handle = _row_reader(cli)
     if handle is None:
         return ''
     reader = _Reader(cli, Path(path), *ALWAYS)
@@ -134,23 +135,16 @@ def note_since_prompt(cli: str, path, prefix: str, tail: int = 256 * 1024) -> bo
     """Whether Claude Code's harness left a note starting with `prefix` (one of its meta rows, such
     as the usage-limit note) after the last prompt of one transcript, in the file's last `tail`
     bytes. False for the other stores, and for a file that cannot be read."""
-    if cli != 'claude':
-        return False
-    found = False
-    for line in _tail(path, tail):
-        try:
-            row = _obj(json.loads(line))
-        except ValueError:
-            continue
-        if row.get('type') != 'user' or row.get('isSidechain'):
-            continue
-        content = _obj(row.get('message')).get('content')
-        if row.get('isMeta'):
-            texts = [content] if isinstance(content, str) else [b.get('text') for b in map(_obj, _items(content))]
-            found = found or any(_text(text).startswith(prefix) for text in texts)
-        elif isinstance(content, str) and content.strip():  # a new prompt: notes before it no longer count
-            found = False
-    return found
+    return adapters.get(cli).note_since_prompt(_tail(path, tail), prefix)
+
+
+def _store_of(cli):
+    return adapters.get(cli).session_store or STORES[cli]
+
+
+def _row_reader(cli):
+    adapter = adapters.get(cli)
+    return adapter.read_row if adapter.session_store else READERS.get(cli)
 
 
 def _tail(path, size):
@@ -186,9 +180,11 @@ def _transcripts(cli, store):
     the old ones closed). Codex files sit under the day the session began, and a session resumed
     days later keeps writing there, so no day folder is skipped."""
     try:
+        if adapters.get(cli).session_store:
+            return adapters.get(cli).transcripts(store)
         if cli == 'codex':
             return sorted(store.glob('*/*/*/*.jsonl'))
-        return sorted(store.glob('*/*.jsonl'))  # not deeper: Claude Code keeps subagent threads there
+        return sorted(store.glob('*/*.jsonl'))
     except OSError:
         return []
 
@@ -283,6 +279,8 @@ class _Reader:
 
 def _file_id(cli, stem):
     """A session's id from its file name, until the transcript says it itself."""
+    if adapters.get(cli).session_store:
+        return adapters.get(cli).session_id(stem)
     if cli == 'codex':
         named = ROLLOUT.fullmatch(stem)
         return named.group(1) if named else stem
@@ -294,28 +292,6 @@ def _file_id(cli, stem):
 # --- one reader per store ----------------------------------------------------------------
 # Each is given the lines of a transcript, as dicts, and tells the _Reader what they say. Only
 # turns and edits need a timestamp; ids, titles and folders sit on lines that have none.
-
-def _claude(reader, row):
-    kind = row.get('type')
-    if kind == 'ai-title':  # no timestamp, and it may come again: the last one is the title
-        reader.ai_title = _text(row.get('aiTitle')).strip() or reader.ai_title
-        return
-    reader.cwd = reader.cwd or _text(row.get('cwd'))
-    at = _when(row.get('timestamp'))
-    if kind not in ('user', 'assistant') or at is None or any(row.get(flag) for flag in NOT_A_TURN):
-        return
-    content = _obj(row.get('message')).get('content')
-    if kind == 'user':  # a list is tool results, not a prompt
-        if isinstance(content, str):
-            reader.user(at, [content])
-        return
-    blocks = _items(content)
-    reader.assistant(at, [block.get('text') for block in blocks if block.get('type') == 'text'])
-    for block in blocks:
-        if block.get('type') == 'tool_use' and block.get('name') in EDIT_TOOLS['claude']:
-            edit = _obj(block.get('input'))
-            reader.edited(at, edit.get('file_path') or edit.get('notebook_path'))
-
 
 def _codex(reader, row):
     kind, payload = row.get('type'), _obj(row.get('payload'))
@@ -381,4 +357,4 @@ def _pi(reader, row):
                 reader.edited(at, _args(part.get('arguments')).get('path'))
 
 
-READERS = {'claude': _claude, 'codex': _codex, 'pi': _pi}
+READERS = {'codex': _codex, 'pi': _pi}
