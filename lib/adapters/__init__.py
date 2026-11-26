@@ -3,7 +3,7 @@
   get(cli)    the adapter of a CLI id (config/ai-clis.json); an unknown id gets one that knows nothing
   CLIS        the ids that have one
 
-A feature does not name a CLI: tests/test_rules.py fails when one does. The Event a feature receives
+A feature does not name a CLI: scripts/tests/test_cli_rule.py fails when one does. The Event a feature receives
 (scripts/agent_hooks.py) gives it the command, its folder and the files a call names; what else a CLI
 can do is a named capability of its adapter. Python 3.11+, stdlib only.
 """
