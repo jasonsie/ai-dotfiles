@@ -4,11 +4,12 @@ worktree-guard (which folders a call changes, which worktree commands it runs) a
 (which `git commit`s, with what message) both read a Bash call's command line through this one
 reader, so both read it the same way. It lives in lib/ because that is what the features share.
 
-    read(line) -> [Command(words, folder, heredocs), ...]
+    read(line) -> [Command(words, folder, heredocs, tail), ...]
 
 Each Command is one simple command, in the order the shell runs them: its words, quotes removed and
-redirections left out; the folder it runs in, relative to the shell's own ('' for that one); and the
-bodies of the heredocs it reads. The rules:
+redirections left out; the folder it runs in, relative to the shell's own ('' for that one); the
+bodies of the heredocs it reads; and its tail, the rest of its line from the operator that ends it
+(`;`, `&&`, `|`...), for a caller that reads arguments up to the first operator. The rules:
 
 - A heredoc's text is never a command: its body goes to the command that reads it, not to the words.
 - A newline ends a command, as `;` does; only a quote or a backslash keeps a line going.
@@ -56,6 +57,7 @@ class Command:
     words: tuple             # the command's words, quotes removed, redirections left out
     folder: str = ''         # where it runs, relative to the shell's own folder
     heredocs: tuple = ()     # the bodies of the heredocs it reads, in order
+    tail: tuple = ()         # the rest of its line, operators and words, from the operator that ends it
 
     @property
     def argv(self):
@@ -68,10 +70,28 @@ class Command:
         return self.words[at:]
 
 
+@dataclass
+class Entry:
+    """A command as it is read: its heredocs' bodies and the rest of its line come after it."""
+    words: tuple
+    folder: str
+    boxes: list    # a one-item list for each heredoc, filled when its body is read
+    stream: list   # the words and operators of its block, in order
+    end: int       # where in the stream the operator that ends the command stands
+
+    def command(self):
+        tail = []
+        for item in self.stream[self.end:]:
+            if item == '\n':
+                break
+            tail.append(item)
+        return Command(self.words, self.folder, tuple(box[0] for box in self.boxes), tuple(tail))
+
+
 class Reader:
     def __init__(self, text, folder=''):
         self.text, self.at, self.folder = text, 0, folder
-        self.found = []     # [words, folder, the boxes of its heredocs]: a body is read after its command
+        self.found = []     # an Entry for each command, or the Commands of a shell's script, in order
         self.pending = []   # (terminator, box) for each heredoc opened on this line, in order
         self.unclosed = set()  # where a `$(` was found never to close, so that is learnt once
 
@@ -81,12 +101,12 @@ class Reader:
 
     def commands(self):
         self.block()
-        return [Command(words, folder, tuple(box[0] for box in boxes)) for words, folder, boxes in self.found]
+        return [entry if isinstance(entry, Command) else entry.command() for entry in self.found]
 
     def block(self, closing=False):
         """Read commands into self.found up to the end, or (when `closing`) up to the `)` that
         ends a subshell or a substitution. Whether it ended on that `)`."""
-        words, boxes, redirect, piped = [], [], None, False
+        words, boxes, redirect, piped, stream = [], [], None, False, []
         while True:
             kind, value = self.token()
             if kind == 'word':
@@ -95,13 +115,16 @@ class Reader:
                     self.pending.append((value, boxes[-1]))
                 elif redirect is None:
                     words.append(value)
+                    stream.append(value)
                 redirect = None
                 continue
             if kind == 'redirect':
                 redirect = value
                 continue
             if words:
-                self.add(tuple(words), boxes, moves=not piped and value not in PIPES)
+                self.add(Entry(tuple(words), self.folder, boxes, stream, len(stream)), moves=not piped and value not in PIPES)
+            if value:
+                stream.append(value)
             words, boxes, redirect, piped = [], [], None, value in ('|', '|&')
             if value == '\n':
                 self.bodies()
@@ -114,19 +137,17 @@ class Reader:
             elif kind == 'end':
                 return False
 
-    def add(self, words, boxes, moves):
+    def add(self, entry, moves):
         """Keep a command that ran where the cursor is; then a `cd` moves the folder (when it is not
         in a pipeline or the background, whose shell is a copy), and a shell's script is read."""
-        command = Command(words, self.folder)
-        self.found.append([words, self.folder, boxes])
-        argv = command.argv
+        self.found.append(entry)
+        argv = entry.command().argv
         if argv[:1] and argv[0] in CHANGE_FOLDER and moves and argv[1:2] and not argv[1].startswith('-'):
             self.folder = os.path.join(self.folder, argv[1])
         if argv[:1] and Path(argv[0]).name in SHELLS:
             flag = next((n for n, word in enumerate(argv) if SHELL_C.fullmatch(word)), None)
             if flag is not None and flag + 1 < len(argv):
-                self.found += [[c.words, c.folder, [[h] for h in c.heredocs]]
-                               for c in Reader(argv[flag + 1], self.folder).commands()]
+                self.found += Reader(argv[flag + 1], self.folder).commands()
 
     def substitution(self):
         """Read a `$(...)` whose `$(` was just read: its commands join self.found, and the text

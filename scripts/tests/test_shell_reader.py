@@ -140,6 +140,19 @@ class FolderTest(unittest.TestCase):
         self.assertEqual(folders('FOO=1 cd a && git x'), [('git', 'a')])
 
 
+class TailTest(unittest.TestCase):
+    def test_the_tail_is_the_rest_of_the_line_from_the_operator_that_ends_the_command(self):
+        echo, git, wc, ls = shell_reader.read('echo x && git commit -m y | wc\nls z')
+        self.assertEqual(echo.tail, ('&&', 'git', 'commit', '-m', 'y', '|', 'wc'))
+        self.assertEqual(git.tail, ('|', 'wc'))
+        self.assertEqual((wc.tail, ls.tail), ((), ()))
+
+    def test_a_shells_script_has_a_tail_of_its_own(self):
+        found = shell_reader.read("bash -c 'git a; git b' && ls")
+        self.assertEqual([(c.words[:2], c.tail) for c in found],
+                         [(('bash', '-c'), ('&&', 'ls')), (('git', 'a'), (';', 'git', 'b')), (('git', 'b'), ()), (('ls',), ())])
+
+
 class ArgvTest(unittest.TestCase):
     def test_argv_is_the_program_and_its_arguments(self):
         for line in ('git commit', 'FOO=1 git commit', 'sudo git commit', 'env A=b git commit',
