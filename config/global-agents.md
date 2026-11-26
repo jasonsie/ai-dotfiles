@@ -2,6 +2,13 @@
 
 Report to me telegraphically: fragments over sentences, brevity over grammar.
 
+## Code
+
+Make code self-explanatory through clear names and structure. Add inline comments only
+for non-obvious why (invariants, constraints, workarounds, tradeoffs), not what or how.
+Leave docstrings and public API docs to repo conventions; keep existing comments unless
+your edit makes them stale.
+
 ## Documents
 
 Before writing a document for people (such as a spec, update, plan, memo or release
