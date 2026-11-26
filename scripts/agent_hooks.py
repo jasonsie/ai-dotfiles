@@ -38,18 +38,16 @@ from pathlib import Path
 import re
 import tempfile
 import time
+import sys
 from typing import Any
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'lib'))
+import adapters  # noqa: E402  (what differs between the CLIs: tools, where a call names its command and files)
 
 CLIS = ('claude', 'codex', 'agy', 'pi')
 HOOK_FILE_CLIS = ('claude', 'codex', 'agy')  # Pi loads an extension instead
-TOOLS = {  # what each CLI's tools do; Codex reads through its shell; 'ask' tools open a dialog for the user
-    'claude': {'edit': {'Edit', 'Write', 'NotebookEdit'}, 'shell': {'Bash'}, 'read': {'Read', 'Glob', 'Grep'},
-               'ask': {'AskUserQuestion', 'ExitPlanMode'}},
-    'codex': {'edit': {'apply_patch', 'Edit', 'Write'}, 'shell': {'Bash'}, 'read': set()},
-    'agy': {'edit': {'write_to_file', 'replace_file_content', 'multi_replace_file_content'},
-            'shell': {'run_command'}, 'read': {'view_file', 'list_dir', 'find_by_name', 'grep_search'}},
-    'pi': {'edit': {'edit', 'write'}, 'shell': {'bash'}, 'read': {'read', 'grep', 'find', 'ls'}},
-}
+# What each CLI's tools do; Codex reads through its shell; 'ask' tools open a dialog for the user.
+TOOLS = {cli: {action: set(names) for action, names in adapters.get(cli).tools.items()} for cli in CLIS}
 EDIT_TOOLS = {cli: tools['edit'] for cli, tools in TOOLS.items()}
 # The installer's matchers per action; Codex matches apply_patch as Edit or Write.
 MATCHERS = {
@@ -116,6 +114,25 @@ class Event:
     reason: str = ''             # why the session ends (an 'end' event)
     outcome: str = ''            # how the run ended: completed, aborted or error (Pi's 'stop')
 
+    @property
+    def adapter(self):
+        return adapters.get(self.cli)
+
+    @property
+    def command(self):
+        """The command a shell call runs, else ''."""
+        return self.adapter.command(self.tool_input) if self.action == 'shell' else ''
+
+    @property
+    def command_folder(self):
+        """The folder a shell call runs in: the call's own, else the session's, else this process's."""
+        return self.adapter.folder(self.tool_input) or self.folder or os.getcwd()
+
+    @property
+    def files(self):
+        """The names a call that is not a shell command gives its files, as written."""
+        return () if self.action == 'shell' else self.adapter.files(self.tool_input, self.action)
+
 
 @dataclass(frozen=True)
 class Continue:
@@ -154,10 +171,7 @@ class Shown:
 
 
 def action_of(cli, tool):
-    for action, names in TOOLS.get(cli, {}).items():
-        if tool in names:
-            return action
-    return 'other'
+    return adapters.get(cli).action_of(tool)
 
 
 def text(value):
