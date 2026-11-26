@@ -29,6 +29,7 @@ class Fixture(unittest.TestCase):
         folder = self.root / top / name
         folder.mkdir(parents=True)
         (folder / 'hook.py').write_text('def hook(event):\n    return None\n')
+        (folder / 'cmd.py').write_text('print("ran")\n')
         (folder / features.DECLARATION).write_text(json.dumps(data))
         return folder / features.DECLARATION
 
@@ -109,6 +110,64 @@ class CheckTest(Fixture):
         folder.mkdir(parents=True)
         (folder / features.DECLARATION).write_text('{')
         with self.assertRaisesRegex(ValueError, 'broken/feature.json'):
+            features.find(self.root)
+
+
+COMMANDS = {'hello': {'run': 'cmd.py', 'help': 'says hello', 'usage': '[name]'},
+            'git push': {'run': 'cmd.py', 'help': 'pushes', 'args': ['push']},
+            'git pr': {'run': 'cmd.py', 'help': 'opens the PR'}}
+
+
+class CommandsTest(Fixture):
+    def commands(self, **changed):
+        return {'version': 1, 'cloud': False, 'commands': {**COMMANDS, **changed}}
+
+    def test_what_a_feature_adds(self):
+        feature = features.load(self.declare('a', self.commands()))
+        self.assertEqual(sorted(feature.commands), ['git pr', 'git push', 'hello'])
+        hello, push = feature.commands['hello'], feature.commands['git push']
+        self.assertEqual((hello.run, hello.help, hello.usage, hello.args),
+                         (feature.folder / 'cmd.py', 'says hello', '[name]', ()))
+        self.assertEqual((push.usage, push.args), ('', ('push',)))
+        self.assertIsNone(feature.module)  # commands alone make no hooks
+
+    def test_each_mistake_stops_it_and_names_the_file(self):
+        cases = [
+            ({'hello': {'run': 'cmd.py', 'help': 'x', 'extra': 1}}, 'unknown key "commands.hello.extra"'),
+            ({'hello': {'help': 'x'}}, '"commands.hello" is missing "run"'),
+            ({'hello': {'run': 'cmd.py'}}, '"commands.hello" is missing "help"'),
+            ({'hello': {'run': '../cmd.py', 'help': 'x'}}, '"commands.hello.run" must be a path inside the folder'),
+            ({'hello': {'run': 'gone.py', 'help': 'x'}}, '"commands.hello.run": no file gone.py'),
+            ({'hello': {'run': 'cmd.py', 'help': ''}}, '"commands.hello.help" must be text'),
+            ({'hello': {'run': 'cmd.py', 'help': 'x', 'args': 'push'}}, '"commands.hello.args" must be a list of text'),
+            ({'Hello World': {'run': 'cmd.py', 'help': 'x'}}, 'one or two lowercase words'),
+            ({'a b c': {'run': 'cmd.py', 'help': 'x'}}, 'one or two lowercase words'),
+            ({'hook': {'run': 'cmd.py', 'help': 'x'}}, '"commands.hook" is the door\'s own'),
+            ({'install now': {'run': 'cmd.py', 'help': 'x'}}, '"commands.install now" is the door\'s own'),
+            ({'git': {'run': 'cmd.py', 'help': 'x'}}, '"commands.git" is a command and the start of "git push"'),
+        ]
+        for commands, why in cases:
+            with self.subTest(why):
+                path = self.declare('bad', {'version': 1, 'cloud': False, 'commands': {**commands, 'git push': COMMANDS['git push']}})
+                with self.assertRaises(ValueError) as caught:
+                    features.load(path)
+                self.assertIn(str(path), str(caught.exception))
+                self.assertIn(why, str(caught.exception))
+                shutil.rmtree(self.root / 'features')
+
+    def test_commands_must_be_an_object(self):
+        path = self.declare('bad', {'version': 1, 'cloud': False, 'commands': ['hello']})
+        with self.assertRaisesRegex(ValueError, '"commands" must be an object'):
+            features.load(path)
+
+    def test_two_features_may_not_share_a_command_or_a_group_word(self):
+        self.declare('one', {'version': 1, 'cloud': False, 'commands': {'hello': COMMANDS['hello']}})
+        self.declare('two', {'version': 1, 'cloud': False, 'commands': {'hello': COMMANDS['hello']}})
+        with self.assertRaisesRegex(ValueError, 'two.*"hello" is already one\'s command'):
+            features.find(self.root)
+        shutil.rmtree(self.root / 'features' / 'two')
+        self.declare('two', {'version': 1, 'cloud': False, 'commands': {'hello now': COMMANDS['hello']}})
+        with self.assertRaisesRegex(ValueError, 'two.*"hello now" starts with one\'s command "hello"'):
             features.find(self.root)
 
 
