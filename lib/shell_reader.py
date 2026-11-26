@@ -12,6 +12,8 @@ bodies of the heredocs it reads; and its tail, the rest of its line from the ope
 (`;`, `&&`, `|`...), for a caller that reads arguments up to the first operator. The rules:
 
 - A heredoc's text is never a command: its body goes to the command that reads it, not to the words.
+  (A shell given no file to run reads its script from the heredoc: `bash <<'EOF'`. That script's
+  commands come out like those of a `-c` text, and the heredoc stays on the shell's own command.)
 - A newline ends a command, as `;` does; only a quote or a backslash keeps a line going.
 - An unclosed quote is a plain character, so it never swallows the lines after it.
 - A quote, `$(...)` included, is one word, even across lines: a commit message with blank lines
@@ -24,8 +26,8 @@ bodies of the heredocs it reads; and its tail, the rest of its line from the ope
 
 `Command.argv` is the words from the program on, after `VAR=x`, keywords and wrappers like `sudo`.
 
-Not read: `$'...'`, backticks, `<(...)`, `eval`, functions and aliases, and a shell fed a script
-by a heredoc (`bash <<EOF`): that text is never a command, as the first rule says.
+Not read: `$'...'`, backticks, `<(...)`, `eval`, functions and aliases, and a script piped in
+(`cat <<EOF | bash`).
 
 A scanner of its own, not shlex: shlex has no heredocs and no newlines, and raises on a stray
 apostrophe, which is how a heredoc's text ended up read as commands (#82, #48).
@@ -88,10 +90,25 @@ class Entry:
         return Command(self.words, self.folder, tuple(box[0] for box in self.boxes), tuple(tail))
 
 
+def script_of(command):
+    """The commands of the script a shell runs: the text after its `-c`, or, with none, the heredoc
+    it reads when it is given no file to run (`bash <<'EOF'`, `sh -s`)."""
+    argv = command.argv
+    if not argv or Path(argv[0]).name not in SHELLS:
+        return []
+    flag = next((n for n, word in enumerate(argv) if SHELL_C.fullmatch(word)), None)
+    if flag is not None:
+        script = argv[flag + 1] if flag + 1 < len(argv) else ''
+    else:
+        from_stdin = '-s' in argv[1:] or all(word.startswith('-') for word in argv[1:])  # else a file is run
+        script = command.heredocs[-1] if command.heredocs and from_stdin else ''
+    return Reader(script, command.folder).commands() if script else []
+
+
 class Reader:
     def __init__(self, text, folder=''):
         self.text, self.at, self.folder = text, 0, folder
-        self.found = []     # an Entry for each command, or the Commands of a shell's script, in order
+        self.found = []     # an Entry for each command, in order
         self.pending = []   # (terminator, box) for each heredoc opened on this line, in order
         self.unclosed = set()  # where a `$(` was found never to close, so that is learnt once
 
@@ -101,7 +118,11 @@ class Reader:
 
     def commands(self):
         self.block()
-        return [entry if isinstance(entry, Command) else entry.command() for entry in self.found]
+        out = []
+        for entry in self.found:  # a heredoc's body is known only now, so a shell's script is read now
+            command = entry.command()
+            out += [command, *script_of(command)]
+        return out
 
     def block(self, closing=False):
         """Read commands into self.found up to the end, or (when `closing`) up to the `)` that
@@ -138,16 +159,12 @@ class Reader:
                 return False
 
     def add(self, entry, moves):
-        """Keep a command that ran where the cursor is; then a `cd` moves the folder (when it is not
-        in a pipeline or the background, whose shell is a copy), and a shell's script is read."""
+        """Keep a command that ran where the cursor is; then a `cd` moves the folder, when it is not
+        in a pipeline or the background, whose shell is a copy."""
         self.found.append(entry)
         argv = entry.command().argv
         if argv[:1] and argv[0] in CHANGE_FOLDER and moves and argv[1:2] and not argv[1].startswith('-'):
             self.folder = os.path.join(self.folder, argv[1])
-        if argv[:1] and Path(argv[0]).name in SHELLS:
-            flag = next((n for n, word in enumerate(argv) if SHELL_C.fullmatch(word)), None)
-            if flag is not None and flag + 1 < len(argv):
-                self.found += Reader(argv[flag + 1], self.folder).commands()
 
     def substitution(self):
         """Read a `$(...)` whose `$(` was just read: its commands join self.found, and the text
@@ -220,7 +237,8 @@ class Reader:
             if self.text.startswith(operator, self.at):
                 self.at += len(operator)
                 return operator
-        raise AssertionError('not at a redirection')
+        self.at += 1  # not at a redirection after all: the character stands alone
+        return self.text[self.at - 1]
 
     def word(self):
         """(the word at the cursor with its quotes removed, whether none were used)."""

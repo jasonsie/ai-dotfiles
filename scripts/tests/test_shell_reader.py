@@ -106,7 +106,7 @@ class QuoteTest(unittest.TestCase):
                          [('git', 'status'), ('wc',), ('a', 'b c'), ('echo', '$(git status | wc)', '$(a "b c")', 'x')])
 
 
-def folders(line, only='git'):
+def folders(line, only: str | None = 'git'):
     """(first word, folder) of each command that is not a cd, or of each named `only`."""
     return [(c.words[0], c.folder) for c in shell_reader.read(line)
             if c.argv[:1] not in (('cd',), ('pushd',)) and only in (None, c.words[0])]
@@ -138,6 +138,17 @@ class FolderTest(unittest.TestCase):
     def test_a_cd_after_a_keyword_or_an_assignment_counts(self):
         self.assertEqual(folders('if true; then cd a; git x; fi', only=None), [('if', ''), ('git', 'a'), ('fi', 'a')])
         self.assertEqual(folders('FOO=1 cd a && git x'), [('git', 'a')])
+
+
+class ShellScriptTest(unittest.TestCase):
+    def test_a_shell_fed_its_script_by_a_heredoc_runs_it_and_any_other_heredoc_is_text(self):
+        found = shell_reader.read("bash <<'EOF'\ngit add .\ncd x && git commit -m y\nEOF\nls")
+        self.assertEqual([(c.words, c.folder) for c in found],
+                         [(('bash',), ''), (('git', 'add', '.'), ''), (('cd', 'x'), ''), (('git', 'commit', '-m', 'y'), 'x'),
+                          (('ls',), '')])
+        self.assertEqual(words('sudo sh -s -- a <<EOF\nrm x\nEOF'), [('sudo', 'sh', '-s', '--', 'a'), ('rm', 'x')])
+        for line in ("bash -c 'ls' <<EOF\nrm x\nEOF", 'bash script.sh <<EOF\nrm x\nEOF', 'cat <<EOF\nrm x\nEOF'):
+            self.assertNotIn(('rm', 'x'), words(line), line)
 
 
 class TailTest(unittest.TestCase):

@@ -78,6 +78,10 @@ class GitChangesTest(unittest.TestCase):
         self.assertEqual(guard.git_changes(f"cat <<'EOF'\n{text}EOF\ngit commit -m x"), [''])
         self.assertEqual(guard.git_changes("git commit -F - <<'EOF'\nthe step's\nEOF\ngit add ."), ['', ''])
 
+    def test_a_script_fed_to_a_shell_by_a_heredoc_is_commands_but_other_heredoc_text_is_not(self):
+        self.assertEqual(guard.git_changes("bash <<'EOF'\ngit commit -m y\nEOF"), [''])
+        self.assertEqual(guard.git_changes("cat <<'EOF'\ngit commit -m y\nEOF"), [])
+
     def test_the_commands_of_a_shell_script_substitution_and_subshell_count_where_they_run(self):
         self.assertEqual(guard.git_changes("bash -c 'cd x && git commit -m y'"), ['x'])
         self.assertEqual(guard.git_changes('cd x && echo "$(git add .)" && (git commit -m y)'), ['x', 'x'])
