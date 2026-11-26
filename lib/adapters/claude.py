@@ -12,6 +12,7 @@ class Claude(Adapter):
     path_keys = ('file_path', 'notebook_path')
     enters_worktree = True  # EnterWorktree
     session_store = '.claude/projects'  # <store>/<cwd-slug>/<session-id>.jsonl
+    leaves_notes = True
     # Lines that look like turns but are not: injected, a subagent's, a summary, an API error.
     not_a_turn = ('isMeta', 'isSidechain', 'isCompactSummary', 'isApiErrorMessage')
 

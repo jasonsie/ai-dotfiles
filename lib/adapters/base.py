@@ -43,6 +43,7 @@ class Adapter:
     # Its session store, read by scripts/agent_sessions.py: transcripts under `session_store` (relative to home),
     # each line told to read_row, which says what it holds to the reader (user, assistant, edited, id, cwd, ...).
     session_store: str | None = None
+    leaves_notes = False  # its harness writes notes into the transcript (note_since_prompt)
 
     def transcripts(self, store):
         """The transcript files under `store`: every one (a file's age rules the old ones out, not its folder's)."""

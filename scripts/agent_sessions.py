@@ -127,7 +127,8 @@ def note_since_prompt(cli: str, path, prefix: str, tail: int = 256 * 1024) -> bo
     """Whether Claude Code's harness left a note starting with `prefix` (one of its meta rows, such
     as the usage-limit note) after the last prompt of one transcript, in the file's last `tail`
     bytes. False for the other stores, and for a file that cannot be read."""
-    return adapters.get(cli).note_since_prompt(_tail(path, tail), prefix)
+    adapter = adapters.get(cli)
+    return adapter.leaves_notes and adapter.note_since_prompt(_tail(path, tail), prefix)
 
 
 def _row_reader(cli):

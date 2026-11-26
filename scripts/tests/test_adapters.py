@@ -7,6 +7,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+import unittest.mock
 
 from support import ROOT
 
@@ -14,6 +15,7 @@ sys.path.insert(0, str(ROOT / 'lib'))
 sys.path.insert(0, str(ROOT / 'scripts'))
 import adapters  # noqa: E402
 import agent_hooks  # noqa: E402
+import agent_sessions  # noqa: E402
 
 PATCH = '*** Begin Patch\n*** Update File: a/b.py\n@@\n-x\n+y\n*** Add File: c.py\n+z\n*** Move to: d.py\n*** End Patch'
 
@@ -211,6 +213,15 @@ class SessionStoreTest(unittest.TestCase):
 
     def test_every_cli_that_keeps_a_store_reads_it(self):
         self.assertEqual([cli for cli in adapters.CLIS if adapters.get(cli).session_store], ['claude', 'codex', 'pi'])
+
+    def test_a_cli_that_leaves_no_notes_is_not_read_for_them(self):
+        self.assertEqual({cli: adapters.get(cli).leaves_notes for cli in adapters.CLIS},
+                         {'claude': True, 'codex': False, 'agy': False, 'pi': False})
+        with tempfile.TemporaryDirectory() as tmp, unittest.mock.patch.object(agent_sessions, '_tail') as tail:
+            path = Path(tmp, 't.jsonl')
+            path.write_text('{}')
+            self.assertFalse(agent_sessions.note_since_prompt('codex', path, 'x'))
+            tail.assert_not_called()
 
     def test_a_cli_with_no_store_has_no_transcripts_and_no_notes(self):
         self.assertIsNone(adapters.get('agy').session_store)
