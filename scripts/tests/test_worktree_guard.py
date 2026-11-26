@@ -27,6 +27,8 @@ import features  # noqa: E402
 
 GUARD = next(feature for feature in features.find() if feature.name == 'worktree-guard')
 guard = door.module_of(GUARD)  # the module the door runs, so a patch here reaches it
+COMMITS = next(feature for feature in features.find() if feature.name == 'small-commits')
+commits = door.module_of(COMMITS)
 DOOR = ROOT / 'scripts/ai-dotfiles'
 
 ME, PARENT = os.getpid(), os.getppid()  # two live processes: two live sessions
@@ -68,6 +70,17 @@ class GitChangesTest(unittest.TestCase):
         self.assertEqual(guard.git_changes('cd /abs/web && git status --short && git checkout -b y main'), ['/abs/web'])
         self.assertEqual(guard.git_changes('cd a; cd b && git add .'), ['a/b'])
         self.assertEqual(guard.git_changes('cd a | git commit'), [''])  # a pipe forgets the cd
+
+    def test_a_heredocs_text_is_no_git_command_and_its_pipes_forget_no_cd(self):  # #82
+        text = "| a | b |\n8. git commit --allow-empty -m probe\n"
+        self.assertEqual(guard.git_changes(f"cd /elsewhere && cat > f <<'EOF'\n{text}EOF"), [])
+        self.assertEqual(guard.git_changes(f"cd sub && cat <<'EOF'\n{text}EOF\ngit commit -m x"), ['sub'])
+        self.assertEqual(guard.git_changes(f"cat <<'EOF'\n{text}EOF\ngit commit -m x"), [''])
+        self.assertEqual(guard.git_changes("git commit -F - <<'EOF'\nthe step's\nEOF\ngit add ."), ['', ''])
+
+    def test_the_commands_of_a_shell_script_substitution_and_subshell_count_where_they_run(self):
+        self.assertEqual(guard.git_changes("bash -c 'cd x && git commit -m y'"), ['x'])
+        self.assertEqual(guard.git_changes('cd x && echo "$(git add .)" && (git commit -m y)'), ['x', 'x'])
 
 
 class GuardCallsTest(unittest.TestCase):
@@ -151,6 +164,33 @@ class Repo(unittest.TestCase):
     def plain(self, reply):
         """Whether `reply` lets the call through untouched and unannounced, in any CLI's format."""
         return reply is None or reply == {'decision': 'allow'}
+
+
+class HeredocTextTest(Repo):
+    """#82: a shell call that writes a file whose heredoc text mentions the git commit command,
+    sent through the door to the guard and the commit gate both."""
+    TEXT = "| a | b |\n8. git commit --allow-empty -m probe\n"
+
+    def through_the_door(self, cli, command):
+        data = {'session_id': 'aaaa1111', 'cwd': str(self.repo), 'pid': ME,
+                'tool_name': 'Bash' if cli in ('claude', 'codex') else 'bash', 'tool_input': {'command': command}}
+        with patch.dict(os.environ, {commits.ENV: str(self.repo.parent / 'commits-state')}):
+            return door.call(cli, 'pre', data, [GUARD, COMMITS])[0]
+
+    def test_the_write_passes_both_features_in_every_cli(self):
+        switch_on(self.repo)
+        elsewhere = self.repo.parent / 'elsewhere'
+        elsewhere.mkdir()
+        for cli in ('claude', 'codex', 'pi'):
+            write = f"cd {shlex.quote(str(elsewhere))} && cat > plan.txt <<'EOF'\n{self.TEXT}EOF"
+            self.assertTrue(self.plain(self.through_the_door(cli, write)), cli)
+            self.assertTrue(self.plain(self.through_the_door(cli, f"cat > plan.txt <<'EOF'\n{self.TEXT}EOF")), cli)
+
+    def test_a_real_commit_after_the_heredoc_is_still_one(self):
+        switch_on(self.repo)
+        reply = self.through_the_door('claude', f"cat > plan.txt <<'EOF'\n{self.TEXT}EOF\ngit commit --allow-empty -m x")
+        self.assertFalse(self.plain(reply))
+        self.assertIn('worktree-guard', json.dumps(reply))
 
 
 class GuardTest(Repo):
