@@ -41,3 +41,6 @@ __pycache__/
 *.pyo
 node_modules/
 .cache/
+
+# Cloned reference repos
+reference/*
