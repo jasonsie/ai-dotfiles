@@ -2,8 +2,6 @@
   "version": 2,
   "claude": {
     "enforce": {
-      "skipDangerousModePermissionPrompt": false,
-      "skipAutoPermissionPrompt": false,
       "statusLine": {
         "type": "command",
         "command": "~/.local/bin/ai-dotfiles statusline",
@@ -13,7 +11,9 @@
     "default": {
       "model": "opus",
       "effortLevel": "high",
-      "advisorModel": "opus"
+      "advisorModel": "opus",
+      "skipDangerousModePermissionPrompt": false,
+      "skipAutoPermissionPrompt": false
     }
   },
   "codex": {

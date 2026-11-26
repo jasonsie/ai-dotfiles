@@ -20,7 +20,7 @@ skill list to taste.
 |---|---|---|
 | `config/ai-clis.json` | Which CLIs are on, and the path each one reads for instructions, settings, MCP, skills and hooks | Drives every step below; a CLI switched off is cleaned out |
 | `config/global-agents.md` | Rules loaded in every project by every CLI | Symlinked as `~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, `~/.pi/agent/AGENTS.md`, `~/.gemini/GEMINI.md` |
-| `config/cli-settings.json` | `enforce`: settings this repo owns (safety settings, the status line), restored on every install. `default`: model choices, written only when the CLI has none | Merged into each CLI's settings file (never symlinked, because CLIs write to these files) |
+| `config/cli-settings.json` | `enforce`: settings this repo owns (safety settings, the status line), restored on every install. `default`: values the CLI writes back itself (model choices, consent to a permission dialog), written only when the CLI has none | Merged into each CLI's settings file (never symlinked, because CLIs write to these files) |
 | `config/mcp-servers.json` | MCP servers every CLI should have (today: context7 for library docs) | `claude`, `codex` and `pi mcp add`; merged into Antigravity's `mcp_config.json` |
 | `config/plugins.json` | The plugins every Mac gets: each one's GitHub repo, exact version and target CLIs (today: web-clipper for all four, zkfy for Claude) | Each CLI's own plugin manager at the release tag; a plugin's `bin/` commands in `~/.local/bin` from a checkout at that tag |
 | `skills/<name>/` | Shared skills. Skills adapted from other repos are pinned in `skills/skills.lock` with source, commit and license | Symlinked into `~/.claude/skills`, `~/.agents/skills` (Codex and Pi), `~/.gemini/config/skills` |

@@ -202,10 +202,13 @@ version or a plugin to remove shows up as a pending change.
 ## Settings: enforce and default
 
 `config/cli-settings.json` (version 2) lists, per CLI, an `enforce` group and a `default`
-group. `enforce` holds the settings this repo owns (approval policy, sandbox, permission
-prompts, the status line) and is put back on every install. `default` holds model choices
-and is written only while a CLI has no value; a model you pick in a CLI's own menu stays,
-and the preview and healthcheck report it as a "local choice kept". A key is a dotted path;
+group. `enforce` holds the settings this repo owns (approval policy, sandbox, the status
+line) and is put back on every install. `default` holds values the CLI writes back itself
+and is written only while a CLI has no value: model choices, and Claude Code's
+`skip*PermissionPrompt` keys, which record that you accepted the bypass or auto-mode dialog.
+A model you pick in a CLI's own menu, or a dialog you accept, stays, and the preview and
+healthcheck report it as a "local choice kept". Enforcing such a key never settles: the
+install undoes the CLI's write, and the CLI writes it again. A key is a dotted path;
 for Codex's TOML, a top-level key or `table.key`.
 
 ## Memory

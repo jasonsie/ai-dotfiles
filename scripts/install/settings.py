@@ -2,8 +2,9 @@
 """Merge workspace-managed keys into each CLI's live settings; writes unless --dry-run.
 
 config/cli-settings.json lists, per CLI, `enforce` keys (settings this repo owns: safety
-settings and the status line, put back on every run) and `default` keys (model choices,
-written only while the CLI has no value of its own, so a later pick made in the CLI stays).
+settings and the status line, put back on every run) and `default` keys (model choices and
+other values the CLI writes back, such as Claude Code's consent to a permission dialog; written
+only while the CLI has no value of its own, so a later pick made in the CLI stays).
 Every other key, credential, and runtime value is preserved. Settings files are never
 symlinked because each CLI writes back to them. A key is a dotted path into JSON; for Codex's
 TOML it is a top-level key, or `table.key` inside that table. Backs up privately before
