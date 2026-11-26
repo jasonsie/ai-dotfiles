@@ -197,6 +197,21 @@ class SessionStoreTest(unittest.TestCase):
         self.assertEqual(codex.files_in_patch('*** Update File: a.py\n+*** Add File: quoted.py\n*** Move to: b.py'),
                          ['a.py', 'b.py'])
 
+    def test_pi_keeps_a_file_per_session_named_by_time_and_id(self):
+        pi = adapters.get('pi')
+        self.assertEqual((pi.session_store, pi.session_id('2026-11-03T10-00-00Z_abc'), pi.session_id('plain')),
+                         ('.pi/agent/sessions', 'abc', 'plain'))
+        with tempfile.TemporaryDirectory() as tmp:
+            store = Path(tmp)
+            (store / 'proj').mkdir()
+            (store / 'proj/2026_abc.jsonl').write_text('')
+            (store / 'proj/deeper').mkdir()
+            (store / 'proj/deeper/x.jsonl').write_text('')
+            self.assertEqual([path.name for path in pi.transcripts(store)], ['2026_abc.jsonl'])
+
+    def test_every_cli_that_keeps_a_store_reads_it(self):
+        self.assertEqual([cli for cli in adapters.CLIS if adapters.get(cli).session_store], ['claude', 'codex', 'pi'])
+
     def test_a_cli_with_no_store_has_no_transcripts_and_no_notes(self):
         self.assertIsNone(adapters.get('agy').session_store)
         self.assertEqual(adapters.get('agy').transcripts(Path('/nowhere')), [])

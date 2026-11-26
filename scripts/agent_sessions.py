@@ -3,7 +3,8 @@
 A daily pass sees plain Sessions: the prompts, replies and edited files of every transcript
 that has a turn in a time window. This module finds each CLI's transcripts, keeps the lines
 inside the window and leaves out what is not the user's own work (subagent threads, injected
-context, sessions in scratch folders). Everything that differs between the stores lives here.
+context, sessions in scratch folders). Where each CLI keeps its transcripts and how its lines read is
+its adapter's (lib/adapters); the windows, the Session and the filtering are the same for all.
 
   window(day, cutoff_hour, tz)    [day at cutoff_hour, the next day at cutoff_hour) in local time
   sessions(start, end, home)      every Session with a turn in [start, end), oldest first
@@ -13,10 +14,9 @@ context, sessions in scratch folders). Everything that differs between the store
   is_temp(cwd)                    a scratch folder; sessions() drops the sessions that ran in one
 
 A Session's turns and files hold only what falls inside the window; its title and cwd belong to
-the whole transcript. A file or line that cannot be read is skipped, never raised. Codex names
-its day folders by the LOCAL day a session began (not the UTC day) and a resumed session keeps
-writing there, so every folder is listed and each file's modification time, not its folder's date,
-rules the old ones out. A resumed or forked session replays its parent's lines (Claude Code's
+the whole transcript. A file or line that cannot be read is skipped, never raised. Every file of a
+store is listed (Codex names its day folders by the LOCAL day a session began and a resumed session
+keeps writing there), and each file's modification time rules the old ones out. A resumed or forked session replays its parent's lines (Claude Code's
 continued-in, Pi's parentSession), so one turn can show up in two Sessions; telling them apart is
 the caller's job. Python 3.11+, stdlib only.
 """
@@ -32,13 +32,9 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'lib'))
 import adapters  # noqa: E402  (each CLI's session store: where it keeps transcripts and how its lines read)
 
-CLIS = ('claude', 'codex', 'pi')
+CLIS = tuple(cli for cli in adapters.CLIS if adapters.get(cli).session_store)
 TEMP_PREFIXES = ('/tmp/', '/private/tmp/', '/var/folders/', '/private/var/folders/')
-STORES = {  # relative to home
-    'pi': '.pi/agent/sessions',          # <store>/<cwd-slug>/<ts>_<id>.jsonl
-}
 TITLE_MAX = 80
-EDIT_TOOLS = {'pi': {'edit', 'write'}}
 ALWAYS = (datetime.min.replace(tzinfo=timezone.utc), datetime.max.replace(tzinfo=timezone.utc))  # a window with no edges
 
 
@@ -88,7 +84,7 @@ def sessions(start: datetime, end: datetime, home: Path | None = None) -> list[S
     home = Path(home) if home is not None else Path.home()
     found = []
     for cli in CLIS:
-        for path in _transcripts(cli, home / _store_of(cli)):
+        for path in _transcripts(cli, home / adapters.get(cli).session_store):
             session = read(cli, path, start, end) if _written_since(path, start) else None
             if session and not is_temp(session.cwd):
                 found.append(session)
@@ -134,13 +130,10 @@ def note_since_prompt(cli: str, path, prefix: str, tail: int = 256 * 1024) -> bo
     return adapters.get(cli).note_since_prompt(_tail(path, tail), prefix)
 
 
-def _store_of(cli):
-    return adapters.get(cli).session_store or STORES[cli]
-
-
 def _row_reader(cli):
+    """What reads the lines of `cli`'s transcripts, or None when it keeps none."""
     adapter = adapters.get(cli)
-    return adapter.read_row if adapter.session_store else READERS.get(cli)
+    return adapter.read_row if adapter.session_store else None
 
 
 def _tail(path, size):
@@ -173,12 +166,9 @@ def _aware(moment):
 
 def _transcripts(cli, store):
     """The transcript files of one CLI: every file of the store (the mtime check in sessions() keeps
-    the old ones closed). Codex files sit under the day the session began, and a session resumed
-    days later keeps writing there, so no day folder is skipped."""
+    the old ones closed)."""
     try:
-        if adapters.get(cli).session_store:
-            return adapters.get(cli).transcripts(store)
-        return sorted(store.glob('*/*.jsonl'))
+        return adapters.get(cli).transcripts(store)
     except OSError:
         return []
 
@@ -192,40 +182,6 @@ def _written_since(path, start):
 
 # --- one transcript ----------------------------------------------------------------------
 
-def _when(value):
-    """The aware datetime in an ISO 8601 string (the stores write UTC), or None."""
-    if not isinstance(value, str):
-        return None
-    try:
-        moment = datetime.fromisoformat(value)
-    except ValueError:
-        return None
-    return moment if moment.tzinfo else moment.replace(tzinfo=timezone.utc)
-
-
-def _obj(value):
-    return value if isinstance(value, dict) else {}
-
-
-def _items(value):
-    """The dicts in a list."""
-    return [item for item in value if isinstance(item, dict)] if isinstance(value, list) else []
-
-
-def _text(value):
-    return value if isinstance(value, str) else ''
-
-
-def _args(value):
-    """A tool call's arguments as a dict: given as one, or as a JSON string; else empty."""
-    if isinstance(value, str):
-        try:
-            value = json.loads(value)
-        except ValueError:
-            return {}
-    return _obj(value)
-
-
 def _clean(texts):
     """The texts that say something, stripped."""
     return [text.strip() for text in texts if isinstance(text, str) and text.strip()]
@@ -236,7 +192,7 @@ class _Reader:
 
     def __init__(self, cli, path, start, end):
         self.cli, self.path, self.start, self.end = cli, path, start, end
-        self.id, self.cwd = _file_id(cli, path.stem), ''
+        self.id, self.cwd = adapters.get(cli).session_id(path.stem), ''
         self.ai_title = self.first_prompt = ''
         self.opened = False      # Codex: the first session_meta has been read
         self.subagent = False    # a thread an agent started for another agent, not the user's own
@@ -269,42 +225,3 @@ class _Reader:
         files = tuple(sorted({os.path.normpath(os.path.join(self.cwd, path)) for path in self.edits}))
         return Session(self.cli, self.id, self.cwd, self.ai_title or self.first_prompt,
                        turns[0].at, turns[-1].at, turns, files, self.path)
-
-
-def _file_id(cli, stem):
-    """A session's id from its file name, until the transcript says it itself."""
-    if adapters.get(cli).session_store:
-        return adapters.get(cli).session_id(stem)
-    if cli == 'pi':
-        return stem.split('_', 1)[-1]
-    return stem
-
-
-# --- one reader per store ----------------------------------------------------------------
-# Each is given the lines of a transcript, as dicts, and tells the _Reader what they say. Only
-# turns and edits need a timestamp; ids, titles and folders sit on lines that have none.
-
-def _pi(reader, row):
-    kind = row.get('type')
-    if kind == 'session':
-        reader.id = _text(row.get('id')) or reader.id
-        reader.cwd = _text(row.get('cwd'))
-        return
-    at = _when(row.get('timestamp'))
-    if kind != 'message' or at is None:
-        return
-    message = _obj(row.get('message'))
-    content = message.get('content')
-    parts = _items(content)
-    texts = [content] if isinstance(content, str) else [part.get('text') for part in parts
-                                                        if part.get('type') == 'text']
-    if message.get('role') == 'user':
-        reader.user(at, texts)
-    elif message.get('role') == 'assistant':
-        reader.assistant(at, texts)
-        for part in parts:
-            if part.get('type') == 'toolCall' and part.get('name') in EDIT_TOOLS['pi']:
-                reader.edited(at, _args(part.get('arguments')).get('path'))
-
-
-READERS = {'pi': _pi}
