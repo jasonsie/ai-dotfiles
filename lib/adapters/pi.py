@@ -10,13 +10,13 @@ class Pi(Adapter):
     path_keys = ('path',)
     session_store = '.pi/agent/sessions'  # <store>/<cwd-slug>/<ts>_<id>.jsonl
     shows_worktree_move = False  # its footer is set by the extension
-
-    def session_survives_end(self, reason):
-        return reason == 'reload'
     hook_file = False
     kinds = ('pre', 'stop', 'end', 'prompt', 'start')  # the events its extension (scripts/agent_hooks.ts) sends
     timeouts = {'pre': 60, 'end': 60}
     continuation_unflagged = True
+
+    def session_survives_end(self, reason):
+        return reason == 'reload'
 
     def transcripts(self, store):
         return sorted(store.glob('*/*.jsonl'))

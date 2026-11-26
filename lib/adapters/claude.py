@@ -15,15 +15,15 @@ class Claude(Adapter):
     leaves_notes = True
     # Lines that look like turns but are not: injected, a subagent's, a summary, an API error.
     not_a_turn = ('isMeta', 'isSidechain', 'isCompactSummary', 'isApiErrorMessage')
-
-    def is_headless(self, environ):
-        return environ.get('CLAUDE_CODE_ENTRYPOINT', '').startswith('sdk-')  # `claude -p` and the SDK
     matchers = {'edit': 'Edit|Write|NotebookEdit', 'shell': 'Bash', 'read': 'Read|Glob|Grep',
                 'ask': 'AskUserQuestion|ExitPlanMode'}
     # Worktree events, API errors and MCP forms are Claude Code's own.
     kinds = ('pre', 'tool', 'stop', 'end', 'prompt', 'error', 'permission', 'form', 'start', 'create', 'remove')
     # Claude Code gives SessionEnd hooks 1.5 s unless an entry asks for more (up to 60); a worktree takes a while.
     timeouts = {'pre': 60, 'end': 60, 'create': 60, 'remove': 60}
+
+    def is_headless(self, environ):
+        return environ.get('CLAUDE_CODE_ENTRYPOINT', '').startswith('sdk-')  # `claude -p` and the SDK
 
     def transcripts(self, store):
         return sorted(store.glob('*/*.jsonl'))  # not deeper: Claude Code keeps subagent threads there
