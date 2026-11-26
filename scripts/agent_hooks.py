@@ -4,7 +4,10 @@ A feature (worktree-guard, small-commits, herdr-title) sees a plain Event and an
 reply; the door (lib/door.py) reads each CLI's hook input into that Event here, and writes the
 reply back in the CLI's own shape; the installer (scripts/install/hooks.py) learns here which
 kinds each CLI hands over, their native names, the tools' matchers and the door's time per event.
-Everything that differs between the CLIs lives here.
+The hook formats are here; the rest that differs between the CLIs (tool names, where a call names its
+command, folder and files, patch headers, matchers, kinds, times, session stores) is each CLI's
+adapter's (lib/adapters). The Event gives a feature the command, its folder and the files of a call
+through its adapter, so a feature never asks which CLI it runs in (scripts/tests/test_cli_rule.py).
 
   read(cli, kind, data)                  the Event in one CLI's hook input
   render(cli, kind, reply)               the JSON (or text) that CLI expects for a reply
@@ -20,7 +23,7 @@ session ends), 'prompt' (the user submits one; never answered), and, never answe
 user stops a turn); 'create' and 'remove' make and remove Claude Code's worktrees. KINDS says
 which CLI hands over which.
 An Event names what the tool does (action: edit, shell, read, ask or other) and carries its
-input; a 'prompt' Event carries the prompt and the transcript's path, a 'stop' Event the
+input (command, command_folder and files read it back; adapter says what the CLI can do); a 'prompt' Event carries the prompt and the transcript's path, a 'stop' Event the
 agent's last message and its background work. Replies: Continue (a 'stop'), Note, Deny and
 Rewrite (a 'pre'), Shown around any of those.
 Pi has no hook file: its extension (agent_hooks.ts) sends the door {session_id, cwd, tool_name,
