@@ -106,6 +106,19 @@ class ApplySettingsTest(unittest.TestCase):
         self.assertFalse(result['skipAutoPermissionPrompt'])
         self.assertEqual(result['model'], 'sonnet')
 
+    def test_consent_claude_records_survives_reinstall(self):
+        # Accepting Claude Code's bypass or auto-mode dialog writes these keys as true. An
+        # install that put them back to false would revoke that consent, Claude Code would
+        # write it again, and the next install (and the healthcheck) would always see a change.
+        path = self.seed('claude', '{"model": "sonnet"}')
+        managed = settings.load_managed(settings.MANAGED)
+        installer.apply(self.home, settings.plan(self.home, ('claude',), managed))
+        consent = {'skipDangerousModePermissionPrompt': True, 'skipAutoPermissionPrompt': True}
+        path.write_text(json.dumps({**json.loads(path.read_text()), **consent}, indent=2) + '\n')
+        self.assertEqual(settings.plan(self.home, ('claude',), managed), [])
+        kept = [(key, mine) for _, key, mine, _ in settings.local_choices(self.home, ('claude',), managed)]
+        self.assertEqual(set(kept) & set(consent.items()), set(consent.items()))
+
     def test_toml_upserts_header_and_keeps_tables(self):
         before = '''# comment kept
 model = "old"

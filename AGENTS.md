@@ -11,7 +11,7 @@ Every CLI reads this file as the project's instructions; there is no `CLAUDE.md`
 |---|---|---|
 | `config/ai-clis.json` | Which CLIs are on, and where each reads things; the desired state | every step, via `scripts/install/installer.py` |
 | `config/global-agents.md` | Global rules for every CLI, live through links | `scripts/install/instructions.py` |
-| `config/cli-settings.json` | Per-CLI `enforce` keys (safety settings, the status line) and `default` keys (model choices) | `scripts/install/settings.py` |
+| `config/cli-settings.json` | Per-CLI `enforce` keys (safety settings, the status line) and `default` keys (model choices, permission-dialog consent) | `scripts/install/settings.py` |
 | `config/mcp-servers.json` | Shared MCP servers | `scripts/install/mcp.py` |
 | `config/plugins.json` | The plugin list: each plugin's GitHub source, pin (exact version) and target CLIs | `scripts/install/plugins.py` |
 | `config/cloud.json` | The skills cloud sessions leave out, each with the reason | `scripts/cloud_session.py` (links the rest in a cloud session) |
@@ -52,7 +52,7 @@ and `agents/`, the engineering skills' setup.
   Keep it free of `@` imports and HTML comments: Claude parses them, the other CLIs do not.
 - Never symlink a CLI's settings file (the CLIs write back to them); add keys to
   `cli-settings.json`, under `enforce` for settings this repo owns (safety, the status line) or
-  `default` for model choices.
+  `default` for model choices and any value the CLI writes back (an enforced one never settles).
 - Logic two skills need lives in one skill (its `scripts/`); the others import it, never copy
   it. Code every step of a bundle needs goes in the bundle's `scripts/`. A bundle
   (`skills/git/`) is this repo's grouping only: the CLIs read one level of skill folders, so
