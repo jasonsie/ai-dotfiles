@@ -158,17 +158,6 @@ def commits_in(command):
     return found
 
 
-def command_of(event):
-    key = 'CommandLine' if event.cli == 'agy' else 'command'
-    value = event.tool_input.get(key)
-    return value if isinstance(value, str) else ''
-
-
-def shell_folder(event):
-    cwd = event.tool_input.get('Cwd') if event.cli == 'agy' else None
-    return cwd if isinstance(cwd, str) and cwd else (event.folder or os.getcwd())
-
-
 # --- git ---------------------------------------------------------------------------------
 
 def git(cwd, *args, check=True, stdin=None):
@@ -381,13 +370,13 @@ def judge(commit, cwd, allowed, state):
 def decide(event, state):
     if event.action != 'shell':
         return None
-    command = command_of(event)
+    command = event.command
     if 'commit' not in command:
         return None
     commits = commits_in(command)
     if not commits:
         return None
-    folder, allowed = shell_folder(event), bool(OVERRIDE_SET.search(command))
+    folder, allowed = event.command_folder, bool(OVERRIDE_SET.search(command))
     denied, notes = [], []
     for commit in commits:
         verdict = judge(commit, os.path.normpath(os.path.join(folder, commit.where)), allowed, state)
