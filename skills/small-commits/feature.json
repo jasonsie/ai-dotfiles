@@ -11,5 +11,12 @@
       "agy": {"pre": ["shell"]},
       "pi": {"pre": ["shell"]}
     }
+  },
+  "commands": {
+    "commit": {
+      "run": "scripts/small_commits.py",
+      "usage": "check [args]",
+      "help": "the size and message `git commit [args]` would get past the hook"
+    }
   }
 }

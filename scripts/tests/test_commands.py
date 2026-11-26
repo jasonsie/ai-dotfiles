@@ -99,11 +99,23 @@ class HelpTest(Fixture):
         self.assertRegex(out, r'ai-dotfiles tool push +pushes')
         self.assertRegex(out, r'ai-dotfiles tool reviewer +the reviewer')
 
+    def test_this_repos_help_lists_every_command_its_declarations_make(self):
+        _, out, _, _ = self.run_repo('--help')
+        declared = [name for feature in features.find() for name in feature.commands]
+        self.assertTrue(declared)
+        for name in declared:
+            self.assertRegex(out, rf'(?m)^  ai-dotfiles {name}\b', name)
+
+    def run_repo(self, *argv):
+        out, err = io.StringIO(), io.StringIO()
+        status = commands.main(list(argv), stdout=out, stderr=err)
+        return status, out.getvalue(), err.getvalue(), None
+
     def test_the_doors_own_commands_are_the_ones_the_wrapper_runs(self):
         wrapper = (ROOT / 'scripts/ai-dotfiles').read_text()
         runs = {word for line in wrapper.splitlines() if line.startswith('  ') and ')' in line
                 for word in line.split(')')[0].replace('|', ' ').split() if word.isalpha()}
-        own = {name.strip('[]') for name, _, _ in commands.OWN}
+        own = {name for name, _, _ in commands.OWN}
         self.assertEqual(own, own & runs)
         self.assertEqual(own, own & set(features.OWN_COMMANDS))
 

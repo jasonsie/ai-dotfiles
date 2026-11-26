@@ -37,11 +37,15 @@ class Fixture(unittest.TestCase):
 class FindTest(Fixture):
     def test_this_repos_features_in_the_doors_order(self):
         found = features.find()
-        self.assertEqual([f.name for f in found], ['worktree-guard', 'small-commits', 'herdr-title'])
+        self.assertEqual([f.name for f in found], ['git', 'worktree-guard', 'small-commits', 'herdr-title'])
         for feature in found:
-            assert feature.module is not None
-            self.assertTrue(feature.module.is_file(), feature.name)
+            if feature.name != 'git':  # the git flow adds commands and no hooks
+                assert feature.module is not None
+                self.assertTrue(feature.module.is_file(), feature.name)
         self.assertEqual([f.name for f in found if f.cloud], ['small-commits'])
+        for feature in found:
+            for command in feature.commands.values():
+                self.assertTrue(command.run.is_file(), command.name)
 
     def test_a_folder_with_a_declaration_is_a_feature_in_features_or_skills_and_order_decides(self):
         self.declare('late', {**GOOD, 'hooks': {**GOOD['hooks'], 'order': 9}})
