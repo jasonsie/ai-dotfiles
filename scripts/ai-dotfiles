@@ -1,19 +1,9 @@
 #!/usr/bin/env bash
-# ai-dotfiles — run this repo's installer from any folder (linked into ~/.local/bin).
+# ai-dotfiles — run this repo's installer and its features' commands from any folder (linked into ~/.local/bin).
 #
-# Usage:
-#   ai-dotfiles [install] [flags]   apply the setup (scripts/install.sh)
-#   ai-dotfiles update [flags]      pull this repo, then install (install.sh --update)
-#   ai-dotfiles uninstall [flags]   remove what points into this repo (scripts/uninstall.sh)
-#   ai-dotfiles check               verify live state (scripts/healthcheck.sh)
-#   ai-dotfiles worktree <command>  agents' linked worktrees: new, pr, shipped, list, done, rm, prune, release, share
-#   ai-dotfiles commit check [args]  the size and message `git commit [args]` would get past the hook
-#   ai-dotfiles ship-pr [flags]     checks, push as <type>/<slug>, PR, delete the worktree (run in it)
-#   ai-dotfiles approve [n] [flags] land PR n from any session, or the branch checked out here
-#   ai-dotfiles git <step> [flags]  one step: push, pr, review, reviewer, tag, merge, prune
-#   ai-dotfiles statusline          the status line Claude Code and Antigravity run: session JSON in, lines out
-#   ai-dotfiles hook <kind> --cli <cli>  what every CLI hook runs: the event's JSON in, every feature's reply out
-#   Flags pass through, e.g. --dry-run, --target=claude; see each script's --help.
+# This script runs the door's own commands: install, update, uninstall, check, statusline and hook.
+# Any other word goes to lib/commands.py, which runs the command a feature's feature.json declares
+# and prints `ai-dotfiles --help` from the declarations. Flags alone mean install.
 
 set -euo pipefail
 
@@ -26,11 +16,9 @@ while [ -L "$SELF" ]; do
 done
 SCRIPTS="$(cd "$(dirname "$SELF")" && pwd)"
 
-usage() { sed -n '2,16p' "$SELF" | sed 's/^# \{0,1\}//'; }
-
 COMMAND="${1:-install}"
 case "$COMMAND" in
-  -h|--help|help) usage; exit 0 ;;
+  -h|--help|help) ;;
   -*) COMMAND=install ;;  # flags only: install
   *) shift ;;
 esac
@@ -40,10 +28,6 @@ case "$COMMAND" in
   update) exec bash "$SCRIPTS/install.sh" --update "$@" ;;
   uninstall) exec bash "$SCRIPTS/uninstall.sh" "$@" ;;
   check) exec bash "$SCRIPTS/healthcheck.sh" "$@" ;;
-  worktree) exec python3 "$SCRIPTS/../skills/worktree-guard/scripts/worktree_guard.py" "$@" ;;
-  commit) exec python3 "$SCRIPTS/../skills/small-commits/scripts/small_commits.py" "$@" ;;
-  ship-pr) exec python3 "$SCRIPTS/../skills/git/ship-pr/scripts/ship_pr.py" "$@" ;;
-  approve) exec python3 "$SCRIPTS/../skills/git/approve/scripts/approve.py" "$@" ;;
   statusline) exec "${PYTHON:-python3}" "$SCRIPTS/statusline.py" "$@" ;;
   hook)
     # The Python the hooks step linked (scripts/install/hooks.py), not the pyenv shim that python3
@@ -52,19 +36,6 @@ case "$COMMAND" in
     PY="${PYTHON:-${HOME:-}/.local/state/ai-dotfiles/python3}"
     [ -n "${PYTHON:-}" ] || [ -x "$PY" ] || PY=python3
     exec "$PY" "$SCRIPTS/../lib/door.py" hook "$@" ;;
-  git)
-    GIT="$SCRIPTS/../skills/git"
-    STEP="${1:-}"
-    [ $# -gt 0 ] && shift
-    case "$STEP" in
-      push) exec python3 "$GIT/push-branch/scripts/push_branch.py" "$@" ;;
-      pr) exec python3 "$GIT/open-pr/scripts/open_pr.py" "$@" ;;
-      review) exec python3 "$GIT/approve-pr/scripts/approve_pr.py" "$@" ;;
-      reviewer) exec python3 "$GIT/approve-pr/scripts/approve_pr.py" reviewer "$@" ;;
-      tag) exec python3 "$GIT/archive-tag/scripts/archive_tag.py" "$@" ;;
-      merge) exec python3 "$GIT/merge-pr/scripts/merge_pr.py" "$@" ;;
-      prune) exec python3 "$GIT/prune-branch/scripts/prune_branch.py" "$@" ;;
-      *) printf '[ERR] ai-dotfiles git <step>: push, pr, review, reviewer, tag, merge or prune; got: %s\n' "$STEP" >&2; exit 1 ;;
-    esac ;;
-  *) printf '[ERR] Unknown command: %s\n' "$COMMAND" >&2; usage >&2; exit 1 ;;
+  -h|--help|help) exec "${PYTHON:-python3}" "$SCRIPTS/../lib/commands.py" --help ;;
+  *) exec "${PYTHON:-python3}" "$SCRIPTS/../lib/commands.py" "$COMMAND" "$@" ;;
 esac

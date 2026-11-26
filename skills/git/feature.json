@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "cloud": false,
+  "commands": {
+    "ship-pr": {
+      "run": "ship-pr/scripts/ship_pr.py",
+      "usage": "[flags]",
+      "help": "checks, push as <type>/<slug>, PR, delete the worktree (run in it)"
+    },
+    "approve": {
+      "run": "approve/scripts/approve.py",
+      "usage": "[n] [flags]",
+      "help": "land PR n from any session, or the branch checked out here"
+    },
+    "git push": {
+      "run": "push-branch/scripts/push_branch.py",
+      "usage": "[flags]",
+      "help": "step: push the branch to origin"
+    },
+    "git pr": {
+      "run": "open-pr/scripts/open_pr.py",
+      "usage": "[flags]",
+      "help": "step: open the PR, or reuse it"
+    },
+    "git review": {
+      "run": "approve-pr/scripts/approve_pr.py",
+      "usage": "[flags]",
+      "help": "step: approve as the repo's reviewer account"
+    },
+    "git reviewer": {
+      "run": "approve-pr/scripts/approve_pr.py",
+      "args": ["reviewer"],
+      "usage": "[LOGIN | --unset]",
+      "help": "show, set or clear the repo's cached reviewer account"
+    },
+    "git tag": {
+      "run": "archive-tag/scripts/archive_tag.py",
+      "usage": "[flags]",
+      "help": "step: archive/<name> tag at the branch tip"
+    },
+    "git merge": {
+      "run": "merge-pr/scripts/merge_pr.py",
+      "usage": "[flags]",
+      "help": "step: merge the PR with a merge commit"
+    },
+    "git prune": {
+      "run": "prune-branch/scripts/prune_branch.py",
+      "usage": "[flags]",
+      "help": "step: pull the base, delete the branch here and on origin, then its worktree"
+    }
+  }
+}

@@ -17,19 +17,29 @@ CLI does not hand over stops the install and the door, and the error names the f
      "budget": {"pre": 60, "end": 60},        the seconds it may take, for each event it wants
      "wants": {                               per CLI (scripts/agent_hooks.py CLIS), the events (KINDS):
        "claude": {"pre": ["edit", "shell"],   a tool event (TOOL_KINDS) for the tools that do these
-                  "end": true}}}}             actions (edit, shell, read, ask, other), or true for every call
+                  "end": true}}},            actions (edit, shell, read, ask, other), or true for every call
+   "commands": {                            (optional) what `ai-dotfiles <name>` runs, and --help prints:
+     "worktree": {"run": "scripts/worktree_guard.py",   the Python script, in the folder, that runs
+                  "help": "agents' worktrees",          its line in --help
+                  "usage": "<command>",                 (optional) what follows the name there
+                  "args": ["reviewer"]},                (optional) words put before the rest of the line
+     "git push": {...}}}                    a name of two words is a step of a group: `ai-dotfiles git push`
+
+A command's name may not be one of the door's own (OWN_COMMANDS), nor another feature's; one feature's
+command may not be the first word of another's. A feature may declare commands alone, with no hooks.
 
 The module's hook(event) gets an agent_hooks.Event and returns a reply (Note, Deny, Rewrite, Shown,
 Continue) or None; it may define failed(error), the note the door gives in its place when it fails
 before a tool call. Why the door runs features in order, in one process: lib/door.py.
-Python 3.11+, stdlib only.
+Python 3.11+, stdlib only (the command table below also loads on the system's 3.9: `--help` runs there).
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 import json
 import numbers
 from pathlib import Path
+import re
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -39,8 +49,22 @@ import agent_hooks  # noqa: E402  (the CLIs' hook formats: their kinds and tools
 DECLARATION = 'feature.json'
 FOLDERS = ('features', 'skills')  # where a feature's folder is found: features/ once it has moved there
 ACTIONS = ('edit', 'shell', 'read', 'ask', 'other')  # what a tool does (agent_hooks.Event.action)
-KEYS = {'version', 'cloud', 'hooks'}
+KEYS = {'version', 'cloud', 'hooks', 'commands'}
 HOOK_KEYS = {'module', 'order', 'budget', 'wants'}
+COMMAND_KEYS = {'run', 'help', 'usage', 'args'}
+COMMAND_REQUIRED = ('run', 'help')
+OWN_COMMANDS = ('install', 'update', 'uninstall', 'check', 'statusline', 'hook', 'status', 'help')  # the door's: no feature takes one
+COMMAND_NAME = re.compile(r'[a-z][a-z0-9-]*( [a-z][a-z0-9-]*)?')  # a word, or a group and its step
+
+
+@dataclass(frozen=True)
+class Command:
+    """An `ai-dotfiles <name>` a feature adds: the script it runs, with `args` before the rest of the line."""
+    name: str                 # one word, or a group and its step: "git push"
+    run: Path
+    help: str
+    usage: str = ''           # what follows the name in --help
+    args: tuple = ()
 
 
 @dataclass(frozen=True)
@@ -52,6 +76,7 @@ class Feature:
     order: int = 0
     budget: dict = field(default_factory=dict)  # {kind: seconds}
     wants: dict = field(default_factory=dict)   # {cli: {kind: None (every call) or frozenset of actions}}
+    commands: dict = field(default_factory=dict)  # {name: Command}
 
     def tools(self, cli, kind):
         """None when the feature wants every call of `kind` from `cli`; else the actions it wants
@@ -72,7 +97,23 @@ def find(root=ROOT):
             if feature.name in found:
                 raise ValueError(f'{path}: a second feature named {feature.name} (the first: {found[feature.name].folder})')
             found[feature.name] = feature
+    check_commands(found.values())
     return sorted(found.values(), key=lambda feature: (feature.order, feature.name))
+
+
+def check_commands(found):
+    """ValueError when two features' commands meet: one name twice, or a name that is another's group."""
+    owner = {}
+    for feature in found:
+        for name in feature.commands:
+            if name in owner:
+                raise ValueError(f'{feature.folder / DECLARATION}: "{name}" is already {owner[name]}\'s command')
+            owner[name] = feature.name
+    for feature in found:
+        for name in feature.commands:
+            group = name.split(' ')[0]
+            if ' ' in name and group in owner and owner[group] != feature.name:
+                raise ValueError(f'{feature.folder / DECLARATION}: "{name}" starts with {owner[group]}\'s command "{group}"')
 
 
 def load(path):
@@ -96,7 +137,7 @@ def parse(data, folder):
         raise ValueError('expected "version": 1')
     if not isinstance(data.get('cloud'), bool):
         raise ValueError('"cloud" must be true or false')
-    feature = Feature(folder.name, folder, data['cloud'])
+    feature = Feature(folder.name, folder, data['cloud'], commands=parse_commands(data.get('commands', {}), folder))
     hooks = data.get('hooks')
     if hooks is None:
         return feature
@@ -115,7 +156,42 @@ def parse(data, folder):
         raise ValueError('"hooks.order" must be a whole number')
     wants = parse_wants(hooks['wants'])
     budget = parse_budget(hooks['budget'], {kind for kinds in wants.values() for kind in kinds})
-    return Feature(folder.name, folder, data['cloud'], folder / module, hooks['order'], budget, wants)
+    return replace(feature, module=folder / module, order=hooks['order'], budget=budget, wants=wants)
+
+
+def parse_commands(commands, folder):
+    if not isinstance(commands, dict):
+        raise ValueError('"commands" must be an object')
+    parsed = {}
+    for name, entry in commands.items():
+        where = f'"commands.{name}"'
+        if not COMMAND_NAME.fullmatch(name):
+            raise ValueError(f'{where} must be one or two lowercase words')
+        if name.split(' ')[0] in OWN_COMMANDS:
+            raise ValueError(f"{where} is the door's own command")
+        if not isinstance(entry, dict):
+            raise ValueError(f'{where} must be an object')
+        unknown(entry, COMMAND_KEYS, f'commands.{name}.')
+        for key in COMMAND_REQUIRED:
+            if key not in entry:
+                raise ValueError(f'{where} is missing "{key}"')
+        run = entry['run']
+        if not isinstance(run, str) or Path(run).is_absolute() or '..' in Path(run).parts:
+            raise ValueError(f'"commands.{name}.run" must be a path inside the folder')
+        if not (folder / run).is_file():
+            raise ValueError(f'"commands.{name}.run": no file {run}')
+        for key in ('help', 'usage'):
+            if key in entry and not (isinstance(entry[key], str) and (entry[key] or key == 'usage')):
+                raise ValueError(f'"commands.{name}.{key}" must be text')
+        args = entry.get('args', [])
+        if not isinstance(args, list) or not all(isinstance(arg, str) for arg in args):
+            raise ValueError(f'"commands.{name}.args" must be a list of text')
+        parsed[name] = Command(name, folder / run, entry['help'], entry.get('usage', ''), tuple(args))
+    for name in parsed:
+        steps = sorted(other for other in parsed if other.startswith(name + ' '))
+        if steps:
+            raise ValueError(f'"commands.{name}" is a command and the start of "{steps[0]}"')
+    return parsed
 
 
 def parse_wants(wants):

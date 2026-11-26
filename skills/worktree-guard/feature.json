@@ -11,5 +11,12 @@
       "agy": {"pre": ["edit", "shell", "read"]},
       "pi": {"pre": true, "end": true}
     }
+  },
+  "commands": {
+    "worktree": {
+      "run": "scripts/worktree_guard.py",
+      "usage": "<command>",
+      "help": "agents' linked worktrees: new, pr, shipped, list, done, rm, prune, release, share"
+    }
   }
 }
