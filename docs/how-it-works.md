@@ -483,14 +483,15 @@ it. The agent commits (small-commits) and writes the PR body (pr skill); then
 ```text
 skills/git/                          a bundle; the installer links each skill by its own name
   scripts/git_run.py                 the runner every step shares; tests fake git and gh here
-  push-branch/   ai-dotfiles git push      origin gets the branch
-  open-pr/       ai-dotfiles git pr        the PR, opened or reused
-  approve-pr/    ai-dotfiles git review    approval as the repo's reviewer (git reviewer: the cache)
-  archive-tag/   ai-dotfiles git tag       archive/<name> at the tip; worktree-guard imports it too
-  merge-pr/      ai-dotfiles git merge     a merge commit
-  prune-branch/  ai-dotfiles git prune     base pulled; branch deleted here and on origin; then its worktree
-  approve/       ai-dotfiles approve       preflight, then the six above, in that order
-  ship-pr/       ai-dotfiles ship-pr       an agent's finish: checks, push as <type>/<slug>, PR, worktree deleted
+  feature.json   the commands this bundle adds (`ai-dotfiles --help` lists them)
+  push-branch/   origin gets the branch
+  open-pr/       the PR, opened or reused
+  approve-pr/    approval as the repo's reviewer (the reviewer command: the cache)
+  archive-tag/   archive/<name> at the tip; worktree-guard imports it too
+  merge-pr/      a merge commit
+  prune-branch/  base pulled; branch deleted here and on origin; then its worktree
+  approve/       preflight, then the six above, in that order
+  ship-pr/       an agent's finish: checks, push as <type>/<slug>, PR, worktree deleted
 ```
 
 - **Steps:** preflight (a branch other than the base, no tracked changes), then the six.

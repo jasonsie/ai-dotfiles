@@ -59,8 +59,7 @@ ai-dotfiles [install]     # apply the setup (idempotent: a second run reports 0 
 ai-dotfiles update        # fast-forward this repo on main, then install
 ai-dotfiles uninstall     # remove every link into this repo and every hook entry it wrote
 ai-dotfiles check         # healthcheck
-ai-dotfiles worktree ...  # list, merge or remove agents' linked worktrees
-ai-dotfiles commit check  # what the commit hook would say to a `git commit`
+ai-dotfiles --help        # every command, printed from the features' declarations
 ```
 
 Flags for `install`: `--dry-run` previews, `--target=<cli>` limits a run to one CLI,
