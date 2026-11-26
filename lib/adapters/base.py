@@ -21,6 +21,11 @@ class Adapter:
     folder_key: str | None = None          # the field that holds the folder it runs in, if the CLI has one
     path_keys: tuple[str, ...] = ()        # the fields that name a file or folder
     patch_edits = False                    # an edit is a patch in the command field, not a file field
+    hook_file = True                       # its hooks sit in a hook file (Pi loads an extension instead)
+    matchers: dict[str, str] = {}          # the hook file's tool matcher per action, where it differs from the tools
+    kinds: tuple[str, ...] = ()            # the hook events it hands over (scripts/agent_hooks.py NATIVE names them)
+    timeouts: dict[str, int] = {}          # the door's time in seconds per kind, where it is not the default
+    continuation_unflagged = False         # it does not flag the turn a hook's own Continue started
 
     @property
     def takes_folder(self):

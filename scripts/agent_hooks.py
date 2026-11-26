@@ -44,33 +44,18 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'lib'))
 import adapters  # noqa: E402  (what differs between the CLIs: tools, where a call names its command and files)
 
-CLIS = ('claude', 'codex', 'agy', 'pi')
-HOOK_FILE_CLIS = ('claude', 'codex', 'agy')  # Pi loads an extension instead
+CLIS = adapters.CLIS
+HOOK_FILE_CLIS = tuple(cli for cli in CLIS if adapters.get(cli).hook_file)
 # What each CLI's tools do; Codex reads through its shell; 'ask' tools open a dialog for the user.
 TOOLS = {cli: {action: set(names) for action, names in adapters.get(cli).tools.items()} for cli in CLIS}
-EDIT_TOOLS = {cli: tools['edit'] for cli, tools in TOOLS.items()}
-# The installer's matchers per action; Codex matches apply_patch as Edit or Write.
-MATCHERS = {
-    'claude': {'edit': 'Edit|Write|NotebookEdit', 'shell': 'Bash', 'read': 'Read|Glob|Grep',
-               'ask': 'AskUserQuestion|ExitPlanMode'},
-    'codex': {'edit': 'Edit|Write', 'shell': 'Bash'},
-    'agy': {'edit': 'write_to_file|replace_file_content|multi_replace_file_content', 'shell': 'run_command',
-            'read': 'view_file|list_dir|find_by_name|grep_search'},
-}
+# The installer's matchers per action.
+MATCHERS = {cli: dict(adapters.get(cli).matchers) for cli in HOOK_FILE_CLIS}
 NATIVE = {'pre': 'PreToolUse', 'tool': 'PostToolUse', 'stop': 'Stop', 'end': 'SessionEnd',
           'prompt': 'UserPromptSubmit', 'create': 'WorktreeCreate', 'remove': 'WorktreeRemove',
           'error': 'StopFailure', 'permission': 'PermissionRequest', 'form': 'Elicitation',
           'start': 'SessionStart', 'interrupt': 'Interrupt'}
-# The kinds each CLI hands over. Antigravity has no session end, and no prompt event (PreInvocation
-# carries no prompt text). Worktree events, API errors and MCP forms are Claude Code's. Codex runs
-# SessionStart only inside a session's first turn, too late to report a resumed session, so 'start'
-# is Claude Code's and Pi's. Pi's are the events its extension (agent_hooks.ts) sends.
-KINDS = {
-    'claude': ('pre', 'tool', 'stop', 'end', 'prompt', 'error', 'permission', 'form', 'start', 'create', 'remove'),
-    'codex': ('pre', 'tool', 'stop', 'end', 'prompt', 'permission', 'interrupt'),
-    'agy': ('pre', 'tool', 'stop'),
-    'pi': ('pre', 'stop', 'end', 'prompt', 'start'),
-}
+# The kinds each CLI hands over (its adapter).
+KINDS = {cli: adapters.get(cli).kinds for cli in CLIS}
 TOOL_KINDS = ('pre', 'tool', 'permission')  # a tool call fires these: a feature may want them for some tools only
 # Claude Code's worktree events: it reads a WorktreeCreate hook's stdout as the new worktree's path,
 # not as JSON, and a hook that fails either event fails it.
@@ -80,10 +65,9 @@ RAW = ('create', 'remove')
 # no entry. Codex runs SessionEnd and Interrupt hooks 3 s at most; Claude Code gives SessionEnd
 # hooks 1.5 s unless an entry asks for more (up to 60 s); a worktree takes a while to make.
 TIMEOUT = 10
-TIMEOUTS = {'claude': {'pre': 60, 'end': 60, 'create': 60, 'remove': 60}, 'codex': {'pre': 60, 'end': 3, 'interrupt': 3},
-            'agy': {'pre': 60}, 'pi': {'pre': 60, 'end': 60}}
+TIMEOUTS = {cli: dict(adapters.get(cli).timeouts) for cli in CLIS}
 # CLIs that do not flag the turn a hook's own Continue started; the store remembers it for them.
-UNFLAGGED_CONTINUATION = ('agy', 'pi')
+UNFLAGGED_CONTINUATION = tuple(cli for cli in CLIS if adapters.get(cli).continuation_unflagged)
 CONTINUED = 'pending'
 
 

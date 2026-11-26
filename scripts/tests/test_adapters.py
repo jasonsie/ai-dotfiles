@@ -112,6 +112,35 @@ class EventTest(unittest.TestCase):
         self.assertIs(event.adapter, adapters.get('agy'))
 
 
+class HookFileTest(unittest.TestCase):
+    """What the installer writes into each CLI's hook file: a change here is a new Codex /hooks approval."""
+
+    def test_the_matchers_the_kinds_and_the_times_are_the_ones_the_hook_files_hold(self):
+        self.assertEqual(agent_hooks.MATCHERS, {
+            'claude': {'edit': 'Edit|Write|NotebookEdit', 'shell': 'Bash', 'read': 'Read|Glob|Grep',
+                       'ask': 'AskUserQuestion|ExitPlanMode'},
+            'codex': {'edit': 'Edit|Write', 'shell': 'Bash'},
+            'agy': {'edit': 'write_to_file|replace_file_content|multi_replace_file_content', 'shell': 'run_command',
+                    'read': 'view_file|list_dir|find_by_name|grep_search'}})
+        self.assertEqual(agent_hooks.KINDS, {
+            'claude': ('pre', 'tool', 'stop', 'end', 'prompt', 'error', 'permission', 'form', 'start', 'create',
+                       'remove'),
+            'codex': ('pre', 'tool', 'stop', 'end', 'prompt', 'permission', 'interrupt'),
+            'agy': ('pre', 'tool', 'stop'), 'pi': ('pre', 'stop', 'end', 'prompt', 'start')})
+        self.assertEqual(agent_hooks.TIMEOUTS, {
+            'claude': {'pre': 60, 'end': 60, 'create': 60, 'remove': 60}, 'codex': {'pre': 60, 'end': 3, 'interrupt': 3},
+            'agy': {'pre': 60}, 'pi': {'pre': 60, 'end': 60}})
+        self.assertEqual((agent_hooks.CLIS, agent_hooks.HOOK_FILE_CLIS, agent_hooks.UNFLAGGED_CONTINUATION),
+                         (('claude', 'codex', 'agy', 'pi'), ('claude', 'codex', 'agy'), ('agy', 'pi')))
+
+    def test_each_adapter_holds_its_own(self):
+        codex = adapters.get('codex')
+        self.assertEqual((codex.kinds, codex.timeouts['end'], codex.matchers['edit'], codex.hook_file),
+                         (agent_hooks.KINDS['codex'], 3, 'Edit|Write', True))
+        self.assertEqual((adapters.get('pi').hook_file, adapters.get('pi').matchers, adapters.get('pi').continuation_unflagged),
+                         (False, {}, True))
+        self.assertFalse(adapters.get('claude').continuation_unflagged)
+
 
 if __name__ == '__main__':
     unittest.main()
