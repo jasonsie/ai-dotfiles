@@ -79,6 +79,8 @@ sys.path.insert(0, str(SKILL.parent / 'git' / 'scripts'))
 import git_run  # noqa: E402  (the git bundle's runner)
 git_run.use('archive-tag')
 import archive_tag  # noqa: E402  (the one archive format, shared with approve)
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / 'lib'))
+import shell_reader  # noqa: E402  (reads a command line: the one reader small-commits uses too)
 
 ENV = 'WORKTREE_GUARD_STATE'
 DEFAULT_STATE = '~/.local/state/ai-dotfiles/worktree-guard'
@@ -99,10 +101,7 @@ NAMING_SECONDS = 600  # how long the hook's note of a `worktree new` call stays 
 NAMING_KEEP_SECONDS = 3600  # after this a note is deleted, used or not
 UNCLAIMED_SECONDS = 3600  # a worktree nobody has claimed yet is left alone this long: its first edit is coming
 PERSON_ONLY = frozenset(('release', 'share'))  # worktree commands a person runs
-HEREDOC = re.compile(r'<<-?\s*([\'"]?)(\w+)\1[^\n]*\n.*?^[ \t]*\2[ \t]*$', re.M | re.S)
 SEPARATORS = frozenset(';&|()\n')
-COMMAND_PREFIXES = frozenset(('sudo', 'env', 'command', 'exec', 'time', 'nohup', 'nice', 'timeout', 'gtimeout'))
-SHELLS = frozenset(('sh', 'bash', 'zsh', 'dash', 'ksh'))
 GUARD_NAMES = frozenset(('worktree-guard', 'worktree_guard', 'worktree-guard.py', 'worktree_guard.py'))
 GIT_VALUED = frozenset(('-C', '-c', '--git-dir', '--work-tree', '--namespace', '--config-env'))  # git options with a value
 CONFIG_READS = frozenset(('--get', '--get-all', '--get-regexp', '--get-urlmatch', '--get-color', '--get-colorbool',
@@ -271,44 +270,31 @@ def copy_included(source, target):
 
 def git_changes(command):
     """The folders ('' for the current one) of the git commands in a shell command line that
-    change a working tree or the index. A leading `cd <dir>` joined by && or ; moves the base
-    for the commands after it, so `cd repo && git commit` names repo, not the current folder; a
-    pipe or subshell boundary forgets it. `-C` and an absolute `cd` resolve on top of that base."""
-    try:
-        lexer = shlex.shlex(command, posix=True, punctuation_chars=True)
-        lexer.whitespace_split = True
-        tokens = list(lexer)
-    except ValueError:
-        tokens = command.split()
-    found, i, cwd = [], 0, ''
-    while i < len(tokens):
-        token = tokens[i]
-        if token in ('|', '|&', '(', ')'):  # a pipe or subshell runs elsewhere: forget the cd
-            cwd, i = '', i + 1
-            continue
-        name = Path(token).name
-        if name == 'cd' and i + 1 < len(tokens) and not tokens[i + 1].startswith('-'):
-            arg = tokens[i + 1]
-            cwd = arg if os.path.isabs(arg) else os.path.join(cwd, arg)
-            i += 2
-            continue
-        if name != 'git':
-            i += 1
-            continue
-        j, where = i + 1, ''
-        while j < len(tokens) and tokens[j].startswith('-'):
-            if tokens[j] in GIT_OPTIONS_WITH_VALUE:
-                if tokens[j] == '-C' and j + 1 < len(tokens):
-                    where = os.path.join(where, tokens[j + 1])
-                j += 2
-            else:
-                j += 1
-        sub = tokens[j] if j < len(tokens) else ''
-        reading = sub == 'stash' and j + 1 < len(tokens) and tokens[j + 1] in ('list', 'show')
-        if sub in GIT_CHANGES and not reading:
-            base = where if os.path.isabs(where) else os.path.join(cwd, where)
-            found.append(os.path.normpath(base) if base else '')
-        i = j + 1
+    change a working tree or the index. A `cd <dir>` before them moves their base, so `cd repo &&
+    git commit` names repo, not the current folder; a pipe, the background or a subshell keeps it
+    to itself (lib/shell_reader.py tracks that). `-C` and an absolute `cd` resolve on top of it.
+    Text in a heredoc is no command."""
+    found = []
+    for run in shell_reader.read(command):
+        words, i = run.words, 0
+        while i < len(words):
+            if Path(words[i]).name != 'git':
+                i += 1
+                continue
+            j, where = i + 1, ''
+            while j < len(words) and words[j].startswith('-'):
+                if words[j] in GIT_OPTIONS_WITH_VALUE:
+                    if words[j] == '-C' and j + 1 < len(words):
+                        where = os.path.join(where, words[j + 1])
+                    j += 2
+                else:
+                    j += 1
+            sub = words[j] if j < len(words) else ''
+            reading = sub == 'stash' and j + 1 < len(words) and words[j + 1] in ('list', 'show')
+            if sub in GIT_CHANGES and not reading:
+                base = where if os.path.isabs(where) else os.path.join(run.folder, where)
+                found.append(os.path.normpath(base) if base else '')
+            i = j + 1
     return found
 
 
@@ -317,29 +303,13 @@ def commands(command):
     `&&`, `;`, `|`, a newline or a parenthesis, behind `VAR=x`, `sudo`, `env`..., or inside
     `sh -c '...'`. The same words in a quote, a heredoc, a comment or an argument do not count.
     The arguments run to the end of the line, separators included."""
-    try:
-        lexer = shlex.shlex(HEREDOC.sub('', command), posix=True, punctuation_chars=';()<>|&\n')
-        lexer.whitespace_split, lexer.whitespace = True, ' \t\r'
-        tokens = list(lexer)
-    except ValueError:
-        return []
-    found, start = [], True
-    for i, token in enumerate(tokens):
-        if set(token) <= SEPARATORS:
-            start = True
-            continue
-        if not start:
-            continue
-        name, rest = Path(token).name, tokens[i + 1:]
-        if '=' in token.split('/')[0] or name in COMMAND_PREFIXES or name.startswith('python'):
-            continue  # VAR=x, sudo, env ...: the command is the next word
-        start = False
-        if name in SHELLS:
-            flag = next((n for n, t in enumerate(rest) if re.fullmatch(r'-\w*c', t)), None)
-            if flag is not None and flag + 1 < len(rest):
-                found += commands(rest[flag + 1])
-        else:
-            found.append((name, rest))
+    found = []
+    for run in shell_reader.read(command):
+        argv = list(run.argv)
+        while argv and Path(argv[0]).name.startswith('python'):
+            argv.pop(0)  # python3 script.py: the command is the script
+        if argv:
+            found.append((Path(argv[0]).name, argv[1:] + list(run.tail)))
     return found
 
 
