@@ -2,7 +2,7 @@
 a feature reads the command, its folder and the files from the Event and asks the adapter what a CLI can do.
 
 A feature's code is scanned with `ast` (its docstrings and comments are prose, not code) for a string that is a
-CLI's id or one of its tools' names, and for a comparison on a CLI id. A feature's own `feature.json` is not
+CLI's id or one of its tools' names, and for a comparison on a CLI id or on a tool (`event.tool`: ask `event.action`). A feature's own `feature.json` is not
 scanned: a declaration is per CLI by design. The short list below holds what is allowed, each with its reason.
 
 Run: python3 -m unittest discover -s scripts/tests -p 'test_cli_rule.py' -v
@@ -59,6 +59,11 @@ def names_a_cli(node):
             or (isinstance(node, ast.Subscript) and isinstance(node.slice, ast.Constant) and node.slice.value == 'cli'))
 
 
+def names_a_tool(node):
+    """Whether an operand of a comparison is a tool's name held in a variable: `event.tool`."""
+    return isinstance(node, ast.Attribute) and node.attr == 'tool'
+
+
 def violations(path):
     """[(line, what)] a feature's Python file names: every string and comparison, the list not yet applied."""
     tree = ast.parse(Path(path).read_text())
@@ -70,6 +75,8 @@ def violations(path):
                 found.append((node.lineno, f'the string {node.value!r}'))
         elif isinstance(node, ast.Compare) and any(names_a_cli(side) for side in [node.left, *node.comparators]):
             found.append((node.lineno, 'a comparison on a CLI id'))
+        elif isinstance(node, ast.Compare) and any(names_a_tool(side) for side in [node.left, *node.comparators]):
+            found.append((node.lineno, 'a comparison on a tool name'))  # event.action says what a tool does
     return found
 
 
@@ -122,11 +129,14 @@ class RuleTest(unittest.TestCase):
                 def hook(event):
                     if event.cli == 'pi':
                         return None
+                    if event.tool in names:
+                        return 'bash' if event.tool == 'bash' else None
                     return 'apply_patch' if event.tool == 'Bash' else None
             '''))
             found = named(Path(tmp))
         self.assertEqual(sorted(found.split(' ', 1)[1] for found in found),
-                         ['a comparison on a CLI id', "the string 'Bash'", "the string 'apply_patch'",
+                         ['a comparison on a CLI id', 'a comparison on a tool name', 'a comparison on a tool name',
+                          'a comparison on a tool name', "the string 'Bash'", "the string 'apply_patch'",
                           "the string 'codex'", "the string 'pi'"])
         self.assertTrue(all(where.startswith('features/rogue/scripts/rogue.py:') for where in found))
 
