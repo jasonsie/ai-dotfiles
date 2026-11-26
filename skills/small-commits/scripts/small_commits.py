@@ -31,7 +31,6 @@ import hashlib
 import os
 from pathlib import Path
 import re
-import shlex
 import subprocess
 import sys
 
@@ -39,6 +38,8 @@ SKILL = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(SKILL.parents[1] / 'scripts'))
 import agent_hooks  # noqa: E402  (the CLIs' hook formats, in the repo's scripts folder)
 from agent_hooks import Deny, Note  # noqa: E402
+sys.path.insert(0, str(SKILL.parents[1] / 'lib'))
+import shell_reader  # noqa: E402  (reads a command line: the one reader the guard uses too)
 
 ENV = 'SMALL_COMMITS_STATE'
 DEFAULT_STATE = '~/.local/state/ai-dotfiles/small-commits'
@@ -57,11 +58,8 @@ LOCKFILES = ('*.lock', '*-lock.json', '*-lock.yaml', '*-lock.yml', '*.lockb', 'g
 EMPTY_TREE = '4b825dc642cb6eb9a060e54bf8d69288fbee4904'
 IN_PROGRESS = ('MERGE_HEAD', 'CHERRY_PICK_HEAD', 'REVERT_HEAD', 'rebase-merge', 'rebase-apply')
 WARNED, WARNED_KEPT = 'warned', 20
-# `git commit -m "$(cat <<'EOF' ... EOF)"`: the message is the heredoc's body.
-HEREDOC = re.compile(r'^\$\(\s*cat\s*<<-?\s*[\'"]?(\w+)[\'"]?\s*\n(.*?)\n\s*\1\s*\)$', re.S)
 
 GIT_OPTIONS_WITH_VALUE = frozenset(('-C', '-c', '--git-dir', '--work-tree', '--namespace', '--config-env'))
-SEPARATORS = set('();<>|&')
 SHORT_WITH_VALUE = {'m': 'messages', 'F': 'file', 'C': 'reuse', 'c': 'reuse', 't': 'template'}
 SHORT_OPTIONAL_VALUE = ('S', 'u')  # -S[keyid], -u[mode]: the rest of the token is the value
 LONG_WITH_VALUE = {'--message': 'messages', '--file': 'file', '--reuse-message': 'reuse', '--reedit-message': 'reuse',
@@ -83,24 +81,12 @@ class Commit:
     include: bool = False           # -i
     pathspecs: list = field(default_factory=list)
     messages: list = field(default_factory=list)   # -m, in order
-    file: str | None = None         # -F
+    file: str | None = None         # -F; `-` is stdin
+    stdin: str | None = None        # the heredoc the command feeds it, when it has one
     reuse: str | None = None        # -C / -c <commit>
     fixup: str | None = None        # --fixup / --squash
     template: str | None = None
     trailers: list = field(default_factory=list)   # --trailer "Key: value"
-
-
-def tokens_of(command):
-    try:
-        lexer = shlex.shlex(command, posix=True, punctuation_chars=True)
-        lexer.whitespace_split = True
-        return list(lexer)
-    except ValueError:
-        return command.split()
-
-
-def is_separator(token):
-    return bool(token) and set(token) <= SEPARATORS
 
 
 def take(commit, name, value):
@@ -112,13 +98,11 @@ def take(commit, name, value):
 
 
 def commit_options(commit, tokens, i):
-    """Read `git commit`'s arguments from tokens[i:] into `commit`; the index after them."""
+    """Read `git commit`'s arguments from the words tokens[i:] into `commit`; the index after them."""
     pathspecs_only = False
-    while i < len(tokens) and not is_separator(tokens[i]):
+    while i < len(tokens):
         token = tokens[i]
         i += 1
-        if token.isdigit() and i < len(tokens) and tokens[i][:1] in '<>':
-            continue  # a redirect's file descriptor, as in 2>&1
         if pathspecs_only or not token.startswith('-') or token == '-':
             commit.pathspecs.append(token)
         elif token == '--':
@@ -127,7 +111,7 @@ def commit_options(commit, tokens, i):
             name, has_value, inline = token.partition('=')
             if name in LONG_WITH_VALUE:
                 if not has_value:
-                    inline, i = (tokens[i], i + 1) if i < len(tokens) and not is_separator(tokens[i]) else ('', i)
+                    inline, i = (tokens[i], i + 1) if i < len(tokens) else ('', i)
                 if LONG_WITH_VALUE[name]:
                     take(commit, LONG_WITH_VALUE[name], inline)
             elif name in LONG_FLAGS:
@@ -137,7 +121,7 @@ def commit_options(commit, tokens, i):
                 if letter in SHORT_WITH_VALUE:
                     rest = token[k + 2:]
                     if not rest:
-                        rest, i = (tokens[i], i + 1) if i < len(tokens) and not is_separator(tokens[i]) else ('', i)
+                        rest, i = (tokens[i], i + 1) if i < len(tokens) else ('', i)
                     take(commit, SHORT_WITH_VALUE[letter], rest)
                     break
                 if letter in SHORT_OPTIONAL_VALUE:
@@ -149,30 +133,28 @@ def commit_options(commit, tokens, i):
 
 def commits_in(command):
     """Every `git commit` in a shell command line, with the folder each runs in (relative to
-    the shell's, following `cd` and `git -C`)."""
-    tokens, found, here, i = tokens_of(command), [], '', 0
-    while i < len(tokens):
-        token = tokens[i]
-        if token in ('cd', 'pushd') and i + 1 < len(tokens) and not is_separator(tokens[i + 1]):
-            here = os.path.join(here, tokens[i + 1])
-            i += 2
-            continue
-        if Path(token).name != 'git':
-            i += 1
-            continue
-        j, where = i + 1, here
-        while j < len(tokens) and tokens[j].startswith('-') and not is_separator(tokens[j]):
-            if tokens[j] in GIT_OPTIONS_WITH_VALUE:
-                if tokens[j] == '-C' and j + 1 < len(tokens):
-                    where = os.path.join(where, tokens[j + 1])
-                j += 2
-            else:
-                j += 1
-        if j < len(tokens) and tokens[j] == 'commit':
-            commit = Commit(where=where)
-            j = commit_options(commit, tokens, j + 1)
-            found.append(commit)
-        i = j + 1
+    the shell's, following `cd` and `git -C`). The reader (lib/shell_reader.py) splits the line
+    into commands, so a commit's options end where its command does."""
+    found = []
+    for run in shell_reader.read(command):
+        words, i = run.words, 0
+        while i < len(words):
+            if Path(words[i]).name != 'git':
+                i += 1
+                continue
+            j, where = i + 1, run.folder
+            while j < len(words) and words[j].startswith('-'):
+                if words[j] in GIT_OPTIONS_WITH_VALUE:
+                    if words[j] == '-C' and j + 1 < len(words):
+                        where = os.path.join(where, words[j + 1])
+                    j += 2
+                else:
+                    j += 1
+            if j < len(words) and words[j] == 'commit':
+                commit = Commit(where=where, stdin=run.heredocs[-1] if run.heredocs else None)
+                j = commit_options(commit, words, j + 1)
+                found.append(commit)
+            i = j + 1
     return found
 
 
@@ -290,11 +272,14 @@ def measure(commit, cwd):
 
 def unwrap(text):
     """The message in one -m value, or None when the shell computes it (`$(...)`) and it is not
-    a heredoc we can read."""
-    match = HEREDOC.match(text.strip())
-    if match:
-        return match.group(2)
-    return None if text.lstrip().startswith(('$(', '`')) else text
+    a heredoc we can read: `$(cat <<'EOF' ... EOF)`, whose message is the heredoc's body."""
+    text = text.strip()
+    if text.startswith('$('):
+        runs = shell_reader.read(text[2:-1]) if text.endswith(')') else []
+        if len(runs) == 1 and runs[0].argv == ('cat',) and runs[0].heredocs:
+            return runs[0].heredocs[-1]
+        return None
+    return None if text.startswith('`') else text
 
 
 def message_of(commit, cwd):
@@ -303,6 +288,8 @@ def message_of(commit, cwd):
     if commit.messages:
         parts = [part for part in map(unwrap, commit.messages) if part is not None]
         return '\n\n'.join(parts) if len(parts) == len(commit.messages) else None
+    if commit.file == '-':
+        return commit.stdin
     if commit.file is not None:
         try:
             return Path(cwd, commit.file).read_text()

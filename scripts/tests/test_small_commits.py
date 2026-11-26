@@ -74,6 +74,19 @@ class ParsingTest(unittest.TestCase):
         (computed,) = sc.commits_in('git commit -m "$(printf "x")"')
         self.assertIsNone(sc.message_of(computed, '.'))
 
+    def test_a_newline_ends_the_commit_so_what_follows_is_never_its_options(self):
+        (commit,) = sc.commits_in('git commit -m x\nls -la -a README')
+        self.assertEqual((commit.all, commit.pathspecs, commit.messages), (False, [], ['x']))
+        (commit,) = sc.commits_in("echo it's here\ngit commit -m y\nrm -a f")  # the apostrophe never closes
+        self.assertEqual((commit.all, commit.pathspecs, commit.messages), (False, [], ['y']))
+
+    def test_a_message_given_with_F_dash_is_the_heredoc_on_stdin(self):
+        (commit,) = sc.commits_in("git commit -q -F - <<'EOF'\nfeat(x): it's the step's\nEOF\npython3 -m unittest")
+        self.assertEqual((commit.file, commit.messages), ('-', []))
+        self.assertEqual(sc.message_of(commit, '.'), "feat(x): it's the step's\n")
+        (piped,) = sc.commits_in('printf x | git commit -F -')
+        self.assertIsNone(sc.message_of(piped, '.'))  # stdin is not a heredoc: not known before the commit
+
     def test_the_override_is_read_from_the_command_line(self):
         self.assertTrue(sc.OVERRIDE_SET.search('ALLOW_LARGE_COMMIT="a vendored file" git commit -m x'))
         self.assertTrue(sc.OVERRIDE_SET.search('export ALLOW_LARGE_COMMIT=why; git commit'))
@@ -286,6 +299,32 @@ class HookTest(Repo):
         reason = self.denied(self.hook('claude', 'git commit --amend --no-edit'))
         self.assertIn('the subject is not', reason)  # HEAD's message, "init", is what --no-edit keeps
         self.assertIsNone(self.hook('claude', f'git commit --amend -m {shlex.quote(GOOD)}'))
+
+    def test_a_heredoc_message_on_stdin_is_checked_whatever_its_apostrophes(self):  # #48
+        self.write('b.py', lines=10)
+        self.stage()
+        good = GOOD.replace('add the thing', "add the step's thing")  # one apostrophe: a quote that never closes
+        for cli in ('claude', 'pi'):
+            for message, after in ((good, '\npython3 -m unittest discover -s scripts/tests'), (good, ''),
+                                   (good.replace("step's", 'steps'), '\nls'), (good.replace("step's", "step's Pi's"), '\nls')):
+                command = f"git commit -q -F - <<'EOF'\n{message}\nEOF{after}"
+                self.assertIsNone(self.denied(self.hook(cli, command), cli), (cli, message, after))
+            bad = "feat(x): add the step's thing"  # a good subject, no trailers
+            for after in ('', '\npython3 -m unittest discover -s scripts/tests'):
+                reason = self.denied(self.hook(cli, f"git commit -q -F - <<'EOF'\n{bad}\nEOF{after}"), cli)
+                self.assertIn('missing trailers Why:, Scope:, Verified:', reason, (cli, after))
+                self.assertNotIn('the subject is not', reason, (cli, after))  # `-m unittest` was read as the message
+            reason = self.denied(self.hook(cli, "git commit -F - <<'EOF'\nadd the step's thing\nEOF\nls"), cli)
+            self.assertIn('the subject is not `type(scope): outcome`', reason)
+
+    def test_a_substitution_heredoc_message_with_an_apostrophe_is_checked(self):
+        self.write('b.py', lines=10)
+        self.stage()
+        good = GOOD.replace('add the thing', "add the step's thing")
+        command = f"git commit -m \"$(cat <<'EOF'\n{good}\nEOF\n)\"\npython3 -m unittest"
+        self.assertIsNone(self.denied(self.hook('claude', command)))
+        reason = self.denied(self.hook('claude', command.replace('Why: the user asked\n', '')))
+        self.assertIn('missing trailer Why:', reason)
 
     def test_a_failure_says_the_commit_was_not_checked(self):
         broken = Path(tempfile.mkstemp()[1])  # the state "folder" is a file
