@@ -8,6 +8,9 @@ class Claude(Adapter):
              'read': frozenset(('Read', 'Glob', 'Grep')), 'ask': frozenset(('AskUserQuestion', 'ExitPlanMode'))}
     path_keys = ('file_path', 'notebook_path')
     enters_worktree = True  # EnterWorktree
+
+    def is_headless(self, environ):
+        return environ.get('CLAUDE_CODE_ENTRYPOINT', '').startswith('sdk-')  # `claude -p` and the SDK
     matchers = {'edit': 'Edit|Write|NotebookEdit', 'shell': 'Bash', 'read': 'Read|Glob|Grep',
                 'ask': 'AskUserQuestion|ExitPlanMode'}
     # Worktree events, API errors and MCP forms are Claude Code's own.

@@ -149,6 +149,22 @@ class CapabilityTest(unittest.TestCase):
         self.assertEqual({cli: adapters.get(cli).shows_worktree_move for cli in adapters.CLIS},
                          {'claude': True, 'codex': False, 'agy': True, 'pi': False})
 
+    def test_a_session_ends_for_good_unless_the_cli_says_it_goes_on(self):
+        self.assertTrue(adapters.get('pi').session_survives_end('reload'))
+        self.assertFalse(adapters.get('pi').session_survives_end('quit'))
+        for cli in ('claude', 'codex', 'agy'):
+            self.assertFalse(adapters.get(cli).session_survives_end('reload'), cli)
+
+    def test_a_headless_run_is_told_by_the_environment_the_cli_sets(self):
+        self.assertTrue(adapters.get('claude').is_headless({'CLAUDE_CODE_ENTRYPOINT': 'sdk-cli'}))
+        self.assertFalse(adapters.get('claude').is_headless({'CLAUDE_CODE_ENTRYPOINT': 'cli'}))
+        self.assertFalse(adapters.get('claude').is_headless({}))
+        self.assertFalse(adapters.get('codex').is_headless({'CLAUDE_CODE_ENTRYPOINT': 'sdk-cli'}))
+
+    def test_only_codex_opens_a_typed_prompt_undecided(self):
+        self.assertEqual({cli: adapters.get(cli).prompt_starts_open for cli in adapters.CLIS},
+                         {'claude': False, 'codex': True, 'agy': False, 'pi': False})
+
 
 if __name__ == '__main__':
     unittest.main()

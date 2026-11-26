@@ -28,6 +28,7 @@ class Adapter:
     continuation_unflagged = False         # it does not flag the turn a hook's own Continue started
     enters_worktree = False                # it has its own tool to enter a worktree, so a session needs no steering
     shows_worktree_move = True             # its own status line follows a session steered to another worktree
+    prompt_starts_open = False             # a typed prompt opens a turn nothing has judged, until its Stop hook answers
 
     @property
     def takes_folder(self):
@@ -38,6 +39,14 @@ class Adapter:
             if tool in names:
                 return action
         return 'other'
+
+    def session_survives_end(self, reason):
+        """Whether a session that ends for `reason` goes on (the CLI reloads it in place)."""
+        return False
+
+    def is_headless(self, environ):
+        """Whether `environ` is that of a run started by a program, not typed at by a person."""
+        return False
 
     def command(self, tool_input):
         value = tool_input.get(self.command_key)
