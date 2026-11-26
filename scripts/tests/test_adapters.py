@@ -142,5 +142,13 @@ class HookFileTest(unittest.TestCase):
         self.assertFalse(adapters.get('claude').continuation_unflagged)
 
 
+class CapabilityTest(unittest.TestCase):
+    def test_what_a_cli_can_do_is_named_not_looked_up_by_its_id(self):
+        self.assertEqual({cli: adapters.get(cli).enters_worktree for cli in adapters.CLIS},
+                         {'claude': True, 'codex': False, 'agy': False, 'pi': False})
+        self.assertEqual({cli: adapters.get(cli).shows_worktree_move for cli in adapters.CLIS},
+                         {'claude': True, 'codex': False, 'agy': True, 'pi': False})
+
+
 if __name__ == '__main__':
     unittest.main()

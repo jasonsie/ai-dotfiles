@@ -64,7 +64,6 @@ import json
 import os
 from pathlib import Path
 import re
-import shlex
 import shutil
 import subprocess
 import sys
@@ -81,6 +80,7 @@ git_run.use('archive-tag')
 import archive_tag  # noqa: E402  (the one archive format, shared with approve)
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / 'lib'))
 import shell_reader  # noqa: E402  (reads a command line: the one reader small-commits uses too)
+import adapters  # noqa: E402  (what differs between the CLIs)
 
 ENV = 'WORKTREE_GUARD_STATE'
 DEFAULT_STATE = '~/.local/state/ai-dotfiles/worktree-guard'
@@ -106,12 +106,7 @@ GUARD_NAMES = frozenset(('worktree-guard', 'worktree_guard', 'worktree-guard.py'
 GIT_VALUED = frozenset(('-C', '-c', '--git-dir', '--work-tree', '--namespace', '--config-env'))  # git options with a value
 CONFIG_READS = frozenset(('--get', '--get-all', '--get-regexp', '--get-urlmatch', '--get-color', '--get-colorbool',
                           '-l', '--list', 'get', 'list'))  # a `git config` that only reads
-PATH_KEYS = {  # tool-input fields that name a file or folder
-    'claude': ('file_path', 'notebook_path'),
-    'pi': ('path',),
-    'agy': ('TargetFile', 'AbsolutePath', 'DirectoryPath', 'SearchPath', 'SearchDirectory'),
-}
-PATCH_HEADER = re.compile(r'^(\*\*\* (?:Add|Update|Delete) File: |\*\*\* Move to: )(.+)$', re.M)
+
 
 
 def state_root():
@@ -368,33 +363,14 @@ def new_names(command):
     return names
 
 
-def command_of(event):
-    key = 'CommandLine' if event.cli == 'agy' else 'command'
-    value = event.tool_input.get(key)
-    return value if isinstance(value, str) else ''
-
-
-def shell_folder(event):
-    cwd = event.tool_input.get('Cwd') if event.cli == 'agy' else None
-    return cwd if isinstance(cwd, str) and cwd else (event.folder or os.getcwd())
-
-
-def patch_paths(patch):
-    return [match.group(2).strip() for match in PATCH_HEADER.finditer(patch)]
-
-
 def targets(event):
     """Absolute paths whose worktrees this call changes."""
     folder = event.folder or os.getcwd()
     if event.action == 'edit':
-        if event.cli == 'codex':
-            names = patch_paths(command_of(event))
-        else:
-            names = [event.tool_input.get(key) for key in PATH_KEYS.get(event.cli, ())]
-        return [Path(os.path.normpath(os.path.join(folder, name))) for name in names if isinstance(name, str) and name]
+        return [Path(os.path.normpath(os.path.join(folder, name))) for name in event.files]
     if event.action == 'shell':
-        here = shell_folder(event)
-        return [Path(os.path.normpath(os.path.join(here, where))) for where in git_changes(command_of(event))]
+        here = event.command_folder
+        return [Path(os.path.normpath(os.path.join(here, where))) for where in git_changes(event.command)]
     return []
 
 
@@ -437,32 +413,13 @@ def steer_text(text, moved, folder=None):
 
 def steer(event, moved):
     """The tool input with the busy worktree swapped for the linked one, or None if unchanged."""
-    folder = event.folder or os.getcwd()
-    data = dict(event.tool_input)
     if event.action == 'shell':
-        key = 'CommandLine' if event.cli == 'agy' else 'command'
-        command = command_of(event)
-        steered = steer_text(command, moved, event.folder)
-        here = into(os.path.normpath(shell_folder(event)), moved)
-        if event.cli == 'agy':
-            if here:
-                data['Cwd'] = str(here)
-            data[key] = steered
-        elif here:
-            data[key] = f'cd {shlex.quote(str(here))} && {steered}'
-        else:
-            data[key] = steered
-    elif event.cli == 'codex' and event.action == 'edit':
-        def header(match):
-            target = into(os.path.normpath(os.path.join(folder, match.group(2).strip())), moved)
-            return match.group(1) + (os.path.relpath(target, folder) if target else match.group(2))
-        data['command'] = PATCH_HEADER.sub(header, command_of(event))
+        steered = steer_text(event.command, moved, event.folder)
+        here = into(os.path.normpath(event.command_folder), moved)
+        data = event.adapter.with_command(event.tool_input, steered, str(here) if here else None)
     else:
-        for key in PATH_KEYS.get(event.cli, ()):
-            if isinstance(data.get(key), str) and data[key]:
-                target = into(os.path.normpath(os.path.join(folder, data[key])), moved)
-                if target:
-                    data[key] = str(target)
+        data = event.adapter.retarget(event.tool_input, event.action, event.folder or os.getcwd(),
+                                      lambda path: into(path, moved))
     return data if data != event.tool_input else None
 
 
@@ -584,9 +541,9 @@ def remember(state, main):
 
 def ran_in(event):
     """{main checkout} of the repo that is on, when a shell command runs `worktree new` or `worktree pr`."""
-    if event.action != 'shell' or not new_names(command_of(event)):
+    if event.action != 'shell' or not new_names(event.command):
         return set()
-    where = worktree_of(shell_folder(event))
+    where = worktree_of(event.command_folder)
     return {main_of(where)} if where and flow_on(where) else set()
 
 
@@ -598,7 +555,7 @@ def note_naming(event, table):
     """The hook saw a shell command that runs `worktree new <name>`. The command has no hook input
     of its own, so keep who is running it, by the CLI process, for the command to find. A note
     changes nothing for the call: it keeps its own permissions."""
-    names = new_names(command_of(event)) if event.action == 'shell' else []
+    names = new_names(event.command) if event.action == 'shell' else []
     if not names:
         return
     me = owner(event, table if table is not None else process_table())
@@ -651,7 +608,7 @@ def tell(event, state, reply):
     """`reply` with a line for the person when the session's worktree was made or deleted since it
     was last told. Codex has no status line that follows a steered session and Pi's footer is set by
     its extension, so both hear it on their next tool call; the others show it themselves."""
-    if event.kind != 'pre' or event.cli not in ('codex', 'pi'):
+    if event.kind != 'pre' or event.adapter.shows_worktree_move:
         return reply
     now, before = seen_work(state), state.get('shown')
     if now == (tuple(before) if before else None):
@@ -681,18 +638,18 @@ def route(event, state, table=None):
         return None
     if event.kind != 'pre':
         return None
-    if event.action == 'shell' and person_only(command_of(event)):
+    if event.action == 'shell' and person_only(event.command):
         return Deny('worktree-guard: release and share are for a person, run from a terminal; '
                     'ask the user to run it.')
-    if event.action == 'shell' and flow_writes(command_of(event)):
+    if event.action == 'shell' and flow_writes(event.command):
         return Deny('worktree-guard: the worktree flow switch is the person\'s; ask them to run /worktree-flow.')
     moved, steered = state.get('moved'), None
-    if moved and event.cli != 'claude':
+    if moved and not event.adapter.enters_worktree:
         steered = steer(event, moved)
         if steered is not None:
             folder = event.folder
-            if event.action == 'shell' and event.cli != 'agy':  # it now starts with `cd <linked>`
-                here = into(os.path.normpath(shell_folder(event)), moved)
+            if event.action == 'shell' and not event.adapter.takes_folder:  # it now starts with `cd <linked>`
+                here = into(os.path.normpath(event.command_folder), moved)
                 folder = str(here) if here else folder
             event = replace(event, tool_input=steered, folder=folder)
     paths = targets(event)
@@ -1131,7 +1088,8 @@ def bind(main, linked, folder, work, ref, base, default, me, note, head):
     state = SESSIONS.load(me['session'])
     SESSIONS.save(me['session'], {**state, 'moved': moved})
     note.unlink(missing_ok=True)
-    how = (f'Call EnterWorktree with path "{linked}", then make every change there.' if me['cli'] == 'claude' else
+    enters = adapters.get(me['cli']).enters_worktree
+    how = (f'Call EnterWorktree with path "{linked}", then make every change there.' if enters else
            f'Your tool calls that name files in {main} are moved there automatically; name files by their paths '
            'there.')
     return f'{head} This session owns it. {how}'

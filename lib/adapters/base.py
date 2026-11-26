@@ -26,6 +26,8 @@ class Adapter:
     kinds: tuple[str, ...] = ()            # the hook events it hands over (scripts/agent_hooks.py NATIVE names them)
     timeouts: dict[str, int] = {}          # the door's time in seconds per kind, where it is not the default
     continuation_unflagged = False         # it does not flag the turn a hook's own Continue started
+    enters_worktree = False                # it has its own tool to enter a worktree, so a session needs no steering
+    shows_worktree_move = True             # its own status line follows a session steered to another worktree
 
     @property
     def takes_folder(self):
