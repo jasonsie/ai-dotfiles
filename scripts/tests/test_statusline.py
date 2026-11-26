@@ -294,6 +294,8 @@ QUOTAS = {'object': 'list', 'data': [
      'lastServedAt': '2026-11-08T10:00:00Z'},
     {'provider': 'copilot', 'user': 'someone@example.com', 'error': 'sign in again'},
 ]}
+AGY = {'provider': 'agy-cli', 'lastServedAt': '2026-11-09T03:30:00Z',
+       'windows': [{'name': 'Gemini · 5 hours', 'used': 45.6, 'resetsAt': '2026-11-09T12:14:00Z'}]}
 WITHOUT_LIMITS = {key: value for key, value in CLAUDE.items() if key != 'rate_limits'}
 FULL_LINE = '⏳ 63% → 06:00  51% → Thu 00:00  7 days · Fable 45% → Thu 00:00  💰 $0.12'
 
@@ -322,8 +324,8 @@ class Opener:
 class GatewayTest(unittest.TestCase):
     """Behind a gateway on this machine Claude Code sends no rate_limits; the windows are asked of the gateway."""
 
-    def usage(self, data, entries=QUOTAS['data']):
-        return plain(statusline.usage_line(data, NOW, UTC, ask=lambda: entries))
+    def usage(self, data, entries=QUOTAS['data'], served=lambda session, model: None):
+        return plain(statusline.usage_line(data, NOW, UTC, ask=lambda: entries, served=served))
 
     def entries(self, base, body=json.dumps(QUOTAS).encode()):
         opener = Opener(body)
@@ -347,9 +349,26 @@ class GatewayTest(unittest.TestCase):
         self.assertEqual(self.usage(prefixed), FULL_LINE)
         self.assertEqual(self.usage({**WITHOUT_LIMITS, 'model': None}), FULL_LINE)  # no model: Claude's
 
-    def test_a_group_or_unknown_provider_takes_the_account_that_answered_last(self):
+    def test_a_group_takes_the_account_that_served_it_in_this_session(self):
+        # Claude Code's background calls (Haiku) answer after the group's, so the account that answered
+        # last is Claude's; the group's own figures are those of the account that served it.
+        group = {**WITHOUT_LIMITS, 'model': {'id': 'auto/gemini-3.8-flash[1m]'}}
+        asked = []
+        served = lambda session, model: asked.append((session, model)) or 'agy-cli'  # noqa: E731
+        self.assertEqual(self.usage(group, QUOTAS['data'] + [AGY], served), '⏳ Gemini · 5 hours 46% → 12:14  💰 $0.12')
+        self.assertEqual(asked, [('abc', 'auto/gemini-3.8-flash[1m]')])
+
+    def test_the_log_is_read_only_for_a_group(self):
+        def served(session, model):
+            raise AssertionError('read the log')
+        for model in ('claude-opus-5-5', 'codex/gpt-6-luna', 'claude/claude-fable-5-2[1m]'):
+            self.assertNotEqual(self.usage({**WITHOUT_LIMITS, 'model': {'id': model}}, served=served), '', model)
+        self.assertEqual(self.usage({**WITHOUT_LIMITS, 'model': {'id': 'auto/x'}}, [], served), '💰 $0.12')  # no gateway
+
+    def test_a_group_the_log_does_not_name_takes_the_account_that_answered_last(self):
         group = {**WITHOUT_LIMITS, 'model': {'id': 'group/auto-claude-opus-5-5'}}
         self.assertEqual(self.usage(group), FULL_LINE)
+        self.assertEqual(self.usage(group, served=lambda session, model: 'gemini'), FULL_LINE)  # served by one with no account
         nobody_last = [{**entry, 'last': None} for entry in QUOTAS['data']]
         self.assertEqual(self.usage(group, nobody_last), '💰 $0.12')
 
@@ -396,6 +415,51 @@ class GatewayTest(unittest.TestCase):
         self.assertEqual(plain(statusline.render(WITHOUT_LIMITS, ('main', ''), NOW, UTC, ask=ask)[-1]), FULL_LINE)
         statusline.render(CLAUDE, ('main', ''), NOW, UTC, ask=ask)
         self.assertEqual(asked, [1])
+
+
+def served_line(session, model, provider, status=200):
+    """One line of Magpie's request log (~/.config/magpie/usage.jsonl), trimmed to the fields read."""
+    return json.dumps({'t': '2026-11-09T03:40:00Z', 'native_session': session, 'model': model,
+                       'provider': provider, 'providerAccount': 'someone@example.com', 'status': status})
+
+
+class GatewayServedTest(unittest.TestCase):
+    """The provider that served a group's model in this session, from the tail of Magpie's request log."""
+
+    def served(self, lines, session='abc', model='auto/gemini-3.8-flash[1m]', head=b''):
+        with tempfile.TemporaryDirectory() as temp:
+            log = Path(temp) / 'usage.jsonl'
+            log.write_bytes(head + ''.join(line + '\n' for line in lines).encode())
+            return statusline.gateway_served(session, model, str(log))
+
+    def test_the_last_request_for_the_group_s_model_in_this_session(self):
+        lines = [served_line('abc', 'gemini-3.8-flash', 'gemini'),
+                 served_line('abc', 'gemini-3.8-flash', 'agy-cli'),
+                 served_line('abc', 'claude-haiku-5-5', 'claude'),         # this session's background call
+                 served_line('other', 'gemini-3.8-flash', 'gemini'),       # another session's
+                 served_line('abc', 'gemini-3.8-flash', 'gemini', 429)]    # refused: it did not serve
+        self.assertEqual(self.served(lines), 'agy-cli')
+        self.assertEqual(self.served(lines, model='auto/gemini-3.8-flash'), 'agy-cli')
+        self.assertEqual(self.served(lines, session='other'), 'gemini')
+
+    def test_nothing_when_the_log_names_no_such_request(self):
+        lines = [served_line('abc', 'claude-haiku-5-5', 'claude')]
+        self.assertIsNone(self.served(lines))
+        self.assertIsNone(self.served(lines, session='nobody'))
+        for session, model in ((None, 'auto/x'), ('', 'auto/x'), ('abc', 'claude-haiku-5-5'), ('abc', 'auto/')):
+            self.assertIsNone(self.served([served_line('abc', 'x', 'claude')], session, model), (session, model))
+
+    def test_bad_lines_are_skipped_and_a_missing_log_gives_nothing(self):
+        lines = ['not json', '[1]', '{"native_session": "abc", "model": "gemini-3.8-flash", "provider": 5, "status": 200}',
+                 served_line('abc', 'gemini-3.8-flash', 'agy-cli'), '\xff', '']
+        self.assertEqual(self.served(lines), 'agy-cli')
+        self.assertIsNone(statusline.gateway_served('abc', 'auto/x', '/nonexistent/usage.jsonl'))
+
+    def test_only_the_tail_is_read(self):
+        old = served_line('abc', 'gemini-3.8-flash', 'gemini').encode() + b'\n'
+        padding = b'x' * statusline.GATEWAY_LOG_TAIL + b'\n'
+        self.assertIsNone(self.served([], head=old + padding))             # beyond the tail: not found
+        self.assertEqual(self.served([served_line('abc', 'gemini-3.8-flash', 'agy-cli')], head=old + padding), 'agy-cli')
 
 
 class MainTest(unittest.TestCase):
