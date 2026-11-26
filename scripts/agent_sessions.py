@@ -27,7 +27,6 @@ from datetime import date, datetime, time, timedelta, timezone
 import json
 import os
 from pathlib import Path
-import re
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'lib'))
@@ -36,14 +35,11 @@ import adapters  # noqa: E402  (each CLI's session store: where it keeps transcr
 CLIS = ('claude', 'codex', 'pi')
 TEMP_PREFIXES = ('/tmp/', '/private/tmp/', '/var/folders/', '/private/var/folders/')
 STORES = {  # relative to home
-    'codex': '.codex/sessions',          # <store>/YYYY/MM/DD/rollout-<ts>-<id>.jsonl, a folder per local day
     'pi': '.pi/agent/sessions',          # <store>/<cwd-slug>/<ts>_<id>.jsonl
 }
 TITLE_MAX = 80
 EDIT_TOOLS = {'pi': {'edit', 'write'}}
 ALWAYS = (datetime.min.replace(tzinfo=timezone.utc), datetime.max.replace(tzinfo=timezone.utc))  # a window with no edges
-ROLLOUT = re.compile(r'rollout-\d{4}-\d\d-\d\dT\d\d-\d\d-\d\d-(.+)')
-PATCH_FILE = re.compile(r'^\*\*\* (?:Add File|Update File|Delete File|Move to): (.+)$', re.MULTILINE)
 
 
 @dataclass(frozen=True)
@@ -182,8 +178,6 @@ def _transcripts(cli, store):
     try:
         if adapters.get(cli).session_store:
             return adapters.get(cli).transcripts(store)
-        if cli == 'codex':
-            return sorted(store.glob('*/*/*/*.jsonl'))
         return sorted(store.glob('*/*.jsonl'))
     except OSError:
         return []
@@ -281,9 +275,6 @@ def _file_id(cli, stem):
     """A session's id from its file name, until the transcript says it itself."""
     if adapters.get(cli).session_store:
         return adapters.get(cli).session_id(stem)
-    if cli == 'codex':
-        named = ROLLOUT.fullmatch(stem)
-        return named.group(1) if named else stem
     if cli == 'pi':
         return stem.split('_', 1)[-1]
     return stem
@@ -292,47 +283,6 @@ def _file_id(cli, stem):
 # --- one reader per store ----------------------------------------------------------------
 # Each is given the lines of a transcript, as dicts, and tells the _Reader what they say. Only
 # turns and edits need a timestamp; ids, titles and folders sit on lines that have none.
-
-def _codex(reader, row):
-    kind, payload = row.get('type'), _obj(row.get('payload'))
-    if kind == 'session_meta':
-        if not reader.opened:  # a forked thread repeats its parent's meta after its own
-            reader.opened = True
-            reader.id = _text(payload.get('id')) or reader.id
-            reader.cwd = _text(payload.get('cwd'))
-            source = payload.get('source')
-            reader.subagent = payload.get('thread_source') == 'subagent' or (
-                isinstance(source, dict) and 'subagent' in source)
-        return
-    at = _when(row.get('timestamp'))
-    if kind != 'response_item' or at is None:
-        return
-    item = payload.get('type')
-    if item == 'message':
-        texts = [part.get('text') for part in _items(payload.get('content'))
-                 if part.get('type') in ('input_text', 'output_text')]
-        if payload.get('role') == 'user':  # the injected AGENTS.md starts with '#'
-            reader.user(at, texts, hidden=('<', '#'))
-        elif payload.get('role') == 'assistant':
-            reader.assistant(at, texts)
-    elif item in ('custom_tool_call', 'function_call'):
-        text = payload.get('input' if item == 'custom_tool_call' else 'arguments')
-        for path in _patched(payload.get('name'), text):
-            reader.edited(at, path)
-
-
-def _patched(name, text):
-    """The paths a Codex tool call edits, from the patch in its text, whatever the call is named.
-    apply_patch carries the patch as its input, or as the `input` of JSON arguments. Any other
-    call (exec runs JavaScript that calls apply_patch; a shell call may too) carries it inside a
-    string, with the newlines escaped, so those are unescaped first. Only a line that starts with
-    a directive counts, not a '+' line of a hunk that happens to quote one."""
-    if not isinstance(text, str):
-        return []
-    if name == 'apply_patch':
-        text = _text(_args(text).get('input')) or text
-    return [path.strip() for path in PATCH_FILE.findall(text.replace('\\n', '\n')) if path.strip()]
-
 
 def _pi(reader, row):
     kind = row.get('type')
@@ -357,4 +307,4 @@ def _pi(reader, row):
                 reader.edited(at, _args(part.get('arguments')).get('path'))
 
 
-READERS = {'codex': _codex, 'pi': _pi}
+READERS = {'pi': _pi}

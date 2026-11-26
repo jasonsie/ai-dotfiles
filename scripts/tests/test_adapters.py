@@ -182,6 +182,21 @@ class SessionStoreTest(unittest.TestCase):
         self.assertEqual(found, ['other/b.jsonl', 'proj/a.jsonl'])
         self.assertEqual(adapters.get('claude').session_id('abc'), 'abc')
 
+    def test_codex_keeps_a_folder_per_day_and_names_the_session_in_the_file_name(self):
+        codex = adapters.get('codex')
+        self.assertEqual(codex.session_store, '.codex/sessions')
+        with tempfile.TemporaryDirectory() as tmp:
+            store = Path(tmp)
+            for name in ('2026/11/03/rollout-2026-11-03T10-00-00-abc.jsonl', '2026/11/03/x/rollout-deep.jsonl',
+                         'loose.jsonl'):
+                (store / name).parent.mkdir(parents=True, exist_ok=True)
+                (store / name).write_text('')
+            found = [path.relative_to(store).as_posix() for path in codex.transcripts(store)]
+        self.assertEqual(found, ['2026/11/03/rollout-2026-11-03T10-00-00-abc.jsonl'])
+        self.assertEqual((codex.session_id('rollout-2026-11-03T10-00-00-abc'), codex.session_id('odd')), ('abc', 'odd'))
+        self.assertEqual(codex.files_in_patch('*** Update File: a.py\n+*** Add File: quoted.py\n*** Move to: b.py'),
+                         ['a.py', 'b.py'])
+
     def test_a_cli_with_no_store_has_no_transcripts_and_no_notes(self):
         self.assertIsNone(adapters.get('agy').session_store)
         self.assertEqual(adapters.get('agy').transcripts(Path('/nowhere')), [])
