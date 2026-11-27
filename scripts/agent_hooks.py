@@ -2,7 +2,7 @@
 
 A feature (worktree-guard, small-commits, herdr-title) sees a plain Event and answers with a plain
 reply; the door (lib/door.py) reads each CLI's hook input into that Event here, and writes the
-reply back in the CLI's own shape; the installer (scripts/install/hooks.py) learns here which
+reply back in the CLI's own shape; the installer (lib/install/hooks.py) learns here which
 kinds each CLI hands over, their native names, the tools' matchers and the door's time per event.
 The hook formats are here; the rest that differs between the CLIs (tool names, where a call names its
 command, folder and files, patch headers, matchers, kinds, times, session stores) is each CLI's

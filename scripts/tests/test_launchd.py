@@ -366,7 +366,7 @@ class LaunchdTest(unittest.TestCase):
             self.run_main('--home', str(self.home), '--target', 'claude')
 
     def test_the_source_names_no_machine_path(self):
-        source = (ROOT / 'scripts/install/launchd.py').read_text()
+        source = (ROOT / 'lib/install/launchd.py').read_text()
         self.assertNotRegex(source, r'/Users/[A-Za-z]|/opt/homebrew|/usr/local/Cellar')
 
 

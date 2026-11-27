@@ -2,7 +2,7 @@
 
 A feature is a program this repo runs: in a session, beside one, on a schedule or in CI. Its folder
 holds its code, its tests, its skills and its declaration, feature.json; a folder that holds one is
-a feature, and it is on. Nothing lists the features anywhere else: the installer (scripts/install/
+a feature, and it is on. Nothing lists the features anywhere else: the installer (lib/install/
 hooks.py) and the door (lib/door.py) both find them here, in features/<name>/ and, until each one
 moves there, in skills/<name>/.
 

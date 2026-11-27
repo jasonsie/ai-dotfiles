@@ -5,12 +5,13 @@ from pathlib import Path
 import sys
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / 'scripts/install'))
+sys.path.insert(0, str(ROOT / 'lib/install'))
 
 
 def load(script):
-    """The module in scripts/<script>, e.g. load('install/skills.py')."""
-    path = ROOT / 'scripts' / script
+    """The module in scripts/<script>, or in lib/<script>, e.g. load('install/skills.py')."""
+    path = next((ROOT / base / script for base in ('scripts', 'lib') if (ROOT / base / script).is_file()),
+                ROOT / 'scripts' / script)
     spec = importlib.util.spec_from_file_location(path.stem.replace('-', '_'), path)
     assert spec and spec.loader, path
     module = importlib.util.module_from_spec(spec)

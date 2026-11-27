@@ -138,6 +138,7 @@ class EntrypointsTest(unittest.TestCase):
         # Run the working copy's install.sh inside the clone, so the guard sees the clone.
         target = clone / 'scripts/install.sh'
         target.write_text((ROOT / 'scripts/install.sh').read_text())
+        (clone / 'lib/install/run.py').write_text((ROOT / 'lib/install/run.py').read_text())  # the runner install.sh calls
         result = subprocess.run(['bash', str(target), '--update', '--dry-run'], env=self.env,
                                 capture_output=True, text=True)
         self.assertEqual(result.returncode, 1)

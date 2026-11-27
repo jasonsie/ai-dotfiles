@@ -156,6 +156,16 @@ def install(home, selected, workspace=WORKSPACE, apply=False, uninstall=False, p
     return len(changes)
 
 
+SUMMARY = "skills/<name>/ → each CLI's skill folder (links); also scripts/ai-dotfiles and the daily-log command → ~/.local/bin, and Pi's hooks extension"
+UNDO = "links in the receipt: skills, Pi's hooks extension, and the ai-dotfiles and daily-log commands (those with --target=all only)"
+
+
+def execute(options):
+    """The step as lib/install/run.py runs it: the number of changes."""
+    return install(options.home, installer.scope(options.target), apply=options.apply, uninstall=options.uninstall,
+                   live=options.live, cloud=options.cloud)
+
+
 def main():
     options = installer.parser(__doc__)
     options.add_argument('--cloud', action='store_true',

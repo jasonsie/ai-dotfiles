@@ -41,8 +41,8 @@ def rules(root):
 def link_skills(root):
     """Link each skill config/cloud.json does not keep local into <root>/.claude/skills/, as a
     relative link; an entry already there is left alone. Returns how many links it made."""
-    sys.path.insert(0, str(Path(__file__).resolve().parent / 'install'))
-    import skills as skill_folders  # scripts/install/skills.py: the repo's skill discovery
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'lib/install'))
+    import skills as skill_folders  # lib/install/skills.py: the repo's skill discovery
 
     folder = root / '.claude/skills'
     folder.mkdir(parents=True, exist_ok=True)

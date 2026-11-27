@@ -103,6 +103,67 @@ def run(home, target, write, uninstall):
     return len(commands) + len(files)
 
 
+SUMMARY = 'config/mcp-servers.json → native `<cli> mcp add` when missing'
+UNDO = 'left in place, listed: servers do not depend on this repo'
+
+
+def execute(options):
+    """The step as lib/install/run.py runs it: the number of changes."""
+    return run(options.home, options.target, options.apply, options.uninstall)
+
+
+CHECKS_TITLE = 'mcp (each CLI switched on in config/ai-clis.json; Antigravity has no list, so its file is read)'
+
+
+def listed(cli, name):
+    """The first line of `<cli> mcp list` that names the server, or ''."""
+    try:
+        done = subprocess.run([cli, 'mcp', 'list'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    except OSError:
+        return ''
+    return next((line for line in done.stdout.splitlines() if name in line), '')
+
+
+def in_file(file, name):
+    """Whether Antigravity's mcp_config.json holds the server."""
+    try:
+        text = file.read_text()
+        return name in (json.loads(text) if text.strip() else {}).get('mcpServers', {})
+    except (OSError, ValueError, AttributeError):
+        return False
+
+
+def checks(options):
+    """Each shared server, in each CLI switched on, as the healthcheck's lines. Servers and CLIs come from
+    the live checkout's config."""
+    servers = [server['name'] for server in json.loads((options.live / 'config/mcp-servers.json').read_text())['servers']]
+    results = []
+    for cli, entry in json.loads((options.live / 'config/ai-clis.json').read_text())['clis'].items():
+        if not entry['on']:
+            continue
+        file = options.home / entry['mcp'][2:]
+        for name in servers:
+            if cli == 'agy':  # no `mcp list`: its file is read (a branch on a CLI; the adapters take it later)
+                if not file.is_file():
+                    results.append(('skip', 'agy not set up'))
+                elif in_file(file, name):
+                    results.append(('ok', f'agy: {name} (in {file.name})'))
+                else:
+                    results.append(('FAIL', f'agy: {name} not in {file}'))
+            elif not shutil.which(cli):
+                results.append(('skip', f'{cli} not on PATH'))
+            else:
+                line = listed(cli, name)
+                if not line:
+                    results.append(('FAIL', f'{cli}: {name} not listed'))
+                elif 'Disabled' in line:
+                    # A server disabled for the current folder is still configured; count it as present.
+                    results.append(('ok', f'{cli}: {name} (configured; disabled in this untrusted folder)'))
+                else:
+                    results.append(('ok', f'{cli}: {name}'))
+    return results
+
+
 def main():
     args = installer.parser(__doc__).parse_args()
     return installer.finish('mcp', lambda: run(args.home, args.target, not args.dry_run, args.uninstall))

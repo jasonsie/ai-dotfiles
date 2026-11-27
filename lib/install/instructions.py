@@ -148,6 +148,16 @@ def run(home, target, write, uninstall_all, replace_existing, workspace=WORKSPAC
             + uninstall(home, off, workspace=workspace, apply=write, live=live))
 
 
+SUMMARY = "config/global-agents.md → each CLI's global entry (symlink)"
+UNDO = 'links removed; the file from before the first install is restored'
+
+
+def execute(options):
+    """The step as lib/install/run.py runs it: the number of changes."""
+    return run(options.home, options.target, options.apply, options.uninstall, options.replace_instructions,
+               live=options.live)
+
+
 def main():
     parser = installer.parser(__doc__)
     parser.add_argument("--replace-existing", action="store_true")

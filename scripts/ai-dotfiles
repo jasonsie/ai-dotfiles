@@ -30,7 +30,7 @@ case "$COMMAND" in
   check) exec bash "$SCRIPTS/healthcheck.sh" "$@" ;;
   statusline) exec "${PYTHON:-python3}" "$SCRIPTS/statusline.py" "$@" ;;
   hook)
-    # The Python the hooks step linked (scripts/install/hooks.py), not the pyenv shim that python3
+    # The Python the hooks step linked (lib/install/hooks.py), not the pyenv shim that python3
     # resolves to in the session's folder: about 150 ms less per call, and one Python in every
     # project. $PYTHON overrides it; python3 when the link is missing or broken.
     PY="${PYTHON:-${HOME:-}/.local/state/ai-dotfiles/python3}"

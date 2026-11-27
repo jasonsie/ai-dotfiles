@@ -293,6 +293,15 @@ def run(home, target, write, uninstall, repo=WORKSPACE, cloud=False):
     return install(home, on, off, write, chosen, python)
 
 
+SUMMARY = "each feature's feature.json → one door entry per event in each CLI's hook file, the door's Python linked; retired hooks taken out"
+UNDO = "the door's hook entries and its Python link, and any retired ones"
+
+
+def execute(options):
+    """The step as lib/install/run.py runs it: the number of changes."""
+    return run(options.home, options.target, options.apply, options.uninstall, cloud=options.cloud)
+
+
 def main():
     options = installer.parser(__doc__)
     options.add_argument('--cloud', action='store_true', help="a cloud session's VM: the cloud features alone")
