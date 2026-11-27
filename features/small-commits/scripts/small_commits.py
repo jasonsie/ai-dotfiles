@@ -4,7 +4,10 @@
   small-commits check [GIT COMMIT ARGS...]             what the hook would say to `git commit ARGS` here
 
 The CLIs' hooks reach it through the door (`ai-dotfiles hook`, lib/door.py), which calls
-hook(event) before each shell command (../feature.json); a cloud session runs it too.
+hook(event) before each shell command, after worktree-guard (../feature.json); a cloud session on
+this repo runs it too, from .claude/settings.json. No rule text in config/global-agents.md: this
+hook is the rule, and its block message points at the small-commits skill (../SKILL.md), which
+holds the protocol an agent follows.
 
 The hook sees each `git commit` a session runs and measures what it would commit: the staged
 diff; with -a, every tracked change; with pathspecs, those paths; with --amend, the result
