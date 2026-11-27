@@ -10,7 +10,8 @@ A step module keeps its own main() (`python3 lib/install/<step>.py --help` works
   CLOUD_SKIP   the line printed in place of the step in a cloud session; absent when the step runs there
   execute(options)  the step's run, as `run.py` calls it; returns the number of changes
   checks(options)   optional: the healthcheck's lines, a list of (status, message) where status
-                    is ok, FAIL, skip or info
+                    is ok, FAIL, skip or info (read-only: it measures the live state)
+  CHECKS_TITLE      optional: the heading over those lines, where the step's name alone says too little
 """
 from dataclasses import dataclass
 import importlib

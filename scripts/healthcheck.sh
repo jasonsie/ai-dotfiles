@@ -4,10 +4,10 @@
 # Checks live state through each CLI where possible, not generated files:
 #   - install.sh --dry-run reports zero pending changes: every instruction, skill, hook
 #     and command link is in place, and every managed setting is applied
-#   - shared MCP servers are listed by each CLI's own `mcp list`
+#   - each install step's own checks (lib/install/run.py check): shared MCP servers are listed by
+#     each CLI's own `mcp list`, the daily-log pass's LaunchAgent is loaded (when claude is installed)
 #   - ~/.local/bin is on PATH, so `ai-dotfiles` runs from any folder
 #   - `ai-dotfiles statusline`, the status line Claude Code and Antigravity run, renders a line
-#   - the daily-log pass's LaunchAgent is loaded (when claude is installed)
 #   - repo sources contain no machine-specific paths; unit tests pass
 #
 # Run in a linked worktree, the live state is measured against the main checkout, which the
@@ -23,7 +23,6 @@ LIVE="$("$PYTHON" -c 'import sys; sys.path.insert(0, sys.argv[1]); import instal
 FAILS=0
 pass() { printf '  ok    %s\n' "$1"; }
 fail() { printf '  FAIL  %s\n' "$1"; FAILS=$((FAILS + 1)); }
-skip() { printf '  skip  %s\n' "$1"; }
 detail() { sed 's/^/          /'; }
 
 echo "-- pending changes (install.sh --dry-run)"
@@ -43,32 +42,10 @@ fi
 printf '%s\n' "$DRY" | sed -n 's/^Local choice kept: /  info  local choice kept: /p'
 printf '%s\n' "$DRY" | sed -n 's/^Warning: /  info  /p'
 
-echo "-- mcp (each CLI switched on in config/ai-clis.json; Antigravity has no list, so its file is read)"
-SERVERS="$("$PYTHON" -c 'import json,sys; print(" ".join(s["name"] for s in json.load(open(sys.argv[1]))["servers"]))' "$LIVE/config/mcp-servers.json")"
-for entry in $("$PYTHON" -c 'import json,sys; c=json.load(open(sys.argv[1]))["clis"]; print(" ".join(k + "=" + v["mcp"] for k, v in c.items() if v["on"]))' "$LIVE/config/ai-clis.json"); do
-  cli="${entry%%=*}"; file="$HOME/${entry#*=\~/}"
-  for name in $SERVERS; do
-    if [ "$cli" = agy ]; then
-      if [ ! -f "$file" ]; then
-        skip "agy not set up"
-      elif "$PYTHON" -c 'import json,sys; t=open(sys.argv[1]).read(); sys.exit(sys.argv[2] not in (json.loads(t) if t.strip() else {}).get("mcpServers", {}))' "$file" "$name"; then
-        pass "agy: $name (in $(basename "$file"))"
-      else
-        fail "agy: $name not in $file"
-      fi
-    elif ! command -v "$cli" >/dev/null 2>&1; then
-      skip "$cli not on PATH"
-    else
-      # A server disabled for the current folder is still configured; count it as present.
-      line="$("$cli" mcp list 2>&1 | grep -m1 "$name" || true)"
-      case "$line" in
-        "") fail "$cli: $name not listed" ;;
-        *Disabled*) pass "$cli: $name (configured; disabled in this untrusted folder)" ;;
-        *) pass "$cli: $name" ;;
-      esac
-    fi
-  done
-done
+# Each step's own checks (mcp: each CLI lists the shared servers; launchd: the daily-log pass is loaded).
+STEP_CHECKS="$("$PYTHON" "$ROOT/lib/install/run.py" check 2>&1)"
+printf '%s\n' "$STEP_CHECKS"
+FAILS=$((FAILS + $(printf '%s\n' "$STEP_CHECKS" | grep -c '^  FAIL ')))
 
 echo "-- command"
 case ":$PATH:" in
@@ -81,20 +58,6 @@ if OUT="$(printf '{"model":{"display_name":"check"},"version":"0"}' | "$PYTHON" 
   pass "statusline renders a line"
 else
   fail "statusline failed: $OUT"
-fi
-
-echo "-- launchd (the daily-log pass, 04:00 each day)"
-PLIST="$HOME/Library/LaunchAgents/com.ai-dotfiles.daily-log-day.plist"
-if [ "$(uname -s)" != Darwin ]; then
-  skip "not macOS: no launchd"
-elif ! command -v claude >/dev/null 2>&1; then
-  skip "claude not on PATH: nothing to schedule"
-elif [ ! -f "$PLIST" ]; then
-  fail "not scheduled: $PLIST missing (run: ai-dotfiles)"
-elif launchctl print "gui/$(id -u)/com.ai-dotfiles.daily-log-day" >/dev/null 2>&1; then
-  pass "com.ai-dotfiles.daily-log-day loaded"
-else
-  fail "com.ai-dotfiles.daily-log-day not loaded (run: ai-dotfiles)"
 fi
 
 echo "-- portability"

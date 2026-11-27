@@ -2,12 +2,17 @@
 import contextlib
 import importlib.util
 import io
+import json
 from pathlib import Path
 import re
+import shutil
 import tempfile
 import unittest
+from unittest import mock
 
-from support import ROOT
+from support import ROOT, registry, where
+import launchd
+import mcp
 import run
 import steps
 
@@ -145,6 +150,64 @@ class RunnerTest(unittest.TestCase):
         self.assertEqual((status, out), (1, ''))
         self.assertTrue(err.startswith('[ERR] Unknown argument: --bogus\n'))
         self.assertIn('Usage:', err)
+
+
+class StepChecksTest(unittest.TestCase):
+    """The checks the healthcheck used to hold in shell: mcp and launchd, as (status, message) lines."""
+
+    def setUp(self):
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        folder = Path(temp.name).resolve()
+        self.home = folder / 'home'
+        self.home.mkdir()
+        self.live = folder / 'live'
+        (self.live / 'config').mkdir(parents=True)
+        shutil.copy(ROOT / 'config/mcp-servers.json', self.live / 'config')
+        registry(self.live / 'config', claude=True, agy=True)
+        self.servers = [s['name'] for s in json.loads((ROOT / 'config/mcp-servers.json').read_text())['servers']]
+        self.options = steps.Options(home=self.home, live=self.live)
+
+    def test_mcp_reads_antigravitys_file_and_skips_a_cli_that_is_not_on_path(self):
+        results = mcp.checks(self.options)
+        self.assertIn(('skip', 'agy not set up'), results)
+        agy_file = self.home / where('agy', 'mcp')
+        agy_file.parent.mkdir(parents=True)
+        agy_file.write_text(json.dumps({'mcpServers': {self.servers[0]: {}}}))
+        with mock.patch('mcp.shutil.which', return_value=None):
+            results = mcp.checks(self.options)
+        self.assertIn(('ok', f'agy: {self.servers[0]} (in {agy_file.name})'), results)
+        self.assertIn(('skip', 'claude not on PATH'), results)
+        agy_file.write_text('{}')
+        with mock.patch('mcp.shutil.which', return_value=None):
+            self.assertIn(('FAIL', f'agy: {self.servers[0]} not in {agy_file}'), mcp.checks(self.options))
+
+    def test_mcp_asks_a_cli_that_is_on_path_what_it_lists(self):
+        def says(output):
+            done = mock.Mock(stdout=output)
+            return mock.patch.multiple('mcp.subprocess', run=mock.Mock(return_value=done)), mock.patch(
+                'mcp.shutil.which', return_value='/bin/claude')
+        name = self.servers[0]
+        for output, expected in ((f'{name}: ok', ('ok', f'claude: {name}')),
+                                 (f'{name}: Disabled', ('ok', f'claude: {name} (configured; disabled in this untrusted folder)')),
+                                 ('nothing here', ('FAIL', f'claude: {name} not listed'))):
+            run_patch, which_patch = says(output)
+            with run_patch, which_patch:
+                self.assertIn(expected, mcp.checks(self.options))
+
+    def test_launchd_is_ok_only_when_the_job_is_scheduled_and_loaded(self):
+        def checks(platform='darwin', claude='/bin/claude', loaded=0):
+            with mock.patch('launchd.sys.platform', platform), mock.patch('launchd.shutil.which', return_value=claude), \
+                    mock.patch('launchd.subprocess.run', return_value=mock.Mock(returncode=loaded)):
+                return launchd.checks(self.options)
+        self.assertEqual(checks('linux'), [('skip', 'not macOS: no launchd')])
+        self.assertEqual(checks(claude=None), [('skip', 'claude not on PATH: nothing to schedule')])
+        plist = self.home / launchd.PLIST
+        self.assertEqual(checks(), [('FAIL', f'not scheduled: {plist} missing (run: ai-dotfiles)')])
+        plist.parent.mkdir(parents=True)
+        plist.write_text('')
+        self.assertEqual(checks(), [('ok', f'{launchd.LABEL} loaded')])
+        self.assertEqual(checks(loaded=113), [('FAIL', f'{launchd.LABEL} not loaded (run: ai-dotfiles)')])
 
 
 if __name__ == '__main__':

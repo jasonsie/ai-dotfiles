@@ -176,6 +176,24 @@ def execute(options):
     return install(options.home, options.apply, options.uninstall)
 
 
+CHECKS_TITLE = 'launchd (the daily-log pass, 04:00 each day)'
+
+
+def checks(options):
+    """Whether the daily-log pass is scheduled and loaded, as the healthcheck's lines."""
+    plist = options.home / PLIST
+    if sys.platform != 'darwin':
+        return [('skip', 'not macOS: no launchd')]
+    if not shutil.which('claude'):
+        return [('skip', 'claude not on PATH: nothing to schedule')]
+    if not plist.is_file():
+        return [('FAIL', f'not scheduled: {plist} missing (run: ai-dotfiles)')]
+    loaded = subprocess.run(['launchctl', 'print', f'gui/{os.getuid()}/{LABEL}'], capture_output=True)
+    if loaded.returncode == 0:
+        return [('ok', f'{LABEL} loaded')]
+    return [('FAIL', f'{LABEL} not loaded (run: ai-dotfiles)')]
+
+
 def main():
     args = installer.parser(__doc__, cli_target=False).parse_args()
     return installer.finish('launchd', lambda: install(args.home, not args.dry_run, args.uninstall))

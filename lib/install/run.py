@@ -147,7 +147,7 @@ def check(options, modules):
         checks = getattr(module, 'checks', None)
         if checks is None:
             continue
-        print(f'-- {module.__name__}')
+        print(f'-- {getattr(module, "CHECKS_TITLE", module.__name__)}')
         try:
             results = checks(options)
         except (OSError, ValueError, KeyError) as error:
