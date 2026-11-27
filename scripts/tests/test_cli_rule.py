@@ -21,8 +21,10 @@ sys.path.insert(0, str(ROOT / 'lib'))
 import adapters  # noqa: E402
 import features  # noqa: E402
 
-# Code outside a feature folder that is a feature, until its folder moves (the layout's status ticket).
-FEATURE_FILES = ('skills/daily-log', 'scripts/statusline.py', 'scripts/cloud_session.py')
+# Code outside a feature folder that is a feature, until its folder moves (the layout's status ticket),
+# and the install steps that no longer branch on a CLI (the rest join as the layout's install ticket reaches them).
+FEATURE_FILES = ('skills/daily-log', 'scripts/statusline.py', 'scripts/cloud_session.py',
+                 'lib/install/settings.py', 'lib/install/mcp.py', 'lib/install/instructions.py')
 # (file, the string) -> why it may stay. A reason says what the string is, in a sentence.
 ALLOWED = {
     ('skills/herdr-title/scripts/herdr_title.py', 'claude'):

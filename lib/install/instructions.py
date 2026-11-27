@@ -16,6 +16,8 @@ import tempfile
 import installer
 
 WORKSPACE = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(WORKSPACE / 'lib'))
+import adapters  # noqa: E402  (what differs between the CLIs)
 SOURCE = "config/global-agents.md"
 OLD_SOURCE = "tools/instructions/AGENTS.md"  # where the source lived before config/; a link there is ours
 BACKUPS = installer.STATE + "/global-instructions"
@@ -109,8 +111,9 @@ def install(home, clis, *, workspace=WORKSPACE, apply=False, replace_existing=Fa
         for parent in path.parents:
             if parent.exists() and not parent.is_dir():
                 raise ValueError(f"Instruction parent is not a directory: {parent}")
-        if cli in ("codex", "pi"):
-            override = path.with_name("AGENTS.override.md")
+        override_name = adapters.get(cli).instructions_override
+        if override_name:
+            override = path.with_name(override_name)
             if override.is_file() and override.read_text().strip():
                 raise ValueError(
                     f"{override} shadows shared instructions; resolve it before installation"
