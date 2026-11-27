@@ -4,7 +4,10 @@ A feature (worktree-guard, small-commits, herdr-title) sees a plain Event and an
 reply; the door (lib/door.py) reads each CLI's hook input into that Event here, and writes the
 reply back in the CLI's own shape; the installer (scripts/install/hooks.py) learns here which
 kinds each CLI hands over, their native names, the tools' matchers and the door's time per event.
-Everything that differs between the CLIs lives here.
+The hook formats are here; the rest that differs between the CLIs (tool names, where a call names its
+command, folder and files, patch headers, matchers, kinds, times, session stores) is each CLI's
+adapter's (lib/adapters). The Event gives a feature the command, its folder and the files of a call
+through its adapter, so a feature never asks which CLI it runs in (scripts/tests/test_cli_rule.py).
 
   read(cli, kind, data)                  the Event in one CLI's hook input
   render(cli, kind, reply)               the JSON (or text) that CLI expects for a reply
@@ -20,7 +23,7 @@ session ends), 'prompt' (the user submits one; never answered), and, never answe
 user stops a turn); 'create' and 'remove' make and remove Claude Code's worktrees. KINDS says
 which CLI hands over which.
 An Event names what the tool does (action: edit, shell, read, ask or other) and carries its
-input; a 'prompt' Event carries the prompt and the transcript's path, a 'stop' Event the
+input (command, command_folder and files read it back; adapter says what the CLI can do); a 'prompt' Event carries the prompt and the transcript's path, a 'stop' Event the
 agent's last message and its background work. Replies: Continue (a 'stop'), Note, Deny and
 Rewrite (a 'pre'), Shown around any of those.
 Pi has no hook file: its extension (agent_hooks.ts) sends the door {session_id, cwd, tool_name,
@@ -38,41 +41,24 @@ from pathlib import Path
 import re
 import tempfile
 import time
+import sys
 from typing import Any
 
-CLIS = ('claude', 'codex', 'agy', 'pi')
-HOOK_FILE_CLIS = ('claude', 'codex', 'agy')  # Pi loads an extension instead
-TOOLS = {  # what each CLI's tools do; Codex reads through its shell; 'ask' tools open a dialog for the user
-    'claude': {'edit': {'Edit', 'Write', 'NotebookEdit'}, 'shell': {'Bash'}, 'read': {'Read', 'Glob', 'Grep'},
-               'ask': {'AskUserQuestion', 'ExitPlanMode'}},
-    'codex': {'edit': {'apply_patch', 'Edit', 'Write'}, 'shell': {'Bash'}, 'read': set()},
-    'agy': {'edit': {'write_to_file', 'replace_file_content', 'multi_replace_file_content'},
-            'shell': {'run_command'}, 'read': {'view_file', 'list_dir', 'find_by_name', 'grep_search'}},
-    'pi': {'edit': {'edit', 'write'}, 'shell': {'bash'}, 'read': {'read', 'grep', 'find', 'ls'}},
-}
-EDIT_TOOLS = {cli: tools['edit'] for cli, tools in TOOLS.items()}
-# The installer's matchers per action; Codex matches apply_patch as Edit or Write.
-MATCHERS = {
-    'claude': {'edit': 'Edit|Write|NotebookEdit', 'shell': 'Bash', 'read': 'Read|Glob|Grep',
-               'ask': 'AskUserQuestion|ExitPlanMode'},
-    'codex': {'edit': 'Edit|Write', 'shell': 'Bash'},
-    'agy': {'edit': 'write_to_file|replace_file_content|multi_replace_file_content', 'shell': 'run_command',
-            'read': 'view_file|list_dir|find_by_name|grep_search'},
-}
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'lib'))
+import adapters  # noqa: E402  (what differs between the CLIs: tools, where a call names its command and files)
+
+CLIS = adapters.CLIS
+HOOK_FILE_CLIS = tuple(cli for cli in CLIS if adapters.get(cli).hook_file)
+# What each CLI's tools do; Codex reads through its shell; 'ask' tools open a dialog for the user.
+TOOLS = {cli: {action: set(names) for action, names in adapters.get(cli).tools.items()} for cli in CLIS}
+# The installer's matchers per action.
+MATCHERS = {cli: dict(adapters.get(cli).matchers) for cli in HOOK_FILE_CLIS}
 NATIVE = {'pre': 'PreToolUse', 'tool': 'PostToolUse', 'stop': 'Stop', 'end': 'SessionEnd',
           'prompt': 'UserPromptSubmit', 'create': 'WorktreeCreate', 'remove': 'WorktreeRemove',
           'error': 'StopFailure', 'permission': 'PermissionRequest', 'form': 'Elicitation',
           'start': 'SessionStart', 'interrupt': 'Interrupt'}
-# The kinds each CLI hands over. Antigravity has no session end, and no prompt event (PreInvocation
-# carries no prompt text). Worktree events, API errors and MCP forms are Claude Code's. Codex runs
-# SessionStart only inside a session's first turn, too late to report a resumed session, so 'start'
-# is Claude Code's and Pi's. Pi's are the events its extension (agent_hooks.ts) sends.
-KINDS = {
-    'claude': ('pre', 'tool', 'stop', 'end', 'prompt', 'error', 'permission', 'form', 'start', 'create', 'remove'),
-    'codex': ('pre', 'tool', 'stop', 'end', 'prompt', 'permission', 'interrupt'),
-    'agy': ('pre', 'tool', 'stop'),
-    'pi': ('pre', 'stop', 'end', 'prompt', 'start'),
-}
+# The kinds each CLI hands over (its adapter).
+KINDS = {cli: adapters.get(cli).kinds for cli in CLIS}
 TOOL_KINDS = ('pre', 'tool', 'permission')  # a tool call fires these: a feature may want them for some tools only
 # Claude Code's worktree events: it reads a WorktreeCreate hook's stdout as the new worktree's path,
 # not as JSON, and a hook that fails either event fails it.
@@ -82,10 +68,9 @@ RAW = ('create', 'remove')
 # no entry. Codex runs SessionEnd and Interrupt hooks 3 s at most; Claude Code gives SessionEnd
 # hooks 1.5 s unless an entry asks for more (up to 60 s); a worktree takes a while to make.
 TIMEOUT = 10
-TIMEOUTS = {'claude': {'pre': 60, 'end': 60, 'create': 60, 'remove': 60}, 'codex': {'pre': 60, 'end': 3, 'interrupt': 3},
-            'agy': {'pre': 60}, 'pi': {'pre': 60, 'end': 60}}
+TIMEOUTS = {cli: dict(adapters.get(cli).timeouts) for cli in CLIS}
 # CLIs that do not flag the turn a hook's own Continue started; the store remembers it for them.
-UNFLAGGED_CONTINUATION = ('agy', 'pi')
+UNFLAGGED_CONTINUATION = tuple(cli for cli in CLIS if adapters.get(cli).continuation_unflagged)
 CONTINUED = 'pending'
 
 
@@ -115,6 +100,25 @@ class Event:
     source: str = ''             # where a prompt came from (Pi), or why a session started ('start')
     reason: str = ''             # why the session ends (an 'end' event)
     outcome: str = ''            # how the run ended: completed, aborted or error (Pi's 'stop')
+
+    @property
+    def adapter(self):
+        return adapters.get(self.cli)
+
+    @property
+    def command(self):
+        """The command a shell call runs, else ''."""
+        return self.adapter.command(self.tool_input) if self.action == 'shell' else ''
+
+    @property
+    def command_folder(self):
+        """The folder a shell call runs in: the call's own, else the session's, else this process's."""
+        return self.adapter.folder(self.tool_input) or self.folder or os.getcwd()
+
+    @property
+    def files(self):
+        """The names a call that is not a shell command gives its files, as written."""
+        return () if self.action == 'shell' else self.adapter.files(self.tool_input, self.action)
 
 
 @dataclass(frozen=True)
@@ -154,10 +158,7 @@ class Shown:
 
 
 def action_of(cli, tool):
-    for action, names in TOOLS.get(cli, {}).items():
-        if tool in names:
-            return action
-    return 'other'
+    return adapters.get(cli).action_of(tool)
 
 
 def text(value):

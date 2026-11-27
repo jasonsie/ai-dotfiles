@@ -106,13 +106,13 @@ def pane():
     return os.environ.get('HERDR_PANE_ID') if os.environ.get('HERDR_ENV') == '1' else None
 
 
-def outsider(cli):
+def outsider(adapter):
     """Whether the call comes from a session that only shares the pane's environment: a teammate in
     the tmux server Claude Code runs for an agent team, or a headless `claude -p` started from the
     pane (Claude Code marks its hooks sdk-cli)."""
     if SWARM in os.environ.get('TMUX', ''):
         return True
-    return cli == 'claude' and os.environ.get('CLAUDE_CODE_ENTRYPOINT', '').startswith('sdk-')
+    return adapter.is_headless(os.environ)
 
 
 @contextlib.contextmanager
@@ -265,7 +265,8 @@ def on_prompt(event):
     with locked():
         state = SESSIONS.load(event.session)
         number = state.get('event', 0) + 1
-        state.update(event=number, typed=number, typed_turn=True, mode='open' if event.cli == 'codex' else 'normal',
+        mode = 'open' if event.adapter.prompt_starts_open else 'normal'
+        state.update(event=number, typed=number, typed_turn=True, mode=mode,
                      blocked=None, ended=False, cli=event.cli, pane=where)
         if kind:
             state['type'] = kind
@@ -477,7 +478,7 @@ def on_end(event):
     """The session is over: its labels come off the pane. Its state stays (pruned after a week), so a
     resumed session finds its type. A subagent's end is not the pane's, Pi's reload keeps the
     session, and a session the pane no longer belongs to (Codex ends an old chat late) changes nothing."""
-    if event.subagent or (event.cli == 'pi' and event.reason == 'reload'):
+    if event.subagent or event.adapter.session_survives_end(event.reason):
         return
     where = pane()
     with locked():
@@ -507,7 +508,7 @@ def hook(event):
     """The door's call (lib/door.py) for one event; the reply is always none, so each CLI gets its
     quiet reply. Nothing runs outside a Herdr pane, for a session that only shares the pane's
     environment, or without a session id."""
-    if pane() and not outsider(event.cli) and event.session:
+    if pane() and not outsider(event.adapter) and event.session:
         if event.kind == 'prompt':
             SESSIONS.prune(time.time())
             PANES.prune(time.time())
