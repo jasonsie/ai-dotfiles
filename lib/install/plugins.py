@@ -772,6 +772,16 @@ def run(home, target, write, uninstall, runner=shell, which=shutil.which):
     return changes + len(files)
 
 
+SUMMARY = "config/plugins.json → each CLI's own plugin manager, at the pinned release tag, each read back after"
+UNDO = 'left in place, listed: plugins work without this repo'
+CLOUD_SKIP = 'plugins: skipped in a cloud session (scripts/cloud/setup.sh clones them at their pins)'
+
+
+def execute(options):
+    """The step as lib/install/run.py runs it: the number of changes."""
+    return run(options.home, options.target, options.apply, options.uninstall)
+
+
 def main():
     args = installer.parser(__doc__).parse_args()
     return installer.finish('plugins', lambda: run(args.home, args.target, not args.dry_run, args.uninstall))

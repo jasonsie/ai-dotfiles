@@ -166,6 +166,16 @@ def install(home, apply=False, uninstall=False):
     return len(changes)
 
 
+SUMMARY = 'the daily-log pass → ~/Library/LaunchAgents, 04:00 each day'
+UNDO = "the daily-log pass's LaunchAgent"
+CLOUD_SKIP = 'launchd: skipped in a cloud session'
+
+
+def execute(options):
+    """The step as lib/install/run.py runs it: the number of changes."""
+    return install(options.home, options.apply, options.uninstall)
+
+
 def main():
     args = installer.parser(__doc__, cli_target=False).parse_args()
     return installer.finish('launchd', lambda: install(args.home, not args.dry_run, args.uninstall))

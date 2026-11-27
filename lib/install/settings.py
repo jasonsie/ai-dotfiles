@@ -288,6 +288,15 @@ def run(home, target, managed_path, write, uninstall):
     return len(changes)
 
 
+SUMMARY = 'config/cli-settings.json → merged into live settings (only those keys)'
+UNDO = "a key that runs this repo's command (the status line) is removed; the other managed keys are left in place and listed"
+
+
+def execute(options):
+    """The step as lib/install/run.py runs it: the number of changes."""
+    return run(options.home, options.target, MANAGED, options.apply, options.uninstall)
+
+
 def main():
     parser = installer.parser(__doc__)
     parser.add_argument('--managed', type=Path, default=MANAGED)

@@ -103,6 +103,15 @@ def run(home, target, write, uninstall):
     return len(commands) + len(files)
 
 
+SUMMARY = 'config/mcp-servers.json → native `<cli> mcp add` when missing'
+UNDO = 'left in place, listed: servers do not depend on this repo'
+
+
+def execute(options):
+    """The step as lib/install/run.py runs it: the number of changes."""
+    return run(options.home, options.target, options.apply, options.uninstall)
+
+
 def main():
     args = installer.parser(__doc__).parse_args()
     return installer.finish('mcp', lambda: run(args.home, args.target, not args.dry_run, args.uninstall))
