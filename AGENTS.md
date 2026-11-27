@@ -33,6 +33,7 @@ Every CLI reads this file as the project's instructions; there is no `CLAUDE.md`
 | `lib/` | What the features and the installer share: `features.py` finds each feature by the `feature.json` in its folder (its hooks per CLI, their order, budgets, the cloud answer); `door.py` is `ai-dotfiles hook`, the one call per event that runs every feature wanting it; `commands.py` runs the commands a declaration adds and prints `--help` from them; `adapters/` holds, one per CLI, what differs on the hook side (tool names, where a call names its command and files, patch headers, hook events, session store) | `scripts/ai-dotfiles` (`hook`, any other command), `lib/install/hooks.py` |
 | `scripts/ai-dotfiles` | Global command: runs the door's own steps and hands every other word to `lib/commands.py`; `ai-dotfiles --help` lists them all | `lib/install/skills.py` |
 | `lib/install/installer.py` | What every step shares: reading `ai-clis.json`, safe writes | — |
+| `lib/install/steps.py`, `lib/install/run.py` | `steps.py` is the one ordered list of the install steps (`STEPS`) and the options each step gets; each step module adds `SUMMARY`, `UNDO`, `execute(options)` and optionally `CLOUD_SKIP`, `checks(options)`. `run.py` is `install`, `uninstall` (reversed), `check` (the healthcheck's step lines) and `help` over that list | `scripts/install.sh`, `scripts/uninstall.sh`, `scripts/healthcheck.sh` |
 | `lib/install/hooks.py` | One door entry per event in each CLI's native hook file, from the features' declarations; ours are found by their command; each feature's old entries and other retired ones taken out; the door's Python linked | — |
 | `lib/install/plugins.py` | Each listed plugin at its release tag through each CLI's own plugin manager, read back after; each manifest checked at its tag (name, dependencies); its bin/ commands linked into `~/.local/bin` from a checkout at the tag; a receipt tells installed from taken over; every outside command through one runner | — |
 | `lib/install/launchd.py` | The daily-log pass as a LaunchAgent, `claude` path and PATH rendered at install | — |
@@ -41,8 +42,9 @@ Every CLI reads this file as the project's instructions; there is no `CLAUDE.md`
 | `scripts/tests/` | Unit tests for the scripts and the skills' helpers | — |
 | `LICENSE`, `THIRD-PARTY-NOTICES.md`, `LICENSES/` | This repo's MIT license; every other author's license (adapted skills, docs mirrors) and the license texts | — |
 
-`scripts/install.sh` runs the seven install steps, `scripts/uninstall.sh` reverses them;
-`scripts/healthcheck.sh` verifies live state. `docs/` holds `how-it-works.md`, the mirror,
+`scripts/install.sh` runs the install steps listed in `lib/install/steps.py` (`--help` names them),
+`scripts/uninstall.sh` reverses them; `scripts/healthcheck.sh` verifies live state. A new step is
+one module in `lib/install/` and one line in `steps.py`. `docs/` holds `how-it-works.md`, the mirror,
 and `agents/`, the engineering skills' setup.
 
 ## Rules for changes

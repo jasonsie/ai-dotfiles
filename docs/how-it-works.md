@@ -23,7 +23,8 @@ skills/              shared skills; skills.lock pins adapted ones; daily-log/ ho
                      the git step skills and approve
 lib/                 features.py (each feature's feature.json, found by its folder) and door.py
                      (`ai-dotfiles hook`: one call per event runs every feature that wants it)
-  install/             installer.py (shared by every step) and one file per step
+  install/             installer.py (shared by every step), steps.py (the one ordered list of steps),
+                       run.py (install, uninstall, check and help over that list) and one file per step
 scripts/             ai-dotfiles, install.sh, uninstall.sh, healthcheck.sh (entry points);
                      agent_hooks.py and agent_sessions.py (the CLIs' hook formats and
                      session stores behind one interface); agent_hooks.ts (Pi's extension);
