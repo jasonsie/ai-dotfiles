@@ -87,7 +87,7 @@ def feature_files(root):
     paths = [path for extra in paths for path in ([extra] if extra.is_file() else extra.rglob('*.py'))]
     for folder in folders:
         paths += sorted(folder.rglob('*.py'))
-    return sorted({path for path in paths if '__pycache__' not in path.parts})
+    return sorted({path for path in paths if not {'__pycache__', 'tests'} & set(path.relative_to(root).parts)})
 
 
 def allowed(relative, what):

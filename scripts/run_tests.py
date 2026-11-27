@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Run every test of this repo as one suite: scripts/tests and each features/<name>/tests.
 
-  run_tests.py [-v] [-p PATTERN]       exit 1 on a failure; PATTERN (default test_*.py) picks the files
+  run_tests.py [-v] [-p PATTERN]       exit 1 on a failure, 2 on a duplicate module name;
+                                       PATTERN (default test_*.py) picks the files
 
 Nothing lists the folders: they are found by glob, so a feature that brings tests is run at once.
 Each folder is discovered on its own, as unittest cannot discover across folders that are not
