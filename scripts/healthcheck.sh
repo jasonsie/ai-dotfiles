@@ -107,7 +107,7 @@ else
 fi
 
 echo "-- tests"
-if (cd "$ROOT" && "$PYTHON" -m unittest discover -s scripts/tests >/dev/null 2>&1); then pass "unit tests"; else fail "unit tests (run: $PYTHON -m unittest discover -s scripts/tests)"; fi
+if (cd "$ROOT" && "$PYTHON" scripts/run_tests.py >/dev/null 2>&1); then pass "unit tests"; else fail "unit tests (run: $PYTHON scripts/run_tests.py)"; fi
 
 echo
 if [ "$FAILS" -eq 0 ]; then echo "healthy"; else echo "$FAILS check(s) failed"; fi

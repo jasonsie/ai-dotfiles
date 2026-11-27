@@ -77,7 +77,7 @@ run prints `done: ok=<n>` with the count you expected.
 
 - `python3 skills/upstream-docs/query.py find <a term from a when label>` lists the new pages;
   `outline` one large page shows its headings.
-- `python3 -m unittest discover -s scripts/tests` and `bash scripts/healthcheck.sh` pass.
+- `python3 scripts/run_tests.py` and `bash scripts/healthcheck.sh` pass.
 - Report in chat: pages mirrored per repository, the skipped candidates with their reasons,
   licenses worth a look. The config entry and its `notes` are the record; nothing hand-written
   goes under `docs/upstream/`.

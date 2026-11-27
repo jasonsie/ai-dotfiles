@@ -78,7 +78,7 @@ and `agents/`, the engineering skills' setup.
 ## Verify
 
 ```bash
-python3 -m unittest discover -s scripts/tests      # Python 3.11+
+python3 scripts/run_tests.py                       # Python 3.11+
 shellcheck scripts/*.sh scripts/cloud/*.sh scripts/ai-dotfiles
 bash scripts/install.sh --dry-run                  # expect 0 changes on a configured Mac
 bash scripts/healthcheck.sh

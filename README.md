@@ -106,7 +106,7 @@ them. Skills written for this repo include `daily-log`, `worktree-guard`, `small
 ## Verify a change
 
 ```bash
-python3 -m unittest discover -s scripts/tests
+python3 scripts/run_tests.py
 shellcheck scripts/*.sh scripts/ai-dotfiles
 bash scripts/install.sh --dry-run        # expect 0 changes on a configured Mac
 bash scripts/healthcheck.sh
