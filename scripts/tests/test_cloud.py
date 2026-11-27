@@ -34,14 +34,14 @@ def hooks():
 
 class Sandbox(unittest.TestCase):
     """A temporary project folder (a clone, as a cloud session sees it) with a HOME and a git
-    config of its own; its config/, lib/, scripts/ and skills/ are links to this repo's."""
+    config of its own; its config/, lib/, scripts/, skills/ and features/ are links to this repo's."""
 
     def setUp(self):
         self.temp = Path(tempfile.mkdtemp())
         self.addCleanup(shutil.rmtree, self.temp, ignore_errors=True)
         self.project = self.temp / 'clone'
         self.project.mkdir()
-        for name in ('config', 'lib', 'scripts', 'skills'):
+        for name in ('config', 'lib', 'scripts', 'skills', 'features'):
             (self.project / name).symlink_to(ROOT / name)
 
     def env(self, remote, **extra):
