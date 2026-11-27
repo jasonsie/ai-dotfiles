@@ -33,7 +33,7 @@ Who picks the type:
   after a newer prompt, and so does every hook call from inside a subagent or teammate, which
   shares the pane.
 When the session ends the labels and the need token come off. The types, the words, the command
-words, the skills and the model's instruction are config/herdr-title.json's. The CLIs' hook
+words, the skills and the model's instruction are labels.json's. The CLIs' hook
 formats live in the repo's scripts/agent_hooks.py, their transcripts in scripts/agent_sessions.py.
 
 Outside a Herdr pane (HERDR_ENV is not 1) nothing runs. A failure never blocks a prompt and
@@ -64,7 +64,7 @@ REPO = SKILL.parents[1]
 sys.path.insert(0, str(REPO / 'scripts'))
 import agent_hooks  # noqa: E402  (the CLIs' hook formats, in the repo's scripts folder)
 
-CONFIG = REPO / 'config' / 'herdr-title.json'
+CONFIG = SKILL / 'labels.json'
 ENV = 'HERDR_TITLE_STATE'
 DEFAULT_STATE = '~/.local/state/ai-dotfiles/herdr-title'
 KEEP_SECONDS = 7 * 24 * 3600

@@ -25,7 +25,7 @@ import features  # noqa: E402
 FEATURE_FILES = ('skills/daily-log', 'scripts/statusline.py', 'scripts/cloud_session.py')
 # (file, the string) -> why it may stay. A reason says what the string is, in a sentence.
 ALLOWED = {
-    ('skills/herdr-title/scripts/herdr_title.py', 'claude'):
+    ('features/herdr-title/scripts/herdr_title.py', 'claude'):
         'the `claude -p` binary it starts to ask a small model; Claude Code run as a tool, not the session\'s CLI',
     ('skills/daily-log/scripts/day_pass.py', 'claude'):
         'the `claude -p` binary the day pass starts to write the log; Claude Code run as a tool, not a session\'s CLI',

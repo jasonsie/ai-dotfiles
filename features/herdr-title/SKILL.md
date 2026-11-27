@@ -10,8 +10,7 @@ Inside a Herdr pane, a hook labels the agent's row in the sidebar with three lay
 [scripts/herdr_title.py](scripts/herdr_title.py) keeps one **mode** per session and reports one
 label for each state Herdr detects; the session's agent does nothing for it. The types, the
 words, the rules that decide at once and both model instructions are
-[config/herdr-title.json](../../config/herdr-title.json) in the ai-dotfiles repo (this folder is a
-link into it: follow `../..` from its real path), the single source for every answer below.
+[labels.json](labels.json), the single source for every answer below.
 
 ## Read a label
 
@@ -79,8 +78,8 @@ never label a pane.
 
 ## Change the types, the words or what decides them
 
-Edit `config/herdr-title.json` in the ai-dotfiles repo, in a worktree of its own;
-`scripts/tests/test_herdr_title.py` checks the file, every label within 22 columns included. The
+Edit `labels.json` in the ai-dotfiles repo, in a worktree of its own;
+`tests/test_herdr_title.py` checks the file, every label within 22 columns included. The
 color rules in the user's Herdr config match the words (`› ask`, `wait`, `run`...): change both
 together. The hook reads the config on every call, so a change is live once the main checkout
 has it.
