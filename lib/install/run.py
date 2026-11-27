@@ -6,6 +6,7 @@
   python3 lib/install/run.py uninstall [--dry-run] [--target=all|<cli>] [--home DIR]
   python3 lib/install/run.py check [--home DIR]
   python3 lib/install/run.py help [install|uninstall]
+  python3 lib/install/run.py args <command> [arguments]    # exit 1 on an argument the command refuses
 
 scripts/install.sh, uninstall.sh and healthcheck.sh call it. Install runs each step in list order,
 uninstall in reverse; every step prints `== name` and `name: N changes`, and the first one to fail
@@ -32,7 +33,7 @@ STEPS_HEADING = {
     'uninstall': 'Steps, in reverse install order (each removes only what its installer created,\n'
                  'backs up before writing, and rolls back on failure):',
 }
-COMMANDS = 'install|uninstall|check|help'
+COMMANDS = 'install|uninstall|check|args|help'
 
 
 class UnknownArgument(Exception):
@@ -165,6 +166,9 @@ def main(argv=None, modules=None):
     command, rest = (argv[0], argv[1:]) if argv else ('', [])
     if command == 'help':
         command, rest = (rest[0] if rest and rest[0] in ENTRY else 'install'), ['--help']
+    check_only = command == 'args'  # `args <command> ...`: parse the arguments, run nothing
+    if check_only:
+        command, rest = (rest[0], rest[1:]) if rest else ('', [])
     if command not in SWITCHES:
         print(f'Usage: run.py {COMMANDS} [arguments]', file=sys.stderr)
         return 1
@@ -177,6 +181,8 @@ def main(argv=None, modules=None):
         return 1
     if helped:
         print(usage(command, modules))
+        return 0
+    if check_only:
         return 0
     if command == 'install':
         return install(options, instructions_only, modules)

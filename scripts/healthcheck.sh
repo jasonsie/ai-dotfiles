@@ -43,9 +43,12 @@ printf '%s\n' "$DRY" | sed -n 's/^Local choice kept: /  info  local choice kept:
 printf '%s\n' "$DRY" | sed -n 's/^Warning: /  info  /p'
 
 # Each step's own checks (mcp: each CLI lists the shared servers; launchd: the daily-log pass is loaded).
-STEP_CHECKS="$("$PYTHON" "$ROOT/lib/install/run.py" check 2>&1)"
+STEP_CHECKS="$("$PYTHON" "$ROOT/lib/install/run.py" check 2>&1)"; STEP_STATUS=$?
 printf '%s\n' "$STEP_CHECKS"
 FAILS=$((FAILS + $(printf '%s\n' "$STEP_CHECKS" | grep -c '^  FAIL ')))
+if [ "$STEP_STATUS" -ne 0 ] && ! printf '%s\n' "$STEP_CHECKS" | grep -q '^  FAIL '; then
+  fail "the step checks did not run (exit $STEP_STATUS; run: $PYTHON lib/install/run.py check)"
+fi
 
 echo "-- command"
 case ":$PATH:" in

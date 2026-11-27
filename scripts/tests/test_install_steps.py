@@ -78,6 +78,7 @@ class RunnerTest(unittest.TestCase):
         cloud = f"CLOUD_SKIP = '{name}: skipped in a cloud session'" if cloud_skip else ''
         path.write_text(FIXTURE.format(name=name, cloud=cloud, fails=fails, status=status))
         spec = importlib.util.spec_from_file_location(name, path)
+        assert spec and spec.loader, path
         module = importlib.util.module_from_spec(spec)
         module.__name__ = name
         spec.loader.exec_module(module)
@@ -86,7 +87,7 @@ class RunnerTest(unittest.TestCase):
     def main(self, *argv, modules):
         out, err = io.StringIO(), io.StringIO()
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
-            status = run.main([argv[0], '--home', str(self.home), *argv[1:]] if argv[0] != 'help' else list(argv),
+            status = run.main(list(argv) if argv[0] == 'help' else [*argv, '--home', str(self.home)],
                               modules)
         return status, out.getvalue(), err.getvalue()
 
@@ -122,6 +123,10 @@ class RunnerTest(unittest.TestCase):
         self.assertNotIn('ran local', out)
         self.assertTrue((self.home / '.claude').is_dir())
 
+    def test_a_cloud_dry_run_makes_no_folder(self):
+        self.main('install', '--cloud', '--dry-run', modules=[self.fixture('first')])
+        self.assertFalse((self.home / '.claude').exists())
+
     def test_instructions_only_stops_after_the_instructions_step(self):
         modules = [self.fixture('instructions'), self.fixture('second')]
         status, out, _ = self.main('install', '--instructions-only', modules=modules)
@@ -144,6 +149,14 @@ class RunnerTest(unittest.TestCase):
         self.assertRegex(out, r'2\. second +the second step undone\n +1\. first +the first step undone')
         status, helped, _ = self.main('install', '--help', modules=modules)
         self.assertEqual((status, helped), (0, self.main('help', modules=modules)[1]))
+
+    def test_args_checks_the_arguments_and_runs_nothing(self):
+        modules = [self.fixture('first')]
+        status, out, _ = self.main('args', 'install', '--dry-run', '--target=claude', modules=modules)
+        self.assertEqual((status, out), (0, ''))
+        status, out, err = self.main('args', 'install', '--bogus', modules=modules)
+        self.assertEqual((status, out), (1, ''))
+        self.assertIn('[ERR] Unknown argument: --bogus', err)
 
     def test_an_unknown_argument_prints_the_usage_and_fails(self):
         status, out, err = self.main('install', '--bogus', modules=[self.fixture('first')])

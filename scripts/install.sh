@@ -36,7 +36,16 @@ for arg in "$@"; do
   PASS+=("$arg")
 done
 
+PYTHON="${PYTHON:-python3}"
+if ! "$PYTHON" -c 'import sys; sys.exit(sys.version_info < (3, 11))' 2>/dev/null; then
+  printf '[ERR] Python 3.11+ required (found: %s). Install one (brew install python) or set PYTHON=/path/to/python3.\n' \
+    "$("$PYTHON" --version 2>&1 || echo none)" >&2
+  exit 1
+fi
+[ "$HELP" = "1" ] && exec "$PYTHON" "$ROOT/lib/install/run.py" help
 if [ "$UPDATE" = "1" ]; then
+  # An argument run.py would refuse stops the run before anything is pulled.
+  "$PYTHON" "$ROOT/lib/install/run.py" args install ${PASS[@]+"${PASS[@]}"}
   echo "== update"
   BRANCH="$(git -C "$ROOT" symbolic-ref --quiet --short HEAD || true)"
   if [ "$BRANCH" != "main" ]; then
@@ -64,11 +73,4 @@ if [ "$UPDATE" = "1" ]; then
   fi
 fi
 
-PYTHON="${PYTHON:-python3}"
-if ! "$PYTHON" -c 'import sys; sys.exit(sys.version_info < (3, 11))' 2>/dev/null; then
-  printf '[ERR] Python 3.11+ required (found: %s). Install one (brew install python) or set PYTHON=/path/to/python3.\n' \
-    "$("$PYTHON" --version 2>&1 || echo none)" >&2
-  exit 1
-fi
-[ "$HELP" = "1" ] && exec "$PYTHON" "$ROOT/lib/install/run.py" help
 exec "$PYTHON" "$ROOT/lib/install/run.py" install ${PASS[@]+"${PASS[@]}"}
