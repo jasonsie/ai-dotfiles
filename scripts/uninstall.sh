@@ -6,37 +6,11 @@
 #   Writes by default; --dry-run previews and writes nothing. Switches in ai-clis.json
 #   do not matter here: every selected CLI is uninstalled.
 #
-# Steps, in reverse install order (each removes only what its installer created,
-# backs up before writing, and rolls back on failure):
-#   7. launchd       the daily-log pass's LaunchAgent
-#   6. hooks         the door's hook entries and its Python link, and any retired ones
-#   5. plugins       left in place, listed: plugins work without this repo
-#   4. skills        links in the receipt: skills, Pi's hooks extension, and the
-#                    ai-dotfiles and daily-log commands (those with --target=all only)
-#   3. mcp           left in place, listed: servers do not depend on this repo
-#   2. settings      a key that runs this repo's command (the status line) is removed;
-#                    the other managed keys are left in place and listed
-#   1. instructions  links removed; the file from before the first install is restored
-#
 # Afterwards, deleting this repo breaks nothing. Reinstall with scripts/install.sh.
 
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-
-TARGET="all"
-DRY_RUN=0
-
-usage() { sed -n '2,20p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
-
-for arg in "$@"; do
-  case "$arg" in
-    --target=*) TARGET="${arg#--target=}" ;;
-    --dry-run) DRY_RUN=1 ;;
-    --help|-h) usage; exit 0 ;;
-    *) printf '[ERR] Unknown argument: %s\n' "$arg" >&2; usage >&2; exit 1 ;;
-  esac
-done
 
 PYTHON="${PYTHON:-python3}"
 if ! "$PYTHON" -c 'import sys; sys.exit(sys.version_info < (3, 11))' 2>/dev/null; then
@@ -44,30 +18,7 @@ if ! "$PYTHON" -c 'import sys; sys.exit(sys.version_info < (3, 11))' 2>/dev/null
     "$("$PYTHON" --version 2>&1 || echo none)" >&2
   exit 1
 fi
-"$PYTHON" "$ROOT/lib/install/installer.py"   # checks config/ai-clis.json
-
-DRY=()
-[ "$DRY_RUN" = "1" ] && DRY=(--dry-run)
-
-echo "== launchd"
-"$PYTHON" "$ROOT/lib/install/launchd.py" --uninstall ${DRY[@]+"${DRY[@]}"}
-
-echo "== hooks"
-"$PYTHON" "$ROOT/lib/install/hooks.py" --uninstall --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
-
-echo "== plugins"
-"$PYTHON" "$ROOT/lib/install/plugins.py" --uninstall --target "$TARGET"
-
-echo "== skills"
-"$PYTHON" "$ROOT/lib/install/skills.py" --uninstall --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
-
-echo "== mcp"
-"$PYTHON" "$ROOT/lib/install/mcp.py" --uninstall --target "$TARGET"
-
-echo "== settings"
-"$PYTHON" "$ROOT/lib/install/settings.py" --uninstall --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
-
-echo "== instructions"
-"$PYTHON" "$ROOT/lib/install/instructions.py" --uninstall --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
-
-[ "$DRY_RUN" = "1" ] && echo "Preview only: nothing written. Run again without --dry-run to remove." || echo "Done. Reinstall: bash scripts/install.sh"
+for arg in "$@"; do
+  case "$arg" in --help|-h) exec "$PYTHON" "$ROOT/lib/install/run.py" help uninstall ;; esac
+done
+exec "$PYTHON" "$ROOT/lib/install/run.py" uninstall "$@"

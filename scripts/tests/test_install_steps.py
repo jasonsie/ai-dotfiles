@@ -49,6 +49,14 @@ class StepListTest(unittest.TestCase):
         for module in steps.load(skipped):
             self.assertTrue(module.CLOUD_SKIP.startswith(f'{module.__name__}: skipped in a cloud session'))
 
+    def test_the_entry_scripts_name_no_step(self):
+        """A step is added in steps.py alone: the shell scripts hold no `== name` list."""
+        for script in ('install.sh', 'uninstall.sh', 'healthcheck.sh'):
+            text = (ROOT / 'scripts' / script).read_text()
+            with self.subTest(script=script):
+                self.assertNotRegex(text, r'==\s+(' + '|'.join(steps.STEPS) + r')\b')
+                self.assertNotRegex(text, r'install/(' + '|'.join(steps.STEPS) + r')\.py')
+
 
 class RunnerTest(unittest.TestCase):
     """run.py over fixture steps: modules in a temp folder, passed in place of the listed ones."""
