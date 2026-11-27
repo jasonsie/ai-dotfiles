@@ -1,4 +1,6 @@
 """Pi."""
+import fnmatch
+
 from .base import Adapter
 from .rows import args, items, obj, text, when
 
@@ -14,6 +16,19 @@ class Pi(Adapter):
     kinds = ('pre', 'stop', 'end', 'prompt', 'start')  # the events its extension (scripts/agent_hooks.ts) sends
     timeouts = {'pre': 60, 'end': 60}
     continuation_unflagged = True
+    instructions_override = 'AGENTS.override.md'
+
+    def check_settings(self, data, keys):
+        if not keys.keys() & {'defaultProvider', 'defaultModel'}:
+            return
+        patterns = data.get('enabledModels') or []
+        full = f"{data.get('defaultProvider', '')}/{data.get('defaultModel', '')}"
+        if patterns and not any(fnmatch.fnmatch(full, pattern) for pattern in patterns):
+            raise ValueError(f'Pi default {full} is not in enabledModels; add it there first')  # its scope would hide it
+
+    def mcp_add(self, server):
+        described = ('--description', server['description']) if server.get('description') else ()
+        return self.native_mcp_add(server, after=described)
 
     def session_survives_end(self, reason):
         return reason == 'reload'

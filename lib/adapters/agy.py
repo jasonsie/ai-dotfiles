@@ -15,3 +15,4 @@ class Antigravity(Adapter):
     kinds = ('pre', 'tool', 'stop')  # no session end, and no prompt event (PreInvocation carries no prompt text)
     timeouts = {'pre': 60}
     continuation_unflagged = True
+    mcp_lists = False  # it has no `mcp list` and no `mcp add`: its mcp_config.json is read and edited

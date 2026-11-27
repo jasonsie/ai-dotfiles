@@ -1,4 +1,4 @@
-"""adapters: what differs between the CLIs on the hook side, one adapter per CLI (lib/adapters).
+"""adapters: what differs between the CLIs on the hook side and the install side, one adapter per CLI (lib/adapters).
 
 Run: python3 -m unittest discover -s scripts/tests -p 'test_adapters.py' -v
 """
@@ -168,6 +168,50 @@ class CapabilityTest(unittest.TestCase):
     def test_only_codex_opens_a_typed_prompt_undecided(self):
         self.assertEqual({cli: adapters.get(cli).prompt_starts_open for cli in adapters.CLIS},
                          {'claude': False, 'codex': True, 'agy': False, 'pi': False})
+
+
+class InstallSideTest(unittest.TestCase):
+    SERVER = {'name': 'docs', 'command': 'npx', 'args': ['-y', 'docs-mcp']}
+
+    def test_only_codex_keeps_its_settings_and_servers_in_toml_under_its_own_key(self):
+        self.assertEqual({cli: (adapters.get(cli).settings_format, adapters.get(cli).mcp_key) for cli in adapters.CLIS},
+                         {'claude': ('json', 'mcpServers'), 'codex': ('toml', 'mcp_servers'),
+                          'agy': ('json', 'mcpServers'), 'pi': ('json', 'mcpServers')})
+
+    def test_a_cli_adds_a_server_through_its_own_mcp_add_or_has_its_file_edited(self):
+        self.assertEqual(adapters.get('claude').mcp_add(self.SERVER),
+                         ['claude', 'mcp', 'add', '-s', 'user', 'docs', '--', 'npx', '-y', 'docs-mcp'])
+        self.assertEqual(adapters.get('codex').mcp_add(self.SERVER),
+                         ['codex', 'mcp', 'add', 'docs', '--', 'npx', '-y', 'docs-mcp'])
+        self.assertIsNone(adapters.get('agy').mcp_add(self.SERVER))
+        self.assertIsNone(adapters.get('nobody').mcp_add(self.SERVER))
+
+    def test_pi_passes_the_description_when_the_server_has_one(self):
+        pi = adapters.get('pi')
+        self.assertEqual(pi.mcp_add({'name': 'docs', 'command': 'npx'}), ['pi', 'mcp', 'add', 'docs', '--', 'npx'])
+        self.assertEqual(pi.mcp_add({**self.SERVER, 'description': 'Docs'}),
+                         ['pi', 'mcp', 'add', 'docs', '--description', 'Docs', '--', 'npx', '-y', 'docs-mcp'])
+
+    def test_only_antigravity_has_no_mcp_list(self):
+        self.assertEqual({cli: adapters.get(cli).mcp_lists for cli in adapters.CLIS},
+                         {'claude': True, 'codex': True, 'agy': False, 'pi': True})
+
+    def test_a_cli_with_no_mcp_add_is_the_one_with_no_mcp_list(self):
+        for cli in adapters.CLIS:
+            self.assertEqual(adapters.get(cli).mcp_lists, adapters.get(cli).mcp_add(self.SERVER) is not None, cli)
+
+    def test_codex_and_pi_read_an_override_file_that_would_shadow_the_shared_instructions(self):
+        self.assertEqual({cli: adapters.get(cli).instructions_override for cli in adapters.CLIS},
+                         {'claude': None, 'codex': 'AGENTS.override.md', 'agy': None, 'pi': 'AGENTS.override.md'})
+
+    def test_pi_refuses_a_default_model_its_enabled_models_would_hide(self):
+        pi = adapters.get('pi')
+        keys = {'defaultProvider': 'p', 'defaultModel': 'm'}
+        with self.assertRaisesRegex(ValueError, 'p/m is not in enabledModels'):
+            pi.check_settings({'enabledModels': ['q/*'], **keys}, keys)
+        pi.check_settings({'enabledModels': ['p/*'], **keys}, keys)
+        pi.check_settings({'enabledModels': ['q/*']}, {'theme': 'x'})  # no model key managed: nothing to check
+        adapters.get('claude').check_settings({'enabledModels': ['q/*'], **keys}, keys)
 
 
 class SessionStoreTest(unittest.TestCase):

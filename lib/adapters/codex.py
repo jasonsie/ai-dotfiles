@@ -17,6 +17,12 @@ class Codex(Adapter):
     # SessionStart runs only inside a session's first turn there, too late to report a resumed session.
     kinds = ('pre', 'tool', 'stop', 'end', 'prompt', 'permission', 'interrupt')
     timeouts = {'pre': 60, 'end': 3, 'interrupt': 3}  # it runs SessionEnd and Interrupt hooks 3 s at most
+    settings_format = 'toml'  # config.toml holds its settings and its MCP servers
+    mcp_key = 'mcp_servers'
+    instructions_override = 'AGENTS.override.md'
+
+    def mcp_add(self, server):
+        return self.native_mcp_add(server)
 
     def transcripts(self, store):
         # Files sit under the day the session began and a session resumed days later keeps writing there.
