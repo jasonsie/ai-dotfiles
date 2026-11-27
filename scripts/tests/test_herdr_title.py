@@ -776,7 +776,7 @@ class ConfigTest(unittest.TestCase):
             self.assertEqual(sorted(set(self.config[table].values()) - set(self.config['types'])), [], table)
 
     def test_skills_are_this_repos_and_outside_holds_the_rest(self):
-        ours = set(load('install/skills.py').skills(ROOT / 'skills'))  # bundles (skills/git/) flattened
+        ours = set(load('install/skills.py').repo_skills(ROOT))  # bundles (skills/git/) flattened
         self.assertEqual(sorted(set(self.config['skills']) - ours), [], 'named under skills, not in skills/')
         self.assertEqual(sorted(set(self.config['outside']) & ours), [], 'a skill of this repo under outside')
 

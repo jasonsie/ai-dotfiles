@@ -80,7 +80,7 @@ def start():
         made = link_skills(root)
     except (OSError, ValueError, KeyError, ImportError) as error:
         lines.append(f"The repo's skills could not be linked into .claude/skills/ ({error}); "
-                     'read one as skills/<name>/SKILL.md.')
+                     'read one as <skills or features>/<name>/SKILL.md.')
     try:
         env_file = os.environ.get('CLAUDE_ENV_FILE')
         if not env_file:

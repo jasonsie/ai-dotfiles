@@ -39,7 +39,7 @@ class CloudSetupTest(unittest.TestCase):
         self.temp = Path(tempfile.mkdtemp(prefix='cloud setup '))
         self.addCleanup(shutil.rmtree, self.temp, ignore_errors=True)
         self.checkout = self.temp / 'ai-dotfiles'
-        for folder in ('scripts', 'lib', 'config', 'skills'):
+        for folder in ('scripts', 'lib', 'config', 'skills', 'features'):
             shutil.copytree(ROOT / folder, self.checkout / folder, ignore=shutil.ignore_patterns('__pycache__'))
         self.home, self.plugins, self.bin = self.temp / 'root', self.temp / 'ai-plugins', self.temp / 'bin'
         self.home.mkdir()
