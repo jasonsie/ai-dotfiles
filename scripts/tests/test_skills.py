@@ -127,10 +127,15 @@ def _tokenize(text):
     return [tok for tok in re.split(r'[^a-z0-9]+', text.lower()) if len(tok) > 2 and tok not in STOPWORDS]
 
 
-def model_invoked_descriptions(skills_root):
+def label(folder):
+    """A skill folder's path in the repo, without the skills/ every one but a feature's starts with."""
+    return folder.relative_to(skills.WORKSPACE).as_posix().removeprefix('skills/')
+
+
+def model_invoked_descriptions(workspace):
     """{name: description} for the skills an agent can fire itself (no disable-model-invocation: true)."""
     found = {}
-    for name, folder in sorted(skills.skills(skills_root).items()):
+    for name, folder in sorted(skills.repo_skills(workspace).items()):
         fields, _ = parse_frontmatter((folder / 'SKILL.md').read_text())
         if fields.get('disable-model-invocation', '').lower() != 'true':
             found[name] = fields['description']
@@ -312,8 +317,24 @@ class InstallSkillsTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Two skills named alpha'):
             skills.skills(self.repo / 'skills')
 
+    def test_a_feature_folder_holds_a_skill_and_a_name_clash_across_folders_is_refused(self):
+        def skill(folder):
+            (self.repo / folder).mkdir(parents=True)
+            (self.repo / folder / 'SKILL.md').write_text(f'---\nname: {folder.rsplit("/", 1)[1]}\n---\n')
+        skill('features/gate/gate')  # a feature with its own skill one folder down
+        skill('features/solo')       # a feature whose folder is the skill
+        (self.repo / 'features/gate/scripts').mkdir()
+        (self.repo / 'features/solo/tests').mkdir()
+        self.assertEqual(sorted(skills.repo_skills(self.repo)), ['alpha', 'beta', 'gate', 'solo'])
+        self.install(apply=True)
+        self.assertEqual(os.readlink(self.home / '.claude/skills/solo'), str(self.repo / 'features/solo'))
+        self.assertEqual(os.readlink(self.home / '.claude/skills/gate'), str(self.repo / 'features/gate/gate'))
+        skill('features/alpha')
+        with self.assertRaisesRegex(ValueError, 'Two skills named alpha'):
+            skills.repo_skills(self.repo)
+
     def test_repo_skills_are_valid(self):
-        names = skills.skills(skills.WORKSPACE / 'skills')
+        names = skills.repo_skills(skills.WORKSPACE)
         self.assertIn('grilling', names)
         for name, folder in names.items():
             text = (folder / 'SKILL.md').read_text()
@@ -509,12 +530,12 @@ class InstallSkillsTest(unittest.TestCase):
 
 class SkillQualityTest(unittest.TestCase):
     def test_repo_skills_pass_size_hygiene_and_link_checks(self):
-        skills_root = skills.WORKSPACE / 'skills'
-        names = skills.skills(skills_root)
+        names = skills.repo_skills(skills.WORKSPACE)
         disallowed = sorted(
-            str(path.relative_to(skills_root))
+            str(path.relative_to(skills.WORKSPACE))
+            for top in skills.SKILL_FOLDERS
             for pattern in DISALLOWED_SKILL_FILES
-            for path in skills_root.rglob(pattern)
+            for path in (skills.WORKSPACE / top).rglob(pattern)
         )
         self.assertEqual(disallowed, [], f'disallowed scratch files in skills/: {disallowed}')
         for name, folder in sorted(names.items()):
@@ -523,10 +544,10 @@ class SkillQualityTest(unittest.TestCase):
             self.assertLess(size, MAX_SKILL_BYTES, f'{name}/SKILL.md is {size} bytes (limit {MAX_SKILL_BYTES})')
             for md in sorted(folder.rglob('*.md')):
                 broken = broken_relative_links(md)
-                self.assertEqual(broken, [], f'{md.relative_to(skills_root)} has broken links: {broken}')
+                self.assertEqual(broken, [], f'{md.relative_to(skills.WORKSPACE)} has broken links: {broken}')
 
     def test_repo_skills_keep_the_frontmatter_and_body_limits(self):
-        for name, folder in sorted(skills.skills(skills.WORKSPACE / 'skills').items()):
+        for name, folder in sorted(skills.repo_skills(skills.WORKSPACE).items()):
             text = (folder / 'SKILL.md').read_text()
             fields, fm_lines = parse_frontmatter(text)
             self.assertEqual(frontmatter_problems(fields), [], name)
@@ -536,12 +557,12 @@ class SkillQualityTest(unittest.TestCase):
     def test_repo_reference_files_are_pointed_at_and_open_with_contents(self):
         skills_root = skills.WORKSPACE / 'skills'
         found = {'unpointed': set(), 'no contents': set()}
-        for name, folder in sorted(skills.skills(skills_root).items()):
-            prefix = folder.relative_to(skills_root).as_posix()
+        for name, folder in sorted(skills.repo_skills(skills.WORKSPACE).items()):
+            prefix = label(folder)
             found['unpointed'].update(f'{prefix}/{rel}' for rel in unpointed_references(folder))
             found['no contents'].update(f'{prefix}/{rel}' for rel in missing_contents(folder))
             for md in sorted(folder.rglob('*.md')):
-                self.assertNotRegex(md.read_text(), WINDOWS_PATH_RE, f'{md.relative_to(skills_root)}: use forward slashes')
+                self.assertNotRegex(md.read_text(), WINDOWS_PATH_RE, f'{md.relative_to(skills.WORKSPACE)}: use forward slashes')
         self.assertEqual(found, KNOWN_UPSTREAM_GAPS)  # a new gap, or a known one that was fixed
         pinned = json.loads((skills_root / 'skills.lock').read_text())['skills']
         for gap in sorted(set().union(*KNOWN_UPSTREAM_GAPS.values())):
@@ -579,7 +600,7 @@ class SkillQualityTest(unittest.TestCase):
             self.assertEqual(missing_contents(folder), ['templates/memo.md'])
 
     def test_model_invoked_descriptions_do_not_collide(self):
-        model_invoked = model_invoked_descriptions(skills.WORKSPACE / 'skills')
+        model_invoked = model_invoked_descriptions(skills.WORKSPACE)
         self.assertGreater(len(model_invoked), 0)
         self.assertNotIn('implement-spec', model_invoked)  # disable-model-invocation: true excluded
         collisions = description_collisions(model_invoked, threshold=COLLISION_THRESHOLD)
@@ -590,7 +611,7 @@ class SkillQualityTest(unittest.TestCase):
         )
 
     def test_collision_check_flags_a_copy_of_any_real_description(self):
-        model_invoked = model_invoked_descriptions(skills.WORKSPACE / 'skills')
+        model_invoked = model_invoked_descriptions(skills.WORKSPACE)
         for name, description in model_invoked.items():
             with self.subTest(skill=name):
                 hits = description_collisions({**model_invoked, 'zz-copy': description})

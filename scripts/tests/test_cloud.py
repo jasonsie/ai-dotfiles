@@ -16,7 +16,7 @@ hooks_step = load('install/hooks.py')
 skills_step = load('install/skills.py')
 
 CLOUD = ROOT / 'config/cloud.json'
-SKILLS = skills_step.skills(ROOT / 'skills')  # {name: folder}, bundles flattened
+SKILLS = skills_step.repo_skills(ROOT)  # {name: folder}, bundles flattened
 SESSION = ROOT / 'scripts/cloud_session.py'
 SETTINGS = ROOT / '.claude/settings.json'
 RULES = (ROOT / 'config/global-agents.md').read_text().strip()
