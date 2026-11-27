@@ -12,6 +12,12 @@ label for each state Herdr detects; the session's agent does nothing for it. The
 words, the rules that decide at once and both model instructions are
 [labels.json](labels.json), the single source for every answer below.
 
+```text
+◐ herdr-title-hooks               the tab's name
+  execute › wait › ask            the label: type › status › result
+  AI-Config · claude              the space, then the CLI
+```
+
 ## Read a label
 
 - **type**: what the user's prompt is for, one of ten (`types` in the config). Left out while
@@ -64,22 +70,62 @@ without an answer (both end the turn, Herdr shows idle), and a dialog no hook an
 in the same turn, which keeps the earlier dialog's word. A Stop hook that keeps Claude Code going
 after a question (`/goal`) leaves `wait › ask` while it works. A session's state is
 `~/.local/state/ai-dotfiles/herdr-title/<session>.json` (type, mode, blocked); `panes/` holds
-each pane's owner.
+each pane's owner (`$HERDR_TITLE_STATE` moves the folder).
+
+Known limits, not bugs:
+
+- Haiku's turn-end verdict was right on 91% of 191 real turn endings; its mistakes lean to
+  calling a finished job an ask.
+- Codex has no error event, so a failed Codex turn reads as done.
+- A scheduled prompt is known by the text the last stop listed for it, read off transcripts and
+  not seen at the hook; an autonomous `/loop` (given no prompt) fires with other text, so it
+  likely reads as typed.
+- Herdr keeps no labels across a restart of its server. A resumed Claude Code or Pi session
+  reports its kept state again; a Codex pane waits for its next typed prompt.
 
 ## A label is missing
 
 Check in this order: the session runs outside a Herdr pane; the CLI is Antigravity, which has
 no hook for a submitted prompt; the hooks are not installed (`ai-dotfiles install --dry-run`
 lists what is pending) or Codex's are not approved in `/hooks` (until then a Codex stop reads a
-bare `› wait`); Herdr's sidebar rows lack `state_text` (the lines for
-`~/.config/herdr/config.toml` are in `docs/how-it-works.md`, section Herdr); the session has had
+bare `› wait`); Herdr's sidebar rows lack `state_text` (set up below); the session has had
 no typed prompt since it started; the session is a tmux teammate or a headless run, which
-never label a pane.
+never label a pane. A label that shows but never gets its type, or whose turn end stays
+`› run`, may lack `claude`: every session, Codex's and Pi's included, asks Haiku through a
+headless `claude -p`, as the daily pass does.
+
+## Draw the label in the sidebar
+
+Once per Mac, by hand: Herdr owns `~/.config/herdr/config.toml`, and its default rows show no
+label. Set `status_indicators` in the `[ui]` table and replace the `rows` key in
+`[ui.sidebar.agents]`; add a table only if the file lacks it, since TOML refuses one declared
+twice. Then run `herdr server reload-config`:
+
+```toml
+[ui]
+status_indicators = "symbols"
+
+[ui.sidebar.agents]
+rows = [
+  ["state_icon", { token = "tab", fg = "#abb2bf", bold = true }],
+  [{ token = "state_text", rules = [{ contains = "› done", fg = "#98c379" }, { contains = "idle", fg = "#98c379" }, { contains = "wait", fg = "#e06c75", bold = true }, { contains = "run", fg = "#e5c07b" }, { contains = "working", fg = "#e5c07b" }] }],
+  ["machine", "workspace", "agent"],
+]
+```
+
+Row 1 is the icon and the tab's name, row 2 the label, row 3 the space and the CLI. The rules
+color the label by whose move it is, in three colors: red for the user's (`ask`, `allow`,
+`fail`, a bare `wait`), yellow for the agent's (`run`), green for nobody's (`done`, `idle`).
+The `› done` rule stands before `wait`, since a done label holds both words. The colors are the
+one-dark theme's. Without these lines the labels are reported and not drawn; a row nothing has
+labeled shows Herdr's own word, `idle` or `working`, in the same green and yellow. Three rows
+per agent fit about 3 agents at the default split in a 27-row window; drag the divider between
+spaces and agents for more.
 
 ## Change the types, the words or what decides them
 
 Edit `labels.json` in the ai-dotfiles repo, in a worktree of its own;
 `tests/test_herdr_title.py` checks the file, every label within 22 columns included. The
-color rules in the user's Herdr config match the words (`› ask`, `wait`, `run`...): change both
-together. The hook reads the config on every call, so a change is live once the main checkout
+color rules in the user's Herdr config (above) repeat the label's words (`› done`, `wait`, `run`...): a
+renamed word changes both places. The hook reads the config on every call, so a change is live once the main checkout
 has it.
