@@ -30,10 +30,10 @@ class EntrypointsTest(unittest.TestCase):
         return result.stdout
 
     def working_copy(self):
-        """scripts/, lib/, config/ and skills/ copied outside git, so an install there links the copy itself
+        """scripts/, lib/, config/, skills/ and features/ copied outside git, so an install there links the copy itself
         (in a worktree, an install from ROOT links the main checkout, which runs other code)."""
         checkout = Path(self.temp.name).resolve() / 'checkout'
-        for folder in ('scripts', 'lib', 'config', 'skills'):
+        for folder in ('scripts', 'lib', 'config', 'skills', 'features'):
             shutil.copytree(ROOT / folder, checkout / folder, ignore=shutil.ignore_patterns('__pycache__'))
         return checkout
 
@@ -178,7 +178,7 @@ class EntrypointsTest(unittest.TestCase):
         git = lambda repo, *a: subprocess.run(['git', '-C', str(repo), *a], check=True, capture_output=True)  # noqa: E731
         main = Path(self.temp.name).resolve() / 'main'
         subprocess.run(['git', 'clone', '-q', str(ROOT), str(main)], check=True)
-        for folder in ('scripts', 'lib', 'config', 'skills'):  # the working copy, committed so the worktree has it
+        for folder in ('scripts', 'lib', 'config', 'skills', 'features'):  # the working copy, committed so the worktree has it
             shutil.rmtree(main / folder, ignore_errors=True)
             shutil.copytree(ROOT / folder, main / folder, ignore=shutil.ignore_patterns('__pycache__'))
         git(main, 'add', '-A')

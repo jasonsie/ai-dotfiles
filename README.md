@@ -26,7 +26,7 @@ skill list to taste.
 | `skills/<name>/` | Shared skills. Skills adapted from other repos are pinned in `skills/skills.lock` with source, commit and license | Symlinked into `~/.claude/skills`, `~/.agents/skills` (Codex and Pi), `~/.gemini/config/skills` |
 | `skills/daily-log/` | The `daily-log` command, which writes a daily work journal, and the day pass that writes yesterday's entries from the CLIs' sessions | `~/.local/bin/daily-log`; a LaunchAgent, `~/Library/LaunchAgents/com.ai-dotfiles.daily-log-day.plist`, that runs the pass at 04:00 |
 | `skills/worktree-guard/` | A hook that, in a repo switched on, keeps each task in its own git worktree and each worktree to one session | Hook entries in each CLI's hook file (Codex runs it only after approval in `/hooks`); a Pi extension; `ai-dotfiles worktree` commands |
-| `skills/small-commits/` | A hook that gates `git commit` on size, subject and trailers | Hook entries in each CLI's hook file (Codex runs it only after approval in `/hooks`); a Pi extension; `ai-dotfiles commit check` |
+| `features/small-commits/` | A hook that gates `git commit` on size, subject and trailers | Hook entries in each CLI's hook file (Codex runs it only after approval in `/hooks`); a Pi extension; `ai-dotfiles commit check` |
 | `skills/herdr-title/` | A hook that, inside a [Herdr](https://herdr.dev) pane, labels the agent's row in the sidebar with what your prompt is for, whose move it is and what the move is: `execute › run` while it works, `execute › wait › ask` when it waits for your answer; rows that need you sort to the top. The words and what decides them are `config/herdr-title.json` | Hook entries in Claude Code's and Codex's hook files (Codex runs it only after approval in `/hooks`); a Pi extension. Antigravity has no hook for a submitted prompt. The sidebar rows that draw the tag are set by hand in Herdr's own config |
 | `skills/git/` | The git skills: `approve` lands a branch the user reviewed (push, PR, approval by the repo's reviewer account, archive tag, merge, branch deleted), each step a skill of its own | Linked by name like every skill; `ai-dotfiles approve`, `ai-dotfiles git <step>`; the reviewer is cached per repo in `git config --local approve.reviewer` |
 | `scripts/statusline.py` | The status line Claude Code and Antigravity draw: folder, branch and worktree, model with effort, version, context left, rate limits and cost | `statusLine` in both settings files runs `ai-dotfiles statusline`; Codex lists the same items in `tui.status_line`; Pi's footer has them built in |
@@ -106,7 +106,7 @@ them. Skills written for this repo include `daily-log`, `worktree-guard`, `small
 ## Verify a change
 
 ```bash
-python3 -m unittest discover -s scripts/tests
+python3 scripts/run_tests.py
 shellcheck scripts/*.sh scripts/ai-dotfiles
 bash scripts/install.sh --dry-run        # expect 0 changes on a configured Mac
 bash scripts/healthcheck.sh

@@ -3,7 +3,7 @@
 Every hook call goes through the door (lib/door.py), as the CLIs' do: in this process with the
 commit gate alone, or as the CLI runs it, `ai-dotfiles hook`.
 
-Run: python3 -m unittest discover -s scripts/tests -p 'test_small_commits.py' -v
+Run: python3 -m unittest discover -s features/small-commits/tests -v
 """
 from contextlib import redirect_stdout
 import io
@@ -17,7 +17,8 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from support import ROOT
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / 'scripts/tests'))  # support.py, the shared helpers
+from support import ROOT  # noqa: E402
 
 sys.path.insert(0, str(ROOT / 'lib'))
 import door  # noqa: E402

@@ -24,7 +24,7 @@ Every CLI reads this file as the project's instructions; there is no `CLAUDE.md`
 | `scripts/statusline.py` | The status line Claude Code and Antigravity run as `ai-dotfiles statusline`: folder, branch and worktree, model with effort, version, context left, rate limits (asked of a gateway on this machine when the CLI sends none) and cost. Codex lists the same items in `tui.status_line`; Pi's footer has them built in | `scripts/install/settings.py` (the `statusLine` keys) |
 | `skills/worktree-guard/` | The hook that, in a repo switched on, keeps each task in its own worktree and each worktree to one session, and the `ai-dotfiles worktree` commands | its `feature.json`, read by the door and `scripts/install/hooks.py` |
 | `skills/worktree-flow/` | `/worktree-flow`, the person's toggle of a repo's flow switch, after their OK in a macOS dialog | `scripts/install/skills.py` |
-| `skills/small-commits/` | The hook that gates `git commit` on size (300 lines warn, 600 wall), subject and trailers, and the `ai-dotfiles commit check` command | its `feature.json`, read by the door, `lib/commands.py` and `scripts/install/hooks.py` |
+| `features/small-commits/` | The hook that gates `git commit` on size (300 lines warn, 600 wall), subject and trailers, and the `ai-dotfiles commit check` command | its `feature.json`, read by the door, `lib/commands.py` and `scripts/install/hooks.py` |
 | `skills/herdr-title/` | The hook that, inside a Herdr pane, labels the agent's row in the sidebar type › status › result (`execute › wait › ask`) at each prompt, turn end, dialog and resume, and sorts the rows that need the person to the top: at once where a rule decides, else by Haiku through a headless `claude -p` | its `feature.json`, read by the door and `scripts/install/hooks.py` |
 | `config/herdr-title.json` | The ten types and their meanings, the label's words, the command words and skills that decide a type at once, how a prompt the user did not type starts, what makes a turn end ask or fail at once, and both model instructions (type, turn end) | `skills/herdr-title/scripts/herdr_title.py` (read on every call) |
 | `skills/portable-plugin/` | The rules a plugin's files follow to run in all four CLIs, the check, and the release step | `scripts/install/skills.py` |
@@ -78,7 +78,7 @@ and `agents/`, the engineering skills' setup.
 ## Verify
 
 ```bash
-python3 -m unittest discover -s scripts/tests      # Python 3.11+
+python3 scripts/run_tests.py                       # Python 3.11+
 shellcheck scripts/*.sh scripts/cloud/*.sh scripts/ai-dotfiles
 bash scripts/install.sh --dry-run                  # expect 0 changes on a configured Mac
 bash scripts/healthcheck.sh

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Link skills, the ai-dotfiles and daily-log commands, and Pi's hooks extension; writes unless --dry-run.
 
-Every folder under skills/ that has a SKILL.md, or sits in a bundle folder (skills/git/)
+Every folder under skills/ or features/ that has a SKILL.md, or sits in a bundle folder (skills/git/)
 one level down, is linked by name into the skill folder of each CLI that config/ai-clis.json switches on. A folder several CLIs read
 (~/.agents/skills, for Codex and Pi) stays linked while any of them is on; a folder only
 switched-off CLIs read loses its links. scripts/ai-dotfiles and the daily-log skill's
@@ -40,6 +40,7 @@ PI_EXTENSION = 'ai-dotfiles-hooks.ts'
 PI_EXTENSION_TARGET = 'scripts/agent_hooks.ts'
 PI_RETIRED = ('ai-dotfiles-daily-log.ts',)  # extensions this script linked before; removed when found
 CLOUD = 'config/cloud.json'  # local_only: the skills a cloud session's VM leaves out, each with why
+SKILL_FOLDERS = ('skills', 'features')  # where the repo's skills are: a feature's own sit in its folder
 
 
 def skills(source):
@@ -60,6 +61,18 @@ def skills(source):
     return found
 
 
+def repo_skills(workspace):
+    """{name: folder} of every skill in the repo at `workspace`: those under skills/ and under
+    features/ (a feature's SKILL.md, or one folder down when it has several). A name twice is refused."""
+    found = {}
+    for top in SKILL_FOLDERS:
+        for name, folder in skills(Path(workspace) / top).items():
+            if name in found:
+                raise ValueError(f'Two skills named {name}: {found[name]} and {folder}')
+            found[name] = folder
+    return found
+
+
 def local_only(workspace):
     """{skill: why it stays on the Mac} from config/cloud.json."""
     return json.loads((Path(workspace) / CLOUD).read_text())['local_only']
@@ -68,7 +81,7 @@ def local_only(workspace):
 def cloud_skills(workspace):
     """{name: folder} of the skills a cloud session gets: every skill but config/cloud.json's local_only."""
     local = local_only(workspace)
-    return {name: folder for name, folder in skills(Path(workspace) / 'skills').items() if name not in local}
+    return {name: folder for name, folder in repo_skills(workspace).items() if name not in local}
 
 
 def owns_commands(selected, uninstall):
@@ -100,7 +113,7 @@ def plan(home, selected, workspace, owned, uninstall=False, live=None, cloud=Fal
     chosen = lambda path: Path(path).parent in managed_roots or path in others  # noqa: E731
     desired = {}
     if link_roots:
-        found = skills(workspace / 'skills')
+        found = repo_skills(workspace)
         desired = {str(root / name): str(live / folder.relative_to(workspace))
                    for root in sorted(link_roots) for name, folder in found.items() if name not in local}
     if not uninstall:

@@ -18,9 +18,11 @@ config/              the sources the installers apply
   cloud.json           the skills cloud sessions leave out, each with the reason
   herdr-title.json     the label an agent's row in Herdr carries, and what decides it
 skills/              shared skills; skills.lock pins adapted ones; daily-log/ holds the
-                     daily-log command and the day pass; worktree-guard/, small-commits/ and
-                     herdr-title/ their hooks, each declared in its feature.json; git/ a bundle:
-                     the git step skills and approve
+                     daily-log command and the day pass; worktree-guard/ and herdr-title/ their
+                     hooks, each declared in its feature.json; git/ a bundle: the git step
+                     skills and approve
+features/            a folder per feature, moved here one at a time: its code, tests, skill
+                     and feature.json together; small-commits/ is the first
 lib/                 features.py (each feature's feature.json, found by its folder) and door.py
                      (`ai-dotfiles hook`: one call per event runs every feature that wants it)
 scripts/             ai-dotfiles, install.sh, uninstall.sh, healthcheck.sh (entry points);
@@ -443,36 +445,6 @@ their meanings, and the words.
   `scripts/tests/test_herdr_title.py` checks the file. State is one small file per session under
   `~/.local/state/ai-dotfiles/herdr-title/` (`$HERDR_TITLE_STATE` moves it); `panes/` there
   holds the session each pane belongs to.
-
-## Small commits
-
-A hook on every shell command gates `git commit` (PreToolUse on Bash / `run_command`; Pi
-through `scripts/agent_hooks.ts`, which sends each event to the door). There is no rule text
-in `config/global-agents.md`: the hook is the rule, and its block message points at the
-`small-commits` skill, which holds the protocol an agent follows (measure, plan, split,
-commit); `scripts/small_commits.py` in it is the hook.
-
-- **What it measures:** added plus deleted lines of what the commit would hold: the staged
-  diff; with `-a`, every tracked change; with paths, those paths; with `--amend`, the result
-  against the parent.
-- **Two tiers:** over 300 lines the first attempt is blocked with a split hint, and an
-  identical retry in the same session passes. Over 600 it is blocked unless the command sets
-  `ALLOW_LARGE_COMMIT="<reason>"` and the message carries a `Large-commit: <reason>` trailer;
-  the override is the user's to grant.
-- **The message:** a subject `type(scope): outcome` of at most 72 characters, and the
-  trailers `Why:`, `Scope:`, `Verified:` (`Part: n/m` when the change is split).
-- **Left out of the count:** binaries, lockfiles, and files `.gitattributes` marks
-  `linguist-generated` or `-diff`; this repo marks `docs/upstream/**`. A commit that finishes a
-  merge, cherry-pick, revert or rebase passes untouched.
-- **Fails open:** a failure never blocks a commit; the hook says "not checked" and the agent
-  reports it.
-- **`ai-dotfiles commit check [git commit args]`:** prints what the hook would say, the size by
-  file and the verdict, without committing.
-- **Declared in its `feature.json`:** PreToolUse for the shell tools of every CLI. The door
-  runs it after worktree-guard, from the one PreToolUse entry per CLI the hooks step writes.
-  State, the sizes a session was warned about, is in `~/.local/state/ai-dotfiles/small-commits/`.
-  A cloud session on this repo runs it through the door, from `.claude/settings.json` (Cloud
-  sessions).
 
 ## Approve
 
