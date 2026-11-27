@@ -1,7 +1,7 @@
 """door: `ai-dotfiles hook <kind> --cli <cli>`, the one hook call that serves every feature.
 
 Every CLI reaches the features through this door. The hook files of Claude Code, Codex and
-Antigravity hold one entry per event that runs it (scripts/install/hooks.py writes them), Pi's
+Antigravity hold one entry per event that runs it (lib/install/hooks.py writes them), Pi's
 extension (scripts/agent_hooks.ts) sends it each event, and a cloud session's project hooks
 (.claude/settings.json) call it too. It reads the CLI's hook input once, then runs, in this one
 process and in the features' order (lib/features.py), every feature whose feature.json wants the

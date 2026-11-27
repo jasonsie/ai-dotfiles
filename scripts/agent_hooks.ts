@@ -4,7 +4,7 @@
 // before each tool call and when the session shuts down (with its reason), and waits for the reply;
 // it tells of each input (with its source: typed or an extension's), each settled run (with the last
 // reply and how the run ended) and each resumed session without waiting, so a feature that labels
-// Herdr's rows never slows a run. Linked into ~/.pi/agent/extensions/ by scripts/install/skills.py;
+// Herdr's rows never slows a run. Linked into ~/.pi/agent/extensions/ by lib/install/skills.py;
 // the link resolves back to scripts/, and the door it calls is the one beside it.
 // The footer shows the work name while the session has a worktree: worktree-guard's reply carries
 // `status` (a name, or null to clear it) on the session's next tool call after the worktree is made

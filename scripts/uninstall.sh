@@ -22,7 +22,7 @@
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 TARGET="all"
 DRY_RUN=0
@@ -44,30 +44,30 @@ if ! "$PYTHON" -c 'import sys; sys.exit(sys.version_info < (3, 11))' 2>/dev/null
     "$("$PYTHON" --version 2>&1 || echo none)" >&2
   exit 1
 fi
-"$PYTHON" "$SCRIPT_DIR/install/installer.py"   # checks config/ai-clis.json
+"$PYTHON" "$ROOT/lib/install/installer.py"   # checks config/ai-clis.json
 
 DRY=()
 [ "$DRY_RUN" = "1" ] && DRY=(--dry-run)
 
 echo "== launchd"
-"$PYTHON" "$SCRIPT_DIR/install/launchd.py" --uninstall ${DRY[@]+"${DRY[@]}"}
+"$PYTHON" "$ROOT/lib/install/launchd.py" --uninstall ${DRY[@]+"${DRY[@]}"}
 
 echo "== hooks"
-"$PYTHON" "$SCRIPT_DIR/install/hooks.py" --uninstall --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
+"$PYTHON" "$ROOT/lib/install/hooks.py" --uninstall --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
 
 echo "== plugins"
-"$PYTHON" "$SCRIPT_DIR/install/plugins.py" --uninstall --target "$TARGET"
+"$PYTHON" "$ROOT/lib/install/plugins.py" --uninstall --target "$TARGET"
 
 echo "== skills"
-"$PYTHON" "$SCRIPT_DIR/install/skills.py" --uninstall --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
+"$PYTHON" "$ROOT/lib/install/skills.py" --uninstall --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
 
 echo "== mcp"
-"$PYTHON" "$SCRIPT_DIR/install/mcp.py" --uninstall --target "$TARGET"
+"$PYTHON" "$ROOT/lib/install/mcp.py" --uninstall --target "$TARGET"
 
 echo "== settings"
-"$PYTHON" "$SCRIPT_DIR/install/settings.py" --uninstall --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
+"$PYTHON" "$ROOT/lib/install/settings.py" --uninstall --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
 
 echo "== instructions"
-"$PYTHON" "$SCRIPT_DIR/install/instructions.py" --uninstall --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
+"$PYTHON" "$ROOT/lib/install/instructions.py" --uninstall --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
 
 [ "$DRY_RUN" = "1" ] && echo "Preview only: nothing written. Run again without --dry-run to remove." || echo "Done. Reinstall: bash scripts/install.sh"

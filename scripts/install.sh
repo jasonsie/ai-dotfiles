@@ -25,7 +25,7 @@
 #   7. launchd       the daily-log pass            → ~/Library/LaunchAgents, 04:00 each day
 #
 # Requires Python 3.11+ (macOS /usr/bin/python3 is older; use Homebrew/pyenv).
-# Steps live in scripts/install/. Undo with scripts/uninstall.sh. See docs/how-it-works.md.
+# Steps live in lib/install/. Undo with scripts/uninstall.sh. See docs/how-it-works.md.
 
 set -euo pipefail
 
@@ -98,7 +98,7 @@ if ! "$PYTHON" -c 'import sys; sys.exit(sys.version_info < (3, 11))' 2>/dev/null
   exit 1
 fi
 # Check config/ai-clis.json (and warn when a CLI folder override disagrees with it).
-"$PYTHON" "$SCRIPT_DIR/install/installer.py"
+"$PYTHON" "$ROOT/lib/install/installer.py"
 
 DRY=()
 [ "$DRY_RUN" = "1" ] && DRY=(--dry-run)
@@ -106,33 +106,33 @@ DRY=()
 echo "== instructions"
 INSTRUCTION_ARGS=(--target "$TARGET" ${DRY[@]+"${DRY[@]}"})
 [ "$REPLACE_INSTRUCTIONS" = "1" ] && INSTRUCTION_ARGS+=(--replace-existing)
-"$PYTHON" "$SCRIPT_DIR/install/instructions.py" "${INSTRUCTION_ARGS[@]}"
+"$PYTHON" "$ROOT/lib/install/instructions.py" "${INSTRUCTION_ARGS[@]}"
 [ "$INSTRUCTIONS_ONLY" = "1" ] && exit 0
 
 echo "== settings"
-"$PYTHON" "$SCRIPT_DIR/install/settings.py" --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
+"$PYTHON" "$ROOT/lib/install/settings.py" --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
 
 echo "== mcp"
-"$PYTHON" "$SCRIPT_DIR/install/mcp.py" --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
+"$PYTHON" "$ROOT/lib/install/mcp.py" --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
 
 echo "== skills"
-"$PYTHON" "$SCRIPT_DIR/install/skills.py" --target "$TARGET" ${DRY[@]+"${DRY[@]}"} ${CLOUD_ARGS[@]+"${CLOUD_ARGS[@]}"}
+"$PYTHON" "$ROOT/lib/install/skills.py" --target "$TARGET" ${DRY[@]+"${DRY[@]}"} ${CLOUD_ARGS[@]+"${CLOUD_ARGS[@]}"}
 
 echo "== plugins"
 if [ "$CLOUD" = "1" ]; then
   echo "plugins: skipped in a cloud session (scripts/cloud/setup.sh clones them at their pins)"
 else
-  "$PYTHON" "$SCRIPT_DIR/install/plugins.py" --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
+  "$PYTHON" "$ROOT/lib/install/plugins.py" --target "$TARGET" ${DRY[@]+"${DRY[@]}"}
 fi
 
 echo "== hooks"
-"$PYTHON" "$SCRIPT_DIR/install/hooks.py" --target "$TARGET" ${DRY[@]+"${DRY[@]}"} ${CLOUD_ARGS[@]+"${CLOUD_ARGS[@]}"}
+"$PYTHON" "$ROOT/lib/install/hooks.py" --target "$TARGET" ${DRY[@]+"${DRY[@]}"} ${CLOUD_ARGS[@]+"${CLOUD_ARGS[@]}"}
 
 echo "== launchd"
 if [ "$CLOUD" = "1" ]; then
   echo "launchd: skipped in a cloud session"
 else
-  "$PYTHON" "$SCRIPT_DIR/install/launchd.py" ${DRY[@]+"${DRY[@]}"}
+  "$PYTHON" "$ROOT/lib/install/launchd.py" ${DRY[@]+"${DRY[@]}"}
 fi
 
 [ "$DRY_RUN" = "1" ] && echo "Preview only: nothing written. Run again without --dry-run to write." || echo "Done. Verify: ai-dotfiles check"

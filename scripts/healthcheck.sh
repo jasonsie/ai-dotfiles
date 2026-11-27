@@ -18,7 +18,7 @@ set -uo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PYTHON="${PYTHON:-python3}"
 LIVE="$("$PYTHON" -c 'import sys; sys.path.insert(0, sys.argv[1]); import installer; print(installer.live_root(sys.argv[2]))' \
-  "$ROOT/scripts/install" "$ROOT" 2>/dev/null)"
+  "$ROOT/lib/install" "$ROOT" 2>/dev/null)"
 [ -f "$LIVE/scripts/install.sh" ] || LIVE="$ROOT"
 FAILS=0
 pass() { printf '  ok    %s\n' "$1"; }

@@ -23,13 +23,13 @@ skills/              shared skills; skills.lock pins adapted ones; daily-log/ ho
                      the git step skills and approve
 lib/                 features.py (each feature's feature.json, found by its folder) and door.py
                      (`ai-dotfiles hook`: one call per event runs every feature that wants it)
+  install/             installer.py (shared by every step) and one file per step
 scripts/             ai-dotfiles, install.sh, uninstall.sh, healthcheck.sh (entry points);
                      agent_hooks.py and agent_sessions.py (the CLIs' hook formats and
                      session stores behind one interface); agent_hooks.ts (Pi's extension);
                      statusline.py (the status line Claude Code and Antigravity run);
                      cloud_session.py (what a cloud session on this repo gets at start)
   cloud/               environment.sh (a cloud environment's setup script) and setup.sh (what it runs)
-  install/             installer.py (shared by every step) and one file per step
   upstream/            the weekly docs sync and its pull request report
   tests/               unit tests for all of the above
 docs/
@@ -42,7 +42,7 @@ docs/
 ## The flow
 
 ```text
-YOU EDIT                          APPLIED BY scripts/install/ (ai-dotfiles = install.sh)   LANDS IN
+YOU EDIT                          APPLIED BY lib/install/ (ai-dotfiles = install.sh)   LANDS IN
 config/ai-clis.json           ─►  every step: which CLIs, and their paths  ─►  (the CLIs switched on)
 config/global-agents.md       ─►  instructions.py (symlinks)               ─►  each CLI's global instruction file
 config/cli-settings.json      ─►  settings.py (merges listed keys)         ─►  settings.json / config.toml
@@ -196,7 +196,7 @@ version or a plugin to remove shows up as a pending change.
   or `scripts/`; scripts resolve their own location. The healthcheck enforces this.
 - **Safe by default.** `--dry-run` previews, idempotent, back up before writing,
   refuse to overwrite anything a script did not create, and roll back on failure. Every
-  step writes through `apply()` in `scripts/install/installer.py`, so these rules live in
+  step writes through `apply()` in `lib/install/installer.py`, so these rules live in
   one place.
 
 ## Settings: enforce and default
@@ -253,7 +253,7 @@ refreshed by `scripts/vendor_daily_log.py` and checked by a test), and every
 - **The evidence is piped, not fetched:** the model gets the day's evidence with its prompt
   and only writes. Letting it run `daily-log day` itself met the Bash tool's timeout on a
   cold cache, a background wait, and a fallback wakeup that ran the pass twice (2026-11-03).
-- **Installed by `scripts/install/launchd.py`:** `~/Library/LaunchAgents/com.ai-dotfiles.daily-log-day.plist`,
+- **Installed by `lib/install/launchd.py`:** `~/Library/LaunchAgents/com.ai-dotfiles.daily-log-day.plist`,
   the PATH (`daily-log`, `claude`, python3, git) rendered at install; log in
   `~/Library/Logs/ai-dotfiles/`. The healthcheck checks the job is loaded. Before November
   2026 a Stop hook nudged every session that edited files; `hooks.py` takes its entries and
@@ -647,12 +647,12 @@ gets its setup from the committed `.claude/settings.json`:
 
 | Step | Record | Rollback |
 |---|---|---|
-| Instructions | `~/.local/state/ai-dotfiles/global-instructions/backup-*/manifest.json` | `python3 scripts/install/instructions.py --uninstall` (restores the earliest backup) |
-| Hooks | `~/.local/state/ai-dotfiles/settings/backup-*`; entries found by their command | `python3 scripts/install/hooks.py --uninstall` |
-| Launchd (the daily-log pass) | `~/.local/state/ai-dotfiles/launchd/backup-*`; the plist found by its marker | `python3 scripts/install/launchd.py --uninstall` |
+| Instructions | `~/.local/state/ai-dotfiles/global-instructions/backup-*/manifest.json` | `python3 lib/install/instructions.py --uninstall` (restores the earliest backup) |
+| Hooks | `~/.local/state/ai-dotfiles/settings/backup-*`; entries found by their command | `python3 lib/install/hooks.py --uninstall` |
+| Launchd (the daily-log pass) | `~/.local/state/ai-dotfiles/launchd/backup-*`; the plist found by its marker | `python3 lib/install/launchd.py --uninstall` |
 | Settings | `~/.local/state/ai-dotfiles/settings/backup-*` | Copy the backed-up file back |
 | MCP (Antigravity's file) | `~/.local/state/ai-dotfiles/mcp/backup-*` | Copy the backed-up file back |
-| Skills, commands, Pi extension | `~/.local/state/ai-dotfiles/skills.json` (links this repo created) | `python3 scripts/install/skills.py --uninstall` |
+| Skills, commands, Pi extension | `~/.local/state/ai-dotfiles/skills.json` (links this repo created) | `python3 lib/install/skills.py --uninstall` |
 | Plugins | `~/.local/state/ai-dotfiles/plugins.json` (installed or taken over, per plugin and CLI; each `bin/` checkout's tag and commands); `settings/backup-*` for the edits to Claude's `settings.json` and Codex's `config.toml` | Empty the list and run `ai-dotfiles install`; `--uninstall` only lists what stays |
 | Everything | the records above | `ai-dotfiles uninstall` |
 
