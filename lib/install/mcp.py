@@ -56,9 +56,9 @@ def add_servers(cli, old, servers):
     return (json.dumps(data, indent=2) + '\n').encode()
 
 
-def goes_to(server, cli_id):
+def goes_to(server, cli):
     """Whether config/mcp-servers.json sends the server to the CLI: its `targets`, or every CLI when it has none."""
-    return cli_id in server.get('targets', [cli_id])
+    return cli in server.get('targets', [cli])
 
 
 def plan(home, clis, servers, which=shutil.which):
