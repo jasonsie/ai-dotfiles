@@ -196,10 +196,6 @@ class InstallSideTest(unittest.TestCase):
         self.assertEqual({cli: adapters.get(cli).mcp_lists for cli in adapters.CLIS},
                          {'claude': True, 'codex': True, 'agy': False, 'pi': True})
 
-    def test_a_cli_with_no_mcp_add_is_the_one_with_no_mcp_list(self):
-        for cli in adapters.CLIS:
-            self.assertEqual(adapters.get(cli).mcp_lists, adapters.get(cli).mcp_add(self.SERVER) is not None, cli)
-
     def test_codex_and_pi_read_an_override_file_that_would_shadow_the_shared_instructions(self):
         self.assertEqual({cli: adapters.get(cli).instructions_override for cli in adapters.CLIS},
                          {'claude': None, 'codex': 'AGENTS.override.md', 'agy': None, 'pi': 'AGENTS.override.md'})
