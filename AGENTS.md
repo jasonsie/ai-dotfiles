@@ -25,8 +25,8 @@ Every CLI reads this file as the project's instructions; there is no `CLAUDE.md`
 | `skills/worktree-guard/` | The hook that, in a repo switched on, keeps each task in its own worktree and each worktree to one session, and the `ai-dotfiles worktree` commands | its `feature.json`, read by the door and `lib/install/hooks.py` |
 | `skills/worktree-flow/` | `/worktree-flow`, the person's toggle of a repo's flow switch, after their OK in a macOS dialog | `lib/install/skills.py` |
 | `features/small-commits/` | The hook that gates `git commit` on size (300 lines warn, 600 wall), subject and trailers, and the `ai-dotfiles commit check` command | its `feature.json`, read by the door, `lib/commands.py` and `lib/install/hooks.py` |
-| `skills/herdr-title/` | The hook that, inside a Herdr pane, labels the agent's row in the sidebar type › status › result (`execute › wait › ask`) at each prompt, turn end, dialog and resume, and sorts the rows that need the person to the top: at once where a rule decides, else by Haiku through a headless `claude -p` | its `feature.json`, read by the door and `lib/install/hooks.py` |
-| `config/herdr-title.json` | The ten types and their meanings, the label's words, the command words and skills that decide a type at once, how a prompt the user did not type starts, what makes a turn end ask or fail at once, and both model instructions (type, turn end) | `skills/herdr-title/scripts/herdr_title.py` (read on every call) |
+| `features/herdr-title/` | The hook that, inside a Herdr pane, labels the agent's row in the sidebar type › status › result (`execute › wait › ask`) at each prompt, turn end, dialog and resume, and sorts the rows that need the person to the top: at once where a rule decides, else by Haiku through a headless `claude -p` | its `feature.json`, read by the door and `lib/install/hooks.py` |
+| `features/herdr-title/labels.json` | The ten types and their meanings, the label's words, the command words and skills that decide a type at once, how a prompt the user did not type starts, what makes a turn end ask or fail at once, and both model instructions (type, turn end) | `features/herdr-title/scripts/herdr_title.py` (read on every call) |
 | `skills/portable-plugin/` | The rules a plugin's files follow to run in all four CLIs, the check, and the release step | `lib/install/skills.py` |
 | `skills/git/` | A bundle: the git step skills (`push-branch`, `open-pr`, `approve-pr`, `archive-tag`, `merge-pr`, `prune-branch`), each with its own script, `approve`, which runs them in order, and `ship-pr`, an agent's finish in its worktree (checks, push, PR, worktree deleted); `scripts/git_run.py` is the runner they share | `lib/install/skills.py` (each linked by its own name); its `feature.json` (commands only), read by `lib/commands.py` |
 | `scripts/agent_hooks.py` | Every CLI's hook format behind one interface, for the door, and the Event that gives a feature the command, its folder and the files of a call; `agent_hooks.ts` is Pi's extension, which sends each event to the door | `lib/install/skills.py` (Pi's link) |
@@ -60,8 +60,9 @@ and `agents/`, the engineering skills' setup.
   it. Code every step of a bundle needs goes in the bundle's `scripts/`. A bundle
   (`skills/git/`) is this repo's grouping only: the CLIs read one level of skill folders, so
   the installer links each skill in it by its own name.
-- Lists live in `config/`: CLIs and their paths in `ai-clis.json`, documentation sources in
-  `upstream-docs.json`; scripts keep only how each is applied.
+- The Mac's lists live in `config/`; a feature's own live beside it (`features/herdr-title/labels.json`).
+  CLIs and their paths are in `ai-clis.json`, documentation sources in `upstream-docs.json`;
+  scripts keep only how each is applied.
 - Never edit `docs/upstream/` by hand; the weekly sync rebuilds it. Agents read it through
   the `upstream-docs` skill; `collect-docs` adds a source.
 - A newer upstream version of a pinned skill replaces ours: remove it, add theirs, re-apply

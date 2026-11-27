@@ -3,7 +3,7 @@
 Each hook call goes through the door as the CLIs make it (`ai-dotfiles hook`, lib/door.py), with a
 `herdr` and a `claude` on PATH that only write down how they were called.
 
-Run: python3 -m unittest discover -s scripts/tests -p 'test_herdr_title.py' -v
+Run: python3 -m unittest discover -s features/herdr-title/tests -v
 """
 import io
 import json
@@ -19,13 +19,14 @@ import time
 import unittest
 from unittest import mock
 
-from support import ROOT, load
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / 'scripts/tests'))  # support.py, the shared helpers
+from support import ROOT, load  # noqa: E402
 
 sys.path.insert(0, str(ROOT / 'lib'))
 import door  # noqa: E402
 import features  # noqa: E402
 
-SCRIPT = ROOT / 'skills/herdr-title/scripts/herdr_title.py'
+SCRIPT = ROOT / 'features/herdr-title/scripts/herdr_title.py'
 DOOR = ROOT / 'scripts/ai-dotfiles'
 TITLE = next(feature for feature in features.find() if feature.name == 'herdr-title')
 FAKE = f'''#!{sys.executable}
@@ -619,7 +620,7 @@ class LabelTest(unittest.TestCase):
     """The matrix: the label each mode shows under each state Herdr detects."""
 
     def setUp(self):
-        self.module = load('../skills/herdr-title/scripts/herdr_title.py')
+        self.module = load('../features/herdr-title/scripts/herdr_title.py')
         self.settings = self.module.config()
 
     def labels(self, **state):
@@ -740,10 +741,10 @@ class QuietTest(Sandbox):
 
 
 class ConfigTest(unittest.TestCase):
-    """config/herdr-title.json: the types, the label's words, and what decides a type at once."""
+    """labels.json: the types, the label's words, and what decides a type at once."""
 
     def setUp(self):
-        self.config = json.loads((ROOT / 'config/herdr-title.json').read_text())
+        self.config = json.loads((ROOT / 'features/herdr-title/labels.json').read_text())
 
     def test_ten_lower_case_types_each_with_a_meaning_and_every_label_fits_its_row(self):
         types, words = self.config['types'], self.config['words']
