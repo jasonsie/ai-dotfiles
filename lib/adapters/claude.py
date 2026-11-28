@@ -22,6 +22,9 @@ class Claude(Adapter):
     # Claude Code gives SessionEnd hooks 1.5 s unless an entry asks for more (up to 60); a worktree takes a while.
     timeouts = {'pre': 60, 'end': 60, 'create': 60, 'remove': 60}
 
+    def mcp_add(self, server):
+        return self.native_mcp_add(server, before=('-s', 'user'))
+
     def is_headless(self, environ):
         return environ.get('CLAUDE_CODE_ENTRYPOINT', '').startswith('sdk-')  # `claude -p` and the SDK
 

@@ -13,23 +13,25 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
-import tomllib
 
 import installer
+import settings
 
 WORKSPACE = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(WORKSPACE / 'lib'))
+import adapters  # noqa: E402  (what differs between the CLIs)
 SERVERS = WORKSPACE / 'config/mcp-servers.json'
+
+
+def names_in(cli, text):
+    """Names of the MCP servers a CLI's config file (its text) holds."""
+    return set(settings.parse(cli, text).get(adapters.get(cli).mcp_key, {}))
 
 
 def configured(home, cli):
     """Names of user-scope MCP servers already known to a CLI."""
     path = installer.path(home, cli, 'mcp')
-    if not path.is_file():
-        return set()
-    text = path.read_text()
-    if cli == 'codex':
-        return set(tomllib.loads(text).get('mcp_servers', {}))
-    return set((json.loads(text) if text.strip() else {}).get('mcpServers', {}))
+    return names_in(cli, path.read_text()) if path.is_file() else set()
 
 
 def leftovers(home, clis, servers):
@@ -39,46 +41,47 @@ def leftovers(home, clis, servers):
 
 
 def add_command(cli, server):
-    name, command, args = server['name'], server['command'], server.get('args', [])
-    if cli == 'claude':
-        return ['claude', 'mcp', 'add', '-s', 'user', name, '--', command, *args]
-    if cli == 'codex':
-        return ['codex', 'mcp', 'add', name, '--', command, *args]
-    if cli == 'pi':
-        described = ['--description', server['description']] if server.get('description') else []
-        return ['pi', 'mcp', 'add', name, *described, '--', command, *args]
-    raise ValueError(cli)
+    command = adapters.get(cli).mcp_add(server)
+    if command is None:
+        raise ValueError(cli)
+    return command
 
 
-def add_servers(old, servers):
-    """Antigravity's mcp_config.json (bytes) with the given stdio servers added."""
-    data = json.loads(old) if old.strip() else {}
-    entries = data.setdefault('mcpServers', {})
+def add_servers(cli, old, servers):
+    """The mcp_config.json (bytes) of a CLI with no `mcp add`, with the given stdio servers added."""
+    data = settings.parse_json(old.decode())
+    entries = data.setdefault(adapters.get(cli).mcp_key, {})
     for server in servers:
         entries[server['name']] = {'command': server['command'], 'args': server.get('args', [])}
     return (json.dumps(data, indent=2) + '\n').encode()
 
 
+def goes_to(server, cli):
+    """Whether config/mcp-servers.json sends the server to the CLI: its `targets`, or every CLI when it has none."""
+    return cli in server.get('targets', [cli])
+
+
 def plan(home, clis, servers, which=shutil.which):
-    """Native commands to run, and file edits for the CLI without one (Antigravity)."""
+    """Native commands to run, and file edits for a CLI without one."""
     commands, files = [], []
     for cli in clis:
         if not which(cli):
             print(f'mcp: skip {cli} (not on PATH)')
             continue
         present = configured(home, cli)
-        missing = [s for s in servers if ('targets' not in s or cli in s['targets']) and s['name'] not in present]
+        missing = [s for s in servers if goes_to(s, cli) and s['name'] not in present]
         if not missing:
             continue
-        if cli == 'agy':
-            path = installer.path(home, 'agy', 'mcp')
+        native = [adapters.get(cli).mcp_add(server) for server in missing]
+        if None in native:
+            path = installer.path(home, cli, 'mcp')
             if not path.parent.is_dir():
-                print('mcp: skip agy (not set up on this machine)')
+                print(f'mcp: skip {cli} (not set up on this machine)')
                 continue
-            change = installer.edit(path, lambda old: add_servers(old, missing))
+            change = installer.edit(path, lambda old, cli=cli, missing=missing: add_servers(cli, old, missing))
             files += [change] if change else []
         else:
-            commands += [add_command(cli, server) for server in missing]
+            commands += native
     return commands, files
 
 
@@ -124,11 +127,10 @@ def listed(cli, name):
     return next((line for line in done.stdout.splitlines() if name in line), '')
 
 
-def in_file(file, name):
-    """Whether Antigravity's mcp_config.json holds the server."""
+def in_file(cli, file, name):
+    """Whether the config file of a CLI with no `mcp list` holds the server."""
     try:
-        text = file.read_text()
-        return name in (json.loads(text) if text.strip() else {}).get('mcpServers', {})
+        return name in names_in(cli, file.read_text())
     except (OSError, ValueError, AttributeError):
         return False
 
@@ -143,13 +145,13 @@ def checks(options):
             continue
         file = options.home / entry['mcp'][2:]
         for name in servers:
-            if cli == 'agy':  # no `mcp list`: its file is read (a branch on a CLI; the adapters take it later)
+            if not adapters.get(cli).mcp_lists:  # its file is read
                 if not file.is_file():
-                    results.append(('skip', 'agy not set up'))
-                elif in_file(file, name):
-                    results.append(('ok', f'agy: {name} (in {file.name})'))
+                    results.append(('skip', f'{cli} not set up'))
+                elif in_file(cli, file, name):
+                    results.append(('ok', f'{cli}: {name} (in {file.name})'))
                 else:
-                    results.append(('FAIL', f'agy: {name} not in {file}'))
+                    results.append(('FAIL', f'{cli}: {name} not in {file}'))
             elif not shutil.which(cli):
                 results.append(('skip', f'{cli} not on PATH'))
             else:

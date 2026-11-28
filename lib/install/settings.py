@@ -13,7 +13,6 @@ this repo's command (the status line's `ai-dotfiles statusline`), which would da
 repo is gone, and lists the rest, which stay. Requires Python 3.11+ for tomllib.
 """
 import copy
-import fnmatch
 import json
 from pathlib import Path
 import re
@@ -23,6 +22,8 @@ import tomllib
 import installer
 
 WORKSPACE = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(WORKSPACE / 'lib'))
+import adapters  # noqa: E402  (what differs between the CLIs)
 MANAGED = WORKSPACE / 'config/cli-settings.json'
 KINDS = ('enforce', 'default')
 MISSING = object()
@@ -33,21 +34,25 @@ def load_managed(path):
     managed = json.loads(path.read_text())
     if managed.get('version') != 2:
         raise ValueError(f'{path}: expected "version": 2 with per-CLI "enforce" and "default" keys')
-    for cli, spec in managed.items():
-        if cli == 'version':
+    for name, spec in managed.items():
+        if name == 'version':
             continue
-        if cli not in installer.clis():
-            raise ValueError(f'{path}: {cli!r} is not in config/ai-clis.json')
+        if name not in installer.clis():
+            raise ValueError(f'{path}: {name!r} is not in config/ai-clis.json')
         if not isinstance(spec, dict) or not set(spec) <= set(KINDS):
-            raise ValueError(f'{path}: {cli} may only have "enforce" and "default" keys')
+            raise ValueError(f'{path}: {name} may only have "enforce" and "default" keys')
         both = set(spec.get('enforce', {})) & set(spec.get('default', {}))
         if both:
-            raise ValueError(f'{path}: {cli} lists {", ".join(sorted(both))} as both enforce and default')
+            raise ValueError(f'{path}: {name} lists {", ".join(sorted(both))} as both enforce and default')
     return managed
 
 
+def parse_json(text):
+    return json.loads(text) if text.strip() else {}
+
+
 def parse(cli, text):
-    return tomllib.loads(text) if cli == 'codex' else (json.loads(text) if text.strip() else {})
+    return tomllib.loads(text) if adapters.get(cli).settings_format == 'toml' else parse_json(text)
 
 
 def set_dotted(data, dotted, value):
@@ -78,21 +83,12 @@ def del_dotted(data, dotted):
         node.pop(leaf, None)
 
 
-def check_pi(data):
-    """Refuse a managed default that Pi's own enabledModels scope would hide."""
-    patterns = data.get('enabledModels') or []
-    full = f"{data.get('defaultProvider', '')}/{data.get('defaultModel', '')}"
-    if patterns and not any(fnmatch.fnmatch(full, p) for p in patterns):
-        raise ValueError(f'Pi default {full} is not in enabledModels; add it there first')
-
-
 def merge_json(cli, text, keys):
-    original = json.loads(text) if text.strip() else {}
+    original = parse_json(text)
     data = copy.deepcopy(original)
     for key, value in keys.items():
         set_dotted(data, key, value)
-    if cli == 'pi' and keys.keys() & {'defaultProvider', 'defaultModel'}:
-        check_pi(data)
+    adapters.get(cli).check_settings(data, keys)
     return text if data == original else json.dumps(data, indent=2, ensure_ascii=False) + '\n'
 
 
@@ -180,9 +176,9 @@ def drop_toml(text, keys):
 
 def drop(cli, text, keys):
     """The settings text without the managed `keys`."""
-    if cli == 'codex':
+    if adapters.get(cli).settings_format == 'toml':
         return drop_toml(text, keys)
-    data = json.loads(text) if text.strip() else {}
+    data = parse_json(text)
     for key in keys:
         del_dotted(data, key)
     return json.dumps(data, indent=2, ensure_ascii=False) + '\n'
@@ -215,7 +211,8 @@ def merge(cli, spec, old):
     """The settings file `old` (bytes) with this CLI's managed keys merged in."""
     text = old.decode()
     keys, _ = split_keys(cli, text, spec)
-    return (merge_toml(text, keys) if cli == 'codex' else merge_json(cli, text, keys)).encode()
+    merged = merge_toml(text, keys) if adapters.get(cli).settings_format == 'toml' else merge_json(cli, text, keys)
+    return merged.encode()
 
 
 def plan(home, clis, managed):

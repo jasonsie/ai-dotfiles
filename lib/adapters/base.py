@@ -1,8 +1,9 @@
-"""Adapter: what one CLI does differently on the hook side. The CLI's own file holds the data.
+"""Adapter: what one CLI does differently, on the hook side and the install side. The CLI's own file holds the data.
 
 A feature never asks which CLI it runs in: it reads the command, its folder and the files a call
 names from the Event (scripts/agent_hooks.py), which asks the CLI's adapter here, and it asks the
-adapter what the CLI can do. Python 3.11+, stdlib only.
+adapter what the CLI can do. An install step (lib/install) does the same: it asks the adapter how
+the CLI's files are edited. Python 3.11+, stdlib only.
 """
 from __future__ import annotations
 
@@ -29,6 +30,24 @@ class Adapter:
     enters_worktree = False                # it has its own tool to enter a worktree, so a session needs no steering
     shows_worktree_move = True             # its own status line follows a session steered to another worktree
     prompt_starts_open = False             # a typed prompt opens a turn nothing has judged, until its Stop hook answers
+
+    # The install side (lib/install): how the installer edits this CLI's files.
+    settings_format = 'json'               # its settings and MCP files: 'json' or 'toml'
+    mcp_key = 'mcpServers'                 # the key of those files that holds the MCP servers
+    mcp_lists = True                       # `<cli> mcp list` names its servers (else its file is read)
+    instructions_override = None           # a file next to its instructions that it reads first and would shadow ours
+
+    def check_settings(self, data, keys):
+        """Refuse managed `keys` that, merged into the settings `data`, this CLI would not honour."""
+
+    def mcp_add(self, server):
+        """The argv that adds the server (a dict of config/mcp-servers.json) in user scope, or None when the
+        CLI has no such command and its file is edited."""
+        return None
+
+    def native_mcp_add(self, server, before=(), after=()):
+        """`<cli> mcp add`, with `before` and `after` the options that go either side of the server's name."""
+        return [self.cli, 'mcp', 'add', *before, server['name'], *after, '--', server['command'], *server.get('args', [])]
 
     @property
     def takes_folder(self):

@@ -2,7 +2,8 @@
 a feature reads the command, its folder and the files from the Event and asks the adapter what a CLI can do.
 
 A feature's code is scanned with `ast` (its docstrings and comments are prose, not code) for a string that is a
-CLI's id or one of its tools' names, and for a comparison on a CLI id or on a tool (`event.tool`: ask `event.action`). A feature's own `feature.json` is not
+CLI's id or one of its tools' names, and for a comparison of a CLI id with a fixed value (a literal, a tuple of literals, a module constant; a
+lookup in data, such as `cli in server.get('targets', [cli])`, is not a branch) or of a tool (`event.tool`: ask `event.action`). A feature's own `feature.json` is not
 scanned: a declaration is per CLI by design. The short list below holds what is allowed, each with its reason.
 
 Run: python3 -m unittest discover -s scripts/tests -p 'test_cli_rule.py' -v
@@ -21,8 +22,10 @@ sys.path.insert(0, str(ROOT / 'lib'))
 import adapters  # noqa: E402
 import features  # noqa: E402
 
-# Code outside a feature folder that is a feature, until its folder moves (the layout's status ticket).
-FEATURE_FILES = ('skills/daily-log', 'scripts/statusline.py', 'scripts/cloud_session.py')
+# Code outside a feature folder that is a feature, until its folder moves (the layout's status ticket),
+# and the install steps that no longer branch on a CLI (the rest join as the layout's install ticket reaches them).
+FEATURE_FILES = ('skills/daily-log', 'scripts/statusline.py', 'scripts/cloud_session.py',
+                 'lib/install/settings.py', 'lib/install/mcp.py', 'lib/install/instructions.py')
 # (file, the string) -> why it may stay. A reason says what the string is, in a sentence.
 ALLOWED = {
     ('skills/herdr-title/scripts/herdr_title.py', 'claude'):
@@ -59,6 +62,22 @@ def names_a_cli(node):
             or (isinstance(node, ast.Subscript) and isinstance(node.slice, ast.Constant) and node.slice.value == 'cli'))
 
 
+def is_fixed(node):
+    """Whether an operand is a value written in the code, not looked up in data: a string, a tuple, list or
+    set of constants, or a bare name (a module constant such as `TOML_CLIS`)."""
+    if isinstance(node, (ast.Tuple, ast.List, ast.Set)):
+        return all(isinstance(item, ast.Constant) for item in node.elts)
+    return isinstance(node, (ast.Constant, ast.Name))
+
+
+def branches_on_a_cli(node):
+    """Whether a comparison sets a CLI's id against a fixed value: `cli == 'x'`, `event.cli in ('x', 'y')`,
+    `cli in TOML_CLIS`. A lookup in data (a call, a subscript or an attribute on the other side) is not a branch."""
+    sides = [node.left, *node.comparators]
+    return any(names_a_cli(side) for side in sides) and any(
+        is_fixed(side) for side in sides if not names_a_cli(side))
+
+
 def names_a_tool(node):
     """Whether an operand of a comparison is a tool's name held in a variable: `event.tool`."""
     return isinstance(node, ast.Attribute) and node.attr == 'tool'
@@ -73,7 +92,7 @@ def violations(path):
         if isinstance(node, ast.Constant) and isinstance(node.value, str) and node not in prose:
             if node.value in CLI_IDS or node.value in TOOL_NAMES:
                 found.append((node.lineno, f'the string {node.value!r}'))
-        elif isinstance(node, ast.Compare) and any(names_a_cli(side) for side in [node.left, *node.comparators]):
+        elif isinstance(node, ast.Compare) and branches_on_a_cli(node):
             found.append((node.lineno, 'a comparison on a CLI id'))
         elif isinstance(node, ast.Compare) and any(names_a_tool(side) for side in [node.left, *node.comparators]):
             found.append((node.lineno, 'a comparison on a tool name'))  # event.action says what a tool does
@@ -126,8 +145,12 @@ class RuleTest(unittest.TestCase):
                 TABLE = {'codex': 1}
 
 
-                def hook(event):
+                def hook(event, server):
                     if event.cli == 'pi':
+                        return None
+                    if cli in TOML_CLIS or event.cli in ('codex', 'pi'):
+                        return None
+                    if cli in server.get('targets', [cli]):
                         return None
                     if event.tool in names:
                         return 'bash' if event.tool == 'bash' else None
@@ -135,9 +158,10 @@ class RuleTest(unittest.TestCase):
             '''))
             found = named(Path(tmp))
         self.assertEqual(sorted(found.split(' ', 1)[1] for found in found),
-                         ['a comparison on a CLI id', 'a comparison on a tool name', 'a comparison on a tool name',
-                          'a comparison on a tool name', "the string 'Bash'", "the string 'apply_patch'",
-                          "the string 'codex'", "the string 'pi'"])
+                         ['a comparison on a CLI id', 'a comparison on a CLI id', 'a comparison on a CLI id',
+                          'a comparison on a tool name', 'a comparison on a tool name', 'a comparison on a tool name',
+                          "the string 'Bash'", "the string 'apply_patch'",
+                          "the string 'codex'", "the string 'codex'", "the string 'pi'", "the string 'pi'"])
         self.assertTrue(all(where.startswith('features/rogue/scripts/rogue.py:') for where in found))
 
     def test_a_fixture_feature_that_only_asks_the_event_passes(self):
